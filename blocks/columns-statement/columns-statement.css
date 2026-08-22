@@ -23,7 +23,7 @@
   text-align: center;
 }
 
-@media (width >= 900px) {
+@media (width >= 992px) {
   .columns-statement > div {
     padding: 32px 0;
   }

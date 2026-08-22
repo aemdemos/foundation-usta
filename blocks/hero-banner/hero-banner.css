@@ -89,7 +89,7 @@
   color: var(--text-color);
 }
 
-@media (width >= 900px) {
+@media (width >= 992px) {
   .hero-banner.block {
     padding: 192px 32px;
   }

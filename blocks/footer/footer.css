@@ -150,9 +150,9 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
 }
 
 /* ============================================================
-   Desktop (>= 900px): 3-column top row, centered footer band
+   Desktop (>= 992px): 3-column top row, centered footer band
    ============================================================ */
-@media (width >= 900px) {
+@media (width >= 992px) {
   footer .footer {
     display: grid;
     grid-template-columns: auto 1fr auto;

@@ -133,7 +133,7 @@
 }
 
 /* --- desktop: side-by-side 50/50 --- */
-@media (width >= 900px) {
+@media (width >= 992px) {
   .columns-feature .columns-feature-row {
     flex-direction: row;
     align-items: flex-start;

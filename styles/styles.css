@@ -55,7 +55,7 @@
   src: local('Arial');
 }
 
-@media (width >= 900px) {
+@media (width >= 992px) {
   :root {
     /* heading sizes — desktop (exact from source) */
     --heading-font-size-xxl: 100px;
@@ -104,7 +104,10 @@ h6 {
   margin-top: 0.8em;
   margin-bottom: 0.25em;
   font-family: var(--heading-font-family);
-  font-weight: 700;
+
+  /* Source renders the condensed display face at weight 500 (single Graphik
+     XXCond Bold cut), not 700 — match the source's computed weight. */
+  font-weight: 500;
   line-height: 1.1;
   scroll-margin: 40px;
 }
@@ -332,7 +335,7 @@ main > .section:first-of-type {
   margin-top: 0;
 }
 
-@media (width >= 900px) {
+@media (width >= 992px) {
   main > .section > div {
     padding: 0 32px;
   }

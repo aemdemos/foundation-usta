@@ -24,14 +24,19 @@ function toYouTubeEmbed(href) {
 /**
  * Replace a bare YouTube link with a responsive 16:9 iframe embed.
  * @param {HTMLAnchorElement} link the authored YouTube link
+ * @param {string} [title] accessible title for the iframe (falls back to a default)
  */
-function embedVideo(link) {
+function embedVideo(link, title) {
   const src = toYouTubeEmbed(link.href);
   const holder = document.createElement('div');
   holder.className = 'columns-feature-video';
   const iframe = document.createElement('iframe');
   iframe.src = src;
-  iframe.title = link.textContent.trim() || 'Video';
+  // Author links carry the raw URL as their text, which is a poor accessible
+  // name. Prefer a caption/heading-derived title; never expose the bare URL.
+  const linkText = link.textContent.trim();
+  const isUrlText = /^https?:\/\//i.test(linkText);
+  iframe.title = title || (isUrlText ? '' : linkText) || 'Video';
   iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
   iframe.setAttribute('allowfullscreen', '');
   iframe.setAttribute('loading', 'lazy');
@@ -54,7 +59,14 @@ export default function decorate(block) {
     // Media-card variant: heading + video + caption inside a grey rounded card
     if (ytLink) {
       cell.classList.add('columns-feature-media');
-      embedVideo(ytLink);
+      // Derive an accessible iframe title from the card's heading or caption
+      // so screen readers announce the video meaningfully (not the raw URL).
+      const heading = cell.querySelector('h1, h2, h3, h4, h5, h6');
+      const caption = [...cell.querySelectorAll('p')]
+        .map((p) => p.textContent.trim())
+        .find((t) => t && !/^https?:\/\//i.test(t) && t !== ytLink.textContent.trim());
+      const videoTitle = (heading && heading.textContent.trim()) || caption || 'Video';
+      embedVideo(ytLink, videoTitle);
     }
 
     // Image-collage variant: cell holds two or more stacked images
