@@ -41,14 +41,14 @@
   line-height: 57px;
 }
 
-/* uppercase label: second paragraph of each item */
+/* label: second paragraph of each item. Source content is already uppercase
+   and the source computes text-transform:none — so we don't force uppercase. */
 .columns-stats > div > div p:last-child {
   font-size: 18px;
   line-height: 24px;
-  text-transform: uppercase;
 }
 
-@media (width >= 900px) {
+@media (width >= 992px) {
   .columns-stats > div {
     flex-direction: row;
     align-items: center;

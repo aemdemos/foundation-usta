@@ -1,6 +1,18 @@
 /* cards-support — 4-up circular-image cards on the light-blue (.highlight) band.
    Values extracted from source computed styles (1440px viewport / 1200px content). */
 
+/* Section intro (default content above the cards): "Your support makes a
+   difference." heading + subtitle. Source renders these centered and black
+   (#000); the global default-content styles otherwise leave them #333/left. */
+.cards-support-container .default-content-wrapper {
+  text-align: center;
+}
+
+.cards-support-container .default-content-wrapper h2,
+.cards-support-container .default-content-wrapper p {
+  color: #000;
+}
+
 /* Row of cards: flex wrap, evenly distributed (source: justify-content space-around). */
 .cards-support > ul {
   list-style: none;
@@ -94,7 +106,7 @@
   text-decoration: underline;
 }
 
-@media (width >= 900px) {
+@media (width >= 992px) {
   /* Single row of 4 on desktop; content is 1200px wide → 4×270 + gutters. */
   .cards-support > ul {
     flex-wrap: nowrap;

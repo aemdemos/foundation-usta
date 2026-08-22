@@ -230,9 +230,9 @@ header nav .nav-donate:focus-visible {
 }
 
 /* ============================================================
-   Desktop (>= 900px): single row, centered nav, hover dropdowns
+   Desktop (>= 992px): single row, centered nav, hover dropdowns
    ============================================================ */
-@media (width >= 900px) {
+@media (width >= 992px) {
   header nav {
     display: flex;
     align-items: center;

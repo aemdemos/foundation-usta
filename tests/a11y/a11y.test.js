@@ -2,7 +2,9 @@ import { test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import config from './a11y.config.js';
 
-const { wcagTags, failOnImpact, urls } = config;
+const {
+  wcagTags, failOnImpact, urls, excludeSelectors = [], disabledRules = {},
+} = config;
 
 // Mode 2: a single URL passed as an argument, forwarded via A11Y_URL.
 const singleUrl = process.env.A11Y_URL || null;
@@ -15,7 +17,20 @@ function runA11yTest(url) {
   test(`a11y: ${url}`, async ({ page }) => {
     await page.goto(url, { waitUntil: 'networkidle' });
 
-    const results = await new AxeBuilder({ page }).withTags(wcagTags).analyze();
+    // Build the scan, excluding third-party embeds (e.g. YouTube's player)
+    // whose internal DOM we don't author and cannot remediate. We still scan
+    // our own wrapper around the embed (title, layout, surrounding content).
+    let builder = new AxeBuilder({ page }).withTags(wcagTags);
+    excludeSelectors.forEach((selector) => {
+      builder = builder.exclude(selector);
+    });
+    // Apply deliberate, documented rule exceptions (see a11y.config.js).
+    const ruleOverrides = Object.entries(disabledRules)
+      .reduce((acc, [id, enabled]) => ({ ...acc, [id]: { enabled } }), {});
+    if (Object.keys(ruleOverrides).length) {
+      builder = builder.options({ rules: ruleOverrides });
+    }
+    const results = await builder.analyze();
 
     // Warnings: impacts NOT in failOnImpact — logged, never fail.
     const warnings = results.violations.filter((v) => !failOnImpact.includes(v.impact));
