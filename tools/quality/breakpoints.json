@@ -1,0 +1,10 @@
+{
+  "$comment": "SINGLE SOURCE OF TRUTH for this project's responsive breakpoints (lift-and-shift: adopted from the source site https://www.ustafoundation.com). See AGENTS.md → The Breakpoint Rule and skills/responsive-breakpoints. Decided ONCE at the start of the migration — do NOT re-litigate per task.",
+  "breakpoints": [768, 992, 1200],
+  "source": "https://www.ustafoundation.com/en/home.html",
+  "sampledPages": [
+    "https://www.ustafoundation.com/en/home.html (clientlibs: foundation main + usta-foundation base/proxy + components common + inline styles)"
+  ],
+  "decidedOn": "2026-08-22",
+  "notes": "The source site is an AEM classic site built on the Bootstrap grid; 768/992/1200 is its dominant responsive grid (min-width hits 296/101/12, with matching max-width -1 boundaries 767/991/1199 at 675/297/13). Detected via breakpoint-discover.mjs + clientlib CSS tally. Excluded as noise: 991 (the ±1 of 992), 336/720/1920 (one-offs), and 1370 (a wide-desktop max-width cap tier, mostly used above 1200). Fallback if empty: 600/900/1200."
+}

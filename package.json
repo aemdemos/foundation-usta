@@ -7,7 +7,15 @@
     "lint:js": "eslint .",
     "lint:css": "stylelint \"blocks/**/*.css\" \"styles/*.css\"",
     "lint": "npm run lint:js && npm run lint:css",
-    "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix"
+    "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix",
+    "check:breakpoints": "node tools/quality/breakpoint-check.mjs",
+    "discover:breakpoints": "node tools/quality/breakpoint-discover.mjs",
+    "check:svg": "node tools/quality/svg-size-check.mjs",
+    "convert:svg": "node skills/svg-assets/convert-svg-to-png.mjs",
+    "test:a11y": "node tests/a11y/run.mjs",
+    "test:a11y:all": "node tests/a11y/run.mjs",
+    "test:a11y:nav": "node tests/a11y/header-footer-states.mjs",
+    "postinstall": "playwright install chromium || true"
   },
   "repository": {
     "type": "git",
@@ -20,11 +28,13 @@
   },
   "homepage": "https://github.com/adobe/aem-boilerplate#readme",
   "devDependencies": {
-    "@babel/eslint-parser": "7.29.7",
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.55.0",
+    "@babel/eslint-parser": "7.28.6",
     "eslint": "8.57.1",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-import": "2.32.0",
-    "stylelint": "17.14.1",
+    "stylelint": "17.4.0",
     "stylelint-config-standard": "40.0.0"
   }
 }
