@@ -1,0 +1,151 @@
+/* columns-feature — two-column feature block (video + image-collage variants) */
+/* stylelint-disable no-descending-specificity */
+
+/* --- base / mobile-first: stack everything --- */
+.columns-feature .columns-feature-row {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.columns-feature .columns-feature-row > div {
+  min-width: 0;
+}
+
+/* headings & text reset within the block (source uses tight margins) */
+.columns-feature h2,
+.columns-feature h3 {
+  margin: 0 0 0.25em;
+  color: #000;
+}
+
+.columns-feature p {
+  margin: 0 0 1em;
+  color: #000;
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.columns-feature img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* --- CTA links styled as buttons (authored as plain <p><a>) --- */
+.columns-feature .columns-feature-row p:has(> a:only-child) {
+  display: inline-block;
+  margin: 8px 8px 0 0;
+  vertical-align: top;
+}
+
+.columns-feature .columns-feature-row a:only-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 14px 18px;
+  background-color: var(--brand-blue);
+  color: #fff;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.columns-feature .columns-feature-row a:only-child:hover,
+.columns-feature .columns-feature-row a:only-child:focus-visible {
+  background-color: var(--link-hover-color);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* --- media-card variant (instance A right column) --- */
+.columns-feature .columns-feature-media {
+  background-color: rgb(0 0 0 / 10%);
+  border-radius: 24px;
+  padding: 0 15px 32px;
+}
+
+.columns-feature .columns-feature-media h3 {
+  margin: 0;
+  padding: 12px 0;
+  color: var(--brand-orange);
+  font-size: 28px;
+  line-height: 30.8px;
+  text-transform: none;
+}
+
+.columns-feature .columns-feature-media p {
+  margin: 16px 0 0;
+  color: #000;
+  font-size: 18px;
+  line-height: 24px;
+}
+
+/* responsive 16:9 video embed */
+.columns-feature .columns-feature-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.columns-feature .columns-feature-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* --- image-collage variant (instance B) --- */
+.columns-feature .columns-feature-title {
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.columns-feature .columns-feature-title h1,
+.columns-feature .columns-feature-title h2,
+.columns-feature .columns-feature-title h3 {
+  margin: 0;
+  text-align: center;
+}
+
+.columns-feature .columns-feature-collage {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.columns-feature .columns-feature-collage picture {
+  display: block;
+}
+
+.columns-feature .columns-feature-collage img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* --- desktop: side-by-side 50/50 --- */
+@media (width >= 900px) {
+  .columns-feature .columns-feature-row {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 48px;
+  }
+
+  .columns-feature .columns-feature-row > div {
+    flex: 1;
+  }
+
+  /* image-collage columns sit closer together (source ~7.5px) */
+  .columns-feature.columns-feature-2-cols:has(.columns-feature-collage) .columns-feature-row {
+    gap: 24px;
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "variantName": "columns-statement",
+  "baseBlock": "columns",
+  "version": "1.0.0",
+  "created": "2026-08-21T00:00:00.000Z",
+  "sourceContext": {
+    "originUrl": "https://www.ustafoundation.com/en/home.html",
+    "originPage": "USTA Foundation home page",
+    "blockPosition": "middle"
+  },
+  "visualCharacteristics": {
+    "colorScheme": "light",
+    "density": "spacious",
+    "purpose": "statement",
+    "imagePattern": "noimg"
+  },
+  "contentPattern": {
+    "structure": "centered heading + supporting paragraph",
+    "buttonCount": 0,
+    "imageCount": 0
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "centered mid-page statement / mission callouts",
+      "single-column prominent heading + intro paragraph"
+    ],
+    "notSuitableFor": [
+      "multi-column side-by-side layouts",
+      "card grids"
+    ]
+  },
+  "usage": {
+    "pagesUsing": ["/en/home"],
+    "reuseCount": 1,
+    "lastUsed": "2026-08-21T00:00:00.000Z"
+  }
+}

@@ -1,0 +1,104 @@
+/* cards-support — 4-up circular-image cards on the light-blue (.highlight) band.
+   Values extracted from source computed styles (1440px viewport / 1200px content). */
+
+/* Row of cards: flex wrap, evenly distributed (source: justify-content space-around). */
+.cards-support > ul {
+  list-style: none;
+  margin: 0;
+  padding: 32px 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px 30px;
+}
+
+.cards-support > ul > li {
+  background-color: transparent;
+  padding: 8px 0;
+  text-align: left;
+  width: 270px;
+  max-width: 100%;
+}
+
+/* Circular photo — the round crop + white ring is baked into the source PNG,
+   so it is a plain 270x270 square image (border-radius 0, no cropping needed). */
+.cards-support .cards-support-card-image {
+  line-height: 0;
+}
+
+.cards-support .cards-support-card-image img {
+  width: 270px;
+  height: 270px;
+  max-width: 100%;
+  border-radius: 0;
+  object-fit: cover;
+  display: block;
+}
+
+/* Text block */
+.cards-support .cards-support-card-body {
+  margin: 0;
+}
+
+.cards-support .cards-support-card-body h4 {
+  margin: 16px 0 0;
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 27px;
+  color: #000;
+  text-transform: none;
+}
+
+.cards-support .cards-support-card-body p {
+  margin: 0;
+  font-family: var(--body-font-family);
+  font-size: 18px;
+  line-height: 24px;
+  color: #000;
+}
+
+/* LEARN MORE — a plain bold-authored link; source renders it as a regular-weight
+   underlined blue link (not a filled button). Reset EDS button decoration. */
+.cards-support .cards-support-card-body p.button-container,
+.cards-support .cards-support-card-body p:last-child {
+  margin-top: 24px;
+}
+
+.cards-support .cards-support-card-body a,
+.cards-support .cards-support-card-body a.button,
+.cards-support .cards-support-card-body a.button.primary {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--link-color);
+  font-family: var(--body-font-family);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: normal;
+  text-transform: none;
+  text-decoration: underline;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.cards-support .cards-support-card-body a.button:hover,
+.cards-support .cards-support-card-body a.button.primary:hover {
+  background: transparent;
+  border: 0;
+  color: var(--link-hover-color);
+  text-decoration: underline;
+}
+
+@media (width >= 900px) {
+  /* Single row of 4 on desktop; content is 1200px wide → 4×270 + gutters. */
+  .cards-support > ul {
+    flex-wrap: nowrap;
+    justify-content: space-around;
+    gap: 0;
+  }
+}

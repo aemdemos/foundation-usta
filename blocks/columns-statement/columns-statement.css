@@ -1,0 +1,38 @@
+/* Block: columns-statement -- centered narrow statement, values from source computed styles */
+
+.columns-statement > div {
+  max-width: 810px;
+  margin: 0 auto;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.columns-statement h2 {
+  margin: 0;
+  color: #000;
+  font-size: 44px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.columns-statement p {
+  margin: 0;
+  color: #000;
+  font-size: var(--body-font-size-s); /* 16px mobile */
+  line-height: 24px;
+  text-align: center;
+}
+
+@media (width >= 900px) {
+  .columns-statement > div {
+    padding: 32px 0;
+  }
+
+  .columns-statement h2 {
+    font-size: 76px;
+  }
+
+  .columns-statement p {
+    font-size: var(--body-font-size-m); /* 18px desktop */
+  }
+}

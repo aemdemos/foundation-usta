@@ -1,0 +1,35 @@
+/*
+ * brand.css — USTA Foundation design tokens
+ * Extracted from https://www.ustafoundation.com/en/home.html
+ */
+
+:root {
+  /* fonts */
+  --heading-font-family: "Graphik XXCond Bold", "Arial Narrow", tahoma, sans-serif;
+  --heading-semibold-font-family: "Graphik Semibold", tahoma, sans-serif;
+  --body-font-family: "Graphik Regular", tahoma, sans-serif;
+
+  /* colors */
+  --background-color: #fff;
+  --text-color: #333;
+  --link-color: #0357b8;
+  --link-hover-color: #23527c;
+
+  /* brand palette */
+  --brand-blue: #0373f3;
+  --brand-orange: #e87722;
+  --stats-band-bg: #000;
+  --cards-band-bg: #e2f7ff;
+
+  /* spacing */
+  --nav-height: 120px;
+  --content-max-width: 1200px;
+
+  /* heading sizes — desktop (exact from source) */
+  --heading-size-xxl: 100px;
+  --heading-size-xl: 76px;
+  --heading-size-l: 56px;
+  --heading-size-m: 18px;
+  --heading-size-s: 18px;
+  --heading-size-xs: 16px;
+}

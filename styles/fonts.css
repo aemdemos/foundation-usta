@@ -1,4 +1,30 @@
 /* stylelint-disable max-line-length */
+
+/* USTA Foundation brand fonts (self-hosted from source site) */
+@font-face {
+  font-family: 'Graphik Regular';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/graphik-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Graphik Semibold';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/graphik-semibold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Graphik XXCond Bold';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/graphik-xxcond-bold.woff2') format('woff2');
+}
+
 @font-face {
   font-family: roboto-condensed;
   font-style: normal;

@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "projectType": "da"
+  },
+  "templates": [
+    {
+      "name": "home-page",
+      "urls": [
+        "https://www.ustafoundation.com/en/home.html"
+      ],
+      "coverageGaps": [],
+      "description": "USTA Foundation home page: hero with headline and CTA, impact stats band, mission statement, two-column content-with-video section, impact section with image collage, and a 4-card support/donation grid.",
+      "blocks": [
+        {
+          "name": "hero-banner",
+          "instances": [
+            "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-none.padding-bottom-none.full-width.aem-GridColumn.aem-GridColumn--default--12:nth-of-type(1)"
+          ]
+        },
+        {
+          "name": "columns-stats",
+          "instances": [
+            "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-none.padding-bottom-none.justify-content_space-around.background-round.aem-GridColumn.aem-GridColumn--default--12"
+          ]
+        },
+        {
+          "name": "columns-statement",
+          "instances": [
+            "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.full-width.justify-content_space-around.aem-GridColumn--default--none.aem-GridColumn.aem-GridColumn--default--10.aem-GridColumn--offset--default--1"
+          ]
+        },
+        {
+          "name": "columns-feature",
+          "instances": [
+            "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-small.padding-bottom-small.aem-GridColumn--default--none.aem-GridColumn.aem-GridColumn--default--11.aem-GridColumn--offset--default--0",
+            "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-none.padding-top-small.padding-bottom-none.padding-bottom-small.full-width.aem-GridColumn.aem-GridColumn--default--12:nth-of-type(8)"
+          ]
+        },
+        {
+          "name": "cards-support",
+          "instances": [
+            "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-none.padding-top-small.padding-bottom-none.padding-bottom-small.full-width.aem-GridColumn.aem-GridColumn--default--12:nth-of-type(11)"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "rc4",
+          "name": "Hero",
+          "selector": "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-none.padding-bottom-none.full-width.aem-GridColumn.aem-GridColumn--default--12:nth-of-type(1)",
+          "style": null,
+          "blocks": [
+            "hero-banner"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "rc6",
+          "name": "Impact Stats",
+          "selector": "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-none.padding-bottom-none.justify-content_space-around.background-round.aem-GridColumn.aem-GridColumn--default--12",
+          "style": null,
+          "blocks": [
+            "columns-stats"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "rc7",
+          "name": "Mission Statement",
+          "selector": "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.full-width.justify-content_space-around.aem-GridColumn--default--none.aem-GridColumn.aem-GridColumn--default--10.aem-GridColumn--offset--default--1",
+          "style": null,
+          "blocks": [
+            "columns-statement"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "rc8",
+          "name": "Beyond Wins Feature",
+          "selector": "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-small.padding-bottom-small.aem-GridColumn--default--none.aem-GridColumn.aem-GridColumn--default--11.aem-GridColumn--offset--default--0",
+          "style": null,
+          "blocks": [
+            "columns-feature"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "rc11",
+          "name": "Impact Nationwide Feature",
+          "selector": "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-none.padding-top-small.padding-bottom-none.padding-bottom-small.full-width.aem-GridColumn.aem-GridColumn--default--12:nth-of-type(8)",
+          "style": null,
+          "blocks": [
+            "columns-feature"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "rc14",
+          "name": "Support Cards",
+          "selector": "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-none.padding-top-small.padding-bottom-none.padding-bottom-small.full-width.aem-GridColumn.aem-GridColumn--default--12:nth-of-type(11)",
+          "style": "highlight",
+          "blocks": [
+            "cards-support"
+          ],
+          "defaultContent": []
+        }
+      ]
+    }
+  ]
+}

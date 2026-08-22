@@ -1,20 +1,207 @@
+/* ============================================================
+   USTA Foundation footer — matches source www.ustafoundation.com
+   Mobile-first: base = stacked; @media (min-width) = desktop columns.
+   ============================================================ */
+/* stylelint-disable no-descending-specificity */
+
+/* black divider bar above the footer band */
 footer {
-  background-color: var(--light-color);
-  font-size: var(--body-font-size-xs);
+  border-top: 12px solid #000;
+  background-color: #dcdfcf;
+  color: #000;
+  font-family: var(--body-font-family);
 }
 
-footer .footer > div {
-  margin: auto;
-  max-width: 1200px;
-  padding: 40px 24px 24px;
+footer .footer {
+  box-sizing: border-box;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 24px;
 }
 
 footer .footer p {
   margin: 0;
 }
 
+footer .footer a:any-link {
+  color: var(--link-color);
+  text-decoration: underline;
+}
+
+/* ---------- brand (logo + KEEP UP WITH US) — mobile base: centered ---------- */
+footer .footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+footer .footer-brand .footer-logo-link {
+  display: inline-flex;
+  border: 0;
+  text-decoration: none;
+}
+
+footer .footer-brand img {
+  width: 210px;
+  height: auto;
+}
+
+footer .footer-brand .footer-keepup:any-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+  padding: 14px 18px;
+  background-color: var(--brand-blue);
+  color: #fff;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 3px;
+}
+
+footer .footer-brand .footer-keepup:hover,
+footer .footer-brand .footer-keepup:focus-visible {
+  background-color: var(--link-hover-color);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* ---------- nav links — mobile base: 2-column grid, centered ---------- */
+footer .footer-nav ul {
+  list-style: none;
+  margin: 0 0 32px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 16px;
+  max-width: 320px;
+  margin-inline: auto;
+}
+
+footer .footer-nav a {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* ---------- social + follow text — mobile base: centered ---------- */
+footer .footer-social {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+footer .footer-social p:first-child {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+footer .footer-social img {
+  width: 27px;
+  height: 27px;
+}
+
+footer .footer-social a {
+  display: inline-flex;
+  text-decoration: none;
+}
+
+footer .footer-social a:hover {
+  opacity: 0.8;
+}
+
+/* ---------- legal (copyright + links) ---------- */
+footer .footer-legal {
+  margin-top: 32px;
+  text-align: center;
+}
+
+footer .footer-legal p:first-child {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+footer .footer-legal p:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 10px;
+}
+
+footer .footer-legal p:last-child a {
+  font-size: 16px;
+}
+
+/* pipe separators between legal links */
+footer .footer-legal p:last-child a:not(:last-child)::after {
+  content: '|';
+  margin-left: 10px;
+  color: #000;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* ============================================================
+   Desktop (>= 900px): 3-column top row, centered footer band
+   ============================================================ */
 @media (width >= 900px) {
-  footer .footer > div {
-    padding: 40px 32px 24px;
+  footer .footer {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'brand nav social'
+      'legal legal legal';
+    column-gap: 40px;
+    padding: 48px 40px;
+  }
+
+  footer .footer-brand {
+    grid-area: brand;
+    align-items: flex-start;
+    margin-bottom: 0;
+    text-align: left;
+  }
+
+  footer .footer-brand .footer-keepup:any-link {
+    width: auto;
+    max-width: none;
+  }
+
+  footer .footer-nav {
+    grid-area: nav;
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+  }
+
+  footer .footer-nav ul {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    max-width: none;
+    margin: 0;
+  }
+
+  footer .footer-social {
+    grid-area: social;
+    margin-bottom: 0;
+    text-align: right;
+  }
+
+  footer .footer-social p:first-child {
+    justify-content: flex-end;
+  }
+
+  footer .footer-legal {
+    grid-area: legal;
+    margin-top: 48px;
   }
 }

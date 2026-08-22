@@ -1,0 +1,96 @@
+/* hero-banner — full-bleed background photo + dark overlay + overlaid white text.
+   Values extracted from source computed styles (see migration-work/hero-banner-extracted.css). */
+
+/* Full-bleed: override EDS section wrapper max-width/padding */
+.hero-banner-container .hero-banner-wrapper {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hero-banner.block {
+  position: relative;
+  box-sizing: border-box;
+
+  /* dark overlay rgba(0,0,0,0.4) composited over the banner photo (background-size: cover) */
+  background-image:
+    linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)),
+    url('./ustaf-banner-2.jpg');
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  background-size: cover;
+  color: var(--background-color);
+  padding: 72px 24px;
+}
+
+/* inner row: constrain to content width, left-aligned text column */
+.hero-banner.block > div {
+  max-width: var(--content-max-width, 1200px);
+  margin: 0 auto;
+}
+
+.hero-banner.block > div > div {
+  max-width: 630px;
+}
+
+.hero-banner h1 {
+  margin: 0;
+  color: var(--background-color);
+  font-family: var(--heading-font-family);
+  font-weight: 500;
+  font-size: var(--heading-font-size-xxl);
+  line-height: 1.1;
+}
+
+.hero-banner p {
+  margin: 0;
+  color: var(--background-color);
+  font-family: var(--body-font-family);
+  font-size: 18px;
+  line-height: 24px;
+}
+
+/* h1 -> p gap is 0 in source; p -> CTA gap is 16px */
+.hero-banner p + p {
+  margin-top: 16px;
+}
+
+/* CTA button (decorated in hero-banner.js) */
+.hero-banner a.button:any-link {
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 14px;
+  background-color: var(--brand-blue);
+  color: var(--background-color);
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: 1px;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.hero-banner a.button:hover,
+.hero-banner a.button:focus-visible {
+  border-color: transparent;
+  background-color: var(--link-hover-color);
+  color: var(--background-color);
+}
+
+/* no background photo variant falls back to dark text on white */
+.hero-banner.no-image {
+  background-image: none;
+}
+
+.hero-banner.no-image h1,
+.hero-banner.no-image p {
+  color: var(--text-color);
+}
+
+@media (width >= 900px) {
+  .hero-banner.block {
+    padding: 192px 32px;
+  }
+}

@@ -1,20 +1,49 @@
-import { getMetadata } from '../../scripts/aem.js';
-import { loadFragment } from '../fragment/fragment.js';
+/**
+ * Fetch the footer fragment. Metadata-independent dual-fetch:
+ * /content first (localhost / aem up), then root (DA/EDS production).
+ */
+async function fetchFooterHtml() {
+  let resp = await fetch('/content/footer.plain.html');
+  if (!resp.ok) resp = await fetch('/footer.plain.html');
+  if (!resp.ok) return null;
+  return resp.text();
+}
 
 /**
- * loads and decorates the footer
+ * Loads and decorates the footer from content/footer.plain.html.
+ * Content-first: all links/labels/images come from the fragment.
  * @param {Element} block The footer block element
  */
 export default async function decorate(block) {
-  // load footer as fragment
-  const footerMeta = getMetadata('footer');
-  const footerPath = footerMeta ? new URL(footerMeta, window.location).pathname : '/footer';
-  const fragment = await loadFragment(footerPath);
-
-  // decorate footer DOM
+  const html = await fetchFooterHtml();
   block.textContent = '';
+  if (!html) return;
+
   const footer = document.createElement('div');
-  while (fragment.firstElementChild) footer.append(fragment.firstElementChild);
+  footer.innerHTML = html;
+
+  // The fragment lives at /content/footer.plain.html, so relative image paths
+  // (images/…) must resolve against /content/, not the current page URL.
+  footer.querySelectorAll('img[src]').forEach((img) => {
+    const src = img.getAttribute('src');
+    if (src && !/^(https?:)?\/\//.test(src) && !src.startsWith('/')) {
+      img.setAttribute('src', `/content/${src}`);
+    }
+  });
+
+  // Assign section roles by order: brand, nav, social, legal.
+  const sections = [...footer.children];
+  ['brand', 'nav', 'social', 'legal'].forEach((name, i) => {
+    if (sections[i]) sections[i].classList.add(`footer-${name}`);
+  });
+
+  // Brand: mark logo link and CTA button.
+  const brand = footer.querySelector('.footer-brand');
+  if (brand) {
+    const links = brand.querySelectorAll('a');
+    if (links[0]) links[0].classList.add('footer-logo-link');
+    if (links[1]) links[1].classList.add('footer-keepup');
+  }
 
   block.append(footer);
 }

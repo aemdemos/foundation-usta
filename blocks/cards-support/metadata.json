@@ -1,0 +1,39 @@
+{
+  "variantName": "cards-support",
+  "baseBlock": "cards",
+  "version": "1.0.0",
+  "created": "2026-08-21T00:00:00.000Z",
+  "sourceContext": {
+    "originUrl": "https://www.ustafoundation.com/en/home.html",
+    "originPage": "USTA Foundation home page",
+    "blockPosition": "bottom"
+  },
+  "visualCharacteristics": {
+    "colorScheme": "light",
+    "density": "spacious",
+    "purpose": "support",
+    "imagePattern": "icon"
+  },
+  "contentPattern": {
+    "structure": "4 cards: circular image + title + description + CTA link",
+    "buttonCount": 4,
+    "imageCount": 4
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "support / donation / call-to-action card grids",
+      "4-across cards with circular images",
+      "centered card items with title + description + link"
+    ],
+    "notSuitableFor": [
+      "bordered rectangular content cards",
+      "text-only card lists",
+      "two-column feature layouts"
+    ]
+  },
+  "usage": {
+    "pagesUsing": ["/en/home"],
+    "reuseCount": 1,
+    "lastUsed": "2026-08-21T00:00:00.000Z"
+  }
+}

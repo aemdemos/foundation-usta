@@ -1,0 +1,92 @@
+/**
+ * Build a YouTube embed URL from any youtube/youtu.be href.
+ * @param {string} href source link
+ * @returns {string} embeddable /embed/<id> url (preserving query where possible)
+ */
+function toYouTubeEmbed(href) {
+  try {
+    const url = new URL(href);
+    // already an /embed/ url
+    if (url.pathname.startsWith('/embed/')) return url.href;
+    let id = '';
+    if (url.hostname.includes('youtu.be')) {
+      id = url.pathname.slice(1);
+    } else {
+      id = url.searchParams.get('v') || '';
+    }
+    if (!id) return href;
+    return `https://www.youtube.com/embed/${id}`;
+  } catch {
+    return href;
+  }
+}
+
+/**
+ * Replace a bare YouTube link with a responsive 16:9 iframe embed.
+ * @param {HTMLAnchorElement} link the authored YouTube link
+ */
+function embedVideo(link) {
+  const src = toYouTubeEmbed(link.href);
+  const holder = document.createElement('div');
+  holder.className = 'columns-feature-video';
+  const iframe = document.createElement('iframe');
+  iframe.src = src;
+  iframe.title = link.textContent.trim() || 'Video';
+  iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+  iframe.setAttribute('allowfullscreen', '');
+  iframe.setAttribute('loading', 'lazy');
+  holder.append(iframe);
+  const container = link.closest('p') || link;
+  container.replaceWith(holder);
+}
+
+export default function decorate(block) {
+  const row = block.firstElementChild;
+  if (!row) return;
+  const cells = [...row.children];
+  block.classList.add(`columns-feature-${cells.length}-cols`);
+  row.classList.add('columns-feature-row');
+
+  cells.forEach((cell) => {
+    const pictures = cell.querySelectorAll('picture');
+    const ytLink = [...cell.querySelectorAll('a')].find((a) => /youtube\.com|youtu\.be/.test(a.href));
+
+    // Media-card variant: heading + video + caption inside a grey rounded card
+    if (ytLink) {
+      cell.classList.add('columns-feature-media');
+      embedVideo(ytLink);
+    }
+
+    // Image-collage variant: cell holds two or more stacked images
+    if (pictures.length > 1) {
+      cell.classList.add('columns-feature-collage');
+      // unwrap pictures from their auto-generated <p> wrappers
+      pictures.forEach((pic) => {
+        const p = pic.closest('p');
+        if (p && p.children.length === 1) p.replaceWith(pic);
+      });
+    }
+
+    // Single dedicated image column
+    if (pictures.length === 1) {
+      const pic = pictures[0];
+      const picWrapper = pic.closest('div');
+      if (picWrapper && picWrapper.children.length === 1) {
+        picWrapper.classList.add('columns-feature-img-col');
+      }
+    }
+  });
+
+  // For the collage variant the source shows the heading full-width and
+  // centered above both columns — lift it out of the cell.
+  const collage = block.querySelector('.columns-feature-collage');
+  if (collage) {
+    const heading = collage.querySelector('h1, h2, h3, h4, h5, h6');
+    if (heading && heading === collage.firstElementChild) {
+      const titleWrap = document.createElement('div');
+      titleWrap.className = 'columns-feature-title';
+      titleWrap.append(heading);
+      block.prepend(titleWrap);
+    }
+  }
+}

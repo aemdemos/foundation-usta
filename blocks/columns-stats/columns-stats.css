@@ -1,0 +1,56 @@
+/* Block: columns-stats -- dark rounded stats band */
+
+/* Values extracted from source computed styles (see migration-work/columns-stats-extracted.css) */
+
+.columns-stats {
+  background-color: #000;
+  border-radius: 24px;
+  color: #fff;
+  padding: 16px 15px;
+}
+
+/* row: 3 stat items side by side, evenly distributed */
+.columns-stats > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 24px;
+}
+
+/* each stat item (cell) */
+.columns-stats > div > div {
+  flex: 1;
+  padding: 8px 0;
+  text-align: center;
+}
+
+/* both lines: white, centered, normal weight (source uses Graphik Regular 400) */
+.columns-stats > div > div p {
+  margin: 0;
+  color: #fff;
+  text-align: center;
+}
+
+.columns-stats > div > div p strong {
+  font-weight: 400;
+}
+
+/* big number: first paragraph of each item */
+.columns-stats > div > div p:first-child {
+  font-size: 38px;
+  line-height: 57px;
+}
+
+/* uppercase label: second paragraph of each item */
+.columns-stats > div > div p:last-child {
+  font-size: 18px;
+  line-height: 24px;
+  text-transform: uppercase;
+}
+
+@media (width >= 900px) {
+  .columns-stats > div {
+    flex-direction: row;
+    align-items: center;
+  }
+}

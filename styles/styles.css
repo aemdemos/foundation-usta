@@ -1,3 +1,5 @@
+@import url('brand.css');
+
 /*
  * Copyright 2020 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
@@ -11,33 +13,33 @@
  */
 
 :root {
-  /* colors */
-  --background-color: white;
-  --light-color: #f8f8f8;
-  --dark-color: #505050;
-  --text-color: #131313;
-  --link-color: #3b63fb;
-  --link-hover-color: #1d3ecf;
+  /* colors (from brand.css; kept here for EDS defaults) */
+  --background-color: #fff;
+  --light-color: #f5f5f5;
+  --dark-color: #000;
+  --text-color: #333;
+  --link-color: #0357b8;
+  --link-hover-color: #23527c;
 
   /* fonts */
-  --body-font-family: roboto, roboto-fallback, sans-serif;
-  --heading-font-family: roboto-condensed, roboto-condensed-fallback, sans-serif;
+  --body-font-family: "Graphik Regular", roboto-fallback, tahoma, sans-serif;
+  --heading-font-family: "Graphik XXCond Bold", "Arial Narrow", tahoma, sans-serif;
 
   /* body sizes */
-  --body-font-size-m: 22px;
-  --body-font-size-s: 19px;
-  --body-font-size-xs: 17px;
+  --body-font-size-m: 18px;
+  --body-font-size-s: 16px;
+  --body-font-size-xs: 14px;
 
-  /* heading sizes */
-  --heading-font-size-xxl: 55px;
-  --heading-font-size-xl: 44px;
-  --heading-font-size-l: 34px;
-  --heading-font-size-m: 27px;
-  --heading-font-size-s: 24px;
-  --heading-font-size-xs: 22px;
+  /* heading sizes — mobile-first */
+  --heading-font-size-xxl: 44px;
+  --heading-font-size-xl: 34px;
+  --heading-font-size-l: 30px;
+  --heading-font-size-m: 18px;
+  --heading-font-size-s: 18px;
+  --heading-font-size-xs: 16px;
 
   /* nav height */
-  --nav-height: 64px;
+  --nav-height: 120px;
 }
 
 /* fallback fonts */
@@ -55,18 +57,13 @@
 
 @media (width >= 900px) {
   :root {
-    /* body sizes */
-    --body-font-size-m: 18px;
-    --body-font-size-s: 16px;
-    --body-font-size-xs: 14px;
-
-    /* heading sizes */
-    --heading-font-size-xxl: 45px;
-    --heading-font-size-xl: 36px;
-    --heading-font-size-l: 28px;
-    --heading-font-size-m: 22px;
-    --heading-font-size-s: 20px;
-    --heading-font-size-xs: 18px;
+    /* heading sizes — desktop (exact from source) */
+    --heading-font-size-xxl: 100px;
+    --heading-font-size-xl: 76px;
+    --heading-font-size-l: 56px;
+    --heading-font-size-m: 18px;
+    --heading-font-size-s: 18px;
+    --heading-font-size-xs: 16px;
   }
 }
 
@@ -107,14 +104,24 @@ h6 {
   margin-top: 0.8em;
   margin-bottom: 0.25em;
   font-family: var(--heading-font-family);
-  font-weight: 600;
-  line-height: 1.25;
+  font-weight: 700;
+  line-height: 1.1;
   scroll-margin: 40px;
 }
 
 h1 { font-size: var(--heading-font-size-xxl); }
 h2 { font-size: var(--heading-font-size-xl); }
 h3 { font-size: var(--heading-font-size-l); }
+
+/* h4-h6 use the semibold body-style face at smaller sizes (per source) */
+h4,
+h5,
+h6 {
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 h4 { font-size: var(--heading-font-size-m); }
 h5 { font-size: var(--heading-font-size-s); }
 h6 { font-size: var(--heading-font-size-xs); }
@@ -153,10 +160,10 @@ button {
   font: inherit;
 }
 
-/* links */
+/* links (source uses underlined links) */
 a:any-link {
   color: var(--link-color);
-  text-decoration: none;
+  text-decoration: underline;
   overflow-wrap: break-word;
 }
 
@@ -178,17 +185,32 @@ button.button {
   justify-content: center;
   max-width: 100%;
   margin: 0;
-  border: 2px solid transparent;
-  border-radius: 2.4em;
-  padding: 0.5em 1.2em;
+  border: 2px solid var(--brand-blue);
+  border-radius: 0;
+  padding: 0.55em 1.4em;
+  background-color: var(--brand-blue);
+  color: #fff;
   font: inherit;
-  font-weight: 500;
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 600;
   line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+a.button:hover,
+a.button:focus-visible,
+button.button:hover,
+button.button:focus-visible {
+  border-color: var(--link-hover-color);
+  background-color: var(--link-hover-color);
+  color: #fff;
+  text-decoration: none;
 }
 
 a.button[aria-disabled="true"],
@@ -317,9 +339,23 @@ main > .section:first-of-type {
 }
 
 /* section metadata */
-main .section.light,
-main .section.highlight {
+main .section.light {
   background-color: var(--light-color);
+  margin: 0;
+  padding: 40px 0;
+}
+
+/* light-blue support/cards band (from source #e2f7ff) */
+main .section.highlight {
+  background-color: var(--cards-band-bg);
+  margin: 0;
+  padding: 56px 0;
+}
+
+/* dark band variant (e.g. stats) */
+main .section.dark {
+  background-color: var(--stats-band-bg);
+  color: #fff;
   margin: 0;
   padding: 40px 0;
 }
