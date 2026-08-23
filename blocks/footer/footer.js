@@ -45,6 +45,23 @@ export default async function decorate(block) {
     if (links[1]) links[1].classList.add('footer-keepup');
   }
 
+  // Social: the fragment delivers the icon links as bare <a> siblings (each
+  // wrapping an <img>), followed by the "Like us…" text paragraphs. Group the
+  // consecutive icon links into a single row wrapper so they lay out as a
+  // horizontal row and the text below is unaffected.
+  const social = footer.querySelector('.footer-social');
+  if (social) {
+    const iconLinks = [...social.children].filter(
+      (el) => el.tagName === 'A' && el.querySelector('img'),
+    );
+    if (iconLinks.length) {
+      const row = document.createElement('div');
+      row.className = 'footer-social-icons';
+      iconLinks[0].before(row);
+      iconLinks.forEach((a) => row.append(a));
+    }
+  }
+
   // Append the section divs directly to the block so they are the direct
   // children of the `.footer` grid container (not nested inside a wrapper).
   while (footer.firstElementChild) block.append(footer.firstElementChild);

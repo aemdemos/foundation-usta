@@ -18,6 +18,77 @@
 
 const FRU_ACCOUNT = 'AURLRFGR';
 
+/**
+ * Trusted Types + the Fundraise Up widget.
+ *
+ * The site's content pages are served with a strict Content-Security-Policy
+ * that enforces `require-trusted-types-for 'script'`. (The 404 page uses a
+ * laxer CSP without that directive — which is why the widget appears there but
+ * not on content pages.) Fundraise Up renders its floating "Donate" tab by
+ * creating same-origin `about:blank` iframes — nested several levels deep — and
+ * calling `document.write` inside them. Trusted Types policies and prototype
+ * patches are PER-REALM: each iframe has its own `window`, `Document.prototype`
+ * and `Node.prototype`, and a policy installed in the top document does not
+ * cover them. So the widget's writes are blocked and the tab never renders.
+ *
+ * Fix: install a pass-through `default` policy in the widget's frame realm at
+ * the exact moment the widget reaches into that frame to write — see
+ * hardenFrameAccessors below. Cross-origin frames (e.g. a video embed) are
+ * inaccessible and skipped.
+ */
+
+/** Install the pass-through `default` policy in a realm (idempotent). */
+function ensureDefaultPolicy(win) {
+  try {
+    const tt = win && win.trustedTypes;
+    if (!tt || !tt.createPolicy || tt.defaultPolicy) return;
+    tt.createPolicy('default', {
+      createHTML: (s) => s,
+      createScript: (s) => s,
+      createScriptURL: (s) => s,
+    });
+  } catch (e) {
+    // Cross-origin realm, or policy already exists — nothing to do.
+  }
+}
+
+/**
+ * Guarantee the policy exists at the exact moment the widget reaches into a
+ * frame to write.
+ *
+ * The widget writes with `iframe.contentWindow.document.write(...)` (or via
+ * `contentDocument`). Timing-based approaches (install on insert, on the
+ * frame's `load`, patch the shared write sink) all proved unreliable: the
+ * child `about:blank` realm is recreated after our hook runs and no `load`
+ * fires before the synchronous write, so the realm has no `default` policy
+ * when the write happens. But a child realm that DOES have the policy writes
+ * fine. The one instant we KNOW precedes every write is the frame-content
+ * access itself — so we wrap the `contentWindow` / `contentDocument` getters on
+ * `HTMLIFrameElement.prototype` to (re)install the policy in that frame's realm
+ * before returning it. Race-free: the policy is created in the same synchronous
+ * step as the access that leads to the write.
+ */
+const wrappedGetters = new WeakSet();
+
+function hardenFrameAccessors() {
+  const proto = HTMLIFrameElement.prototype;
+  ['contentWindow', 'contentDocument'].forEach((prop) => {
+    const desc = Object.getOwnPropertyDescriptor(proto, prop);
+    if (!desc || !desc.get || wrappedGetters.has(desc.get)) return;
+    const originalGet = desc.get;
+    const wrappedGet = function hardened() {
+      const value = originalGet.call(this);
+      // `contentWindow` returns the realm window; `contentDocument` returns its
+      // document, whose realm window is `.defaultView`.
+      const win = value && (value.defaultView || value);
+      ensureDefaultPolicy(win);
+      return value;
+    };
+    wrappedGetters.add(wrappedGet);
+    Object.defineProperty(proto, prop, { ...desc, get: wrappedGet });
+  });
+}
+
 /** Loads the official Fundraise Up loader script (once). */
 function loadFundraiseUp() {
   if (window.FundraiseUp) return;
@@ -55,4 +126,5 @@ function wireDonateTriggers() {
 }
 
 wireDonateTriggers();
+if (window.trustedTypes) hardenFrameAccessors();
 loadFundraiseUp();

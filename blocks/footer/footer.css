@@ -18,9 +18,13 @@ footer {
 
 footer .footer {
   box-sizing: border-box;
-  max-width: 1170px;
+
+  /* Match the header/hero container so the footer's left edge lines up with the
+     header breadcrumb ("HOME") and the logo tracks the nav logo: same 1440px
+     max-width, centered, with the shared 40px side gutter. */
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 40px 36px;
+  padding: 40px;
 }
 
 footer .footer p {
@@ -103,16 +107,18 @@ footer .footer-social {
   text-align: center;
 }
 
-footer .footer-social p:first-child {
+footer .footer-social-icons {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
 }
 
+/* Match the source: icons are 27px tall and keep their native aspect ratio,
+   so wider glyphs (LinkedIn ≈ 29×27) are not squashed to a square. */
 footer .footer-social img {
-  width: 27px;
+  width: auto;
   height: 27px;
 }
 
@@ -123,6 +129,17 @@ footer .footer-social a {
 
 footer .footer-social a:hover {
   opacity: 0.8;
+}
+
+/* Follow-us text: 18px/24px, centered, with a one-line (24px) gap between the
+   two sentences — the source renders a blank line between them. */
+footer .footer-social p {
+  font-size: 18px;
+  line-height: 24px;
+}
+
+footer .footer-social p:not(:last-child) {
+  margin-bottom: 24px;
 }
 
 /* ---------- legal (copyright + links) ---------- */
@@ -170,7 +187,7 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
       'legal legal legal';
     align-items: start;
     column-gap: 40px;
-    padding: 48px 0;
+    padding: 48px 40px;
   }
 
   /* left column: logo on top row, KEEP UP button below it */
@@ -219,15 +236,11 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
     white-space: nowrap;
   }
 
-  /* social + follow text: right column, top-aligned */
+  /* social + follow text: right column, centered content (matches source) */
   footer .footer-social {
     grid-area: social;
     margin-bottom: 0;
     text-align: center;
-  }
-
-  footer .footer-social p:first-child {
-    justify-content: flex-end;
   }
 
   footer .footer-legal {
