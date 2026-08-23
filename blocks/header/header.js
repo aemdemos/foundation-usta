@@ -170,6 +170,15 @@ export default async function decorate(block) {
   const navSections = nav.querySelector('.nav-sections');
   if (navSections) {
     navSections.querySelectorAll(':scope > ul > li').forEach((li) => {
+      // EDS wraps a standalone top-level link in a <p>; the parent items that
+      // carry a sub-list get this treatment while plain items are a bare <a>.
+      // Unwrap so every top-level item is a DIRECT child <a> of the <li>, which
+      // is what the CSS `> li > a` selectors (padding, colour, expanded
+      // underline) and the caret insertion below all rely on.
+      const topP = li.querySelector(':scope > p');
+      if (topP && topP.querySelector(':scope > a')) {
+        topP.replaceWith(...topP.childNodes);
+      }
       if (li.querySelector(':scope > ul')) {
         // Add a caret toggle button next to the top-level link (mobile use).
         const caret = document.createElement('button');
@@ -178,6 +187,7 @@ export default async function decorate(block) {
         caret.setAttribute('aria-label', 'Toggle submenu');
         const topLink = li.querySelector(':scope > a');
         if (topLink) topLink.after(caret);
+        else li.prepend(caret);
         wireDropdown(li, navSections);
       }
     });

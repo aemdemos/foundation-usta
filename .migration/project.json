@@ -2,10 +2,10 @@
   "type": "da",
   "sites": {
     "foundation-usta": {
+      "libraryUrl": "https://main--sta-boilerplate--aemdemos.aem.page/tools/sidekick/library.json",
       "previewOrg": "aemdemos",
       "previewSite": "foundation-usta",
-      "contentHostUrl": "https://content.da.live/aemdemos/foundation-usta/",
-      "libraryUrl": "https://main--sta-boilerplate--aemdemos.aem.page/tools/sidekick/library.json"
+      "contentHostUrl": "https://content.da.live/aemdemos/foundation-usta/"
     }
   }
 }
