@@ -45,20 +45,36 @@ export default async function decorate(block) {
     if (links[1]) links[1].classList.add('footer-keepup');
   }
 
-  // Social: the fragment delivers the icon links as bare <a> siblings (each
-  // wrapping an <img>), followed by the "Like us…" text paragraphs. Group the
-  // consecutive icon links into a single row wrapper so they lay out as a
-  // horizontal row and the text below is unaffected.
+  // Social: group the icon links into a single row wrapper so they lay out as
+  // a horizontal row (the text paragraphs below are left untouched). The icon
+  // links arrive in one of two shapes depending on the content source:
+  //   • bare <a><img></a> siblings (local/DA authoring), or
+  //   • each <a><img></a> wrapped in its own <p> (production/xwalk), which would
+  //     otherwise stack vertically because each <p> is a block.
+  // Handle both: collect the icon-bearing top-level nodes (the <a> itself, or a
+  // <p> that contains only an image link), unwrap any <p> to the inner <a>, and
+  // move them all into the row.
   const social = footer.querySelector('.footer-social');
   if (social) {
-    const iconLinks = [...social.children].filter(
-      (el) => el.tagName === 'A' && el.querySelector('img'),
-    );
-    if (iconLinks.length) {
+    const iconNodes = [...social.children].filter((el) => {
+      if (el.tagName === 'A') return !!el.querySelector('img');
+      // A <p> counts as an icon holder only if its sole content is an image link
+      // (so text paragraphs like "Like us…" are never swept in).
+      if (el.tagName === 'P') {
+        const link = el.querySelector(':scope > a');
+        return !!(link && link.querySelector('img') && !el.textContent.trim());
+      }
+      return false;
+    });
+    if (iconNodes.length) {
       const row = document.createElement('div');
       row.className = 'footer-social-icons';
-      iconLinks[0].before(row);
-      iconLinks.forEach((a) => row.append(a));
+      iconNodes[0].before(row);
+      iconNodes.forEach((node) => {
+        const link = node.tagName === 'A' ? node : node.querySelector(':scope > a');
+        row.append(link);
+        if (node.tagName === 'P') node.remove();
+      });
     }
   }
 

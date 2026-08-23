@@ -204,13 +204,23 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
     width: 290px;
   }
 
-  /* KEEP UP WITH US: 237px wide, 40px tall (source) */
+  /* The KEEP UP button is wrapped in a <p>; as a flex item under
+     align-items:flex-start it would shrink-wrap. Stretch it to the full 290px
+     brand column so the button can center within it. */
+  footer .footer-brand > p {
+    align-self: stretch;
+  }
+
+  /* KEEP UP WITH US: 237px wide, 40px tall, and CENTERED under the 290px logo
+     (source insets the button ~27px on each side, not left-aligned). The link
+     sits inside the now-full-width <p>, so centre it with auto side margins. */
   footer .footer-brand .footer-keepup:any-link {
     box-sizing: border-box;
     width: 237px;
     max-width: none;
     height: 40px;
     padding: 8px 18px;
+    margin: 0 auto;
   }
 
   /* nav links: horizontal, top-aligned with the logo, spread across center */
