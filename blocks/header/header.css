@@ -446,19 +446,20 @@ header .nav-breadcrumb a:hover {
   }
 
   /* hover dropdown panel — reset the mobile accordion's max-height/overflow
-     clip so the absolutely-positioned panel shows in full. */
+     clip so the absolutely-positioned panel shows in full. Matches source:
+     white panel, soft shadow, 12px/20px/36px/26px padding, ~246px wide. */
   header nav .nav-sections > ul > li > ul {
     display: none;
     position: absolute;
     top: 100%;
     left: 0;
-    min-width: 220px;
+    min-width: 246px;
     max-height: none;
     margin: 0;
-    padding: 8px 0;
+    padding: 12px 20px 36px 26px;
     overflow: visible;
     background: #fff;
-    box-shadow: 0 6px 18px rgb(0 0 0 / 12%);
+    box-shadow: 0 6px 6px rgb(0 0 0 / 16%);
     z-index: 30;
     transition: none;
   }
@@ -467,20 +468,30 @@ header .nav-breadcrumb a:hover {
     display: block;
   }
 
+  /* sub-items: 15px gap below each, with a 1px DASHED divider between items
+     (source uses a dashed rule, not a solid one). No divider after the last. */
   header nav .nav-sections > ul > li > ul > li {
+    margin-bottom: 15px;
     border-top: 0;
+    border-bottom: 1px dashed #e6e6e6;
+  }
+
+  header nav .nav-sections > ul > li > ul > li:last-child {
+    margin-bottom: 0;
+    border-bottom: 0;
   }
 
   header nav .nav-sections > ul > li > ul > li > a {
-    padding: 10px 24px;
+    padding: 0 0 15px;
     color: rgb(36 86 178);
     font-family: var(--heading-semibold-font-family);
-    font-size: 15px;
-    border-bottom: 1px solid #eee;
+    font-size: 16px;
+    font-weight: 900;
+    border-bottom: 0;
   }
 
   header nav .nav-sections > ul > li > ul > li:last-child > a {
-    border-bottom: 0;
+    padding-bottom: 0;
   }
 
   header nav .nav-sections > ul > li > ul > li > a:hover {
