@@ -335,6 +335,14 @@ main > .section:first-of-type {
   margin-top: 0;
 }
 
+/* An empty section (no authored content in it) must not contribute its default
+   40px margin — otherwise it opens a white gap. This can appear as a trailing
+   section before the footer, which would push the footer away from the flush
+   black separator strip above it. */
+main > .section:empty {
+  margin: 0;
+}
+
 @media (width >= 992px) {
   main > .section > div {
     padding: 0 32px;

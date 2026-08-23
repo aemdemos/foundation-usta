@@ -250,8 +250,10 @@ async function loadLazy(doc) {
  */
 function loadDelayed() {
   import('./consent-check.js');
-  // Fundraise Up donation widget (floating tab + ?form=DONATE overlay)
-  import('./donate.js');
+  // Fundraise Up donation widget (floating tab + ?form=DONATE overlay).
+  // Skip on error pages (e.g. 404) — the floating Donate tab has no place on a
+  // "Page Not Found" screen. 404.html sets window.isErrorPage before this runs.
+  if (!window.isErrorPage) import('./donate.js');
   // load anything that can be postponed to the latest here
 }
 

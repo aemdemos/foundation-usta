@@ -1,1 +1,9 @@
 /* add global styles that can be loaded post LCP here */
+
+/* Third-party utility iframes (e.g. the Fundraise Up donate widget) are
+   appended directly to <body> as tiny inline frames. Left inline, they add a
+   line-box strut below the footer — a stray white gap under the footer's flush
+   black strip. Rendering them as block collapses that phantom height. */
+body > iframe {
+  display: block;
+}
