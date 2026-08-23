@@ -1,0 +1,20 @@
+/* spacer — authorable vertical gap / colored band (see spacer.js) */
+
+.spacer {
+  width: 100%;
+}
+
+/* When a spacer carries a background color it is a full-bleed band: break out
+   of the section's content padding so the color runs edge to edge. */
+.spacer-container .spacer-wrapper {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* A section that only holds spacers has no gap of its own — spacers stack
+   flush so authors control the rhythm entirely through spacer heights. */
+main > .section.spacer-container {
+  margin: 0;
+  padding: 0;
+}

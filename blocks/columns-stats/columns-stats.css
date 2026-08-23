@@ -2,11 +2,40 @@
 
 /* Values extracted from source computed styles (see migration-work/columns-stats-extracted.css) */
 
+/* Source has a small 17px gap above the stats bar (not the global 40px, not 0).
+   Set it explicitly with higher specificity than `main > .section {margin:40px 0}`
+   — and win over the hero rule that zeros the following section's top margin. */
+main > .section.columns-stats-container,
+main > .section.hero-banner-container + .section.columns-stats-container {
+  margin: 17px 0 0;
+}
+
+/* Desktop only: butt the statement section directly under the stats bar.
+   Mobile keeps the default section gap (matches the source's mobile rhythm). */
+@media (width >= 992px) {
+  main > .section.columns-stats-container + .section {
+    margin-top: 0;
+  }
+}
+
+/* Override the EDS section wrapper (default max-width:1200px + 32px gutters) so
+   the band sits at a 15px gutter → 1170px wide at a 1200px viewport (source). */
+.columns-stats-container .columns-stats-wrapper {
+  max-width: none;
+  margin: 0;
+  padding: 0 15px;
+}
+
+/* 1170px band with 15px gutters (source is NOT full-bleed). Vertical padding
+   ~14px brings the band to the source's 115px height (46 number + 24 label +
+   item padding + band padding). */
 .columns-stats {
+  max-width: 1170px;
+  margin: 0 auto;
   background-color: #000;
   border-radius: 24px;
   color: #fff;
-  padding: 16px 15px;
+  padding: 14px 15px;
 }
 
 /* row: 3 stat items side by side, evenly distributed */
@@ -24,21 +53,22 @@
   text-align: center;
 }
 
-/* both lines: white, centered, normal weight (source uses Graphik Regular 400) */
+/* both lines: white, centered */
 .columns-stats > div > div p {
   margin: 0;
   color: #fff;
   text-align: center;
 }
 
+/* numbers render bold in the source */
 .columns-stats > div > div p strong {
-  font-weight: 400;
+  font-weight: 700;
 }
 
 /* big number: first paragraph of each item */
 .columns-stats > div > div p:first-child {
   font-size: 38px;
-  line-height: 57px;
+  line-height: 46px;
 }
 
 /* label: second paragraph of each item. Source content is already uppercase

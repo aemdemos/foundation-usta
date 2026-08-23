@@ -1,5 +1,46 @@
-// media query match that indicates desktop width
-const isDesktop = window.matchMedia('(min-width: 900px)');
+// media query match that indicates desktop width (matches the CSS breakpoint)
+const isDesktop = window.matchMedia('(min-width: 992px)');
+
+/**
+ * Build the page breadcrumb row from the URL path (matches the source's
+ * third header row, e.g. "HOME"). Locale segment (en) is dropped; hyphenated
+ * slugs become spaced labels; CSS uppercases them. Parent crumbs link, the
+ * current page is plain text.
+ * @returns {Element|null} a <nav class="nav-breadcrumb"> or null when at root
+ */
+function buildBreadcrumb() {
+  const path = window.location.pathname.replace(/\.html$/, '').replace(/\/$/, '');
+  // Drop infrastructure/locale segments so the crumb matches the source: the
+  // DA/EDS 'content' mount prefix and the 'en' locale never appear as crumbs.
+  const segments = path.split('/').filter(Boolean)
+    .filter((s) => s !== 'content' && s !== 'en');
+  if (!segments.length) return null;
+
+  const bcNav = document.createElement('nav');
+  bcNav.className = 'nav-breadcrumb';
+  bcNav.setAttribute('aria-label', 'Breadcrumb');
+  const ol = document.createElement('ol');
+
+  let href = '/en';
+  segments.forEach((seg, i) => {
+    href += `/${seg}`;
+    const li = document.createElement('li');
+    const label = seg.replace(/-/g, ' ');
+    if (i === segments.length - 1) {
+      li.textContent = label;
+      li.setAttribute('aria-current', 'page');
+    } else {
+      const a = document.createElement('a');
+      a.href = href;
+      a.textContent = label;
+      li.append(a);
+    }
+    ol.append(li);
+  });
+
+  bcNav.append(ol);
+  return bcNav;
+}
 
 /**
  * Fetch the nav fragment. Metadata-independent dual-fetch:
@@ -26,6 +67,13 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
     : nav.getAttribute('aria-expanded') === 'true';
   const button = nav.querySelector('.nav-hamburger button');
   document.body.style.overflowY = (expanded || isDesktop.matches) ? '' : 'hidden';
+  // Anchor the slide-in panel just below the full header (nav bar + breadcrumb),
+  // measured live so it stays correct regardless of header height.
+  if (!expanded && !isDesktop.matches) {
+    const wrapper = nav.closest('.nav-wrapper');
+    const bottom = wrapper ? Math.round(wrapper.getBoundingClientRect().bottom) : 105;
+    navSections.style.setProperty('--nav-mobile-top', `${bottom}px`);
+  }
   nav.setAttribute('aria-expanded', expanded ? 'false' : 'true');
   if (button) {
     button.setAttribute('aria-label', expanded ? 'Open navigation' : 'Close navigation');
@@ -169,5 +217,10 @@ export default async function decorate(block) {
   const navWrapper = document.createElement('div');
   navWrapper.className = 'nav-wrapper';
   navWrapper.append(nav);
+
+  // Third row: page breadcrumb (matches the source's "HOME" row).
+  const breadcrumb = buildBreadcrumb();
+  if (breadcrumb) navWrapper.append(breadcrumb);
+
   block.append(navWrapper);
 }

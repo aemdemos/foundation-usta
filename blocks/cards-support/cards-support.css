@@ -24,11 +24,12 @@
   gap: 40px 30px;
 }
 
+/* Mobile: source stacks full-width cards with centered text. */
 .cards-support > ul > li {
   background-color: transparent;
   padding: 8px 0;
-  text-align: left;
-  width: 270px;
+  text-align: center;
+  width: 100%;
   max-width: 100%;
 }
 
@@ -38,9 +39,11 @@
   line-height: 0;
 }
 
+/* Mobile: source shows a full-width square image (≈328px). */
 .cards-support .cards-support-card-image img {
-  width: 270px;
-  height: 270px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
   max-width: 100%;
   border-radius: 0;
   object-fit: cover;
@@ -112,5 +115,17 @@
     flex-wrap: nowrap;
     justify-content: space-around;
     gap: 0;
+  }
+
+  /* fixed 270px cards, left-aligned text (mobile base is full-width, centered) */
+  .cards-support > ul > li {
+    width: 270px;
+    text-align: left;
+  }
+
+  .cards-support .cards-support-card-image img {
+    width: 270px;
+    height: 270px;
+    aspect-ratio: auto;
   }
 }

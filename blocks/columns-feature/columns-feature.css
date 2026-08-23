@@ -8,8 +8,12 @@
   gap: 32px;
 }
 
+/* Mobile: source centers the feature text, CTA buttons (WHO WE ARE /
+   WHAT WE DO) and the LEARN MORE link. The button paragraphs are inline-block,
+   so centering their cell centers them. */
 .columns-feature .columns-feature-row > div {
   min-width: 0;
+  text-align: center;
 }
 
 /* headings & text reset within the block (source uses tight margins) */
@@ -19,11 +23,19 @@
   color: #000;
 }
 
+/* Mobile: source centers the feature text and shows a larger h3 (36px). */
+.columns-feature h3 {
+  font-size: 36px;
+  line-height: 1.1;
+  text-align: center;
+}
+
 .columns-feature p {
   margin: 0 0 1em;
   color: #000;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 24px;
+  text-align: center;
 }
 
 .columns-feature img {
@@ -43,9 +55,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  height: 40px;
   border: 1px solid transparent;
   border-radius: 3px;
-  padding: 14px 18px;
+  padding: 4px 18px;
   background-color: var(--brand-blue);
   color: #fff;
   font-family: var(--heading-semibold-font-family);
@@ -116,10 +130,28 @@
   text-align: center;
 }
 
+/* source shows this heading larger than the global mobile h2 (44px vs 34px) */
+.columns-feature .columns-feature-title h2 {
+  font-size: 44px;
+  line-height: 1.1;
+}
+
+/* Collage cell: a stack of thumbnails beside a tall portrait (source layout).
+   Mobile base = two small left-aligned thumbnails, portrait hidden (matches
+   source mobile); desktop lays the stack + portrait side by side. */
 .columns-feature .columns-feature-collage {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 16px;
+}
+
+/* Mobile: two thumbnails side by side, portrait below them (all 3 images
+   shown). The stack is a row of the two small thumbnails. */
+.columns-feature .columns-feature-collage-stack {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 16px;
 }
 
 .columns-feature .columns-feature-collage picture {
@@ -127,9 +159,22 @@
 }
 
 .columns-feature .columns-feature-collage img {
-  width: 100%;
+  width: 156px; /* source mobile thumbnail width */
+  max-width: 100%;
   height: auto;
   object-fit: cover;
+}
+
+/* tall portrait (decorative background image, matches source's 3rd collage
+   image) — shown on mobile below the two thumbnails. */
+.columns-feature .columns-feature-collage-portrait {
+  background-image: url('./college-bootcamp-hp.jpg');
+  background-position: 50% 50%;
+  background-size: cover;
+  width: 328px;
+  max-width: 100%;
+  min-height: 300px;
+  margin: 0 auto;
 }
 
 /* --- desktop: side-by-side 50/50 --- */
@@ -142,10 +187,62 @@
 
   .columns-feature .columns-feature-row > div {
     flex: 1;
+    text-align: left;
   }
 
-  /* image-collage columns sit closer together (source ~7.5px) */
+  /* Reset the mobile centering/sizing back to the desktop layout. */
+  .columns-feature h3 {
+    font-size: var(--heading-font-size-l);
+    line-height: 1.1;
+    text-align: left;
+  }
+
+  .columns-feature p {
+    text-align: left;
+  }
+
+  /* title stays centered (lifted heading) at its desktop size */
+  .columns-feature .columns-feature-title h2 {
+    font-size: var(--heading-font-size-xl);
+  }
+
+  .columns-feature:has(.columns-feature-collage) .columns-feature-collage img {
+    width: 100%;
+  }
+
+  /* image-collage ("For decades") instance: source is [266px thumbnail stack |
+     296px tall portrait] on the left, then a text column on the right. */
   .columns-feature.columns-feature-2-cols:has(.columns-feature-collage) .columns-feature-row {
-    gap: 24px;
+    gap: 40px;
+  }
+
+  .columns-feature:has(.columns-feature-collage) .columns-feature-collage {
+    flex: 0 0 578px; /* 266 + 16 gap + 296 */
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .columns-feature:has(.columns-feature-collage) .columns-feature-collage-stack {
+    flex: 0 0 266px;
+    flex-direction: column; /* reset mobile row layout */
+  }
+
+  .columns-feature:has(.columns-feature-collage) .columns-feature-collage-portrait {
+    flex: 0 0 296px;
+    align-self: stretch;
+
+    /* reset mobile sizing */
+    width: auto;
+    min-height: 100%;
+    margin: 0;
+  }
+
+  /* "We go beyond" video instance: source is a balanced 50/50 split within the
+     1200 container — left text col ~532, right video card ~532, wide gap.
+     Both columns flex:1 (inherited). The video card grows with its half; the
+     iframe fills it (16:9). No extra row padding, no fixed card width. */
+  .columns-feature:has(.columns-feature-media) .columns-feature-row {
+    gap: 106px;
   }
 }

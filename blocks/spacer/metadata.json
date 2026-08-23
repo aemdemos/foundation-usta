@@ -1,0 +1,37 @@
+{
+  "variantName": "spacer",
+  "baseBlock": "spacer",
+  "version": "1.0.0",
+  "created": "2026-08-22T00:00:00.000Z",
+  "sourceContext": {
+    "originUrl": "https://www.ustafoundation.com/en/home.html",
+    "originPage": "USTA Foundation home page",
+    "blockPosition": "between sections"
+  },
+  "visualCharacteristics": {
+    "colorScheme": "neutral",
+    "density": "n/a",
+    "purpose": "spacing / colored separator band",
+    "imagePattern": "none"
+  },
+  "contentPattern": {
+    "structure": "key/value rows: desktop, tablet, mobile heights + optional color",
+    "buttonCount": 0,
+    "imageCount": 0
+  },
+  "reuseGuidance": {
+    "suitableFor": [
+      "vertical spacing between sections",
+      "full-bleed colored separator bands",
+      "stacking multiple bands (e.g. colored strip + white gap)"
+    ],
+    "notSuitableFor": [
+      "content that needs text or images"
+    ]
+  },
+  "usage": {
+    "pagesUsing": ["/en/home"],
+    "reuseCount": 1,
+    "lastUsed": "2026-08-22T00:00:00.000Z"
+  }
+}

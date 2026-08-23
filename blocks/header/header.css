@@ -4,14 +4,14 @@
    ============================================================ */
 /* stylelint-disable no-descending-specificity */
 
-/* thin blue accent line across the very top of the page */
+/* blue accent bar across the very top of the page (source: 8px solid) */
 header .nav-wrapper {
   position: relative;
   width: 100%;
   z-index: 20;
   background-color: #fff;
-  border-top: 4px solid var(--brand-blue);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 8%);
+  border-top: 8px solid var(--brand-blue);
+  box-shadow: none;
 }
 
 header nav {
@@ -42,7 +42,7 @@ header nav .nav-brand {
 
 header nav .nav-brand img {
   width: auto;
-  height: 44px;
+  height: 64px; /* source mobile logo ≈150x64 */
 }
 
 header nav .nav-brand-link {
@@ -112,19 +112,28 @@ header nav[aria-expanded='true'] .nav-hamburger-icon::after {
 }
 
 /* ---------- sections (nav links) ---------- */
+
+/* Mobile: off-canvas panel that slides in from the right (matches source). */
 header nav .nav-sections {
   grid-area: sections;
-  display: none;
+  position: fixed;
+  top: var(--nav-mobile-top, 105px);
+  left: 0;
+  right: 0;
+  z-index: 25;
+  width: auto;
+  height: calc(100vh - var(--nav-mobile-top, 105px));
+  padding: 8px 20px 40px;
+  overflow-y: auto;
+  background: #fff;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-out;
+  visibility: hidden;
 }
 
 header nav[aria-expanded='true'] .nav-sections {
-  display: block;
-  grid-column: 1 / -1;
-
-  /* break out of the nav's 20px horizontal padding so the menu list is
-     full-width edge-to-edge (matches source full-width-flush layout) */
-  width: auto;
-  margin: 0 -20px;
+  transform: translateX(0);
+  visibility: visible;
 }
 
 header nav .nav-sections ul {
@@ -135,25 +144,32 @@ header nav .nav-sections ul {
 
 header nav .nav-sections > ul > li {
   position: relative;
-  border-top: 1px solid #eee;
+  border-bottom: 1px solid #e6e6e6;
 }
 
 header nav .nav-sections > ul > li > a {
   display: block;
-  padding: 14px 20px;
+  padding: 15px 4px;
   color: #000;
   font-family: var(--heading-semibold-font-family);
   font-size: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
+  font-weight: 400;
+  text-transform: none;
   text-decoration: none;
+}
+
+/* expanded top-level item: blue label with 4px blue underline (source) */
+header nav .nav-sections > ul > li[aria-expanded='true'] > a {
+  display: inline-block;
+  color: rgb(36 86 178);
+  box-shadow: inset 0 -4px 0 rgb(36 86 178);
 }
 
 /* caret toggle button (mobile) */
 header nav .nav-drop-toggle {
   position: absolute;
-  top: 8px;
-  right: 16px;
+  top: 10px;
+  right: 4px;
   width: 36px;
   height: 36px;
   margin: 0;
@@ -180,23 +196,42 @@ header nav .nav-drop[aria-expanded='true'] .nav-drop-toggle::after {
   transform: rotate(180deg);
 }
 
-/* sub-list */
+/* sub-list — mobile accordion: animate open/closed with a slow max-height
+   transition (smooth reveal like the source). Collapsed = max-height 0 +
+   overflow hidden; expanded = a generous max-height the content fits within. */
 header nav .nav-sections > ul > li > ul {
-  display: none;
-  padding: 0 0 8px 32px;
+  display: block;
+  max-height: 0;
+  padding: 0 0 0 24px;
+  overflow: hidden;
+  transition: max-height 0.45s ease, padding 0.45s ease;
+}
+
+header nav .nav-sections > ul > li > ul > li {
+  border: 0;
+  margin-bottom: 28px;
+}
+
+header nav .nav-sections > ul > li > ul > li:last-child {
+  margin-bottom: 0;
 }
 
 header nav .nav-sections > ul > li[aria-expanded='true'] > ul {
-  display: block;
+  max-height: 400px;
+  padding: 16px 0 16px 24px;
 }
 
 header nav .nav-sections > ul > li > ul > li > a {
   display: block;
-  padding: 8px 4px;
-  color: var(--link-color);
-  font-family: var(--body-font-family);
-  font-size: 15px;
+  padding: 0;
+  color: rgb(36 86 178);
+  font-family: var(--heading-semibold-font-family);
+  font-size: 16px;
   text-decoration: none;
+}
+
+header nav .nav-sections > ul > li > ul > li > a:hover {
+  text-decoration: underline;
 }
 
 /* ---------- tools (donate) ---------- */
@@ -229,18 +264,90 @@ header nav .nav-donate:focus-visible {
   text-decoration: none;
 }
 
+/* ---------- breadcrumb (third row, matches source "HOME") ---------- */
+
+/* The .nav-breadcrumb is itself a <nav>, so the generic `header nav` rules
+   (grid, min-height:120px, align-items:center) would otherwise apply and
+   inflate/centre it. Reset those explicitly so it is a short left-aligned row. */
+header .nav-breadcrumb {
+  display: flex;
+  align-items: center;
+
+  /* explicit height wins over the generic `header nav { height:120px }` that
+     would otherwise apply to this <nav> and inflate the breadcrumb row */
+  height: auto;
+  min-height: 38px;
+  padding: 0;
+  border-top: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+header .nav-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 20px;
+  list-style: none;
+}
+
+header .nav-breadcrumb li,
+header .nav-breadcrumb a {
+  color: #383838;
+  font-family: var(--body-font-family);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+header .nav-breadcrumb li + li::before {
+  content: '/';
+  margin-right: 4px;
+  color: #383838;
+}
+
+header .nav-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
 /* ============================================================
    Desktop (>= 992px): single row, centered nav, hover dropdowns
    ============================================================ */
 @media (width >= 992px) {
+  /* Centered max-width:1440px container (matches the source + the hero). The
+     logo therefore tracks the hero heading at every viewport: 40px gutter until
+     1440, then centered with equal side margins beyond. */
   header nav {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 0;
+    height: 120px;
     min-height: 120px;
-    max-width: none;
+    max-width: 1440px;
+    margin: 0 auto;
+    overflow: visible;
     padding: 0 40px;
+  }
+
+  /* breadcrumb: reset the generic `header nav { height:120px, max-width:1440px }`
+     (this row is a <nav>). The border must run edge-to-edge, so the row itself is
+     FULL WIDTH; only the inner <ol> content is centered to the 1440px container. */
+  header .nav-breadcrumb {
+    height: auto;
+    max-width: none;
+    margin: 0;
+  }
+
+  header .nav-breadcrumb ol {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 14px 40px;
   }
 
   header nav .nav-hamburger {
@@ -250,12 +357,33 @@ header nav .nav-donate:focus-visible {
   header nav .nav-brand img {
     width: 294px;
     height: auto;
+    max-height: 120px;
+    object-fit: contain;
+  }
+
+  /* Lock DONATE to 110px so nav-sections stays 616px and item positions match
+     the source exactly (right edge stays at 1160, 40px from the viewport). */
+  header nav .nav-donate {
+    width: 110px;
+    min-width: 110px;
+    flex-shrink: 0;
+    padding: 0;
+    justify-content: center;
   }
 
   /* sections: nav list starts ~100px after the logo, items left-packed with
      50px gaps; the list flex-grows so DONATE is pushed to the far right —
-     matching the source geometry (logo@40, nav starts@434, donate right@40) */
+     matching the source geometry (logo@40, nav starts@434, donate right@40).
+     Reset the mobile off-canvas panel styles back to an in-flow flex row. */
   header nav .nav-sections {
+    position: static;
+    height: auto;
+    padding: 0;
+    overflow: visible;
+    background: none;
+    transform: none;
+    transition: none;
+    visibility: visible;
     display: flex;
     flex: 1 1 auto;
     margin-left: 100px;
@@ -274,7 +402,9 @@ header nav .nav-donate:focus-visible {
   header nav .nav-sections > ul > li {
     display: flex;
     align-items: center;
-    border-top: 0;
+
+    /* remove the mobile row divider — desktop items have no underline */
+    border-bottom: 0;
   }
 
   header nav .nav-sections > ul > li > a {
@@ -289,23 +419,25 @@ header nav .nav-donate:focus-visible {
   header nav .nav-sections > ul > li:hover > a,
   header nav .nav-sections > ul > li[aria-expanded='true'] > a {
     color: rgb(36 86 178);
-    box-shadow: inset 0 -2px 0 rgb(36 86 178);
   }
 
-  /* desktop caret sits inline after the label as a solid ▼ triangle */
+  /* desktop caret sits inline after the label as a solid ▼ triangle (18x12) */
   header nav .nav-drop-toggle {
     position: static;
     display: inline-flex;
     align-items: center;
-    width: 12px;
+    justify-content: center;
+    width: 18px;
     height: 12px;
-    margin-left: 8px;
+    margin-left: 5px;
     vertical-align: middle;
     cursor: pointer;
   }
 
   header nav .nav-drop-toggle::after {
-    border-top-color: #000;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid rgb(0 0 0);
   }
 
   header nav .nav-sections > ul > li:hover .nav-drop-toggle::after,
@@ -313,18 +445,22 @@ header nav .nav-donate:focus-visible {
     border-top-color: rgb(36 86 178);
   }
 
-  /* hover dropdown panel */
+  /* hover dropdown panel — reset the mobile accordion's max-height/overflow
+     clip so the absolutely-positioned panel shows in full. */
   header nav .nav-sections > ul > li > ul {
     display: none;
     position: absolute;
     top: 100%;
     left: 0;
     min-width: 220px;
+    max-height: none;
     margin: 0;
     padding: 8px 0;
+    overflow: visible;
     background: #fff;
     box-shadow: 0 6px 18px rgb(0 0 0 / 12%);
     z-index: 30;
+    transition: none;
   }
 
   header nav .nav-sections > ul > li[aria-expanded='true'] > ul {

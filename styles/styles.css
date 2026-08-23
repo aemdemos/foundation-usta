@@ -362,3 +362,56 @@ main .section.dark {
   margin: 0;
   padding: 40px 0;
 }
+
+/* ------------------------------------------------------------------
+   Section separator bands — authored as Spacer blocks in their own sections
+   (see blocks/spacer + tools/importer). The source stacks full-bleed 17px
+   colored strips between sections. The spacer section itself owns no margin
+   (blocks/spacer.css zeroes it); the gaps around each strip are tuned here so
+   they match the source: blue strips float with whitespace after the video and
+   impact sections, the black strip butts the footer flush.
+   ------------------------------------------------------------------ */
+
+/* stylelint-disable no-descending-specificity */
+
+/* Blue spacer floating after the video / impact feature sections: give the
+   spacer section whitespace above and below (source ~56 above / 76 below on
+   desktop, 40/60 on mobile). */
+main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) {
+  margin: 40px 0 60px;
+}
+
+/* The blue spacer immediately before the light-blue support section sits close:
+   a THIN white gap below it (a 17px white "border" the same height as the
+   strip), then the support section's own top padding gives the heading its room
+   (matches the source ~82px strip-to-heading gap, not the full 76px float). */
+main > .section.spacer-container:has(.spacer[style*='cards-band-bg']):has(+ .section.highlight) {
+  margin-bottom: 17px;
+}
+
+main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) + .section.highlight {
+  margin-top: 0;
+}
+
+/* Black spacer before the footer is FLUSH: the support section butts it on top
+   and the footer butts it below, with no white gap. */
+main > .section.spacer-container:has(.spacer[style*='stats-band-bg']) {
+  margin: 0;
+}
+
+/* the support (highlight) section butts the black spacer directly below it */
+main > .section.highlight {
+  margin-bottom: 0;
+}
+
+/* footer butts the black spacer above it (no gap) */
+footer {
+  margin-top: 0;
+}
+/* stylelint-enable no-descending-specificity */
+
+@media (width >= 992px) {
+  main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) {
+    margin: 56px 0 76px;
+  }
+}

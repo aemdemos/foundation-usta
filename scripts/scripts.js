@@ -168,11 +168,30 @@ function decorateSectionMetadata(main) {
 }
 
 /**
+ * Removes stray injected tracking anchors (e.g. Hotjar's "_hjSafeContext"
+ * about:blank link) that get captured into imported content. Hotjar injects
+ * these late in the source page, so the importer's cleanup can miss them; strip
+ * them here too, dropping the wrapping <p> when the anchor is its only content.
+ * @param {Element} main The main container element
+ */
+function removeTrackingArtifacts(main) {
+  main.querySelectorAll('a[href="about:blank"], a[href^="about:"]').forEach((a) => {
+    const text = (a.textContent || '').trim();
+    if (a.getAttribute('href')?.startsWith('about:') || text === '_hjSafeContext') {
+      const p = a.closest('p');
+      if (p && p.textContent.trim() === text) p.remove();
+      else a.remove();
+    }
+  });
+}
+
+/**
  * Decorates the main element.
  * @param {Element} main The main element
  */
 // eslint-disable-next-line import/prefer-default-export
 export function decorateMain(main) {
+  removeTrackingArtifacts(main);
   decorateIcons(main);
   buildAutoBlocks(main);
   decorateSectionMetadata(main);
@@ -231,6 +250,8 @@ async function loadLazy(doc) {
  */
 function loadDelayed() {
   import('./consent-check.js');
+  // Fundraise Up donation widget (floating tab + ?form=DONATE overlay)
+  import('./donate.js');
   // load anything that can be postponed to the latest here
 }
 

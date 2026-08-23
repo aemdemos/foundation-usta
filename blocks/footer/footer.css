@@ -4,19 +4,23 @@
    ============================================================ */
 /* stylelint-disable no-descending-specificity */
 
-/* black divider bar above the footer band */
+/* footer band (source has no top border on the band itself) */
 footer {
-  border-top: 12px solid #000;
+  position: relative;
   background-color: #dcdfcf;
   color: #000;
   font-family: var(--body-font-family);
+
+  /* source ends the page with a full-bleed 17px black strip directly below the
+     footer band; draw it as a bottom border so it is always flush at page end */
+  border-bottom: 17px solid var(--stats-band-bg, #000);
 }
 
 footer .footer {
   box-sizing: border-box;
-  max-width: 1280px;
+  max-width: 1170px;
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: 40px 36px;
 }
 
 footer .footer p {
@@ -28,34 +32,39 @@ footer .footer a:any-link {
   text-decoration: underline;
 }
 
-/* ---------- brand (logo + KEEP UP WITH US) — mobile base: centered ---------- */
+/* ---------- brand (logo + KEEP UP WITH US) ---------- */
+
+/* mobile base: left-aligned, full-width KEEP UP button (matches source) */
 footer .footer-brand {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 32px;
-  text-align: center;
+  align-items: stretch;
+  gap: 44px; /* source logo -> KEEP UP gap */
+  margin-bottom: 48px; /* source KEEP UP -> nav gap */
+  text-align: left;
 }
 
 footer .footer-brand .footer-logo-link {
   display: inline-flex;
+  align-self: flex-start;
   border: 0;
   text-decoration: none;
 }
 
 footer .footer-brand img {
-  width: 210px;
+  width: 290px; /* source mobile logo is near-full-width (~317@390) */
+  max-width: 100%;
   height: auto;
 }
 
 footer .footer-brand .footer-keepup:any-link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   width: 100%;
-  max-width: 320px;
-  padding: 14px 18px;
+  height: 40px; /* source mobile button is 40px tall */
+  padding: 8px 18px;
   background-color: var(--brand-blue);
   color: #fff;
   font-family: var(--heading-semibold-font-family);
@@ -73,16 +82,14 @@ footer .footer-brand .footer-keepup:focus-visible {
   text-decoration: none;
 }
 
-/* ---------- nav links — mobile base: 2-column grid, centered ---------- */
+/* ---------- nav links — mobile base: 2-column grid, left-aligned ---------- */
 footer .footer-nav ul {
   list-style: none;
-  margin: 0 0 32px;
+  margin: 0 0 48px; /* source nav -> social gap */
   padding: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px 16px;
-  max-width: 320px;
-  margin-inline: auto;
+  gap: 39px 16px; /* source row gap between the two nav rows */
 }
 
 footer .footer-nav a {
@@ -155,45 +162,68 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
 @media (width >= 992px) {
   footer .footer {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+
+    /* brand column wide enough for the 290px logo + 237px button (source) */
+    grid-template-columns: 290px 1fr 220px;
     grid-template-areas:
       'brand nav social'
       'legal legal legal';
+    align-items: start;
     column-gap: 40px;
-    padding: 48px 40px;
+    padding: 48px 0;
   }
 
+  /* left column: logo on top row, KEEP UP button below it */
   footer .footer-brand {
     grid-area: brand;
     align-items: flex-start;
+    gap: 40px;
     margin-bottom: 0;
     text-align: left;
   }
 
-  footer .footer-brand .footer-keepup:any-link {
-    width: auto;
-    max-width: none;
+  /* logo matches source width (290px, was 210) */
+  footer .footer-brand img {
+    width: 290px;
   }
 
+  /* KEEP UP WITH US: 237px wide, 40px tall (source) */
+  footer .footer-brand .footer-keepup:any-link {
+    box-sizing: border-box;
+    width: 237px;
+    max-width: none;
+    height: 40px;
+    padding: 8px 18px;
+  }
+
+  /* nav links: horizontal, top-aligned with the logo, spread across center */
   footer .footer-nav {
     grid-area: nav;
     display: flex;
     justify-content: center;
-    padding-top: 8px;
+    align-items: flex-start;
+    padding: 0 20px;
   }
 
   footer .footer-nav ul {
     display: flex;
     flex-direction: row;
-    gap: 40px;
+    justify-content: space-between;
+    gap: 24px;
+    width: 100%;
     max-width: none;
     margin: 0;
   }
 
+  footer .footer-nav a {
+    white-space: nowrap;
+  }
+
+  /* social + follow text: right column, top-aligned */
   footer .footer-social {
     grid-area: social;
     margin-bottom: 0;
-    text-align: right;
+    text-align: center;
   }
 
   footer .footer-social p:first-child {

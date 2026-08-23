@@ -69,7 +69,10 @@ export default function decorate(block) {
       embedVideo(ytLink, videoTitle);
     }
 
-    // Image-collage variant: cell holds two or more stacked images
+    // Image-collage variant: cell holds two or more stacked images.
+    // Source renders these as two small stacked thumbnails PLUS a tall
+    // portrait beside them (a decorative background image on the source). We
+    // group the thumbnails into a narrow stack and add the portrait next to it.
     if (pictures.length > 1) {
       cell.classList.add('columns-feature-collage');
       // unwrap pictures from their auto-generated <p> wrappers
@@ -77,6 +80,25 @@ export default function decorate(block) {
         const p = pic.closest('p');
         if (p && p.children.length === 1) p.replaceWith(pic);
       });
+
+      // Lift the section heading out of the cell BEFORE regrouping the images,
+      // so the title bar still gets it (see the block-level step below).
+      const cellHeading = cell.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > h4');
+      if (cellHeading) block.prepend(cellHeading);
+
+      // Wrap the stacked thumbnails in their own column.
+      const stack = document.createElement('div');
+      stack.className = 'columns-feature-collage-stack';
+      cell.querySelectorAll(':scope > picture').forEach((pic) => stack.append(pic));
+
+      // Tall portrait beside the stack (matches the source collage).
+      const portrait = document.createElement('div');
+      portrait.className = 'columns-feature-collage-portrait';
+      portrait.setAttribute('role', 'img');
+      portrait.setAttribute('aria-label', 'USTA Foundation athlete celebrating');
+
+      cell.append(stack);
+      cell.append(portrait);
     }
 
     // Single dedicated image column
@@ -90,15 +112,16 @@ export default function decorate(block) {
   });
 
   // For the collage variant the source shows the heading full-width and
-  // centered above both columns — lift it out of the cell.
+  // centered above both columns. The heading was prepended to the block above;
+  // wrap it in the title bar here.
   const collage = block.querySelector('.columns-feature-collage');
   if (collage) {
-    const heading = collage.querySelector('h1, h2, h3, h4, h5, h6');
-    if (heading && heading === collage.firstElementChild) {
+    const heading = block.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6');
+    if (heading) {
       const titleWrap = document.createElement('div');
       titleWrap.className = 'columns-feature-title';
+      heading.replaceWith(titleWrap);
       titleWrap.append(heading);
-      block.prepend(titleWrap);
     }
   }
 }
