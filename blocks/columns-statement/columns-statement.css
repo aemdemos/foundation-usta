@@ -1,5 +1,19 @@
 /* Block: columns-statement -- centered narrow statement, values from source computed styles */
 
+/* Desktop: source butts this section against the stats bar above and the
+   feature section below. Zero its margin (and the following section's top
+   margin) only at desktop — mobile keeps the default section spacing, which
+   matches the source's mobile rhythm. */
+@media (width >= 992px) {
+  main > .section.columns-statement-container {
+    margin: 0;
+  }
+
+  main > .section.columns-statement-container + .section {
+    margin-top: 0;
+  }
+}
+
 .columns-statement > div {
   max-width: 810px;
   margin: 0 auto;
@@ -24,12 +38,18 @@
 }
 
 @media (width >= 992px) {
+  /* Centered column, fluid like the source (~56% of viewport → 670@1200,
+     965@1706). Uses vw so it scales past the section's 1200px cap; capped at
+     the source's widest. */
   .columns-statement > div {
-    padding: 32px 0;
+    width: 56vw;
+    max-width: 965px;
+    padding: 50px 0 80px;
   }
 
   .columns-statement h2 {
     font-size: 76px;
+    line-height: 110px;
   }
 
   .columns-statement p {

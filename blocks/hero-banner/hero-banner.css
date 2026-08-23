@@ -8,11 +8,29 @@
   padding: 0;
 }
 
+/* No gap between the hero and the stats bar below (source has none). The hero
+   owns this seam: zero its own bottom margin AND the following section's top
+   margin, otherwise the global `main > .section { margin: 40px 0 }` on the next
+   section keeps a 40px gap (adjacent margins collapse to the larger value). */
+main > .section.hero-banner-container {
+  margin: 0;
+}
+
+/* Desktop only: butt the stats bar directly under the hero. On mobile the
+   stats section keeps its own 17px top margin (source mobile rhythm). */
+@media (width >= 992px) {
+  main > .section.hero-banner-container + .section {
+    margin-top: 0;
+  }
+}
+
 .hero-banner.block {
   position: relative;
   box-sizing: border-box;
 
-  /* dark overlay rgba(0,0,0,0.4) composited over the banner photo (background-size: cover) */
+  /* source composites a 40% black overlay over the banner photo (a full-size
+     rgba(0,0,0,0.4) layer) — replicate it as a gradient so background-size:cover
+     still applies to the photo. */
   background-image:
     linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)),
     url('./ustaf-banner-2.jpg');
@@ -30,7 +48,7 @@
 }
 
 .hero-banner.block > div > div {
-  max-width: 630px;
+  max-width: 510px;
 }
 
 .hero-banner h1 {
@@ -38,7 +56,7 @@
   color: var(--background-color);
   font-family: var(--heading-font-family);
   font-weight: 500;
-  font-size: var(--heading-font-size-xxl);
+  font-size: 54px; /* source mobile H1 */
   line-height: 1.1;
 }
 
@@ -46,7 +64,7 @@
   margin: 0;
   color: var(--background-color);
   font-family: var(--body-font-family);
-  font-size: 18px;
+  font-size: 16px; /* source mobile body */
   line-height: 24px;
 }
 
@@ -55,8 +73,11 @@
   margin-top: 16px;
 }
 
-/* CTA button (decorated in hero-banner.js) */
+/* CTA button (decorated in hero-banner.js) — source height 40px */
 .hero-banner a.button:any-link {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
   margin: 0;
   border: 1px solid transparent;
   border-radius: 3px;
@@ -90,7 +111,42 @@
 }
 
 @media (width >= 992px) {
+  /* Full-width hero, source height 740px @1706 (background-image + overlay come
+     from the base rule — do NOT redeclare here or the overlay is lost). */
   .hero-banner.block {
-    padding: 192px 32px;
+    min-height: 740px;
+    padding: 0;
+  }
+
+  /* Content in a centered max-width:1440px container (matches the header nav),
+     so the heading tracks the logo (h1 left ≈173, source 187). padding-top 246
+     places h1 at ~366 from the viewport top; bottom padding keeps the band 740. */
+  .hero-banner.block > div {
+    display: flex;
+    align-items: flex-start;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 246px 40px 170px;
+  }
+
+  /* Text column ~763px (source width) so the 100px h1 wraps to 3 lines (h≈220),
+     not 5, keeping the hero at the source's 740px height. */
+  .hero-banner.block > div > div {
+    box-sizing: border-box;
+    width: 763px;
+    max-width: 55%;
+    padding-right: 20px;
+    padding-left: 0;
+  }
+
+  /* desktop H1 scales up to the source's 100px (mobile base is 54px) */
+  .hero-banner h1 {
+    font-size: var(--heading-font-size-xxl);
+  }
+
+  .hero-banner p {
+    font-size: 18px;
   }
 }

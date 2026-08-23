@@ -45,5 +45,7 @@ export default async function decorate(block) {
     if (links[1]) links[1].classList.add('footer-keepup');
   }
 
-  block.append(footer);
+  // Append the section divs directly to the block so they are the direct
+  // children of the `.footer` grid container (not nested inside a wrapper).
+  while (footer.firstElementChild) block.append(footer.firstElementChild);
 }

@@ -1,26 +1,9 @@
 /* eslint-disable */
 var CustomImportScript = (() => {
   var __defProp = Object.defineProperty;
-  var __defProps = Object.defineProperties;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-  var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
   var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __propIsEnum = Object.prototype.propertyIsEnumerable;
-  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-  var __spreadValues = (a, b) => {
-    for (var prop in b || (b = {}))
-      if (__hasOwnProp.call(b, prop))
-        __defNormalProp(a, prop, b[prop]);
-    if (__getOwnPropSymbols)
-      for (var prop of __getOwnPropSymbols(b)) {
-        if (__propIsEnum.call(b, prop))
-          __defNormalProp(a, prop, b[prop]);
-      }
-    return a;
-  };
-  var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -231,6 +214,23 @@ var CustomImportScript = (() => {
 
   // tools/importer/transformers/ustafoundation-sections.js
   var TransformHook2 = { beforeTransform: "beforeTransform", afterTransform: "afterTransform" };
+  var SECTION_BANDS = {
+    "Impact Nationwide Feature": [{ color: "cards-band-bg", height: "17px" }],
+    "Support Cards": [{ color: "cards-band-bg", height: "17px" }]
+  };
+  var TRAILING_BANDS = [{ color: "stats-band-bg", height: "17px" }];
+  function createSpacerBlock(document, band) {
+    return WebImporter.Blocks.createBlock(document, {
+      name: "Spacer",
+      cells: { color: band.color, desktop: band.height }
+    });
+  }
+  function insertSpacerSection(document, parent, ref, band) {
+    const hr = document.createElement("hr");
+    const spacer = createSpacerBlock(document, band);
+    parent.insertBefore(hr, ref);
+    parent.insertBefore(spacer, ref);
+  }
   function findSectionEl(element, selector) {
     if (!selector) return null;
     let el = null;
@@ -253,6 +253,17 @@ var CustomImportScript = (() => {
       const sections = payload && payload.template && payload.template.sections || [];
       if (sections.length < 2) return;
       const document = element.ownerDocument;
+      const lastSection = sections[sections.length - 1];
+      const lastEl = findSectionEl(element, lastSection.selector);
+      if (lastEl) {
+        for (let b = TRAILING_BANDS.length - 1; b >= 0; b -= 1) {
+          const ref = lastEl.nextSibling;
+          const hr = document.createElement("hr");
+          const spacer = createSpacerBlock(document, TRAILING_BANDS[b]);
+          lastEl.parentNode.insertBefore(spacer, ref);
+          lastEl.parentNode.insertBefore(hr, spacer);
+        }
+      }
       for (let i = sections.length - 1; i >= 0; i -= 1) {
         const section = sections[i];
         const sectionEl = findSectionEl(element, section.selector);
@@ -267,6 +278,12 @@ var CustomImportScript = (() => {
         if (i > 0) {
           const hr = document.createElement("hr");
           sectionEl.parentNode.insertBefore(hr, sectionEl);
+        }
+        const bands = SECTION_BANDS[section.name];
+        if (bands && i > 0) {
+          for (let b = bands.length - 1; b >= 0; b -= 1) {
+            insertSpacerSection(document, sectionEl.parentNode, sectionEl.previousSibling || sectionEl, bands[b]);
+          }
         }
       }
     }
@@ -367,7 +384,7 @@ var CustomImportScript = (() => {
     ...PAGE_TEMPLATE.sections && PAGE_TEMPLATE.sections.length > 1 ? [transform2] : []
   ];
   function executeTransformers(hookName, element, payload) {
-    const enhancedPayload = __spreadProps(__spreadValues({}, payload), { template: PAGE_TEMPLATE });
+    const enhancedPayload = { ...payload, template: PAGE_TEMPLATE };
     transformers.forEach((transformerFn) => {
       try {
         transformerFn.call(null, hookName, element, enhancedPayload);
