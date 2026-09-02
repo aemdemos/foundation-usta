@@ -15,6 +15,9 @@
     "test:a11y": "node tests/a11y/run.mjs",
     "test:a11y:all": "node tests/a11y/run.mjs",
     "test:a11y:nav": "node tests/a11y/header-footer-states.mjs",
+    "check:overflow": "node tools/quality/overflow-sweep.mjs",
+    "discover:typography": "node tools/quality/typography-discover.mjs",
+    "check:typography": "node tools/quality/typography-check.mjs",
     "postinstall": "playwright install chromium || true"
   },
   "repository": {

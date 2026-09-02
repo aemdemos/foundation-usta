@@ -6,5 +6,13 @@
     "https://www.ustafoundation.com/en/home.html (clientlibs: foundation main + usta-foundation base/proxy + components common + inline styles)"
   ],
   "decidedOn": "2026-08-22",
-  "notes": "The source site is an AEM classic site built on the Bootstrap grid; 768/992/1200 is its dominant responsive grid (min-width hits 296/101/12, with matching max-width -1 boundaries 767/991/1199 at 675/297/13). Detected via breakpoint-discover.mjs + clientlib CSS tally. Excluded as noise: 991 (the ±1 of 992), 336/720/1920 (one-offs), and 1370 (a wide-desktop max-width cap tier, mostly used above 1200). Fallback if empty: 600/900/1200."
+  "grid": {
+    "system": "Bootstrap 3 (container → row → 12 float/flex columns), pixel-based",
+    "columns": 12,
+    "gutterPx": 30,
+    "containerMaxWidthPx": { "base": null, "768": 720, "992": 970, "1200": 1170 },
+    "containerNote": "A few areas cap at 1200 instead of 1170. Base tier is fluid 100% with 15px side padding. Gutter 30px = .row margin -15px + col padding 15px. Full deep-dive + EDS mapping: docs/source-css-system.md.",
+    "unitsNote": "SOURCE IS PIXEL-FIRST (~13.4k px vs ~73 rem; html font-size 10px so 1rem=10px). Author block CSS in px to match — do NOT convert fixed px to rem/em/clamp. Grid widths use %, full-bleed uses vw. Spacing scale: 4/6/8/10/12/15/16/20/24/30/40px. See docs/source-css-system.md."
+  },
+  "notes": "The source site is an AEM classic site built on the Bootstrap 3 grid; 768/992/1200 is its dominant responsive grid (min-width hits 296/101/12, with matching max-width -1 boundaries 767/991/1199 at 675/297/13). Detected via breakpoint-discover.mjs + clientlib CSS tally. Excluded as noise: 991 (the ±1 of 992), 336/720/1920 (one-offs), and 1370 (a wide-desktop max-width cap tier, mostly used above 1200). Fallback if empty: 600/900/1200."
 }
