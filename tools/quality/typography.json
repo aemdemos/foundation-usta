@@ -1,0 +1,17 @@
+{
+  "$comment": "SINGLE SOURCE OF TRUTH for the source site's TYPE SCALE (lift-and-shift from https://www.ustafoundation.com). Fonts + source recorded here; the per-breakpoint SCALE is still to be captured from the live rendered DOM — run `npm run discover:typography -- https://www.ustafoundation.com/en/home.html --write` (needs Playwright + npm install) to fill `scale`, then enforce with `npm run check:typography`. See AGENTS.md → The Typography Rule, skills/typography-system, and docs/source-css-system.md (units: px-first). Empty scale = checker skips.",
+  "source": "https://www.ustafoundation.com/en/home.html",
+  "tolerancePx": 1.5,
+  "toleranceRatio": 0.06,
+  "fonts": [
+    { "family": "Graphik Regular", "weight": "400", "style": "normal", "file": "fonts/graphik-regular.woff2" },
+    { "family": "Graphik Semibold", "weight": "600", "style": "normal", "file": "fonts/graphik-semibold.woff2" },
+    { "family": "Graphik XXCond Bold", "weight": "700", "style": "normal", "file": "fonts/graphik-xxcond-bold.woff2" },
+    { "family": "Inter", "weight": "100 900", "style": "normal", "file": "fonts/inter-variable.ttf" },
+    { "family": "Barlow Condensed", "weight": "400", "style": "normal", "file": "fonts/barlow-condensed-regular.ttf" },
+    { "family": "Barlow Condensed", "weight": "700", "style": "normal", "file": "fonts/barlow-condensed-bold.ttf" },
+    { "family": "Anton", "weight": "400", "style": "normal", "file": "fonts/anton-regular.ttf" }
+  ],
+  "fontsNote": "COMPLETE set — every face the source references is self-hosted, in the source's own formats. By frequency in the theme CSS: Graphik Semibold/Regular/XXCond Bold dominate (the brand face) — PRIMARY, wired to --body/--heading-font-family. Inter / Barlow Condensed / Anton — SECONDARY, used by specific source components; wire per component where the source uses them. Removed the unused Roboto boilerplate faces. Graphik is a PROPRIETARY typeface — confirm licensing before publishing.",
+  "scale": {}
+}

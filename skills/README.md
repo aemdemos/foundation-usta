@@ -21,6 +21,8 @@ To create a new skill: read `writing-skills/SKILL.md` first, then copy the forma
 | Skill | Load when… |
 |-------|-----------|
 | [responsive-breakpoints](responsive-breakpoints/SKILL.md) | Writing or reviewing any CSS media query; a layout needs to adapt across mobile/tablet/desktop; starting a migration (discover & record the source site's breakpoints once); tempted to use `max-width`. Adopt the source site's breakpoints from `tools/quality/breakpoints.json`. Enforced by `tools/quality/breakpoint-check.mjs` |
+| [grid-system](grid-system/SKILL.md) | Setting section or content width; aligning two sections; discovering the source site's grid at the start of a migration; tempted to write a bespoke `width: 52%; margin-left: 25%`. Reproduce the source's one shared 12-col grid (column spans + `--grid-gap`); full-bleed via the `full-width*` section styles. Enforced by `npm run check:overflow` |
+| [typography-system](typography-system/SKILL.md) | Setting any font-size or font-family; adding a heading style; wiring `fonts.css`/`brand.css`; discovering the source site's type scale + fonts at the start of a migration. Reproduce the source's h1..h6/body scale at every breakpoint + self-host its fonts. Discover with `npm run discover:typography`; enforced by `npm run check:typography` |
 | [accessibility](accessibility/SKILL.md) | Building or reviewing any block/UI; adding an image (alt text); a CTA/form/nav/interactive element; heading structure; a focus ring. Enforced by `npm run test:a11y` |
 | [svg-assets](svg-assets/SKILL.md) | Adding an icon or inline SVG; committing an SVG under `icons/`; an SVG asset looks heavy. How SVGs are delivered + the Asset-Size Rule (rasterize oversized SVGs to 2x PNG). Enforced by `npm run check:svg` |
 | [security](security/SKILL.md) | Injecting author/external HTML (`innerHTML`); handling user/API/URL input; adding config; anything that could commit a secret or run dynamic code |
@@ -56,6 +58,7 @@ To create a new skill: read `writing-skills/SKILL.md` first, then copy the forma
 | [eds-content-patterns](eds-content-patterns/SKILL.md) | A CTA link isn't becoming a button; button variant is wrong; an eyebrow isn't styling; `decorateButtons()` not firing (auto-styles) |
 | [container-block-vs-section-style](container-block-vs-section-style/SKILL.md) | A container (tabs/accordion/carousel) must hold a variety of content or reuse existing blocks; inner block content renders unstyled; "block or section style?" |
 | [page-template-metadata](page-template-metadata/SKILL.md) | One page type needs page-wide styling; need a body-level template class to scope CSS instead of `:has()` or per-block overrides |
+| [content-import](content-import/SKILL.md) | Importing/migrating a source site's pages into EDS; writing an import script/parser/profile; wiring downloadable assets; setting up import infrastructure. Profile-driven, hash-free, selector-based importer built once per template + the finalize-assets pipeline. Full playbook: `content-import/IMPORTING-GUIDE.md` |
 
 ---
 
