@@ -25,18 +25,23 @@
   --body-font-family: "Graphik Regular", roboto-fallback, tahoma, sans-serif;
   --heading-font-family: "Graphik XXCond Bold", "Arial Narrow", tahoma, sans-serif;
 
-  /* body sizes */
-  --body-font-size-m: 18px;
+  /* body sizes — mobile-first (source: 16px body @ <768, 18px @ >=768) */
+  --body-font-size-m: 16px;
   --body-font-size-s: 16px;
   --body-font-size-xs: 14px;
+  --body-line-height: 24px; /* source body line-height is a fixed 24px */
 
-  /* heading sizes — mobile-first */
-  --heading-font-size-xxl: 44px;
-  --heading-font-size-xl: 34px;
-  --heading-font-size-l: 30px;
-  --heading-font-size-m: 18px;
-  --heading-font-size-s: 18px;
-  --heading-font-size-xs: 16px;
+  /* heading sizes — mobile-first (source computed scale, tools/quality/typography.json) */
+  --heading-font-size-xxl: 54px; /* h1 */
+  --heading-font-size-xl: 44px;  /* h2 */
+  --heading-font-size-l: 36px;   /* h3 */
+  --heading-font-size-m: 18px;   /* h4 */
+  --heading-font-size-s: 18px;   /* h5 */
+  --heading-font-size-xs: 16px;  /* h6 */
+
+  /* shared 12-column grid (source: Bootstrap-3, 30px gutter) — see
+     docs/source-css-system.md §3. Blocks consume --grid-gap + .grid-* utilities. */
+  --grid-gap: 30px;
 
   /* nav height */
   --nav-height: 120px;
@@ -55,15 +60,16 @@
   src: local('Arial');
 }
 
-@media (width >= 992px) {
+@media (width >= 768px) {
   :root {
-    /* heading sizes — desktop (exact from source) */
+    /* heading + body sizes — desktop (source scale jumps at the 768 tier) */
     --heading-font-size-xxl: 100px;
     --heading-font-size-xl: 76px;
     --heading-font-size-l: 56px;
     --heading-font-size-m: 18px;
     --heading-font-size-s: 18px;
     --heading-font-size-xs: 16px;
+    --body-font-size-m: 18px;
   }
 }
 
@@ -74,7 +80,7 @@ body {
   color: var(--text-color);
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-m);
-  line-height: 1.6;
+  line-height: var(--body-line-height);
 }
 
 body.appear {
@@ -82,7 +88,10 @@ body.appear {
 }
 
 header {
-  height: var(--nav-height);
+  /* reserve at least the nav height to avoid CLS before the block loads, but
+     let the header grow to fit its real content (nav bar + breadcrumb row) so
+     the hero below it starts at the correct offset, not under the breadcrumb */
+  min-height: var(--nav-height);
 }
 
 header .header,
@@ -320,15 +329,61 @@ main img {
   width: 100%;
 }
 
+/* ------------------------------------------------------------------
+   Shared 12-column grid — reproduces the source's Bootstrap-3 system
+   (12 cols, 30px gutter, centered container 720/970/1170 at 768/992/1200).
+   Set ONCE here; blocks consume .container-max / .grid-12 / .grid-col-*.
+   See docs/source-css-system.md §3 and skills/grid-system.
+   ------------------------------------------------------------------ */
+.container-max {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin-inline: auto;
+  padding-inline: 15px; /* fluid phone tier: 15px side gutter */
+}
+
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: var(--grid-gap);
+}
+
+/* common source spans (col-* → grid span) */
+.grid-col-3 { grid-column: span 3; }  /* col-lg-3 (1/4) */
+.grid-col-4 { grid-column: span 4; }  /* col-md-4 (1/3) */
+.grid-col-6 { grid-column: span 6; }  /* col-*-6 (1/2)  */
+.grid-col-8 { grid-column: span 8; }  /* col-md-8 (2/3) */
+.grid-col-9 { grid-column: span 9; }  /* col-lg-9 (3/4) */
+
+@media (width >= 768px) {
+  .container-max {
+    max-width: 720px;
+    padding-inline: 0;
+  }
+}
+
+@media (width >= 992px) {
+  .container-max { max-width: 970px; }
+}
+
+@media (width >= 1200px) {
+  .container-max { max-width: 1170px; }
+}
+
 /* sections */
 main > .section {
   margin: 40px 0;
 }
 
+/* Section content sits on the SOURCE grid: fluid with a 15px side gutter on
+   phone, then the Bootstrap-3 container widths (720/970/1170) per tier — so
+   every section lands on the same lines as the source (see docs/source-css-system.md
+   §3). Tier widths are layered in the media queries below. */
 main > .section > div {
-  max-width: 1200px;
+  max-width: none;
   margin: auto;
-  padding: 0 24px;
+  padding: 0 15px;
 }
 
 main > .section:first-of-type {
@@ -343,9 +398,22 @@ main > .section:empty {
   margin: 0;
 }
 
+@media (width >= 768px) {
+  main > .section > div {
+    max-width: 720px;
+    padding: 0;
+  }
+}
+
 @media (width >= 992px) {
   main > .section > div {
-    padding: 0 32px;
+    max-width: 970px;
+  }
+}
+
+@media (width >= 1200px) {
+  main > .section > div {
+    max-width: 1170px;
   }
 }
 

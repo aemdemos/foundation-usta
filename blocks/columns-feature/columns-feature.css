@@ -2,6 +2,13 @@
 /* stylelint-disable no-descending-specificity */
 
 /* --- base / mobile-first: stack everything --- */
+
+/* Mobile: source insets the feature content ~31px each side (vs the 15px
+   section gutter) — add 16px inline padding. Reset at the desktop tier. */
+.columns-feature {
+  padding-inline: 16px;
+}
+
 .columns-feature .columns-feature-row {
   display: flex;
   flex-direction: column;
@@ -23,18 +30,17 @@
   color: #000;
 }
 
-/* Mobile: source centers the feature text and shows a larger h3 (36px). */
+/* Mobile: source centers the feature text; h3 size/lh from the global token
+   scale (36px→56px at 768). */
 .columns-feature h3 {
-  font-size: 36px;
-  line-height: 1.1;
   text-align: center;
 }
 
 .columns-feature p {
   margin: 0 0 1em;
   color: #000;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: var(--body-font-size-m); /* 16px→18px at 768 (global token) */
+  line-height: var(--body-line-height);
   text-align: center;
 }
 
@@ -59,14 +65,17 @@
   height: 40px;
   border: 1px solid transparent;
   border-radius: 3px;
-  padding: 4px 18px;
+
+  /* source feature CTAs render ~167–188px wide; a little extra horizontal
+     padding brings ours (was ~166) up to match the source's fuller buttons */
+  padding: 4px 24px;
   background-color: var(--brand-blue);
   color: #fff;
   font-family: var(--heading-semibold-font-family);
   font-size: 18px;
   font-weight: 400;
   letter-spacing: 1px;
-  line-height: 1;
+  line-height: 20px; /* source button line-height */
   text-transform: uppercase;
   text-decoration: none;
 }
@@ -92,13 +101,20 @@
   font-size: 28px;
   line-height: 30.8px;
   text-transform: none;
+
+  /* source left-aligns the video-card heading at ALL widths (overrides the
+     block's mobile-centered default) */
+  text-align: left;
 }
 
 .columns-feature .columns-feature-media p {
   margin: 16px 0 0;
   color: #000;
-  font-size: 18px;
+  font-size: var(--body-font-size-m); /* 16px mobile → 18px at 768 (source) */
   line-height: 24px;
+
+  /* source left-aligns the video-card body at ALL widths */
+  text-align: left;
 }
 
 /* responsive 16:9 video embed */
@@ -130,9 +146,8 @@
   text-align: center;
 }
 
-/* source shows this heading larger than the global mobile h2 (44px vs 34px) */
+/* title h2 uses the global h2 token scale (44px→76px at 768) */
 .columns-feature .columns-feature-title h2 {
-  font-size: 44px;
   line-height: 1.1;
 }
 
@@ -177,8 +192,23 @@
   margin: 0 auto;
 }
 
+/* At the 768 tier the source already left-aligns the image-collage ("For
+   decades") feature BODY text (the centered .columns-feature-title h2 stays
+   centered; the video/We-go-beyond feature stays centered until 992). Scope to
+   the collage instance's body paragraphs only. */
+@media (width >= 768px) {
+  .columns-feature:has(.columns-feature-collage) .columns-feature-row > div p {
+    text-align: left;
+  }
+}
+
 /* --- desktop: side-by-side 50/50 --- */
 @media (width >= 992px) {
+  /* reset the mobile inline inset — desktop uses the grid container */
+  .columns-feature {
+    padding-inline: 0;
+  }
+
   .columns-feature .columns-feature-row {
     flex-direction: row;
     align-items: flex-start;
@@ -190,10 +220,9 @@
     text-align: left;
   }
 
-  /* Reset the mobile centering/sizing back to the desktop layout. */
+  /* Reset the mobile centering back to the desktop layout (size comes from the
+     global h3 token). */
   .columns-feature h3 {
-    font-size: var(--heading-font-size-l);
-    line-height: 1.1;
     text-align: left;
   }
 
@@ -201,19 +230,16 @@
     text-align: left;
   }
 
-  /* title stays centered (lifted heading) at its desktop size */
-  .columns-feature .columns-feature-title h2 {
-    font-size: var(--heading-font-size-xl);
-  }
-
   .columns-feature:has(.columns-feature-collage) .columns-feature-collage img {
     width: 100%;
   }
 
   /* image-collage ("For decades") instance: source is [266px thumbnail stack |
-     296px tall portrait] on the left, then a text column on the right. */
+     296px tall portrait] on the left, then a text column on the right, with a
+     generous ~64px gap between the collage and the text (source spacing — a flat
+     40px read too tight). */
   .columns-feature.columns-feature-2-cols:has(.columns-feature-collage) .columns-feature-row {
-    gap: 40px;
+    gap: 64px;
   }
 
   .columns-feature:has(.columns-feature-collage) .columns-feature-collage {

@@ -73,7 +73,11 @@ footer .footer-brand .footer-keepup:any-link {
   color: #fff;
   font-family: var(--heading-semibold-font-family);
   font-size: 14px;
-  letter-spacing: 0.02em;
+
+  /* match the source button: no letter-spacing, 20px line-height, centered */
+  letter-spacing: normal;
+  line-height: 20px;
+  text-align: center;
   text-transform: uppercase;
   text-decoration: none;
   border-radius: 3px;
@@ -131,10 +135,10 @@ footer .footer-social a:hover {
   opacity: 0.8;
 }
 
-/* Follow-us text: 18px/24px, centered, with a one-line (24px) gap between the
-   two sentences — the source renders a blank line between them. */
+/* Follow-us text: 16px mobile → 18px at 768 (source), 24px line-height,
+   centered, with a one-line (24px) gap between the two sentences. */
 footer .footer-social p {
-  font-size: 18px;
+  font-size: var(--body-font-size-m);
   line-height: 24px;
 }
 
@@ -180,13 +184,16 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
   footer .footer {
     display: grid;
 
-    /* brand column wide enough for the 290px logo + 237px button (source) */
-    grid-template-columns: 290px 1fr 220px;
+    /* Brand column fits the 237px KEEP UP button; social column sizes to its
+       content; nav takes the middle. Column-gap 30px (source grid gutter) keeps
+       the three columns inside the tier width so nothing overflows (the source
+       footer never scrolls sideways). */
+    grid-template-columns: 237px 1fr auto;
     grid-template-areas:
       'brand nav social'
       'legal legal legal';
     align-items: start;
-    column-gap: 40px;
+    column-gap: 30px;
     padding: 48px 40px;
   }
 
@@ -199,9 +206,10 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
     text-align: left;
   }
 
-  /* logo matches source width (290px, was 210) */
+  /* Logo tracks the source's responsive footer logo (≈180px @992, 210px @1200),
+     kept within the 237px brand column so it never pushes the grid wider. */
   footer .footer-brand img {
-    width: 290px;
+    width: 180px;
   }
 
   /* The KEEP UP button is wrapped in a <p>; as a flex item under
@@ -242,13 +250,16 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
     margin: 0;
   }
 
+  /* nav links wrap if the tier is tight rather than forcing horizontal overflow
+     (at ≥1200 there's room to keep them on one line — see below) */
   footer .footer-nav a {
-    white-space: nowrap;
+    white-space: normal;
   }
 
   /* social + follow text: right column, centered content (matches source) */
   footer .footer-social {
     grid-area: social;
+    width: 220px;
     margin-bottom: 0;
     text-align: center;
   }
@@ -256,5 +267,16 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
   footer .footer-legal {
     grid-area: legal;
     margin-top: 48px;
+  }
+}
+
+/* ≥1200: full room — restore the source's larger logo + nowrap nav row */
+@media (width >= 1200px) {
+  footer .footer-brand img {
+    width: 210px;
+  }
+
+  footer .footer-nav a {
+    white-space: nowrap;
   }
 }

@@ -17,23 +17,27 @@
 .columns-statement > div {
   max-width: 810px;
   margin: 0 auto;
-  padding: 24px 0;
+
+  /* Mobile: source insets this statement ~53px from each edge (vs the 15px
+     section gutter) — add 38px inline padding so content sits at 53px. Reset
+     at the desktop tier below. */
+  padding: 24px 38px;
   text-align: center;
 }
 
 .columns-statement h2 {
   margin: 0;
   color: #000;
-  font-size: 44px;
-  line-height: 1.1;
+
+  /* size/line-height from the global h2 token scale (44px→76px at 768, lh 1.1) */
   text-align: center;
 }
 
 .columns-statement p {
   margin: 0;
   color: #000;
-  font-size: var(--body-font-size-s); /* 16px mobile */
-  line-height: 24px;
+  font-size: var(--body-font-size-m); /* 16px→18px at 768 (global token) */
+  line-height: var(--body-line-height);
   text-align: center;
 }
 
@@ -44,15 +48,9 @@
   .columns-statement > div {
     width: 56vw;
     max-width: 965px;
-    padding: 50px 0 80px;
+    padding: 50px 0 80px; /* reset the mobile inline inset */
   }
 
-  .columns-statement h2 {
-    font-size: 76px;
-    line-height: 110px;
-  }
-
-  .columns-statement p {
-    font-size: var(--body-font-size-m); /* 18px desktop */
-  }
+  /* h2 + body sizes scale via the global tokens at the 768 tier — no per-block
+     font-size override (the old line-height:110px drifted from the source 83.6). */
 }

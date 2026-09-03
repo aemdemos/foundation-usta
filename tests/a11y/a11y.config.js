@@ -36,6 +36,7 @@ export default {
   },
   urls: [
     '/',
+    '/en/home',
     // Add real pages/templates here as they land, e.g.:
     // '/products', '/about', '/contact'
   ],

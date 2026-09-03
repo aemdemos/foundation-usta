@@ -22,6 +22,13 @@ export default async function decorate(block) {
   const footer = document.createElement('div');
   footer.innerHTML = html;
 
+  // DA-authored <picture> elements carry <source srcset> renditions whose
+  // filenames differ from the working <img src> (an extra hash suffix) and are
+  // not present locally — the browser would prefer the 404ing <source> and the
+  // logo/icons break. These fragment images need no responsive art-direction,
+  // so drop the <source>s and always use the <img>.
+  footer.querySelectorAll('picture source').forEach((s) => s.remove());
+
   // The fragment lives at /content/footer.plain.html, so relative image paths
   // (images/…) must resolve against /content/, not the current page URL.
   footer.querySelectorAll('img[src]').forEach((img) => {

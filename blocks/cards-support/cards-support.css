@@ -3,9 +3,26 @@
 
 /* Section intro (default content above the cards): "Your support makes a
    difference." heading + subtitle. Source renders these centered and black
-   (#000); the global default-content styles otherwise leave them #333/left. */
+   (#000); the global default-content styles otherwise leave them #333/left.
+   Mobile: source insets this section ~31px each side (vs the 15px section
+   gutter) — add 16px inline padding on the intro and the cards block. */
 .cards-support-container .default-content-wrapper {
   text-align: center;
+
+  /* intro is a direct section child (no 15px wrapper gutter) → full 31px */
+  padding-inline: 31px;
+}
+
+.cards-support {
+  /* cards block sits in the section's 15px-gutter wrapper → +16px = 31px total */
+  padding-inline: 16px;
+}
+
+@media (width >= 992px) {
+  .cards-support-container .default-content-wrapper,
+  .cards-support {
+    padding-inline: 0;
+  }
 }
 
 .cards-support-container .default-content-wrapper h2,
@@ -68,7 +85,7 @@
 .cards-support .cards-support-card-body p {
   margin: 0;
   font-family: var(--body-font-family);
-  font-size: 18px;
+  font-size: var(--body-font-size-m); /* 16px mobile → 18px at 768 (source) */
   line-height: 24px;
   color: #000;
 }
@@ -109,6 +126,14 @@
   text-decoration: underline;
 }
 
+/* Source left-aligns the card text from the 768 tier (mobile base is centered).
+   The intro heading/subtitle above the cards stays centered (handled above). */
+@media (width >= 768px) {
+  .cards-support > ul > li {
+    text-align: left;
+  }
+}
+
 @media (width >= 992px) {
   /* Single row of 4 on desktop; content is 1200px wide → 4×270 + gutters. */
   .cards-support > ul {
@@ -117,10 +142,9 @@
     gap: 0;
   }
 
-  /* fixed 270px cards, left-aligned text (mobile base is full-width, centered) */
+  /* fixed 270px cards (mobile base is full-width) */
   .cards-support > ul > li {
     width: 270px;
-    text-align: left;
   }
 
   .cards-support .cards-support-card-image img {

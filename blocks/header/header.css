@@ -30,7 +30,11 @@ header nav {
 
 header nav p {
   margin: 0;
-  line-height: 1;
+
+  /* keep the global body line-height (24px) so it doesn't drift from the type
+     scale; the DONATE link inside is inline-flex with its own fixed height, so
+     this line-height has no visual effect on the nav row. */
+  line-height: var(--body-line-height);
 }
 
 /* ---------- brand / logo ---------- */
@@ -274,9 +278,10 @@ header .nav-breadcrumb {
   align-items: center;
 
   /* explicit height wins over the generic `header nav { height:120px }` that
-     would otherwise apply to this <nav> and inflate the breadcrumb row */
+     would otherwise apply to this <nav> and inflate the breadcrumb row. Height
+     comes from the crumb line-height (38/28px), so no min-height floor. */
   height: auto;
-  min-height: 38px;
+  min-height: 0;
   padding: 0;
   border-top: 1px solid #e5e5e5;
   border-bottom: 1px solid #e5e5e5;
@@ -289,7 +294,10 @@ header .nav-breadcrumb ol {
   justify-content: flex-start;
   gap: 4px;
   margin: 0;
-  padding: 8px 20px;
+
+  /* horizontal gutter only — row height comes from the crumb line-height so it
+     matches the source's 38px/28px (no vertical padding) */
+  padding: 0 20px;
   list-style: none;
 }
 
@@ -299,7 +307,10 @@ header .nav-breadcrumb a {
   font-family: var(--body-font-family);
   font-size: 10px;
   font-weight: 900;
-  line-height: 1;
+
+  /* Source drives the row height from the crumb line-height (no vertical
+     padding): 38px on phone/tablet, 28px from the 1440 tier. */
+  line-height: 38px;
   text-transform: uppercase;
   text-decoration: none;
 }
@@ -326,8 +337,8 @@ header .nav-breadcrumb a:hover {
     align-items: center;
     justify-content: flex-start;
     gap: 0;
-    height: 120px;
-    min-height: 120px;
+    height: 128px; /* source nav bar is 128px tall */
+    min-height: 128px;
     max-width: 1440px;
     margin: 0 auto;
     overflow: visible;
@@ -347,7 +358,9 @@ header .nav-breadcrumb a:hover {
     width: 100%;
     max-width: 1440px;
     margin: 0 auto;
-    padding: 14px 40px;
+
+    /* horizontal 40px gutter only; height from crumb line-height (see below) */
+    padding: 0 40px;
   }
 
   header nav .nav-hamburger {
@@ -357,7 +370,7 @@ header .nav-breadcrumb a:hover {
   header nav .nav-brand img {
     width: 294px;
     height: auto;
-    max-height: 120px;
+    max-height: 125px; /* source logo renders 294×125 */
     object-fit: contain;
   }
 
@@ -434,10 +447,12 @@ header .nav-breadcrumb a:hover {
     cursor: pointer;
   }
 
+  /* Source caret is an 18×12 solid triangle (border-left/right 9px transparent,
+     border-top 12px) in a mid-grey (#6e7277) — match size AND color. */
   header nav .nav-drop-toggle::after {
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 6px solid rgb(0 0 0);
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 12px solid rgb(110 114 119);
   }
 
   header nav .nav-sections > ul > li:hover .nav-drop-toggle::after,
@@ -496,5 +511,13 @@ header .nav-breadcrumb a:hover {
 
   header nav .nav-sections > ul > li > ul > li > a:hover {
     text-decoration: underline;
+  }
+}
+
+/* ≥1440: source shrinks the breadcrumb crumb line-height 38px→28px (row 40→30px) */
+@media (width >= 1440px) {
+  header .nav-breadcrumb li,
+  header .nav-breadcrumb a {
+    line-height: 28px;
   }
 }

@@ -97,11 +97,16 @@ const scale = {};
 const fontMap = new Map();
 for (const url of urls) {
   for (const w of WIDTHS) {
-    const ctx = await browser.newContext({ viewport: { width: w, height: 900 } });
+    const ctx = await browser.newContext({
+      viewport: { width: w, height: 900 },
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    });
     const page = await ctx.newPage();
     try {
-      await page.goto(url, { waitUntil: 'networkidle', timeout: 25000 });
-      await page.waitForTimeout(400);
+      // `load` (not `networkidle`) — the source polls analytics continuously, so
+      // networkidle never settles and every viewport times out.
+      await page.goto(url, { waitUntil: 'load', timeout: 45000 });
+      await page.waitForTimeout(1200);
       const { out, fonts } = await page.evaluate(collect, TAGS);
       scale[w] = { ...(scale[w] || {}), ...out }; // first URL wins per tag, later fills gaps
       for (const [tag, v] of Object.entries(out)) if (!scale[w][tag]) scale[w][tag] = v;

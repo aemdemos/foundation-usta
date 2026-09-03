@@ -38,7 +38,9 @@ main > .section.hero-banner-container {
   background-position: 50% 50%;
   background-size: cover;
   color: var(--background-color);
-  padding: 72px 24px;
+
+  /* mobile: source hero content sits ~12px from each edge */
+  padding: 72px 12px;
 }
 
 /* inner row: constrain to content width, left-aligned text column */
@@ -54,18 +56,19 @@ main > .section.hero-banner-container {
 .hero-banner h1 {
   margin: 0;
   color: var(--background-color);
-  font-family: var(--heading-font-family);
-  font-weight: 500;
-  font-size: 54px; /* source mobile H1 */
-  line-height: 1.1;
+
+  /* size/weight/line-height come from the global h1 token scale (54px→100px at
+     768px, line-height 1.1) — matches the source across every breakpoint. */
 }
 
 .hero-banner p {
   margin: 0;
   color: var(--background-color);
   font-family: var(--body-font-family);
-  font-size: 16px; /* source mobile body */
-  line-height: 24px;
+
+  /* body size from global tokens (16px→18px at 768); source line-height 24px */
+  font-size: var(--body-font-size-m);
+  line-height: var(--body-line-height);
 }
 
 /* h1 -> p gap is 0 in source; p -> CTA gap is 16px */
@@ -73,10 +76,14 @@ main > .section.hero-banner-container {
   margin-top: 16px;
 }
 
-/* CTA button (decorated in hero-banner.js) — source height 40px */
+/* CTA button (decorated in hero-banner.js) — source is 238px × 40px, text
+   centered (the source button has a fixed ~238px width, not shrink-to-text). */
 .hero-banner a.button:any-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 238px;
   height: 40px;
   margin: 0;
   border: 1px solid transparent;
@@ -88,7 +95,7 @@ main > .section.hero-banner-container {
   font-weight: 400;
   font-size: 18px;
   letter-spacing: 1px;
-  line-height: 1;
+  line-height: 20px; /* source button line-height */
   text-transform: uppercase;
   text-decoration: none;
 }
@@ -110,43 +117,64 @@ main > .section.hero-banner-container {
   color: var(--text-color);
 }
 
-@media (width >= 992px) {
-  /* Full-width hero, source height 740px @1706 (background-image + overlay come
-     from the base rule — do NOT redeclare here or the overlay is lost). */
+/* ------------------------------------------------------------------
+   Desktop tiers. The hero is full-bleed (background + overlay from the base
+   rule — never redeclared here or the overlay is lost). Its inner text column
+   is the block's own art-direction: it sits inside the shared centered
+   container (.container-max tier widths) and its width matches the SOURCE's
+   measured left-offset text column at each breakpoint (768→348, 992→406,
+   1200→510px) so the 100px h1 wraps exactly as the source does.
+   ------------------------------------------------------------------ */
+@media (width >= 768px) {
   .hero-banner.block {
-    min-height: 740px;
     padding: 0;
   }
 
-  /* Content in a centered max-width:1440px container (matches the header nav),
-     so the heading tracks the logo (h1 left ≈173, source 187). padding-top 246
-     places h1 at ~366 from the viewport top; bottom padding keeps the band 740. */
+  /* centered container at the tier width (720/970/1170), matching page content */
   .hero-banner.block > div {
-    display: flex;
-    align-items: flex-start;
     box-sizing: border-box;
     width: 100%;
-    max-width: 1440px;
+    max-width: 720px;
     margin: 0 auto;
-    padding: 246px 40px 170px;
+    padding: 120px 0 96px;
   }
 
-  /* Text column ~763px (source width) so the 100px h1 wraps to 3 lines (h≈220),
-     not 5, keeping the hero at the source's 740px height. */
+  /* text column: source width @768 (348px), indented ~1 column from the
+     container edge so it tracks the source's left offset (src x≈82). */
   .hero-banner.block > div > div {
     box-sizing: border-box;
-    width: 763px;
-    max-width: 55%;
-    padding-right: 20px;
-    padding-left: 0;
+    width: 348px;
+    max-width: 100%;
+    margin-left: 58px;
+    padding: 0;
+  }
+}
+
+/* ≥992: the source hero is FLUID (not fixed tiers). Measured on the live site,
+   the text column follows exact linear formulas at every width ≥992:
+     • left offset = 8.333vw + 45px  (128@992, 145@1200, 165@1440, 205@1920)
+     • width       = 50vw − 90px     (406@992, 510@1200, 630@1440, 870@1920)
+   BOTH are CAPPED at their ~1920 values (width 870, left 205) — beyond ~1920 the
+   source stops growing, so the heading stays "Transforming Lives Through" on
+   line 1 (it does NOT let "Tennis &" join line 1). The band has symmetric ~208px
+   top/bottom padding, so its height follows the content — the 100px h1 wraps to
+   3 lines (~874px) around 1200 and to 2 lines (~740px) on wide screens, exactly
+   like the source. min() reproduces both the fluid growth AND the cap. */
+@media (width >= 992px) {
+  .hero-banner.block {
+    min-height: 0;
   }
 
-  /* desktop H1 scales up to the source's 100px (mobile base is 54px) */
-  .hero-banner h1 {
-    font-size: var(--heading-font-size-xxl);
+  .hero-banner.block > div {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 208px 0;
   }
 
-  .hero-banner p {
-    font-size: 18px;
+  .hero-banner.block > div > div {
+    width: min(calc(50vw - 90px), 870px);
+    max-width: none;
+    margin-left: min(calc(8.333vw + 45px), 205px);
   }
 }
