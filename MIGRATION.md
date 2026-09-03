@@ -567,3 +567,14 @@ bar at the card's bottom corners. Zeroed `.cards-expand-donate p { margin:0; lin
 button IS the 44px footer, flush to the card edge and aligned with the panel's 44px bottom inset.
 Verified: footer 63→44px, `cardBottom - donateBottom === 0`, `donateBottom - aBottom === 0`.
 Gates: stylelint ✓ · breakpoints ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-03 — cards-expand: verified per-fund DONATE opens the Fundraise Up overlay
+Confirmed (real mouse click, not synthetic) that each card's DONATE opens the Fundraise Up overlay for
+that specific fund on the local preview: JLLI click → Judy Levering collage + "Designate to the Judy
+Levering Leadership Initiative (JLLI)"; DINKINS click → Dinkins photo + "Designate to the David N.
+Dinkins Fund". Click is intercepted (`defaultPrevented=true`), checkout iframes load — exactly like the
+source's donate widget. Card hrefs use `?form=<CODE>` (JLLI/DINKINS/TISDEL/RSPA/MIDDLESTATES), matching
+the source's `special-funds.html?form=<CODE>` pattern (source codes e.g. TIAFOE/MACKIE/EVERT).
+Also hardened `scripts/donate.js`: the `contentWindow`/`contentDocument` getter now wraps `.defaultView`
+access in try/catch — reading it on the CROSS-ORIGIN Stripe checkout iframe was throwing SecurityError
+(harmless here but could break the widget's own frame access). eslint ✓.

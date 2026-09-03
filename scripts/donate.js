@@ -78,10 +78,17 @@ function hardenFrameAccessors() {
     const originalGet = desc.get;
     const wrappedGet = function hardened() {
       const value = originalGet.call(this);
-      // `contentWindow` returns the realm window; `contentDocument` returns its
-      // document, whose realm window is `.defaultView`.
-      const win = value && (value.defaultView || value);
-      ensureDefaultPolicy(win);
+      try {
+        // `contentWindow` returns the realm window; `contentDocument` returns its
+        // document, whose realm window is `.defaultView`. Reading `.defaultView`
+        // on a CROSS-ORIGIN document throws SecurityError — guard it so the
+        // getter never throws (that would break the widget's own frame access).
+        const win = value && (value.defaultView || value);
+        ensureDefaultPolicy(win);
+      } catch (e) {
+        // Cross-origin frame (e.g. the Stripe checkout iframe) — inaccessible
+        // and doesn't need our same-origin Trusted Types policy. Ignore.
+      }
       return value;
     };
     wrappedGetters.add(wrappedGet);
