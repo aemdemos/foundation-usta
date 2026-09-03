@@ -1,0 +1,47 @@
+/* Block: quote — italic testimonial quote(s) + bold attribution.
+   Values from source computed styles (chris-evert-50th-anniversary):
+   - quotation: 32px/48px, weight 500, italic, Graphik Regular, black, left,
+     20px left inset, ~40px gap between blocks.
+   - attribution: 22px→28px @768, lh 1.1, weight 700, italic, Graphik Semibold,
+     black, centered. */
+
+.quote {
+  color: #000;
+}
+
+/* Quotation paragraphs — mirror the source <blockquote> treatment. */
+.quote .quote-quotation {
+  padding-left: 20px;
+  margin-bottom: 40px;
+}
+
+.quote .quote-quotation p {
+  margin: 0;
+  font-family: var(--body-font-family); /* Graphik Regular */
+  font-size: 32px;
+  line-height: 48px;
+  font-weight: 500;
+  font-style: italic;
+  text-align: left;
+}
+
+/* Attribution — name + affiliation. */
+.quote .quote-attribution {
+  margin: 0;
+}
+
+.quote .quote-attribution p {
+  margin: 0;
+  font-family: var(--heading-semibold-font-family); /* Graphik Semibold */
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 700;
+  font-style: italic;
+  text-align: center;
+}
+
+@media (width >= 768px) {
+  .quote .quote-attribution p {
+    font-size: 28px; /* source bumps the attribution to 28px from the 768 tier */
+  }
+}

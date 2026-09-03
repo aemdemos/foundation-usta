@@ -1,0 +1,75 @@
+/* Table block — mirrors the source's two-column data layout:
+   bold header row, black text, no borders/background/cell-padding, equal
+   columns separated by the shared grid gutter. Group spacing comes from the
+   authored empty paragraphs (one 24px line each), exactly like the source.
+   Mobile-first: columns stack; from 768px they sit side-by-side as a table. */
+
+.table table {
+  width: 100%;
+  color: #000;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-m); /* 16px mobile → 18px at 768 (source) */
+  line-height: 24px;
+}
+
+/* base (mobile): render every table part as a block so the two columns stack */
+.table table,
+.table thead,
+.table tbody,
+.table tr,
+.table th,
+.table td {
+  display: block;
+  padding: 0;
+  border: 0;
+  text-align: left;
+}
+
+.table thead th {
+  font-weight: 700;
+}
+
+.table tbody td {
+  font-weight: 400;
+}
+
+/* stacked-column spacing on mobile: a 24px gap before each column after the
+   first, matching the source's group rhythm */
+.table th + th,
+.table td + td {
+  margin-top: 24px;
+}
+
+/* the source zeroes paragraph rhythm inside the columns; blank authored
+   paragraphs supply the 24px group separators */
+.table th p,
+.table td p {
+  margin: 0;
+  line-height: 24px;
+}
+
+@media (width >= 768px) {
+  .table table {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .table thead { display: table-header-group; }
+  .table tbody { display: table-row-group; }
+  .table tr { display: table-row; }
+
+  .table th,
+  .table td {
+    display: table-cell;
+    vertical-align: top;
+  }
+
+  /* column gutter (shared grid gap) between the two columns */
+  .table th + th,
+  .table td + td {
+    margin-top: 0;
+    padding-left: var(--grid-gap);
+  }
+}

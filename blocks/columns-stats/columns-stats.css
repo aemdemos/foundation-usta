@@ -31,7 +31,13 @@ main > .section.hero-banner-container + .section.columns-stats-container {
 
 @media (width >= 768px) {
   .columns-stats-container .columns-stats-wrapper {
-    padding: 0 15px;
+    padding: 0 24px; /* source 768 tier: 24px gutter → 720px band */
+  }
+}
+
+@media (width >= 992px) {
+  .columns-stats-container .columns-stats-wrapper {
+    padding: 0 15px; /* source ≥992: 15px gutter → 962/1170px band */
   }
 }
 
@@ -44,20 +50,23 @@ main > .section.hero-banner-container + .section.columns-stats-container {
   background-color: #000;
   border-radius: 24px;
   color: #fff;
-  padding: 14px 15px;
+
+  /* Source band: 9px top/bottom rhythm, NO side padding (items carry their own
+     15px side margins in the desktop row); height follows items (97px + 2×9px
+     ≈ 115px desktop). Mobile keeps a 15px side inset so stacked items clear the
+     rounded corners. */
+  padding: 9px 15px;
 }
 
-/* row: 3 stat items side by side, evenly distributed */
+/* mobile: stat items stacked, full width, abutting */
 .columns-stats > div {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  gap: 24px;
 }
 
-/* each stat item (cell) */
 .columns-stats > div > div {
-  flex: 1;
+  flex: 0 1 auto;
   padding: 8px 0;
   text-align: center;
 }
@@ -69,9 +78,12 @@ main > .section.hero-banner-container + .section.columns-stats-container {
   text-align: center;
 }
 
-/* numbers render bold in the source */
+/* The content authors numbers + labels in <strong> (default 700), but the
+   SOURCE computes weight 400 (Graphik Regular) for BOTH the figures and the
+   labels — measured at every viewport. Override the <strong> default to 400 to
+   match; the size difference alone distinguishes the number from its label. */
 .columns-stats > div > div p strong {
-  font-weight: 700;
+  font-weight: 400;
 }
 
 /* big number: first paragraph of each item (source: 38px / line-height 57 = 1.5) */
@@ -94,9 +106,23 @@ main > .section.hero-banner-container + .section.columns-stats-container {
   }
 }
 
-@media (width >= 992px) {
+/* Source lays the 3 stats side-by-side from the 768 tier (band collapses to a
+   compact ~139px horizontal row), not 992. Items shrink-to-share the row with a
+   15px side margin each (source model: flex 0 1 auto, margin 0 15px,
+   space-around) — this yields the source's ~291px item width @992 so labels
+   wrap exactly as the source (e.g. "YOUNG PEOPLE SERVED ANNUALLY" → 2 lines). */
+@media (width >= 768px) {
+  .columns-stats {
+    padding: 9px 0; /* items carry the side margin; band has no side inset */
+  }
+
   .columns-stats > div {
     flex-direction: row;
     align-items: center;
+  }
+
+  .columns-stats > div > div {
+    flex: 1 1 0;
+    margin: 0 15px;
   }
 }

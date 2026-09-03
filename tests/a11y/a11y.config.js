@@ -37,7 +37,34 @@ export default {
   urls: [
     '/',
     '/en/home',
-    // Add real pages/templates here as they land, e.g.:
-    // '/products', '/about', '/contact'
+    // Block-library sample pages (drafts/block-samples/*) — one per pending
+    // block, built to source parity. Kept in the sweep so block a11y is enforced.
+    '/drafts/block-samples/hero-error',
+    '/drafts/block-samples/banner-stats-grid',
+    '/drafts/block-samples/cards-tiles',
+    '/drafts/block-samples/cards-profile',
+    '/drafts/block-samples/cards-stats',
+    '/drafts/block-samples/cards-content',
+    '/drafts/block-samples/cards-expand',
+    '/drafts/block-samples/cards-news',
+    '/drafts/block-samples/tabs',
+    '/drafts/block-samples/downloads',
+    '/drafts/block-samples/quote',
+    '/drafts/block-samples/quote-image',
+    '/drafts/block-samples/quote-tweet',
+    '/drafts/block-samples/table',
+    '/drafts/block-samples/social',
+    '/drafts/block-samples/custom-content-related-articles',
+    '/drafts/block-samples/embed-instagram',
+    '/drafts/block-samples/video-embed',
+    '/drafts/block-samples/custom-widget-reactions',
+    '/drafts/block-samples/custom-form-donate',
+    // Homepage blocks (already live on /en/home) — sample pages for the library:
+    '/drafts/block-samples/hero-banner',
+    '/drafts/block-samples/columns-stats',
+    '/drafts/block-samples/columns-statement',
+    '/drafts/block-samples/columns-feature-video',
+    '/drafts/block-samples/columns-feature-collage',
+    '/drafts/block-samples/cards-support',
   ],
 };

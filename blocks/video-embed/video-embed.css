@@ -1,0 +1,68 @@
+/* video-embed — consent-gated, responsive 16:9 YouTube embed
+   Source: ustafoundation.com news article (.usta-consent-embed).
+   Deviation: the source renders a fixed 315px-tall iframe; per the build brief
+   we use a fluid 16:9 aspect-ratio frame so the embed scales at every width.
+   The consent placeholder overlays the frame exactly as on the source. */
+
+/* Responsive 16:9 frame — the iframe and the placeholder both fill it. */
+.video-embed .video-embed-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.video-embed .video-embed-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Consent placeholder — overlays the frame (source: absolute inset 0). */
+.video-embed .video-embed-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  border: 1px solid #c1c6c8;
+  border-radius: 4px;
+  background-color: #eef0f0;
+  text-align: center;
+}
+
+/* Message — source is 14px/21px, weight 400, #333 (differs from the 16→18
+   body token; this gated placeholder uses its own smaller type). */
+.video-embed .video-embed-placeholder p {
+  max-width: 400px;
+  margin: 0;
+  color: #333;
+  font-family: var(--body-font-family);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+}
+
+/* Load-video control — source renders it as an inline underlined link
+   (#418fde) with no button chrome. */
+.video-embed .video-embed-consent {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #418fde;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.video-embed .video-embed-consent:hover {
+  color: var(--link-hover-color, #23527c);
+}
+
+.video-embed .video-embed-consent:focus-visible {
+  outline: 2px solid #418fde;
+  outline-offset: 2px;
+}

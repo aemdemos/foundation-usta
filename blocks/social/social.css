@@ -1,0 +1,63 @@
+/*
+ * social — share bar. Source (USTA Foundation) renders five 48x48 icon
+ * buttons in a left-aligned row that abut (no gap): each is a 24px glyph
+ * centred in 12px padding. Icon size + layout are constant across viewports.
+ */
+
+.social .social-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.social .social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 12px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+  appearance: none;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.social .social-btn svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+/* Subtle affordance on hover/focus without altering source layout/size. */
+.social .social-btn:hover svg,
+.social .social-btn:focus-visible svg {
+  opacity: 0.8;
+}
+
+.social .social-btn:focus-visible {
+  outline: 2px solid var(--link-color);
+  outline-offset: 2px;
+}
+
+/* Copy-link confirmation: visible next to the bar, doesn't shift the icons. */
+.social .social-status {
+  margin-left: 8px;
+  font-family: var(--body-font-family);
+  font-size: 14px;
+  line-height: 48px;
+  color: var(--text-color, #333);
+}
+
+.social .social-status:empty {
+  display: none;
+}

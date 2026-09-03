@@ -1,0 +1,176 @@
+/* Block: banner-stats-grid — impact stats on WHITE:
+   heading + featured stat + a 2x2 grid of number/label pairs.
+   Values from source computed styles (ustafoundation.com/en/home/our-impact). */
+
+.banner-stats-grid {
+  /* Source content column = viewport − 60 (30px side gutters), capped at 1200.
+     Our section wrapper is a touch wider (970/1170), which flips the heading +
+     featured line-wrap vs the source; constrain to the source widths so they
+     wrap identically (heading 2 lines @992, featured 2 lines @992/1200). */
+  box-sizing: border-box;
+  margin-inline: auto;
+
+  /* Mobile: source insets content ~31px each side (content 328px, vs our 15px
+     section gutter) — add 16px so the heading/featured wrap exactly like the
+     source. Reset at 768 where the tier widths above take over. */
+  padding-inline: 16px;
+  text-align: center;
+}
+
+@media (width >= 768px) {
+  .banner-stats-grid {
+    padding-inline: 0;
+  }
+}
+
+/* Source content column grows as viewport − 90px and caps at the parent grid
+   width, so the stat columns widen with the viewport (labels reflow: e.g.
+   "coaches, mentors & volunteers" is 3 lines up to ~1200 then 2 lines beyond).
+   A fixed cap froze our columns and kept that label at 3 lines on wide screens.
+   Fluid min() reproduces the source at 992 (→902), 1200 (→1110) AND past 1260
+   (→ up to the 970/1170 grid cap, giving the source's 270px columns). */
+@media (width >= 992px) {
+  .banner-stats-grid {
+    max-width: min(970px, calc(100vw - 90px));
+  }
+}
+
+@media (width >= 1200px) {
+  .banner-stats-grid {
+    max-width: min(1170px, calc(100vw - 90px));
+  }
+}
+
+/* Heading row — source h2: 44→76 black, centered (inherits global h2 scale). */
+.banner-stats-grid .banner-stats-grid-heading {
+  margin: 0;
+}
+
+.banner-stats-grid .banner-stats-grid-heading h2,
+.banner-stats-grid .banner-stats-grid-heading p {
+  margin: 0;
+  font-family: var(--heading-font-family);
+  font-weight: 500;
+  font-size: var(--heading-font-size-xl); /* 44 → 76 */
+  line-height: 1.1;
+  color: #000;
+  text-align: center;
+}
+
+/* Featured stat — source h1: 54→100 blue, centered. The source constrains the
+   featured line to a narrow centered column so it wraps (240px @768 → 4 lines,
+   ~669px @992 → 2 lines), not the full content width. Reproduce per tier. */
+.banner-stats-grid .banner-stats-grid-featured {
+  margin: 32px 0 0; /* source heading→featured gap = 32px */
+}
+
+@media (width >= 768px) {
+  .banner-stats-grid .banner-stats-grid-featured h1,
+  .banner-stats-grid .banner-stats-grid-featured p {
+    max-width: 240px;
+  }
+}
+
+@media (width >= 992px) {
+  .banner-stats-grid .banner-stats-grid-featured h1,
+  .banner-stats-grid .banner-stats-grid-featured p {
+    max-width: 669px;
+  }
+}
+
+@media (width >= 1200px) {
+  .banner-stats-grid .banner-stats-grid-featured h1,
+  .banner-stats-grid .banner-stats-grid-featured p {
+    max-width: none;
+  }
+}
+
+.banner-stats-grid .banner-stats-grid-featured h1,
+.banner-stats-grid .banner-stats-grid-featured p {
+  margin: 0 auto; /* centered; the per-tier max-width above narrows the wrap */
+  font-family: var(--heading-font-family);
+  font-weight: 500;
+  font-size: var(--heading-font-size-xxl); /* 54 → 100 */
+  line-height: 1.1;
+  color: var(--brand-blue-accent, #418FDE);
+  text-align: center;
+}
+
+/* Stat grid: single column on mobile, 2 columns from 768. Source featured→first
+   stat gap = 48px, and 48px between stacked pairs. */
+.banner-stats-grid .banner-stats-grid-items {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px 30px;
+  margin-top: 48px;
+}
+
+/* Mobile: number stacked ABOVE its label, both FULL-WIDTH and centered (source
+   number + label each span the full 328px column, centered — align-items:stretch
+   so they don't shrink-wrap). 16px gap between the number and its label. */
+.banner-stats-grid .banner-stats-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+
+/* Number — source: fixed 90px / 99px blue, all breakpoints. */
+.banner-stats-grid .banner-stats-grid-number,
+.banner-stats-grid .banner-stats-grid-number p {
+  margin: 0;
+  font-family: var(--heading-font-family);
+  font-weight: 500;
+  font-size: 90px;
+  line-height: 99px;
+  color: var(--brand-blue-accent, #418FDE);
+  text-align: center;
+}
+
+/* Label — source h3: 36→56 black, centered. */
+.banner-stats-grid .banner-stats-grid-label,
+.banner-stats-grid .banner-stats-grid-label p {
+  margin: 0;
+  font-family: var(--heading-font-family);
+  font-weight: 500;
+  font-size: var(--heading-font-size-l); /* 36 → 56 */
+  line-height: 1.1;
+  color: #000;
+  text-align: center;
+}
+
+@media (width >= 768px) {
+  .banner-stats-grid .banner-stats-grid-items {
+    /* minmax(0,1fr) so the two columns stay truly equal and can shrink below the
+       label's min-content width (repeat(2,1fr) let a wide label push its track
+       past half, overflowing the row at 768). */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 60px 30px;
+  }
+}
+
+/* From 768: each item is number | label side-by-side as TWO EQUAL centered
+   halves (source: item is a flex row, space-around; number and label each take
+   ~half and are centered — so the label wraps within its narrow half, e.g.
+   "come from families of need" → 2–3 lines, matching the source). */
+@media (width >= 768px) {
+  .banner-stats-grid .banner-stats-grid-item {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+  }
+
+  .banner-stats-grid .banner-stats-grid-number,
+  .banner-stats-grid .banner-stats-grid-label {
+    flex: 1 1 0; /* equal halves */
+    min-width: 0;
+  }
+
+  .banner-stats-grid .banner-stats-grid-number,
+  .banner-stats-grid .banner-stats-grid-number p,
+  .banner-stats-grid .banner-stats-grid-label,
+  .banner-stats-grid .banner-stats-grid-label p {
+    text-align: center;
+  }
+}

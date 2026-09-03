@@ -1,0 +1,92 @@
+/* cards-profile — profile/staff cards: portrait photo + name + italic role.
+   Source: ustafoundation.com/.../leadership-and-staff (AEM teaser tiles).
+   Values from source computed styles at 390/768/992/1200.
+
+   Layout: 1-up (mobile) → 4-up (>=768), on the shared 12-col grid (30px
+   column gutter). Card widths follow the shared container (720/970/1170),
+   which is a touch wider than this source page's own per-page inset — a
+   deliberate consequence of the Grid Rule (one shared grid, never bespoke
+   per-block widths); typography matches the source exactly. */
+
+.cards-profile > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px var(--grid-gap); /* row 40px, column 30px */
+}
+
+/* White shadowed card. Source: #fff, box-shadow rgba(0,0,0,.5) 0 2px 5px. */
+.cards-profile > ul > li {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  box-shadow: 0 2px 5px 0 rgb(0 0 0 / 50%);
+}
+
+/* Portrait — full-bleed square at the top of the card. */
+.cards-profile .cards-profile-card-image {
+  line-height: 0;
+}
+
+.cards-profile .cards-profile-card-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+/* Text area — source content-wrapper padding 20px 20px 0 (bottom spacing
+   comes from the role's 10px bottom margin below). */
+.cards-profile .cards-profile-card-body {
+  padding: 20px 20px 0;
+}
+
+/* Name. Source: Graphik Semibold, weight 400, #000, 20/28 → 22/32. */
+.cards-profile .cards-profile-card-body h4 {
+  margin: 0 0 5px;
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 28px;
+  color: #000;
+  text-transform: none;
+}
+
+/* Role. Source: description <p><i> — Graphik Regular italic, #000, 16/22.857
+   → 18/25.714. A 34x4 black divider bar sits above it. */
+.cards-profile .cards-profile-card-body p {
+  margin: 0 0 10px;
+  font-family: var(--body-font-family);
+  font-size: 16px;
+  line-height: 22.8571px;
+  font-style: italic;
+  color: #000;
+}
+
+.cards-profile .cards-profile-card-body p::before {
+  content: "";
+  display: block;
+  width: 34px;
+  height: 4px;
+  margin: 0 0 10px;
+  background-color: #000;
+}
+
+@media (width >= 768px) {
+  .cards-profile > ul {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .cards-profile .cards-profile-card-body h4 {
+    font-size: 22px;
+    line-height: 32px;
+  }
+
+  .cards-profile .cards-profile-card-body p {
+    font-size: 18px;
+    line-height: 25.7143px;
+  }
+}

@@ -1,0 +1,52 @@
+/* Downloads block — heading + bulleted list of download (PDF) links.
+   Source: ustafoundation.com financials "Annual Reports".
+   Heading uses the global h2 tokens (44px/76px Graphik XXCond Bold, wt 500);
+   source renders it black, so override the inherited #333 body color. */
+
+.downloads h1,
+.downloads h2,
+.downloads h3,
+.downloads h4,
+.downloads h5,
+.downloads h6 {
+  margin: 0 0 20px;
+  color: var(--dark-color);
+}
+
+.downloads ul {
+  margin: 0;
+  padding-left: 40px;
+  list-style: disc;
+}
+
+.downloads li {
+  margin: 0;
+  color: var(--text-color);
+
+  /* source link line-height is 1.4286 (22.857px @16 / 25.714px @18),
+     not the global fixed 24px body line-height */
+  line-height: 1.4286;
+}
+
+.downloads li + li {
+  margin-top: 10px;
+}
+
+.downloads li a:any-link {
+  color: var(--link-color);
+  font-size: 16px;
+  line-height: 1.4286;
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+.downloads li a:hover,
+.downloads li a:focus {
+  color: var(--link-hover-color);
+}
+
+@media (width >= 768px) {
+  .downloads li a:any-link {
+    font-size: 18px;
+  }
+}

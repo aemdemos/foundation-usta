@@ -1,0 +1,95 @@
+/* cards-stats — 4-up stat cards on the cream band: circular photo + a large
+   stat number (90px Graphik XXCond Bold) + a caption (18px Graphik Semibold).
+   Values from source computed styles (our-impact.html) at 390/768/992/1200.
+
+   The round crop + white ring is baked into the source PNG, so the image is a
+   plain square (border-radius 0). Source lays images in one 4-col grid and the
+   number+caption pairs in a second 4-col grid below; we model each column as a
+   single stacked card (image → number → caption), which is visually identical
+   per column and the natural EDS authoring model. */
+
+.cards-stats {
+  /* cream stat band (source container bg #FFEFBE) */
+  background-color: var(--stats-cream-bg, #ffefbe);
+  padding: 32px 0;
+}
+
+.cards-stats > ul {
+  list-style: none;
+  margin: 0;
+
+  /* mobile: single column, source insets ~16px inside the 15px gutter */
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px 30px;
+}
+
+.cards-stats > ul > li {
+  margin: 0;
+  text-align: center;
+}
+
+/* Circular photo — square PNG with the ring pre-baked; full-width on mobile. */
+.cards-stats .cards-stats-card-image {
+  line-height: 0;
+}
+
+.cards-stats .cards-stats-card-image img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 0;
+  display: block;
+}
+
+/* Large stat number: 90px / 99px / 500, Graphik XXCond Bold, black, centered. */
+.cards-stats .cards-stats-card-number {
+  margin: 24px 0 0;
+}
+
+.cards-stats .cards-stats-card-number h2,
+.cards-stats .cards-stats-card-number h3,
+.cards-stats .cards-stats-card-number p {
+  margin: 0;
+  font-family: var(--heading-font-family);
+  font-size: 90px;
+  line-height: 99px;
+  font-weight: 500;
+  color: #000;
+  text-align: center;
+  text-transform: none;
+}
+
+/* Caption: 18px / 27px / 500, Graphik Semibold, black, centered. */
+.cards-stats .cards-stats-card-caption {
+  margin: 24px 0 0;
+}
+
+.cards-stats .cards-stats-card-caption h4,
+.cards-stats .cards-stats-card-caption p {
+  margin: 0;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  line-height: 27px;
+  font-weight: 500;
+  color: #000;
+  text-align: center;
+  text-transform: none;
+}
+
+/* Tablet: 2-up (source aem-GridColumn--tablet--6). */
+@media (width >= 768px) {
+  .cards-stats > ul {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0;
+  }
+}
+
+/* Desktop: single row of 4 (source aem-GridColumn--default--3). */
+@media (width >= 992px) {
+  .cards-stats > ul {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

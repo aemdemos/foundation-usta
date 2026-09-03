@@ -1,0 +1,172 @@
+/* embed-instagram — Instagram post embed alongside article text (2-column).
+   We render a consent-gated placeholder card (no third-party script by default);
+   a "Load post" button upgrades it to the live blockquote on click. */
+/* stylelint-disable no-descending-specificity */
+
+/* --- base / mobile-first: stack (embed above text) --- */
+.embed-instagram > div {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.embed-instagram > div > div {
+  min-width: 0;
+}
+
+/* --- article text column --- */
+.embed-instagram .embed-instagram-text p {
+  margin: 0 0 1em;
+  color: #000;
+  font-size: var(--body-font-size-m); /* 16px → 18px at 768 (global token) */
+  line-height: var(--body-line-height); /* 24px */
+  text-align: left;
+}
+
+.embed-instagram .embed-instagram-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* --- embed column: center the card on mobile --- */
+.embed-instagram .embed-instagram-embed {
+  display: flex;
+  justify-content: center;
+}
+
+/* --- placeholder card (mirrors Instagram's official embed skeleton) --- */
+.embed-instagram .embed-instagram-card {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 326px;
+  max-width: 658px;
+  padding: 16px;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 0 1px 0 rgb(0 0 0 / 50%), 0 1px 10px 0 rgb(0 0 0 / 15%);
+}
+
+/* header: round avatar + two skeleton name bars */
+.embed-instagram .embed-instagram-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.embed-instagram .embed-instagram-avatar {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  margin-right: 14px;
+  border-radius: 50%;
+  background-color: #f4f4f4;
+}
+
+.embed-instagram .embed-instagram-lines {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: center;
+}
+
+.embed-instagram .embed-instagram-bar {
+  display: block;
+  height: 14px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  background-color: #f4f4f4;
+}
+
+.embed-instagram .embed-instagram-bar:last-child {
+  margin-bottom: 0;
+}
+
+/* Instagram glyph */
+.embed-instagram .embed-instagram-glyph {
+  width: 50px;
+  height: 50px;
+  margin: 19% auto 12px;
+}
+
+.embed-instagram .embed-instagram-glyph svg {
+  display: block;
+  width: 50px;
+  height: 50px;
+}
+
+/* "View this post on Instagram" — Instagram's own placeholder typography */
+.embed-instagram .embed-instagram-cta {
+  display: block;
+  margin-top: 8px;
+  color: #3897f0;
+  font-family: arial, sans-serif;
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 18px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.embed-instagram .embed-instagram-cta:hover,
+.embed-instagram .embed-instagram-cta:focus-visible {
+  color: #3897f0;
+  text-decoration: underline;
+}
+
+/* footer caption skeleton bars */
+.embed-instagram .embed-instagram-footer {
+  margin-top: 12.5%;
+}
+
+.embed-instagram .embed-instagram-caption {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+/* "Load post" — consent-gated upgrade to the live embed */
+.embed-instagram .embed-instagram-load {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  background-color: #fafafa;
+  color: #262626;
+  font-family: arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.embed-instagram .embed-instagram-load:hover,
+.embed-instagram .embed-instagram-load:focus-visible {
+  background-color: #f0f0f0;
+}
+
+/* live embed, once loaded, sits centered like the placeholder */
+.embed-instagram .instagram-media {
+  margin: 0 auto !important;
+}
+
+/* --- desktop: embed + text side by side (source stacks on mobile AND tablet;
+   goes 2-col only at 992 on the shared 12-col grid: embed = col-5, text = col-6,
+   30px gutter, trailing col left empty — matches source Bootstrap layout) --- */
+@media (width >= 992px) {
+  .embed-instagram > div {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--grid-gap); /* 30px shared gutter */
+    align-items: start;
+  }
+
+  .embed-instagram .embed-instagram-embed {
+    grid-column: span 5;
+    justify-content: flex-start;
+  }
+
+  .embed-instagram .embed-instagram-text {
+    grid-column: span 6;
+  }
+}

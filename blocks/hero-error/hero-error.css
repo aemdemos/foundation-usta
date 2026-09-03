@@ -1,0 +1,86 @@
+/* hero-error — 404 "page not found" hero. Centered tennis-ball graphic +
+   heading + CTA. Values from source computed styles (ustafoundation.com/404).
+   Typography comes from the global h1 token scale (54px→100px at 768). */
+
+.hero-error {
+  box-sizing: border-box;
+  padding: 80px 15px;
+  text-align: center;
+}
+
+/* centered content column */
+.hero-error > div > div {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* bouncing tennis-ball graphic above the heading (source uses an animated ball) */
+.hero-error > div > div::before {
+  content: '';
+  display: block;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d4e94a, #b6d40a 70%);
+  box-shadow: inset -6px -8px 0 rgb(0 0 0 / 8%);
+  animation: hero-error-bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes hero-error-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-error > div > div::before { animation: none; }
+}
+
+.hero-error h1 {
+  margin: 0;
+  color: #000;
+
+  /* size/line-height/weight from the global h1 token scale (54→100 at 768) */
+  text-align: center;
+}
+
+/* CTA — filled brand-blue button, 40px tall, matches the site button style */
+.hero-error a.button:any-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 40px;
+  margin: 32px 0 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 14px 24px;
+  background-color: var(--brand-blue);
+  color: #fff;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 20px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.hero-error a.button:hover,
+.hero-error a.button:focus-visible {
+  background-color: var(--link-hover-color);
+  color: #fff;
+  text-decoration: none;
+}
+
+@media (width >= 768px) {
+  .hero-error {
+    padding: 120px 0;
+  }
+
+  .hero-error > div > div::before {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 40px;
+  }
+}
