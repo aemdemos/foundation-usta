@@ -636,3 +636,22 @@ unlike the source's clear ~20px gutter. Changed to `gap: 20px` (uniform). Four c
 5th card centered below. Re-verified DONATE: click on Judy Levering → FundraiseUp overlay for JLLI
 (collage image + "Designate to the Judy Levering Leadership Initiative (JLLI)"). Gates: stylelint ✓ ·
 breakpoints ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-04 — cards (expand): DONATE redirected to home on PRODUCTION (DA strips query-only hrefs)
+Root cause found via the published page: on prod every card DONATE resolved to `/url: /` (home), NOT
+`?form=<CODE>`. DA/EDS publishing STRIPS a query-ONLY href (`?form=JLLI`, no path) down to the site root.
+(The nav DONATE survives because it's an ABSOLUTE url WITH a query — `https://…/?form=DONATE` — DA keeps
+the query when there's a real path/host.) So the fund code never reached the Fundraise Up widget and the
+link just navigated home.
+Fix (two parts):
+1. Content: authored each card DONATE as a full path-bearing URL that DA preserves —
+   `https://www.ustafoundation.com/en/home/get-involved/special-funds.html?form=<CODE>` (mirrors the real
+   source's own hrefs + the working nav DONATE pattern).
+2. scripts/donate.js: generalized `wireDonateTriggers()` from `form=DONATE`-only to ANY `a[href*="form="]`
+   — it reads the `form` code (via URL API, regex fallback) and rewrites the href to
+   `${location.pathname}?form=<CODE>` so the click stays on our origin and the widget opens the matching
+   campaign. Nav DONATE still normalises to `/en/home?form=DONATE` (verified, no regression).
+Verified locally: real click on Dinkins DONATE → stays on `?form=DINKINS` (no home redirect) → Fundraise Up
+overlay for "David N. Dinkins Fund" ("Designate to the David N. Dinkins Fund"). Gates: eslint ✓ · lint 0 err ·
+a11y ✓.
+**Requires DA re-upload of cards-expand.plain.html for prod to pick up the corrected hrefs.**

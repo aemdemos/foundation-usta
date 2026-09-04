@@ -122,13 +122,27 @@ function loadFundraiseUp() {
 
 /**
  * Normalise donate triggers so a click opens the widget on our own origin.
- * Any link whose href carries `form=DONATE` (e.g. the nav DONATE button, whose
- * href comes from the authored nav document and may point at the source domain)
- * is rewritten to the relative `?form=DONATE` on the current path.
+ * Any link whose href carries a `form=<CODE>` query (the nav DONATE button, or a
+ * per-fund card button like `form=JLLI`) is rewritten to `?form=<CODE>` on the
+ * CURRENT path. This does two things:
+ *   1. keeps the visitor on our origin so the Fundraise Up widget opens the
+ *      overlay (rather than navigating to the source domain), and
+ *   2. survives DA publishing: authors give the link a real absolute/path href
+ *      (e.g. `https://www.ustafoundation.com/...?form=JLLI`) because DA strips a
+ *      query-ONLY href (`?form=JLLI`) down to `/` — here we restore the query on
+ *      our own path at runtime, so the fund code always reaches the widget.
+ * The `<CODE>` is preserved verbatim so the widget opens the matching campaign.
  */
 function wireDonateTriggers() {
-  document.querySelectorAll('a[href*="form=DONATE"]').forEach((a) => {
-    a.setAttribute('href', `${window.location.pathname}?form=DONATE`);
+  document.querySelectorAll('a[href*="form="]').forEach((a) => {
+    let code = null;
+    try {
+      code = new URL(a.href, window.location.origin).searchParams.get('form');
+    } catch {
+      const m = a.getAttribute('href')?.match(/[?&]form=([^&]+)/);
+      code = m ? decodeURIComponent(m[1]) : null;
+    }
+    if (code) a.setAttribute('href', `${window.location.pathname}?form=${code}`);
   });
 }
 
