@@ -1,3 +1,5 @@
+/* stylelint-disable no-descending-specificity */
+
 .hero-container .hero-wrapper {
   max-width: unset;
   padding: 0;
@@ -33,5 +35,281 @@
 @media (width >= 992px) {
   .hero {
     padding: 40px 32px;
+  }
+}
+
+/* ==================================================================
+   Variant: banner
+   ================================================================== */
+
+/* hero banner — full-bleed background photo + dark overlay + overlaid white text.
+   Values extracted from source computed styles (see migration-work/hero-banner-extracted.css). */
+
+/* Full-bleed: override EDS section wrapper max-width/padding */
+.hero-container:has(.hero.banner) .hero-wrapper {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* No gap between the hero and the stats bar below (source has none). The hero
+   owns this seam: zero its own bottom margin AND the following section's top
+   margin, otherwise the global `main > .section { margin: 40px 0 }` on the next
+   section keeps a 40px gap (adjacent margins collapse to the larger value). */
+main > .section.hero-container:has(.hero.banner) {
+  margin: 0;
+}
+
+/* Desktop only: butt the stats bar directly under the hero. On mobile the
+   stats section keeps its own 17px top margin (source mobile rhythm). */
+@media (width >= 992px) {
+  main > .section.hero-container:has(.hero.banner) + .section {
+    margin-top: 0;
+  }
+}
+
+.hero.banner.block {
+  position: relative;
+  box-sizing: border-box;
+
+  /* source composites a 40% black overlay over the banner photo (a full-size
+     rgba(0,0,0,0.4) layer) — replicate it as a gradient so background-size:cover
+     still applies to the photo. */
+  background-image:
+    linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)),
+    url('./ustaf-banner-2.jpg');
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  background-size: cover;
+  color: var(--background-color);
+
+  /* mobile: source hero content sits ~12px from each edge */
+  padding: 72px 12px;
+}
+
+/* inner row: constrain to content width, left-aligned text column */
+.hero.banner.block > div {
+  max-width: var(--content-max-width, 1200px);
+  margin: 0 auto;
+}
+
+.hero.banner.block > div > div {
+  max-width: 510px;
+}
+
+.hero.banner h1 {
+  margin: 0;
+  color: var(--background-color);
+
+  /* size/weight/line-height come from the global h1 token scale (54px→100px at
+     768px, line-height 1.1) — matches the source across every breakpoint. */
+}
+
+.hero.banner p {
+  margin: 0;
+  color: var(--background-color);
+  font-family: var(--body-font-family);
+
+  /* body size from global tokens (16px→18px at 768); source line-height 24px */
+  font-size: var(--body-font-size-m);
+  line-height: var(--body-line-height);
+}
+
+/* h1 -> p gap is 0 in source; p -> CTA gap is 16px */
+.hero.banner p + p {
+  margin-top: 16px;
+}
+
+/* CTA button (decorated in hero.js) — source is 238px × 40px, text
+   centered (the source button has a fixed ~238px width, not shrink-to-text). */
+.hero.banner a.button:any-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 238px;
+  height: 40px;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 14px;
+  background-color: var(--brand-blue);
+  color: var(--background-color);
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: 1px;
+  line-height: 20px; /* source button line-height */
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.hero.banner a.button:hover,
+.hero.banner a.button:focus-visible {
+  border-color: transparent;
+  background-color: var(--link-hover-color);
+  color: var(--background-color);
+}
+
+/* no background photo variant falls back to dark text on white */
+.hero.banner.no-image {
+  background-image: none;
+}
+
+.hero.banner.no-image h1,
+.hero.banner.no-image p {
+  color: var(--text-color);
+}
+
+/* ------------------------------------------------------------------
+   Desktop tiers. The hero is full-bleed (background + overlay from the base
+   rule — never redeclared here or the overlay is lost). Its inner text column
+   is the block's own art-direction: it sits inside the shared centered
+   container (.container-max tier widths) and its width matches the SOURCE's
+   measured left-offset text column at each breakpoint (768→348, 992→406,
+   1200→510px) so the 100px h1 wraps exactly as the source does.
+   ------------------------------------------------------------------ */
+@media (width >= 768px) {
+  .hero.banner.block {
+    padding: 0;
+  }
+
+  /* centered container at the tier width (720/970/1170), matching page content */
+  .hero.banner.block > div {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 120px 0 96px;
+  }
+
+  /* text column: source width @768 (348px), indented ~1 column from the
+     container edge so it tracks the source's left offset (src x≈82). */
+  .hero.banner.block > div > div {
+    box-sizing: border-box;
+    width: 348px;
+    max-width: 100%;
+    margin-left: 58px;
+    padding: 0;
+  }
+}
+
+/* ≥992: the source hero is FLUID (not fixed tiers). Measured on the live site,
+   the text column follows exact linear formulas at every width ≥992:
+     • left offset = 8.333vw + 45px  (128@992, 145@1200, 165@1440, 205@1920)
+     • width       = 50vw − 90px     (406@992, 510@1200, 630@1440, 870@1920)
+   BOTH are CAPPED at their ~1920 values (width 870, left 205) — beyond ~1920 the
+   source stops growing, so the heading stays "Transforming Lives Through" on
+   line 1 (it does NOT let "Tennis &" join line 1). The band has symmetric ~208px
+   top/bottom padding, so its height follows the content — the 100px h1 wraps to
+   3 lines (~874px) around 1200 and to 2 lines (~740px) on wide screens, exactly
+   like the source. min() reproduces both the fluid growth AND the cap. */
+@media (width >= 992px) {
+  .hero.banner.block {
+    min-height: 0;
+  }
+
+  .hero.banner.block > div {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 208px 0;
+  }
+
+  .hero.banner.block > div > div {
+    width: min(calc(50vw - 90px), 870px);
+    max-width: none;
+    margin-left: min(calc(8.333vw + 45px), 205px);
+  }
+}
+
+/* ==================================================================
+   Variant: error
+   ================================================================== */
+
+/* hero error — 404 "page not found" hero. Centered tennis-ball graphic +
+   heading + CTA. Values from source computed styles (ustafoundation.com/404).
+   Typography comes from the global h1 token scale (54px→100px at 768). */
+
+.hero.error {
+  box-sizing: border-box;
+  padding: 80px 15px;
+  text-align: center;
+}
+
+/* centered content column */
+.hero.error > div > div {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* bouncing tennis-ball graphic above the heading (source uses an animated ball) */
+.hero.error > div > div::before {
+  content: '';
+  display: block;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d4e94a, #b6d40a 70%);
+  box-shadow: inset -6px -8px 0 rgb(0 0 0 / 8%);
+  animation: hero-error-bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes hero-error-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero.error > div > div::before { animation: none; }
+}
+
+.hero.error h1 {
+  margin: 0;
+  color: #000;
+
+  /* size/line-height/weight from the global h1 token scale (54→100 at 768) */
+  text-align: center;
+}
+
+/* CTA — filled brand-blue button, 40px tall, matches the site button style */
+.hero.error a.button:any-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 40px;
+  margin: 32px 0 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 14px 24px;
+  background-color: var(--brand-blue);
+  color: #fff;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 20px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.hero.error a.button:hover,
+.hero.error a.button:focus-visible {
+  background-color: var(--link-hover-color);
+  color: #fff;
+  text-decoration: none;
+}
+
+@media (width >= 768px) {
+  .hero.error {
+    padding: 120px 0;
+  }
+
+  .hero.error > div > div::before {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 40px;
   }
 }

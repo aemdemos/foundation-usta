@@ -578,3 +578,61 @@ the source's `special-funds.html?form=<CODE>` pattern (source codes e.g. TIAFOE/
 Also hardened `scripts/donate.js`: the `contentWindow`/`contentDocument` getter now wraps `.defaultView`
 access in try/catch — reading it on the CROSS-ORIGIN Stripe checkout iframe was throwing SecurityError
 (harmless here but could break the widget's own frame access). eslint ✓.
+
+### 2026-09-04 — Block naming: consolidated to base + variant (EDS model)
+Refactored the block library to the EDS "small set of baseline blocks + variants" model
+(see skills/eds-content-modeling). In EDS, authoring "Cards (content)" yields
+`<div class="cards content">` which loads ONLY `blocks/cards/` — so each family was
+CONSOLIDATED into one base block whose `decorate()` dispatches on the variant class:
+- **cards** ← content (default), expand, news, profile, stats, support, tiles
+- **columns** ← feature (auto-detects video/collage sub-layouts), statement, stats
+- **hero** ← banner (default, keeps the NBSP h1 line-break bind), error
+- **quote** ← (default), image, tweet
+Singletons unchanged: banner-stats-grid, social, table, tabs, downloads, video-embed,
+embed-instagram, custom-content-related-articles, custom-form-donate, custom-widget-reactions.
+
+Mechanics / gotchas:
+- Each base `<block>.js` moved the variant bodies into named helpers (decorateExpand,
+  decorateFeature, …) and dispatches via `block.classList.contains('<variant>')`. All
+  descendant element classes kept verbatim (`cards-expand-panel`, `columns-stats-img-col`, …).
+- CSS: block-ROOT token rewritten `.cards-content` → `.cards.content` (compound class), etc.
+  Descendant classes untouched.
+- **Section-container rescope (the tricky bit):** EDS derives the section wrapper class from
+  the block's FIRST class, so after consolidation `.columns-stats-container` no longer exists —
+  it's `.columns-container` shared by all columns variants. Rules that keyed off the old
+  per-variant container were rescoped with `:has()`:
+  `.columns-stats-container .columns-stats-wrapper` → `.columns-container:has(.columns.stats) .columns-wrapper`;
+  `main > .section.hero-banner-container` → `main > .section.hero-container:has(.hero.banner)`;
+  and the cross-block adjacency in columns.css:
+  `…hero-banner-container + …columns-stats-container` →
+  `…hero-container:has(.hero.banner) + …columns-container:has(.columns.stats)`.
+- Content updated: home.plain.html + all block-sample .plain.html now author `class="cards content"`
+  etc.; sample H1 labels switched to bracket notation ("Cards (content)", "Hero (banner)", …).
+- Verified: /en/home renders pixel/type-identical (stats band black+24px radius+17px margin via the
+  :has rescope; columns feature still emits BOTH video iframe + collage; cards support → <ul>).
+  Gates: lint 0 err · breakpoints ✓ · overflow ✓ (360→1920) on home + all 16 renamed samples ·
+  typography ✓ (390/768/992/1200) · a11y ✓ (28/28 pages).
+
+### 2026-09-04 — Asset localization: sample-page images downloaded to content/media-da
+The published block-sample pages showed `about:error` for every image: they hotlinked
+ustafoundation.com / ucarecdn.com, and DA re-localization broke them (the exact failure the
+Asset Localization Playbook warns about). Wrote `tools/assets/localize-assets.mjs` (idempotent,
+profile of the playbook) + `docs/asset-localization-playbook.md`, and localized all 8 image-bearing
+samples: 30 images downloaded to `content/media-da/drafts/block-samples/{page}/media-{sha1}-{first8}.{ext}`,
+src+srcset rewritten to relative `/media-da/…`, ZERO external hotlinks remain, every ref verified
+serving 200 locally. Cards-expand fund images (500×376) render locally.
+- **DA re-upload required to fix production:** the corrected `.plain.html` docs must be re-pushed to
+  DA (media-da stays LOCAL-ONLY, never uploaded) — until then prod still shows the old about:error.
+- Heavy source assets flagged (local-only staging, optimize before any prod use): cards-profile has a
+  2.8MB SVG, an 815KB SVG, and an 851KB JPEG; quote-image a 683KB PNG.
+- Routing check: the header/footer logo correctly links to `/en/home` (verified by real click →
+  full homepage renders); `/en/home` is 200 on production. The "not routing home" symptom was the
+  broken-image state making the page look dead, not a broken link.
+
+### 2026-09-04 — cards (expand): restored inter-card gap (regression from column-fit tuning)
+The card row had `gap: 20px 4px` — the 4px COLUMN gap made the four 250px cards nearly touch,
+unlike the source's clear ~20px gutter. Changed to `gap: 20px` (uniform). Four cards still fit
+4-across (4×250 + 3×20 = 1060 ≤ 1070 ul); verified card x = 35/305/575/845, colGap = 20px,
+5th card centered below. Re-verified DONATE: click on Judy Levering → FundraiseUp overlay for JLLI
+(collage image + "Designate to the Judy Levering Leadership Initiative (JLLI)"). Gates: stylelint ✓ ·
+breakpoints ✓ · overflow ✓ (360→1920) · a11y ✓.

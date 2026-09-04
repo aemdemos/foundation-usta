@@ -31,3 +31,464 @@
     order: unset;
   }
 }
+
+/* columns-feature — two-column feature block (video + image-collage variants) */
+/* stylelint-disable no-descending-specificity */
+
+/* --- base / mobile-first: stack everything --- */
+
+/* Mobile: source insets the feature content ~31px each side (vs the 15px
+   section gutter) — add 16px inline padding. Reset at the desktop tier. */
+.columns.feature {
+  padding-inline: 16px;
+}
+
+.columns.feature .columns-feature-row {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Mobile: source centers the feature text, CTA buttons (WHO WE ARE /
+   WHAT WE DO) and the LEARN MORE link. The button paragraphs are inline-block,
+   so centering their cell centers them. */
+.columns.feature .columns-feature-row > div {
+  min-width: 0;
+  text-align: center;
+}
+
+/* headings & text reset within the block (source uses tight margins) */
+.columns.feature h2,
+.columns.feature h3 {
+  margin: 0 0 0.25em;
+  color: #000;
+}
+
+/* Mobile: source centers the feature text; h3 size/lh from the global token
+   scale (36px→56px at 768). */
+.columns.feature h3 {
+  text-align: center;
+}
+
+.columns.feature p {
+  margin: 0 0 1em;
+  color: #000;
+  font-size: var(--body-font-size-m); /* 16px→18px at 768 (global token) */
+  line-height: var(--body-line-height);
+  text-align: center;
+}
+
+.columns.feature img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* --- CTA links styled as buttons (authored as plain <p><a>) --- */
+.columns.feature .columns-feature-row p:has(> a:only-child) {
+  display: inline-block;
+  margin: 8px 8px 0 0;
+  vertical-align: top;
+}
+
+.columns.feature .columns-feature-row a:only-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+
+  /* source feature CTAs render ~167–188px wide; a little extra horizontal
+     padding brings ours (was ~166) up to match the source's fuller buttons */
+  padding: 4px 24px;
+  background-color: var(--brand-blue);
+  color: #fff;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 20px; /* source button line-height */
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.columns.feature .columns-feature-row a:only-child:hover,
+.columns.feature .columns-feature-row a:only-child:focus-visible {
+  background-color: var(--link-hover-color);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* --- media-card variant (instance A right column) --- */
+.columns.feature .columns-feature-media {
+  background-color: rgb(0 0 0 / 10%);
+  border-radius: 24px;
+  padding: 0 15px 32px;
+}
+
+.columns.feature .columns-feature-media h3 {
+  margin: 0;
+  padding: 12px 0;
+  color: var(--brand-orange);
+  font-size: 28px;
+  line-height: 30.8px;
+  text-transform: none;
+
+  /* source left-aligns the video-card heading at ALL widths (overrides the
+     block's mobile-centered default) */
+  text-align: left;
+}
+
+.columns.feature .columns-feature-media p {
+  margin: 16px 0 0;
+  color: #000;
+  font-size: var(--body-font-size-m); /* 16px mobile → 18px at 768 (source) */
+  line-height: 24px;
+
+  /* source left-aligns the video-card body at ALL widths */
+  text-align: left;
+}
+
+/* responsive 16:9 video embed */
+.columns.feature .columns-feature-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.columns.feature .columns-feature-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* --- image-collage variant (instance B) --- */
+.columns.feature .columns-feature-title {
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.columns.feature .columns-feature-title h1,
+.columns.feature .columns-feature-title h2,
+.columns.feature .columns-feature-title h3 {
+  margin: 0;
+  text-align: center;
+}
+
+/* title h2 uses the global h2 token scale (44px→76px at 768) */
+.columns.feature .columns-feature-title h2 {
+  line-height: 1.1;
+}
+
+/* Collage cell: a stack of thumbnails beside a tall portrait (source layout).
+   Mobile base = two small left-aligned thumbnails, portrait hidden (matches
+   source mobile); desktop lays the stack + portrait side by side. */
+.columns.feature .columns-feature-collage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Mobile: two thumbnails side by side, portrait below them (all 3 images
+   shown). The stack is a row of the two small thumbnails. */
+.columns.feature .columns-feature-collage-stack {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 16px;
+}
+
+.columns.feature .columns-feature-collage picture {
+  display: block;
+}
+
+.columns.feature .columns-feature-collage img {
+  width: 156px; /* source mobile thumbnail width */
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* tall portrait (decorative background image, matches source's 3rd collage
+   image) — shown on mobile below the two thumbnails. */
+.columns.feature .columns-feature-collage-portrait {
+  background-image: url('./college-bootcamp-hp.jpg');
+  background-position: 50% 50%;
+  background-size: cover;
+  width: 328px;
+  max-width: 100%;
+  min-height: 300px;
+  margin: 0 auto;
+}
+
+/* At the 768 tier the source already left-aligns the image-collage ("For
+   decades") feature BODY text (the centered .columns-feature-title h2 stays
+   centered; the video/We-go-beyond feature stays centered until 992). Scope to
+   the collage instance's body paragraphs only. */
+@media (width >= 768px) {
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div p {
+    text-align: left;
+  }
+}
+
+/* --- desktop: side-by-side 50/50 --- */
+@media (width >= 992px) {
+  /* reset the mobile inline inset — desktop uses the grid container */
+  .columns.feature {
+    padding-inline: 0;
+  }
+
+  .columns.feature .columns-feature-row {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 48px;
+  }
+
+  .columns.feature .columns-feature-row > div {
+    flex: 1;
+    text-align: left;
+  }
+
+  /* Reset the mobile centering back to the desktop layout (size comes from the
+     global h3 token). */
+  .columns.feature h3 {
+    text-align: left;
+  }
+
+  .columns.feature p {
+    text-align: left;
+  }
+
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage img {
+    width: 100%;
+  }
+
+  /* image-collage ("For decades") instance: source is [266px thumbnail stack |
+     296px tall portrait] on the left, then a text column on the right, with a
+     generous ~64px gap between the collage and the text (source spacing — a flat
+     40px read too tight). */
+  .columns.feature.columns-feature-2-cols:has(.columns-feature-collage) .columns-feature-row {
+    gap: 64px;
+  }
+
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage {
+    flex: 0 0 578px; /* 266 + 16 gap + 296 */
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage-stack {
+    flex: 0 0 266px;
+    flex-direction: column; /* reset mobile row layout */
+  }
+
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage-portrait {
+    flex: 0 0 296px;
+    align-self: stretch;
+
+    /* reset mobile sizing */
+    width: auto;
+    min-height: 100%;
+    margin: 0;
+  }
+
+  /* "We go beyond" video instance: source is a balanced 50/50 split within the
+     1200 container — left text col ~532, right video card ~532, wide gap.
+     Both columns flex:1 (inherited). The video card grows with its half; the
+     iframe fills it (16:9). No extra row padding, no fixed card width. */
+  .columns.feature:has(.columns-feature-media) .columns-feature-row {
+    gap: 106px;
+  }
+}
+
+/* Block: columns-statement -- centered narrow statement, values from source computed styles */
+
+/* Desktop: source butts this section against the stats bar above and the
+   feature section below. Zero its margin (and the following section's top
+   margin) only at desktop — mobile keeps the default section spacing, which
+   matches the source's mobile rhythm. */
+@media (width >= 992px) {
+  main > .section.columns-container:has(.columns.statement) {
+    margin: 0;
+  }
+
+  main > .section.columns-container:has(.columns.statement) + .section {
+    margin-top: 0;
+  }
+}
+
+.columns.statement > div {
+  max-width: 810px;
+  margin: 0 auto;
+
+  /* Mobile: source insets this statement ~53px from each edge (vs the 15px
+     section gutter) — add 38px inline padding so content sits at 53px. Reset
+     at the desktop tier below. */
+  padding: 24px 38px;
+  text-align: center;
+}
+
+.columns.statement h2 {
+  margin: 0;
+  color: #000;
+
+  /* size/line-height from the global h2 token scale (44px→76px at 768, lh 1.1) */
+  text-align: center;
+}
+
+.columns.statement p {
+  margin: 0;
+  color: #000;
+  font-size: var(--body-font-size-m); /* 16px→18px at 768 (global token) */
+  line-height: var(--body-line-height);
+  text-align: center;
+}
+
+@media (width >= 992px) {
+  /* Centered column, fluid like the source (~56% of viewport → 670@1200,
+     965@1706). Uses vw so it scales past the section's 1200px cap; capped at
+     the source's widest. */
+  .columns.statement > div {
+    width: 56vw;
+    max-width: 965px;
+    padding: 50px 0 80px; /* reset the mobile inline inset */
+  }
+
+  /* h2 + body sizes scale via the global tokens at the 768 tier — no per-block
+     font-size override (the old line-height:110px drifted from the source 83.6). */
+}
+
+/* Block: columns-stats -- dark rounded stats band */
+
+/* Values extracted from source computed styles (see migration-work/columns-stats-extracted.css) */
+
+/* Source has a small 17px gap above the stats bar (not the global 40px, not 0).
+   Set it explicitly with higher specificity than `main > .section {margin:40px 0}`
+   — and win over the hero rule that zeros the following section's top margin. */
+main > .section.columns-container:has(.columns.stats),
+main > .section.hero-container:has(.hero.banner) + .section.columns-container:has(.columns.stats) {
+  margin: 17px 0 0;
+}
+
+/* Desktop only: butt the statement section directly under the stats bar.
+   Mobile keeps the default section gap (matches the source's mobile rhythm). */
+@media (width >= 992px) {
+  main > .section.columns-container:has(.columns.stats) + .section {
+    margin-top: 0;
+  }
+}
+
+/* Override the EDS section wrapper (default max-width:1200px + 32px gutters) so
+   the band sits at a 15px gutter → 1170px wide at a 1200px viewport (source). */
+.columns-container:has(.columns.stats) .columns-wrapper {
+  max-width: none;
+  margin: 0;
+
+  /* Mobile: source insets the band ~27px each side; from the 768 tier it uses
+     the 15px grid gutter (→ 1170px band at 1200). */
+  padding: 0 27px;
+}
+
+@media (width >= 768px) {
+  .columns-container:has(.columns.stats) .columns-wrapper {
+    padding: 0 24px; /* source 768 tier: 24px gutter → 720px band */
+  }
+}
+
+@media (width >= 992px) {
+  .columns-container:has(.columns.stats) .columns-wrapper {
+    padding: 0 15px; /* source ≥992: 15px gutter → 962/1170px band */
+  }
+}
+
+/* 1170px band with 15px gutters (source is NOT full-bleed). Vertical padding
+   ~14px brings the band to the source's 115px height (46 number + 24 label +
+   item padding + band padding). */
+.columns.stats {
+  max-width: 1170px;
+  margin: 0 auto;
+  background-color: #000;
+  border-radius: 24px;
+  color: #fff;
+
+  /* Source band: 9px top/bottom rhythm, NO side padding (items carry their own
+     15px side margins in the desktop row); height follows items (97px + 2×9px
+     ≈ 115px desktop). Mobile keeps a 15px side inset so stacked items clear the
+     rounded corners. */
+  padding: 9px 15px;
+}
+
+/* mobile: stat items stacked, full width, abutting */
+.columns.stats > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.columns.stats > div > div {
+  flex: 0 1 auto;
+  padding: 8px 0;
+  text-align: center;
+}
+
+/* both lines: white, centered */
+.columns.stats > div > div p {
+  margin: 0;
+  color: #fff;
+  text-align: center;
+}
+
+/* The content authors numbers + labels in <strong> (default 700), but the
+   SOURCE computes weight 400 (Graphik Regular) for BOTH the figures and the
+   labels — measured at every viewport. Override the <strong> default to 400 to
+   match; the size difference alone distinguishes the number from its label. */
+.columns.stats > div > div p strong {
+  font-weight: 400;
+}
+
+/* big number: first paragraph of each item (source: 38px / line-height 57 = 1.5) */
+.columns.stats > div > div p:first-child {
+  font-size: 38px;
+  line-height: 57px;
+}
+
+/* label: second paragraph of each item. Source content is already uppercase
+   and the source computes text-transform:none — so we don't force uppercase.
+   Source label font-size is 16px on mobile, 18px from the 768 tier. */
+.columns.stats > div > div p:last-child {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+@media (width >= 768px) {
+  .columns.stats > div > div p:last-child {
+    font-size: 18px;
+  }
+}
+
+/* Source lays the 3 stats side-by-side from the 768 tier (band collapses to a
+   compact ~139px horizontal row), not 992. Items shrink-to-share the row with a
+   15px side margin each (source model: flex 0 1 auto, margin 0 15px,
+   space-around) — this yields the source's ~291px item width @992 so labels
+   wrap exactly as the source (e.g. "YOUNG PEOPLE SERVED ANNUALLY" → 2 lines). */
+@media (width >= 768px) {
+  .columns.stats {
+    padding: 9px 0; /* items carry the side margin; band has no side inset */
+  }
+
+  .columns.stats > div {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .columns.stats > div > div {
+    flex: 1 1 0;
+    margin: 0 15px;
+  }
+}

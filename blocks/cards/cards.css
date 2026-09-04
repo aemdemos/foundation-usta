@@ -1,27 +1,930 @@
-.cards > ul {
+/* cards-content — content cards grid: square image + bold title + description.
+   NO CTA link (distinct from cards-grid). Values from source computed styles
+   (what-we-do.html) at 390/768/992/1200. Mobile: single column, centered.
+   From 768: 4-up on the shared 12-col grid (each card = span 3, --grid-gap
+   gutter), left-aligned. */
+
+/* Constrain the block to the SOURCE content column (viewport − gutters, capped
+   at 1200) so the 4 cards match the source's widths/insets instead of filling
+   our wider section container. Mobile inset = 31px each side (content 328). */
+.cards.content {
+  box-sizing: border-box;
+  margin-inline: auto;
+  padding-inline: 16px; /* +15 section gutter = 31px, source mobile inset */
+}
+
+@media (width >= 768px) {
+  .cards.content {
+    /* source content sits at a 30px gutter at 768; our section wrapper gives
+       24px, so add 6px to align the first card to the source (x30). */
+    padding-inline: 6px;
+  }
+}
+
+@media (width >= 992px) {
+  .cards.content {
+    padding-inline: 0;
+  }
+}
+
+@media (width >= 992px) {
+  .cards.content {
+    max-width: min(970px, calc(100vw - 90px));
+  }
+}
+
+@media (width >= 1200px) {
+  .cards.content {
+    max-width: min(1170px, calc(100vw - 90px));
+  }
+}
+
+.cards.content > ul {
+  list-style: none;
+  margin: 0;
+  padding: 16px 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.cards.content > ul > li {
+  text-align: center;
+}
+
+/* Square image — source renders a 1:1 crop (328 mobile → 168/203/255 desktop). */
+.cards.content .cards-content-card-image {
+  line-height: 0;
+}
+
+.cards.content .cards-content-card-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+/* Text block */
+.cards.content .cards-content-card-body {
+  margin: 0;
+}
+
+.cards.content .cards-content-card-body h4 {
+  margin: 16px 0 0;
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 27px;
+  color: #000;
+  text-transform: none;
+}
+
+.cards.content .cards-content-card-body p {
+  margin: 0;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-m); /* 16px mobile → 18px at 768 (source) */
+  line-height: 24px;
+  color: #000;
+}
+
+/* From 768: 4 cards across the shared grid, left-aligned text.
+   Column-gap uses the site --grid-gap so cards land on the 12-col lines
+   (each card spans 3 columns). */
+@media (width >= 768px) {
+  .cards.content > ul {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 32px 12px; /* source column gap is 12px at the 768 tier (image 168) */
+    padding: 32px 0;
+  }
+
+  .cards.content > ul > li {
+    text-align: left;
+  }
+}
+
+/* From 992 the source column gap opens to 30px (image 203 → 255). */
+@media (width >= 992px) {
+  .cards.content > ul {
+    gap: 32px var(--grid-gap);
+  }
+}
+
+/* cards-expand — "special funds" cards (source: get-involved/special-funds,
+   a Fundraise Up widget). Structure per card (FIXED 320px footprint):
+     .cards-expand-image   (top, ~186px)
+     .cards-expand-title   (title + chevron; slides UP on expand to reveal desc)
+     .cards-expand-desc    (description, revealed in the freed space)
+     .cards-expand-donate  (full-width DONATE, PINNED to the bottom — never moves)
+   Expanding does NOT grow the card: the title translates up over the image and
+   the description shows in place, so DONATE stays put. The whole card lifts on
+   hover (source `.card.hoverable`). DONATE opens the site-wide Fundraise Up
+   overlay for that fund (?form=<code>, kept on-origin by scripts/donate.js).
+   Source values: card 250w fixed / radius 6 / shadow; title 16/24 w400 #212830;
+   DONATE 16/44 w600 #0373f3 white uppercase. */
+
+/* The hover/focus-within/open state groups share equal specificity with their
+   base rules but are authored after them for readability (reveal states grouped
+   together); disable the descending-specificity check for this file. */
+/* stylelint-disable no-descending-specificity */
+
+/* The funds widget is WIDER than the section content column: the source spans
+   viewport − 60px (30px gutters, ~1070 @1130, capped ~1170) so FOUR 250px cards
+   fit per row. Break out of the section's 970/1170 max-width to that width so
+   the card count/positions match the source (our 970 wrapper only fit 3). */
+.cards.expand {
+  width: min(1170px, calc(100vw - 60px));
+  margin-inline: calc(50% - min(585px, 50vw - 30px));
+}
+
+/* FIXED 250px cards, left-packed with a small 4px gap, wrapping (4-up desktop →
+   3 → 2 → 1), centered as a group. */
+.cards.expand > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px; /* source shows a clear ~20px gutter between cards (4×250 + 3×20 = 1060 ≤ 1070 ul, still 4-across) */
+}
+
+/* Fixed 250x328 card. A flex column: a content area (image + sliding title/desc
+   panel) that flexes, and the DONATE footer pinned below it. overflow:hidden
+   clips the sliding panel; DONATE is never covered and never moves. */
+.cards.expand .cards-expand-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 250px;
+  max-width: 100%;
+  height: 328px;
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 50%);
+  overflow: hidden;
+  cursor: pointer;
+  transition: translate 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Hover: the card stays put — only the panel slides up. The source card does
+   NOT lift; a subtle shadow deepen is the only whole-card change. */
+.cards.expand .cards-expand-card:hover,
+.cards.expand .cards-expand-card:focus-within {
+  box-shadow: 0 8px 18px rgb(0 0 0 / 25%);
+}
+
+/* Image — fills the card content area (behind the sliding panel). */
+.cards.expand .cards-expand-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 186px;
+  line-height: 0;
+  overflow: hidden;
+}
+
+/* Zero the EDS <p>/<picture> wrappers: their default top margin pushes the
+   <picture> down inside the clipped 186px box, leaving a white strip above the
+   image. Flatten them so the image starts flush at the card top. */
+.cards.expand .cards-expand-image p,
+.cards.expand .cards-expand-image picture {
+  display: block;
+  margin: 0;
+  line-height: 0;
+}
+
+.cards.expand .cards-expand-image img {
+  display: block;
+  width: 100%;
+  height: 186px;
+  object-fit: cover;
+  border-radius: 6px 6px 0 0;
+}
+
+/* Panel = title + description as ONE unit, filling the whole content area above
+   DONATE (top:0 → bottom:44). Its content is bottom-aligned; collapsed, the panel
+   is pushed DOWN so only the ~98px title band peeks below the image. On hover it
+   slides UP (translate:0) to cover the image, revealing the description. The
+   white background fully covers the image at every step (no bleed). */
+.cards.expand .cards-expand-panel {
+  position: absolute;
+  inset: 0 0 44px; /* fill content area, above the pinned DONATE footer */
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  translate: 0 186px; /* collapsed: pushed down so title sits below the image */
+  transition: translate 0.3s ease-in-out;
+}
+
+.cards.expand .cards-expand-card:hover .cards-expand-panel,
+.cards.expand .cards-expand-card:focus-within .cards-expand-panel,
+.cards.expand .cards-expand-open .cards-expand-panel {
+  translate: 0 0; /* slide up to cover the image, revealing the description */
+}
+
+/* Title bar: heading + chevron. */
+.cards.expand .cards-expand-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 20px;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 0.3s ease-in-out;
+}
+
+.cards.expand .cards-expand-card:hover .cards-expand-title,
+.cards.expand .cards-expand-card:focus-within .cards-expand-title,
+.cards.expand .cards-expand-open .cards-expand-title {
+  border-bottom-color: rgb(33 40 48 / 13%);
+}
+
+.cards.expand .cards-expand-title h3 {
+  margin: 0;
+  font-family: var(--body-font-family);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: normal;
+  color: #212830;
+  text-transform: none;
+}
+
+/* Chevron toggle (down; rotates up when open). */
+.cards.expand .cards-expand-toggle {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin: 0 -4px 0 0;
+  padding: 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #212830;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.cards.expand .cards-expand-toggle:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+}
+
+.cards.expand .cards-expand-arrow {
+  width: 16px;
+  height: 16px;
+  transition: rotate 0.3s ease-in-out;
+}
+
+.cards.expand .cards-expand-card:hover .cards-expand-arrow,
+.cards.expand .cards-expand-card:focus-within .cards-expand-arrow,
+.cards.expand .cards-expand-open .cards-expand-arrow {
+  rotate: 180deg;
+}
+
+/* Description — inside the sliding panel, below the title; fades in on reveal. */
+.cards.expand .cards-expand-desc {
+  padding: 12px 20px 0;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.cards.expand .cards-expand-card:hover .cards-expand-desc,
+.cards.expand .cards-expand-card:focus-within .cards-expand-desc,
+.cards.expand .cards-expand-open .cards-expand-desc {
+  opacity: 1;
+}
+
+.cards.expand .cards-expand-desc p {
+  margin: 0;
+  font-family: var(--body-font-family);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: #212830;
+}
+
+/* Donate — full-width footer button, absolutely PINNED to the card bottom so it
+   never moves regardless of title height or the sliding panel above it. */
+.cards.expand .cards-expand-donate {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  line-height: 0;
+}
+
+/* Zero the EDS button <p> wrapper: its default vertical margin (≈14px top /
+   4.5px bottom) inflated the footer past the 44px button, leaving a white strip
+   below the blue bar. Flatten it so the button is the whole 44px footer, flush
+   to the card's bottom edge (and aligned with the panel's 44px bottom inset). */
+.cards.expand .cards-expand-donate p {
+  margin: 0;
+  line-height: 0;
+}
+
+.cards.expand .cards-expand-donate a,
+.cards.expand .cards-expand-donate a.button,
+.cards.expand .cards-expand-donate a.button.primary {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 0 0 6px 6px; /* source donate has rounded bottom corners */
+  background-color: var(--brand-blue);
+  color: #fff;
+  font-family: var(--body-font-family);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 44px;
+  letter-spacing: normal;
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cards.expand .cards-expand-donate a:hover,
+.cards.expand .cards-expand-donate a:focus-visible,
+.cards.expand .cards-expand-donate a.button:hover,
+.cards.expand .cards-expand-donate a.button.primary:hover {
+  background-color: var(--link-color);
+  color: #fff;
+  border: 0;
+  text-decoration: none;
+}
+
+/* Wrapping (fixed 250px cards, centered) naturally gives 1-up mobile → 2-up →
+   3-up → 4-up as width allows, matching the source's flex-wrap packing. */
+
+/* cards-news — "Related Articles" news teasers (landscape image + title + date
+   + description + "Read More"), 3-up. Values extracted from the source's live
+   computed styles (.list-core-component) at 390/768/992/1200. */
+
+/* Row of cards. Source: flex-wrap row; each card is flex-basis 33% with a 5px
+   inline padding (the inter-card gutter is 2×5px = 10px). Mobile stacks. */
+.cards.news > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Mobile: full-width stacked cards. Source card padding is 15px block, 0 inline. */
+.cards.news > ul > li {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 15px 0;
+}
+
+/* Landscape image — source is a 400×200 (2:1) image, full card width, no radius. */
+.cards.news .cards-news-card-image {
+  line-height: 0;
+}
+
+.cards.news .cards-news-card-image img,
+.cards.news .cards-news-card-image picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+/* Title — Graphik Semibold, uppercase, black. Source uses 28px/36px here (its
+   own scale, smaller than the global h3 token) with -0.7px tracking; drop to
+   22px/32px from 992. Not the h3 token, so set explicitly and comment why. */
+.cards.news .cards-news-card-title {
+  margin: 15px 0 0; /* gap below the image */
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 400; /* weight is baked into the Semibold face */
+  font-size: 28px;
+  line-height: 36px;
+  letter-spacing: -0.7px;
+  text-transform: uppercase;
+  color: #000;
+}
+
+/* Date — regular body, black, small. */
+.cards.news .cards-news-card-date {
+  margin: 4px 0 0;
+  font-family: var(--body-font-family);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 20px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #000;
+}
+
+/* Description — body, black, clamped to 4 lines (source caps at 96px). */
+.cards.news .cards-news-card-desc {
+  margin: 15px 0 0;
+  font-family: var(--body-font-family);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #000;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Read More — Graphik Semibold, uppercase, underlined blue link. Source is
+   14px/24px on mobile+tablet, 16px/24px from 992. Reset EDS button decoration
+   (a lone <p><a> is auto-turned into a .button). */
+.cards.news .cards-news-card-link {
+  margin: 10px 0 0;
+}
+
+/* When there is no description, the link follows the date directly; source
+   inserts the 15px content-top gap on top of the link's own 10px (→ ~25px). */
+.cards.news .cards-news-card-date + .cards-news-card-link {
+  margin-top: 25px;
+}
+
+.cards.news .cards-news-card-link a,
+.cards.news .cards-news-card-link a.button,
+.cards.news .cards-news-card-link a.button.primary {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--link-color);
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: normal;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.cards.news .cards-news-card-link a.button:hover,
+.cards.news .cards-news-card-link a.button.primary:hover {
+  background: transparent;
+  border: 0;
+  color: var(--link-hover-color);
+  text-decoration: underline;
+}
+
+/* Tablet+ : 3-up flex row. Source: flex-basis 33%, 5px inline padding, and a
+   per-card max-width (32% at 768, 370px from 992). */
+@media (width >= 768px) {
+  .cards.news > ul > li {
+    flex: 0 1 33%;
+    max-width: 32%;
+    padding: 15px 5px;
+  }
+}
+
+@media (width >= 992px) {
+  .cards.news > ul > li {
+    max-width: 370px;
+  }
+
+  .cards.news .cards-news-card-title {
+    font-size: 22px;
+    line-height: 32px;
+    letter-spacing: normal;
+  }
+
+  .cards.news .cards-news-card-link a,
+  .cards.news .cards-news-card-link a.button,
+  .cards.news .cards-news-card-link a.button.primary {
+    font-size: 16px;
+  }
+}
+
+/* cards-profile — profile/staff cards: portrait photo + name + italic role.
+   Source: ustafoundation.com/.../leadership-and-staff (AEM teaser tiles).
+   Values from source computed styles at 390/768/992/1200.
+
+   Layout: 1-up (mobile) → 4-up (>=768), on the shared 12-col grid (30px
+   column gutter). Card widths follow the shared container (720/970/1170),
+   which is a touch wider than this source page's own per-page inset — a
+   deliberate consequence of the Grid Rule (one shared grid, never bespoke
+   per-block widths); typography matches the source exactly. */
+
+.cards.profile > ul {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(257px, 1fr));
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 40px var(--grid-gap); /* row 40px, column 30px */
 }
 
-.cards > ul > li {
-  border: 1px solid #dadada;
-  background-color: var(--background-color);
+/* White shadowed card. Source: #fff, box-shadow rgba(0,0,0,.5) 0 2px 5px. */
+.cards.profile > ul > li {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  box-shadow: 0 2px 5px 0 rgb(0 0 0 / 50%);
 }
 
-.cards .cards-card-body {
-  margin: 16px;
-}
-
-.cards .cards-card-image {
+/* Portrait — full-bleed square at the top of the card. */
+.cards.profile .cards-profile-card-image {
   line-height: 0;
 }
 
-.cards > ul > li img {
+.cards.profile .cards-profile-card-image img {
+  display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: auto;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
 }
+
+/* Text area — source content-wrapper padding 20px 20px 0 (bottom spacing
+   comes from the role's 10px bottom margin below). */
+.cards.profile .cards-profile-card-body {
+  padding: 20px 20px 0;
+}
+
+/* Name. Source: Graphik Semibold, weight 400, #000, 20/28 → 22/32. */
+.cards.profile .cards-profile-card-body h4 {
+  margin: 0 0 5px;
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 28px;
+  color: #000;
+  text-transform: none;
+}
+
+/* Role. Source: description <p><i> — Graphik Regular italic, #000, 16/22.857
+   → 18/25.714. A 34x4 black divider bar sits above it. */
+.cards.profile .cards-profile-card-body p {
+  margin: 0 0 10px;
+  font-family: var(--body-font-family);
+  font-size: 16px;
+  line-height: 22.8571px;
+  font-style: italic;
+  color: #000;
+}
+
+.cards.profile .cards-profile-card-body p::before {
+  content: "";
+  display: block;
+  width: 34px;
+  height: 4px;
+  margin: 0 0 10px;
+  background-color: #000;
+}
+
+@media (width >= 768px) {
+  .cards.profile > ul {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .cards.profile .cards-profile-card-body h4 {
+    font-size: 22px;
+    line-height: 32px;
+  }
+
+  .cards.profile .cards-profile-card-body p {
+    font-size: 18px;
+    line-height: 25.7143px;
+  }
+}
+
+/* cards-stats — 4-up stat cards on the cream band: circular photo + a large
+   stat number (90px Graphik XXCond Bold) + a caption (18px Graphik Semibold).
+   Values from source computed styles (our-impact.html) at 390/768/992/1200.
+
+   The round crop + white ring is baked into the source PNG, so the image is a
+   plain square (border-radius 0). Source lays images in one 4-col grid and the
+   number+caption pairs in a second 4-col grid below; we model each column as a
+   single stacked card (image → number → caption), which is visually identical
+   per column and the natural EDS authoring model. */
+
+.cards.stats {
+  /* cream stat band (source container bg #FFEFBE) */
+  background-color: var(--stats-cream-bg, #ffefbe);
+  padding: 32px 0;
+}
+
+.cards.stats > ul {
+  list-style: none;
+  margin: 0;
+
+  /* mobile: single column, source insets ~16px inside the 15px gutter */
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px 30px;
+}
+
+.cards.stats > ul > li {
+  margin: 0;
+  text-align: center;
+}
+
+/* Circular photo — square PNG with the ring pre-baked; full-width on mobile. */
+.cards.stats .cards-stats-card-image {
+  line-height: 0;
+}
+
+.cards.stats .cards-stats-card-image img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 0;
+  display: block;
+}
+
+/* Large stat number: 90px / 99px / 500, Graphik XXCond Bold, black, centered. */
+.cards.stats .cards-stats-card-number {
+  margin: 24px 0 0;
+}
+
+.cards.stats .cards-stats-card-number h2,
+.cards.stats .cards-stats-card-number h3,
+.cards.stats .cards-stats-card-number p {
+  margin: 0;
+  font-family: var(--heading-font-family);
+  font-size: 90px;
+  line-height: 99px;
+  font-weight: 500;
+  color: #000;
+  text-align: center;
+  text-transform: none;
+}
+
+/* Caption: 18px / 27px / 500, Graphik Semibold, black, centered. */
+.cards.stats .cards-stats-card-caption {
+  margin: 24px 0 0;
+}
+
+.cards.stats .cards-stats-card-caption h4,
+.cards.stats .cards-stats-card-caption p {
+  margin: 0;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  line-height: 27px;
+  font-weight: 500;
+  color: #000;
+  text-align: center;
+  text-transform: none;
+}
+
+/* Tablet: 2-up (source aem-GridColumn--tablet--6). */
+@media (width >= 768px) {
+  .cards.stats > ul {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0;
+  }
+}
+
+/* Desktop: single row of 4 (source aem-GridColumn--default--3). */
+@media (width >= 992px) {
+  .cards.stats > ul {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* cards-support — 4-up circular-image cards on the light-blue (.highlight) band.
+   Values extracted from source computed styles (1440px viewport / 1200px content). */
+
+/* Section intro (default content above the cards): "Your support makes a
+   difference." heading + subtitle. Source renders these centered and black
+   (#000); the global default-content styles otherwise leave them #333/left.
+   Mobile: source insets this section ~31px each side (vs the 15px section
+   gutter) — add 16px inline padding on the intro and the cards block. */
+.cards-container:has(.cards.support) .default-content-wrapper {
+  text-align: center;
+
+  /* intro is a direct section child (no 15px wrapper gutter) → full 31px */
+  padding-inline: 31px;
+}
+
+.cards.support {
+  /* cards block sits in the section's 15px-gutter wrapper → +16px = 31px total */
+  padding-inline: 16px;
+}
+
+@media (width >= 992px) {
+  .cards-container:has(.cards.support) .default-content-wrapper,
+  .cards.support {
+    padding-inline: 0;
+  }
+}
+
+.cards-container:has(.cards.support) .default-content-wrapper h2,
+.cards-container:has(.cards.support) .default-content-wrapper p {
+  color: #000;
+}
+
+/* Row of cards: flex wrap, evenly distributed (source: justify-content space-around). */
+.cards.support > ul {
+  list-style: none;
+  margin: 0;
+  padding: 32px 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px 30px;
+}
+
+/* Mobile: source stacks full-width cards with centered text. */
+.cards.support > ul > li {
+  background-color: transparent;
+  padding: 8px 0;
+  text-align: center;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Circular photo — the round crop + white ring is baked into the source PNG,
+   so it is a plain 270x270 square image (border-radius 0, no cropping needed). */
+.cards.support .cards-support-card-image {
+  line-height: 0;
+}
+
+/* Mobile: source shows a full-width square image (≈328px). */
+.cards.support .cards-support-card-image img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  max-width: 100%;
+  border-radius: 0;
+  object-fit: cover;
+  display: block;
+}
+
+/* Text block */
+.cards.support .cards-support-card-body {
+  margin: 0;
+}
+
+.cards.support .cards-support-card-body h4 {
+  margin: 16px 0 0;
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 27px;
+  color: #000;
+  text-transform: none;
+}
+
+.cards.support .cards-support-card-body p {
+  margin: 0;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-m); /* 16px mobile → 18px at 768 (source) */
+  line-height: 24px;
+  color: #000;
+}
+
+/* LEARN MORE — a plain bold-authored link; source renders it as a regular-weight
+   underlined blue link (not a filled button). Reset EDS button decoration. */
+.cards.support .cards-support-card-body p.button-container,
+.cards.support .cards-support-card-body p:last-child {
+  margin-top: 24px;
+}
+
+.cards.support .cards-support-card-body a,
+.cards.support .cards-support-card-body a.button,
+.cards.support .cards-support-card-body a.button.primary {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--link-color);
+  font-family: var(--body-font-family);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: normal;
+  text-transform: none;
+  text-decoration: underline;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.cards.support .cards-support-card-body a.button:hover,
+.cards.support .cards-support-card-body a.button.primary:hover {
+  background: transparent;
+  border: 0;
+  color: var(--link-hover-color);
+  text-decoration: underline;
+}
+
+/* Source left-aligns the card text from the 768 tier (mobile base is centered).
+   The intro heading/subtitle above the cards stays centered (handled above). */
+@media (width >= 768px) {
+  .cards.support > ul > li {
+    text-align: left;
+  }
+}
+
+@media (width >= 992px) {
+  /* Single row of 4 on desktop; content is 1200px wide → 4×270 + gutters. */
+  .cards.support > ul {
+    flex-wrap: nowrap;
+    justify-content: space-around;
+    gap: 0;
+  }
+
+  /* fixed 270px cards (mobile base is full-width) */
+  .cards.support > ul > li {
+    width: 270px;
+  }
+
+  .cards.support .cards-support-card-image img {
+    width: 270px;
+    height: 270px;
+    aspect-ratio: auto;
+  }
+}
+
+/* cards-tiles — 4-up image tiles (square-ish image + centered uppercase title,
+   NO description, NO CTA). Values from source computed styles measured live at
+   390/768/992/1200 (deviceScaleFactor 2). Source:
+   https://www.ustafoundation.com/en/home/who-we-are.html
+
+   Source geometry (tile image width / column-gap / edge-inset inside container):
+     390  : 1-up stack, image ≈328px full-bleed inside 16px inset, 48px row gap
+     768  : 4-up, image 168, gap 12, inset 6   (container 720)
+     992  : 4-up, image 203, gap 30, inset ~34 (container 970)
+     1200 : 4-up, image 255, gap 30, inset 30  (container 1170)
+   Title (h4): Graphik Semibold, 18px/27px, #000, centered, authored UPPERCASE.
+   Image height is the source's natural ratio (~1:1) — no forced aspect-ratio. */
+
+.cards.tiles > ul {
+  list-style: none;
+  margin: 0;
+
+  /* mobile: single column stack; source insets ~16px beyond the 15px section
+     gutter (→ ≈31px total) and separates stacked tiles by 48px. */
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  row-gap: 48px;
+}
+
+.cards.tiles > ul > li {
+  margin: 0;
+}
+
+/* Square-ish photo — plain width-constrained image at the source's natural
+   ratio, no crop, no rounding. */
+.cards.tiles .cards-tiles-card-image {
+  line-height: 0;
+}
+
+.cards.tiles .cards-tiles-card-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+}
+
+/* Title only — centered uppercase heading 16px below the image. */
+.cards.tiles .cards-tiles-card-body h4 {
+  margin: 16px 0 0;
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 500; /* source computes 500 on the single Graphik Semibold cut */
+  font-size: 18px;
+  line-height: 27px; /* 1.5 — matches source at every breakpoint */
+  color: #000;
+  text-align: center;
+  text-transform: none; /* label is authored in uppercase */
+}
+
+/* 4-up from the tablet tier. */
+@media (width >= 768px) {
+  .cards.tiles > ul {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0 12px;
+    padding-inline: 6px;
+  }
+}
+
+@media (width >= 992px) {
+  .cards.tiles > ul {
+    column-gap: 30px;
+    padding-inline: 30px;
+  }
+}
+
+/* stylelint-enable no-descending-specificity */
