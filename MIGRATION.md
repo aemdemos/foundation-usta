@@ -901,3 +901,80 @@ Three fixes on the home + collage-sample "For decades" section:
 Verified home + sample: heading centered at 390/768/1200; 2 thumbnails (156/164/266) + portrait render at all
 tiers; text gap 30px. Gates: stylelint ✓ · eslint ✓ · breakpoints ✓ · overflow ✓ (home + sample) · typography
 ✓ · a11y ✓.
+
+### 2026-09-04 — columns (feature) collage: heading pure-black + fluid collage on desktop range
+Two fixes after the tablet/iPad-Pro (1024) review:
+1. HEADING COLOR: after moving the "For decades…" heading to separate default content, it inherited the
+   global body color #333 (was #000 when inside the block). Added `color: #000` to the collage section's
+   default-content h2 rule → pure black at every viewport (matches source rgb(0,0,0)).
+2. FLUID COLLAGE: the desktop collage was fixed 266/296 (flex 0 0), so at 1024 it stayed 266 vs the source's
+   222 (source scales the collage with the container across 992–1200, capping at 266/296 from 1200). Made it
+   fluid: `.columns-feature-collage { flex: 0 1 49.3%; max-width: 577px }`, stack `flex: 47.3 1 0`, portrait
+   `flex: 52.7 1 0` (266:296 proportion, 15px gap). Now scales with the content column (219 in our 970 tier
+   ≈ source 222 @1024; 266 from 1200). Verified iPad-Pro 1024 view = collage beside text, black centered
+   heading. (Our grid caps the wrapper at 970 for 992–1199 per the adopted breakpoints, so mid-range widths
+   track that cap — matches the source within a few px at the tier boundaries.) Gates: stylelint ✓ ·
+   breakpoints ✓ · overflow ✓ (home + sample) · typography ✓ · a11y ✓.
+
+### 2026-09-04 — columns (feature) collage: tablet (768–991) collage centered (was big empty block)
+The tablet collage was left-anchored in its full 688px cell: thumbnail row + 340px portrait pinned left,
+leaving a ~348px empty block on the right (the beige gap the user saw). The source CENTERS the collage
+(thumb row + portrait below) in its cell. Fixed: collage `align-items: center` and portrait
+`align-self: center` (was flex-start). Now the ~340px collage column is centered with balanced 174px margins
+each side at 768/900/991 — matching the source's centered tablet collage; text flows below. Gates: stylelint
+✓ · breakpoints ✓ · overflow ✓ (home + sample) · a11y ✓.
+
+### 2026-09-04 — columns (feature) collage: carry the desktop 2-col layout through tablet
+Per the user: don't use a separate stacked/centered tablet variant for the collage — keep the DESKTOP
+two-column layout ([stacked thumbnails | tall portrait] left, text right) from the 768 tier all the way up,
+switching to the stacked mobile layout only below 768. Moved the collage's two-column rules (row direction,
+left-aligned text, fluid 49.3%/577 collage, stacked thumbnails, portrait) into the `@media (width >= 768px)`
+tier, SCOPED to `:has(.columns-feature-collage)`. Critically kept the VIDEO feature ("We go beyond") STACKED
+until 992 (source behavior) by scoping its two-column row-flip to a NEW `@media (width >= 992px)
+:has(.columns-feature-media)` block — the earlier merge had wrongly flipped ALL feature rows at 768.
+Verified: collage 2-col at 768/900/1200 (thumb 156→263 fluid, text beside); video stacked at 768/900/991 →
+side-by-side at 1200. Heading pure-black + centered. Gates: stylelint ✓ · breakpoints ✓ · overflow ✓ (home +
+collage + video samples) · a11y ✓.
+
+### 2026-09-04 — columns (feature) collage: widen container in 992–1199 to match source (tablet parity)
+The shared grid caps `main > .section > div` at a flat 970px in the 992–1199 tier, but the SOURCE runs the
+"For decades" collage section FLUID there (viewport - 30, i.e. 15px gutter each side, capping at 1170) - so
+at 1024 its content is ~994px, giving thumb 222 / portrait 252. Ours was stuck at 970 -> thumb 215 / portrait
+240. Widened ONLY this section: `@media (width >= 992px) { main > .section.columns-container:has(
+.columns-feature-collage) > div { max-width: min(1170px, calc(100vw - 30px)) } }`. Verified mine now = source
+at 1024 (cont 994, thumb 221, portrait 246), 1100 (239), 1200 (263/292) - within 1-6px. Other sections
+(video/statement/cards-support) still cap at 970 @1024 (scoping confirmed); no horizontal overflow.
+DEVIATION NOTE: intentional, section-scoped override of the shared 970 cap to reproduce the source's own
+fluid container for this section - not a grid violation. Gates: stylelint OK, breakpoints OK,
+overflow OK (home + sample, 360-1920), a11y OK.
+
+### 2026-09-04 — columns (feature) collage: match source's THREE per-tier layouts (dimensions + positions)
+Re-measured the source live DOM across the full range and found it uses three genuinely different collage
+layouts — my code was reproducing only two, and the desktop portrait height was wrong. Fixed all:
+- DESKTOP (>=992): images LEFT / text RIGHT; inside the image column the two thumbnails STACK vertically
+  (touching) beside the tall portrait. KEY FIX: source portrait is a FIXED 401px tall (252x401 @1024,
+  296x401 @1199) — TALLER than the ~332 stack, so it sticks out below. Mine had stretched it to the stack
+  height (~330). Set portrait `height: 401px`, collage `align-items: flex-start`.
+- TABLET (768-991): source LOCKS the section to 720 and REFLOWS — the two thumbnails become a centered ROW
+  (164x123, 12px gutter) with the wide portrait (353x401) BELOW them, text column on the right. Mine had
+  kept the desktop stacked layout. Rebuilt the 768 tier: collage `flex-direction: column; align-items:
+  center; gap:0`; stack `flex-direction: row; gap:12px`; img `width:164px`; portrait `width:100%;
+  height:401px`.
+- MOBILE (<768): unchanged (156x117 stack | 137x225 portrait, 18px gap, text below) — matches source.
+Verified mine == source at 1199/1024/991/880/768/375 (thumb/portrait/text-x all within 1-6px). Gates:
+stylelint OK, breakpoints OK, overflow OK (home + sample 360-1920), a11y OK. Screenshots confirm iPad-Pro
+portrait now extends below the stack, and tablet shows the row+band reflow.
+
+### 2026-09-04 — columns (feature) collage: tablet gap + portrait width + content-text discrepancy
+Compared migrated vs source at IDENTICAL widths (screenshots + geometry, devtools closed) across 768–991:
+- GAP collage→text was 30px (var(--grid-gap)); SOURCE is ~14px. Fixed row `gap: 14px` (768 tier only).
+- Portrait width was 345 (percentage basis); SOURCE is a fixed 353 in the 720-locked tablet grid. Fixed
+  collage `flex: 0 0 353px; max-width: 353px`.
+Verified @768/810/900/991: portrait 353=353, gap 14=14, text-x within ~3px (grid 15px vs source 12px outer
+gutter — negligible). Gates: stylelint OK, breakpoints OK, overflow OK, a11y OK.
+CONTENT DISCREPANCY (needs re-import, NOT a CSS fix): the imported "We support…" body text differs from the
+live source wording. SOURCE (exact):
+  1) "…organizations THAT use a combination of tennis, education, and life-skills development…"  (mine: "to use")
+  2) "…not only benefit from tennis and education, but ARE surrounded by people…"  (mine: "but they are surrounded by")
+Flag: content/en/home.plain.html + block sample carry the older copy; regenerate via the import script to
+match source verbatim (content is never hand-edited per the Content-Import Rule).

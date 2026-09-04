@@ -179,17 +179,34 @@
   color: #000; /* source heading is pure black (#000), not the #333 body text color */
 }
 
-/* Collage cell — source layout differs per tier (measured on home.html):
-   - MOBILE (<768): [stacked thumbnails (0 gap) | tall portrait] side by side
-   - TABLET (768–991): [thumbnail | thumbnail] row, tall portrait BELOW
-   - DESKTOP (≥992): [stacked thumbnails (0 gap) | tall portrait] beside the text
-   The tall portrait (3rd image) is a decorative background — VISIBLE at every
-   viewport. */
+/* Widen the collage section's content container in the 992–1199 tier: the shared
+   grid caps sections at 970 there, but the SOURCE runs this section fluid
+   (viewport − 30, i.e. a 15px gutter each side, capping at 1170) — so at 1024 its
+   content is ~994px, not 970. Match the source here (scoped to this section only,
+   so the rest of the grid keeps its 970 cap). */
+@media (width >= 992px) {
+  main > .section.columns-container:has(.columns-feature-collage) > div {
+    max-width: min(1170px, calc(100vw - 30px));
+  }
+}
+
+/* Collage cell — the SOURCE uses three genuinely different layouts per tier
+   (all measured on home.html, live rendered DOM):
+   - MOBILE (<768): section 336; [two thumbnails stacked (156×117, touching)]
+     beside a tall [portrait 137×225], 18px gap; text BELOW.
+   - TABLET (768–991): section LOCKED to 720; images LEFT / text RIGHT.
+     Inside the image column: the two thumbnails sit SIDE-BY-SIDE in a row
+     (164×123, 12px gutter, centered) with the wide [portrait 353×401] BELOW.
+   - DESKTOP (≥992): section fluid; images LEFT / text RIGHT. Inside the image
+     column: the two thumbnails STACK vertically (touching) beside a tall
+     [portrait ×401] — the portrait is TALLER than the stack and sticks out below.
+   The portrait (the decorative 3rd image) is a FIXED 401px tall from 768 up —
+   only its width scales (252→296 desktop, 353 tablet). VISIBLE at every viewport. */
 .columns.feature .columns-feature-collage {
   display: flex;
   flex-direction: row; /* mobile: stack beside portrait */
   align-items: flex-start;
-  gap: 12px;
+  gap: 18px; /* source mobile gap: thumbnail stack → portrait */
 }
 
 /* Mobile: the two thumbnails stack VERTICALLY, touching (0 gap) — source. */
@@ -212,127 +229,121 @@
 }
 
 /* Tall portrait (decorative bg, the 3rd image) — VISIBLE at every viewport.
-   Mobile: ~137×225 beside the stack (source). */
+   Mobile: 137×225 beside the stack (source). */
 .columns.feature .columns-feature-collage-portrait {
   background-image: url('./college-bootcamp-hp.jpg');
   background-position: 50% 50%;
   background-size: cover;
-  flex: 0 0 137px;
-  align-self: stretch;
-  min-height: 234px; /* two stacked 117px thumbs = 234, portrait matches their height */
+  flex: 0 0 137px; /* source mobile portrait width */
+  height: 225px; /* source mobile portrait height */
 }
 
-/* At the 768 tier the source left-aligns the image-collage ("For decades")
-   feature BODY text (the separate default-content h2 above stays centered; the
-   video/We-go-beyond feature stays centered until 992). Scope to the collage
-   instance's body paragraphs only. */
+/* TABLET (768–991): the collage feature goes two-column — image column LEFT,
+   text RIGHT. The image column itself becomes a COLUMN: the two thumbnails sit
+   in a centered ROW on top, with the wide portrait (353×401) directly below.
+   The VIDEO feature ("We go beyond") stays STACKED until 992 (source). */
 @media (width >= 768px) {
-  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div p {
-    text-align: left;
-  }
-
-  /* Tablet (768–991): source switches the collage to [thumb | thumb] in a ROW
-     with the tall portrait BELOW them. */
-  .columns.feature:has(.columns-feature-collage) .columns-feature-collage {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .columns.feature:has(.columns-feature-collage) .columns-feature-collage-stack {
-    flex-direction: row;
-    gap: 12px;
-  }
-
-  .columns.feature:has(.columns-feature-collage) .columns-feature-collage img {
-    width: 164px; /* source tablet thumbnail width */
-  }
-
-  /* portrait sits below the thumbnail row, full stack width (source 353×401) */
-  .columns.feature:has(.columns-feature-collage) .columns-feature-collage-portrait {
-    flex: 0 0 auto;
-    width: 340px;
-    max-width: 100%;
-    min-height: 401px;
-    align-self: flex-start;
-  }
-}
-
-/* --- desktop: side-by-side 50/50 --- */
-@media (width >= 992px) {
-  /* reset the mobile inline inset — desktop uses the grid container */
+  /* reset the mobile inline inset — the grid container handles gutters */
   .columns.feature {
     padding-inline: 0;
   }
 
-  .columns.feature .columns-feature-row {
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row {
     flex-direction: row;
     align-items: flex-start;
-    gap: 48px;
+    gap: 14px; /* source tablet gap between collage column and text (~13px) */
   }
 
-  .columns.feature .columns-feature-row > div {
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div {
     flex: 1;
     text-align: left;
   }
 
-  /* Reset the mobile centering back to the desktop layout (size comes from the
-     global h3 token). */
-  .columns.feature h3 {
+  /* collage feature: left-align its text (the separate default-content h2 above
+     stays centered). */
+  .columns.feature:has(.columns-feature-collage) h3,
+  .columns.feature:has(.columns-feature-collage) p {
     text-align: left;
   }
 
-  .columns.feature p {
-    text-align: left;
+  /* image column: thumbnail ROW on top, wide portrait BELOW (touching). In the
+     768–991 tier the grid locks the content container to 720, so the source's
+     collage column is a fixed 353px (portrait width); text fills the rest. */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage {
+    flex: 0 0 353px;
+    max-width: 353px;
+    flex-direction: column;
+    align-items: center;
+    gap: 0; /* thumbnail row touches the portrait below (source) */
   }
 
-  .columns.feature:has(.columns-feature-collage) .columns-feature-collage img {
+  /* two thumbnails side by side, centered within the column */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage-stack {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 12px; /* source tablet thumbnail gutter */
     width: 100%;
   }
 
-  /* image-collage ("For decades") instance: source is [266px thumbnail stack |
-     296px tall portrait] on the left, then a text column right beside it. The
-     source text starts ~8px after the portrait's right edge (measured 724 vs
-     716) — a small column gap, NOT the wide 64px we had (which pushed the text
-     too far right). Use the standard ~40px column gap to match. */
-  .columns.feature.columns-feature-2-cols:has(.columns-feature-collage) .columns-feature-row {
-    gap: var(--grid-gap); /* 30px — the shared column gutter; source text sits close to the collage */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage img {
+    width: 164px; /* source tablet thumbnail width (fixed-720 layout) */
   }
 
-  /* The collage is FLUID across the desktop range, not fixed: the source scales
-     it with the container (thumb 214@992 → 266@1200, portrait 252@1024 → 296),
-     capping at 266+15+296 = 577 from 1200. Reproduce with a percentage basis
-     (~49.3% of the content column) capped at 577px; the stack + portrait share
-     that width proportionally (266:296 ≈ 47.3% : 51.3%, 15px gap between). */
+  /* wide portrait spans the full image column, fixed 401 tall (source 353×401) */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage-portrait {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 401px;
+  }
+}
+
+/* DESKTOP (≥992): the image column flips back to a ROW — the two thumbnails
+   STACK vertically (touching) beside the tall portrait. The portrait keeps its
+   fixed 401px height (source), so it extends below the shorter thumbnail stack. */
+@media (width >= 992px) {
   .columns.feature:has(.columns-feature-collage) .columns-feature-collage {
-    flex: 0 1 49.3%;
-    max-width: 577px;
     flex-direction: row;
-    align-items: stretch;
-    gap: 15px; /* source stack→portrait gap */
+    align-items: flex-start; /* portrait (401) taller than stack → top-align */
+    gap: 15px; /* source stack → portrait gap */
+    max-width: 577px; /* 266+15+296 at the 1200 cap */
   }
 
   .columns.feature:has(.columns-feature-collage) .columns-feature-collage-stack {
-    flex: 47.3 1 0; /* proportional: 266 of the 562 image px (excl. 15 gap) */
-    flex-direction: column; /* reset the tablet row → stacked again on desktop */
-    gap: 0; /* source: the two stacked thumbnails TOUCH (no gap) */
-  }
-
-  /* Tall portrait beside the stack — scales with the stack (source ratio). */
-  .columns.feature:has(.columns-feature-collage) .columns-feature-collage-portrait {
-    flex: 52.7 1 0; /* proportional: 296 of the 562 image px */
-    align-self: stretch;
+    flex: 47.3 1 0; /* proportional: ~222 of the 475 image px @1024 (excl. 15 gap) */
+    flex-direction: column; /* stacked thumbnails */
+    gap: 0; /* source: the two stacked thumbnails TOUCH */
     width: auto;
-    min-height: 100%;
-    margin: 0;
   }
 
-  /* "We go beyond" video instance: source is a balanced 50/50 split within the
-     1200 container — left text col ~532, right video card ~532, wide gap.
-     Both columns flex:1 (inherited). The video card grows with its half; the
-     iframe fills it (16:9). No extra row padding, no fixed card width. */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage img {
+    width: 100%; /* thumbnails fill the stack */
+  }
+
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage-portrait {
+    flex: 52.7 1 0; /* proportional: ~252 of the 475 image px @1024 */
+    width: auto;
+    height: 401px; /* source fixed portrait height (taller than the stack) */
+  }
+}
+
+/* --- desktop (≥992): the VIDEO feature goes two-column here (source keeps it
+   stacked through the tablet range). --- */
+@media (width >= 992px) {
   .columns.feature:has(.columns-feature-media) .columns-feature-row {
+    flex-direction: row;
+    align-items: flex-start;
     gap: 106px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div {
+    flex: 1;
+    text-align: left;
+  }
+
+  .columns.feature:has(.columns-feature-media) h3,
+  .columns.feature:has(.columns-feature-media) p {
+    text-align: left;
   }
 }
 
