@@ -840,3 +840,64 @@ Verified MOBILE-ONLY: all four now 328@390 (imgL 31) → imgL 86 @500 (pulls off
 768 and 1200 UNCHANGED (content 168/255 4-up, news 220/360 3-up, stats/support 168/270 4-up). Home
 cards-support unaffected (390 →328 1-up, 1200 →270 4-up). Gates: stylelint ✓ · breakpoints ✓ · typography ✓
 · overflow ✓ (360→1920) · a11y ✓ on all four sample pages.
+
+### 2026-09-04 — cards (profile): fixed DA preview validation (images 2 & 5 were SVG-wrapped rasters)
+DA preview rejected images 2 (Kim Borza Donaldson) and 5 (Kasey O'Connor) — "failed validation". Root cause:
+the SOURCE serves those two headshots as .svg files (kim-borza-donaldson.svg / kasey-oconnor.svg — 1500x1500
+SVGs embedding a raster, 2.8MB & 815KB), while the other six are .jpeg. DA won't validate the oversized
+SVG-wrapped rasters as content images. Fix: rasterized both SVGs to 750x750 JPEG via headless chromium
+(renders the embedded raster + viewBox like a browser) -> 60KB/58KB, matching the other cards' JPEG format.
+Wrote new media-da files (media-c4e978ba / media-593f41ed) and swapped the two src's in
+cards-profile.plain.html. Verified all 8 profile images are now JPEG and load (Kim & Kasey at 750px, correct
+headshots); zero external hotlinks; new files serve 200. Old .svg files left un-referenced in local media-da
+staging (never uploaded to DA per the asset playbook). Gates: check:svg OK, a11y OK, overflow OK, typography OK.
+
+### 2026-09-04 — columns (feature) collage: mobile/tablet thumbnails stack vertically (were side-by-side)
+Bug: on mobile/tablet the two collage thumbnails rendered as a horizontal ROW ("1st image attached to 2nd"),
+and the tall portrait was shown below them. Measured the source (home.html "For decades" feature) at 390/600:
+the two thumbnails are STACKED VERTICALLY (both left-aligned, touching — 0 gap) at every width, and the tall
+portrait is a decorative background that is HIDDEN below 992. Fixed the mobile base: `.columns-feature-collage
+-stack { flex-direction: column; align-items: flex-start; gap: 0 }` and `.columns-feature-collage-portrait
+{ display: none }`; the 992 desktop tier now re-shows the portrait (`display:block`) and opens the stack gap
+to 16px (desktop was already correct — unchanged). Verified: 390/768 → thumbs stacked column at the content
+inset, gap 0, portrait hidden; 1000/1200 → stacked + portrait beside (unchanged). Home page collage matches
+(mobile column/portrait hidden, desktop column/portrait shown) — no desktop regression. Gates: stylelint ✓ ·
+breakpoints ✓ · overflow ✓ (360→1920) · typography ✓ · a11y ✓.
+
+### 2026-09-04 — columns (feature) collage: 0-gap stacked thumbs + portrait visible at all tiers
+Corrected the collage to the source's per-tier layout (measured on home.html "For decades" at 390/600/768/900/1200):
+- DESKTOP (≥992): fixed the stacked-thumbnail GAP from 16px → 0 (source thumbnails TOUCH); [266 stack | 296
+  portrait] beside the text (collage flex 574 = 266+12+296).
+- MOBILE (<768): [stacked thumbs (0 gap, 156px) | tall portrait 137px] side by side — portrait now VISIBLE
+  (was wrongly hidden last change).
+- TABLET (768–991): [thumb | thumb] ROW (164px, 12px gap) with the tall portrait (340px) BELOW — portrait
+  VISIBLE. Added the 768 tier (stack flex-direction row, portrait full-width below); desktop resets stack
+  back to column.
+The tall portrait (3rd/decorative bg image) is now shown at EVERY viewport. Verified mine = source at
+390/600/768/900/1200 (layout, thumb widths, 0 stack gap, portrait placement) and home page unaffected/correct
+at all tiers. Gates: stylelint ✓ · breakpoints ✓ · overflow ✓ (360→1920) · typography ✓ · a11y ✓.
+
+### 2026-09-04 — columns (feature) collage: desktop stack→portrait gap 12→15px (source)
+Fine-tune: measured the source desktop collage at 1440/1720 — stacked thumbnails 266px, tall portrait 296px,
+gap between the stack and the portrait = 15px (mine was 12). Set the desktop collage `gap: 15px` (flex-basis
+266+15+296 = 577). Stacked thumbnails still touch (0 internal gap) and portrait 296 — unchanged. Verified
+mine@1440 = 266/296/gap 15. Gates: stylelint ✓ · breakpoints ✓ · overflow ✓ (collage + home) · a11y ✓.
+
+### 2026-09-04 — columns (feature) collage: heading as default content (centered) + JS fix + tighter text gap
+Three fixes on the home + collage-sample "For decades" section:
+1. HEADING CENTERED: the "For decades…" h2 was authored INSIDE the block's first cell; the collage JS lifted
+   it and wrapped it in `.columns-feature-title`, but it shrink-wrapped (1016px, left-shifted) instead of
+   centering. Moved the h2 OUT to be SEPARATE default content above the block (its own full-width H2). Now it's
+   1170px, centered. Added `.section.columns-container:has(.columns-feature-collage) .default-content-wrapper
+   h2 { text-align: center; margin: 0 0 24px }` (source centers it at every width). Removed the now-dead
+   heading-lift + title-wrap logic from columns.js and the `.columns-feature-title` rules.
+2. JS PICTURE-GROUPING: after removing the in-cell h2, EDS wrapped BOTH collage pictures in a SINGLE shared
+   <p> (cell had no other content), so the old `p.children.length===1` unwrap + `:scope > picture` selector
+   found 0 → collage collapsed to a thin strip. Fixed: select `cell.querySelectorAll('picture')` (descendant,
+   nesting-agnostic), move each into the stack, then drop empty <p> wrappers. All 3 images render again.
+3. COLLAGE→TEXT GAP: the row gap was 64px (too wide — pushed text far right). Source text starts ~8px after
+   the portrait; set the collage row gap to `var(--grid-gap)` (30px). Text now lands at 742 (was 776),
+   matching the source's tight column.
+Verified home + sample: heading centered at 390/768/1200; 2 thumbnails (156/164/266) + portrait render at all
+tiers; text gap 30px. Gates: stylelint ✓ · eslint ✓ · breakpoints ✓ · overflow ✓ (home + sample) · typography
+✓ · a11y ✓.

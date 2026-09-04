@@ -75,21 +75,20 @@ function decorateFeature(block) {
     // group the thumbnails into a narrow stack and add the portrait next to it.
     if (pictures.length > 1) {
       cell.classList.add('columns-feature-collage');
-      // unwrap pictures from their auto-generated <p> wrappers
-      pictures.forEach((pic) => {
-        const p = pic.closest('p');
-        if (p && p.children.length === 1) p.replaceWith(pic);
-      });
 
-      // Lift the section heading out of the cell BEFORE regrouping the images,
-      // so the title bar still gets it (see the block-level step below).
-      const cellHeading = cell.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > h4');
-      if (cellHeading) block.prepend(cellHeading);
+      // The section heading ("For decades…") is authored as separate
+      // default content ABOVE the block (not inside a cell), so the platform
+      // centers it full-width like the source — no lifting needed here.
 
-      // Wrap the stacked thumbnails in their own column.
+      // Wrap the two thumbnails in their own column. EDS may wrap the pictures
+      // in a single shared <p> (when the cell has no other content) or in
+      // separate <p>s — grab them by descendant selector so nesting doesn't
+      // matter, move each into the stack, then drop the now-empty <p> wrappers.
       const stack = document.createElement('div');
       stack.className = 'columns-feature-collage-stack';
-      cell.querySelectorAll(':scope > picture').forEach((pic) => stack.append(pic));
+      const cellPictures = [...cell.querySelectorAll('picture')];
+      cellPictures.forEach((pic) => stack.append(pic));
+      cell.querySelectorAll('p').forEach((p) => { if (!p.textContent.trim() && !p.querySelector('picture, img')) p.remove(); });
 
       // Tall portrait beside the stack (matches the source collage).
       const portrait = document.createElement('div');
@@ -110,20 +109,6 @@ function decorateFeature(block) {
       }
     }
   });
-
-  // For the collage variant the source shows the heading full-width and
-  // centered above both columns. The heading was prepended to the block above;
-  // wrap it in the title bar here.
-  const collage = block.querySelector('.columns-feature-collage');
-  if (collage) {
-    const heading = block.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6');
-    if (heading) {
-      const titleWrap = document.createElement('div');
-      titleWrap.className = 'columns-feature-title';
-      heading.replaceWith(titleWrap);
-      titleWrap.append(heading);
-    }
-  }
 }
 
 function decorateStatement(block) {
