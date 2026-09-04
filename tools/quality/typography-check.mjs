@@ -63,11 +63,31 @@ try {
 function measure(tags) {
   const round = (v) => Math.round(parseFloat(v) * 10) / 10;
   const out = {};
+  // The source type SCALE (typography.json) describes DEFAULT-CONTENT headings /
+  // body — the page's h1..h6 rhythm. Block-internal titles legitimately carry
+  // their own scale (e.g. a news-card title or an expand-card title measured
+  // straight from the source widget, both smaller than the global h3 token), so
+  // measuring the first h3 that happens to be a card title yields false drift.
+  // Prefer an element inside a `.default-content-wrapper` (true page heading /
+  // body); only fall back to any visible element when the page has no default
+  // content for that tag.
+  const visible = (e) => {
+    const r = e.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && e.textContent.trim();
+  };
+  // Headings/body inside a block carry the block's own scale; only h1 (the page
+  // title) and default-content headings/body represent the page type scale.
+  const inBlock = (e) => e.closest('[data-block-name], .block');
+  const isPageScale = (e) => e.tagName === 'H1'
+    || e.closest('.default-content-wrapper')
+    || !inBlock(e);
   for (const tag of tags) {
-    const el = [...document.querySelectorAll(tag)].find((e) => {
-      const r = e.getBoundingClientRect();
-      return r.width > 0 && r.height > 0 && e.textContent.trim();
-    });
+    const all = [...document.querySelectorAll(tag)].filter(visible);
+    // Prefer a default-content / page-level element; if the only candidates are
+    // block-internal titles (which have their own source-matched scale), skip
+    // the tag rather than flag false drift against the page scale.
+    const el = all.find((e) => e.closest('.default-content-wrapper'))
+      || all.find(isPageScale);
     if (!el) continue;
     const cs = getComputedStyle(el);
     out[tag] = {

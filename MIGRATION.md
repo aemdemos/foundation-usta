@@ -655,3 +655,188 @@ Verified locally: real click on Dinkins DONATE → stays on `?form=DINKINS` (no 
 overlay for "David N. Dinkins Fund" ("Designate to the David N. Dinkins Fund"). Gates: eslint ✓ · lint 0 err ·
 a11y ✓.
 **Requires DA re-upload of cards-expand.plain.html for prod to pick up the corrected hrefs.**
+
+### 2026-09-04 — cards (news): mobile side gutters restored to source (390px)
+Mobile cards sat flush at the 15px section gutter; source insets the "Related Articles" feed to 31px each
+side (content 328 @390) with the card image/text at 36 (a further 5px inline inset). Measured source live
+DOM: heading/list x31, image x36. Fixes:
+- `.cards.news > ul { padding: 0 16px }` on mobile (15 section + 16 = 31), reset to 0 at ≥768 (3-up row's
+  gutters come from the li's 5px inline padding).
+- `.cards.news > ul > li { padding: 15px 5px }` (was 15px 0) → image/text land at x36 like the source.
+- The authored "Related Articles" <h2> is default content in the same section (0-inset default-content
+  wrapper), so it didn't align with the cards; added `.section.cards-container:has(.cards.news)
+  .default-content-wrapper { padding-inline: 31px }` (reset at ≥768) to align the heading to the card column.
+Verified @390: heading x31, li x31, image x36 (matches source exactly); desktop unaffected (3-up, heading +
+first card both x55). Gates: stylelint ✓ · breakpoints ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-04 — Typography parity verified: cards (news) + cards (expand) across all viewports
+Measured the SOURCE live DOM at 390/768/1280 and confirmed both blocks match every text metric.
+cards (news) — Related Articles feed (source values):
+- Title: Graphik Semibold, 28/36 uppercase, letter-spacing -0.7px @≤768 → 22/32 letter-spacing normal @≥992,
+  color #000. Date: Graphik Regular 16/20 #000. Description: Graphik Regular 16/24 #000. Read More: Graphik
+  Semibold 14/24 uppercase underline #0357b8 @≤768 → 16/24 @≥992. Our CSS already reproduces all of these
+  exactly (verified computed styles @390 match 1:1); responsive title/link size steps at 992 confirmed.
+cards (expand) — special-funds cards render inside FundraiseUp about:blank iframes; card width is a FIXED
+250px at EVERY viewport, so type is invariant across breakpoints (confirmed @390 and @1280 identical):
+- Title 16/24 w400 color #212830 none; Description 14/20 w400 #212830; DONATE 16/44 w600 white center.
+  Ours matches size/weight/line-height/letter-spacing/color/alignment exactly. ONE deliberate divergence:
+  source uses the widget's IBM Plex Sans; we use the site's self-hosted Graphik per the Typography Rule
+  (same faces, self-hosted — never adopt a third-party widget font). Metrics identical → wrapping/heights match.
+Also fixed tools/quality/typography-check.mjs: it measured the FIRST h3 (a block-internal card title with its
+own source-matched scale) against the page h1..h6 scale, flagging false drift. Now it measures page-scale
+headings (h1 / default-content / non-block) and skips block-internal titles. Home + both samples pass; no new
+eslint errors (file's pre-existing 16 unchanged). Gates: typography ✓ (all 3) · breakpoints ✓ · overflow ✓
+(360→1920) · a11y ✓ · lint 0 err.
+
+### 2026-09-04 — cards (profile): exact source dimensions across all viewports (was "zoomed")
+Measured the source (leadership-and-staff, Staff tab) live at 390/768/1200 — the profile grid is
+1-up mobile → 4-up FLUID from 768, on a content column = viewport−60, with a per-tier COLUMN GAP that
+opens 12px→30px, and the card row centered (narrower than the container):
+- 390: 1-up, card 312, inset 39px each side, image 312²
+- 768: 4-up, card 162, gap 12
+- 1200: 4-up, card 255, image 255², gap 30
+Ours was a stretched 1170 grid → 270px cards ("zoomed") and only 15px mobile inset. Rewrote to match:
+mobile single card capped 312 with `padding:0 24px` (15 gutter+24 = 39px inset); 768 tier `max-width:
+min(684px,100vw−60)` + `repeat(4,minmax(0,1fr))` gap 12 (→162 cards); 992+ `max-width: min(1110px,
+100vw−90)` (=4×255+3×30, the source card row) gap 30 (→255 cards, 255² images). Typography already matched
+(name Graphik Semibold 20/28→22/32; role Graphik Regular italic 16/22.9→18/25.7 with the 34×4 divider).
+Verified computed rects at all three widths equal the source (card 312/162/255, gap –/12/30, image square).
+Gates: stylelint ✓ · breakpoints ✓ · overflow ✓ (360→1920) · typography ✓ · a11y ✓.
+
+### 2026-09-04 — cards (profile): typography parity across all viewports (name scale + plain list)
+Measured every text element on the source (leadership-and-staff, Staff tab) at 390/768/1280:
+| element | mobile 390 | tablet 768 | desktop ≥992 |
+| Our Staff (h3) | XXCond Bold 36/39.6 | 56/61.6 | 56/61.6 |
+| Name (h4) Graphik Semibold | 20/28 | **18/24** | 22/32 |
+| Role (i) Graphik Reg italic | 16/22.86 | 18/25.71 | 18/25.71 |
+| Staff list (p) Graphik Reg | 16/24 | 18/24 | 18/24 |
+Two fixes:
+1. Name font-size is NON-monotonic (20→18→22) — the card narrows to 162px at the 768 tier so the source
+   DROPS the name to 18/24 there, then grows to 22/32 at 992. Ours jumped straight to 22/32 at 768 (too big).
+   Set base 20/28, added 18/24 at the 768 tier, and 22/32 at the 992 tier.
+2. Staff list: source renders it as PLAIN Graphik Regular (16/24→18/24). Our sample authored each line as
+   `**Name**, *role*` (bold+italic), which diverged. Stripped the <strong>/<em> wrappers in the sample
+   content so the list is plain regular like the source (heading/name/role/list now all match at every width).
+Role (16/22.86→18/25.71 italic, with the 34×4 divider), heading, and colors (#000) already matched.
+Verified computed values at all three widths equal the source. Gates: stylelint ✓ · breakpoints ✓ ·
+typography ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-04 — cards (profile): CORRECTION to the name scale (prior 18/24@768 was a devtools artifact)
+The previous entry recorded the card name as dropping to 18/24 at the 768 tier. That reading was WRONG —
+it was taken with devtools OPEN. The source title uses AEM's `cmp-teaser__title_scalable`, which shrinks
+the font when the layout viewport is squeezed by the open devtools panel (the 18px the user saw). Re-measured
+at REAL viewport widths (devtools closed) across 390→1920: the name is 20/28 at ≤~700, then a flat 22/32
+from 768 upward (never 18). Reverted the name to 20/28 mobile → 22/32 from 768 (removed the bogus 18/24 @768
+and the redundant 22/32 @992 override). Role 16/22.86→18/25.71 and the plain 16/24→18/24 staff list are
+unchanged/correct. Verified mine now = source at all widths (name 20/22/22 at 390/768/1200). Lesson: measure
+scalable AEM titles with devtools CLOSED (or via a headless context at the true width). Gates: stylelint ✓ ·
+breakpoints ✓ · typography ✓ · a11y ✓.
+
+### 2026-09-04 — cards (profile): exact name spacing (h4 margin 16/16) + CEO-title myth
+Devtools tooltip on the source revealed the h4 uses `margin: 16px 0` (16 top AND bottom) — ours was
+`0 0 5px`, so the image→name and name→divider gaps were short. Measured the source's real vertical rhythm
+(devtools closed): image→name 16px @mobile / 36px @desktop; name→role-text 37px at all widths (h4 16mb +
+description-wrapper 5top + 4px bar + 10 below). Reproduced exactly:
+- body padding `0 20px` mobile/tablet → `20px 20px 0` at 992 (source content-wrapper).
+- h4 `margin: 16px 0`.
+- role <p> `padding-top: 5px` (NOT margin — avoids collapsing with the h4's 16px bottom margin) + bar
+  `::before` `margin: 0 0 10px`. Verified mine = source: img→name 16/36, name→role 37/37 at 390 & 1200.
+CEO-title "bigger" is a myth: the source title is AEM `cmp-teaser__title_scalable` (JS fits title to card).
+With devtools OPEN it recomputes per-card as the panel squeezes the layout, so the inspected/first card reads
+a different px (the user saw 18 in one shot, 22 in another for the same design). Measured all 8 cards at real
+widths, devtools CLOSED: uniformly 20/28 (≤700) → 22/32 (≥768) — the CEO card is NOT larger. Ours matches
+(all 8 uniform). Gates: stylelint ✓ · breakpoints ✓ · typography ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-04 — cards (profile): desktop title sizing = first card 22px, rest 18px (per source scalable title)
+Per user direction + the source's AEM `cmp-teaser__title_scalable` behavior: at DESKTOP the first card
+(CEO — short name + single-line role) keeps 22/32 while every other card's title renders 18/24 (the longer
+names/roles trigger the scalable step-down). Implemented at the 992 tier: base all `.cards-profile-card-body
+h4` to 18/24, then `> ul > li:first-child ... h4` back to 22/32. Mobile (390) stays uniform 20/28 and tablet
+(768) uniform 22/32 — matching the source at those widths. Verified rendered: 390 first/rest 20/28·20/28;
+768 22/32·22/32; 1200 first 22/32, rest 18/24. (Dev server had to be restarted + chromium reinstalled after
+the Playwright MCP disconnected.) Gates: stylelint ✓ · breakpoints ✓ · typography ✓ · overflow ✓ · a11y ✓.
+
+### 2026-09-04 — cards (stats): vertical rhythm matched to source (image→number & number→caption gaps)
+Measured the source stats band (our-impact.html) at 390/768/1200: horizontal geometry already matched
+(image 328 @390 1-up / 270 @≥992 4-up, 30px gap, same 135/135 & 215/215 insets at 1440/1600). The real
+diff was the VERTICAL gaps: source image→number is 60px @mobile then 76px @≥768; number→caption 26px. Ours
+was a flat 24/24. Fixed: `.cards-stats-card-number` margin-top 60 (mobile) → 76 (from 768 tier);
+`.cards-stats-card-caption` margin-top 26. Number (Graphik XXCond Bold 90/99 w500 #000 center) and caption
+(Graphik Semibold 18/27 w500 #000 center) typography already matched at all widths — verified 1:1. Verified
+rendered gaps now equal source (60/76/76 image→number; 26 number→caption). Gates: stylelint ✓ · breakpoints ✓
+· typography ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-04 — cards (stats): full-bleed cream band + mobile paddings + typography parity
+Mobile screenshot review: the source cream band is FULL-BLEED (edge-to-edge) at every width, but ours sat
+inside the section's 15px wrapper gutter. Measured source at 390/768/1200/1440:
+- band: full-bleed (0/0) all widths; vertical padding 16px @mobile → 32px from 768.
+- images: 328 (1-up @390) → 168 (4-up, 12px gap @768) → 270 (4-up, 30px gap @≥992); content column CENTERED
+  (image inset 31/30/15/135 at 390/768/1200/1440).
+Fixes: `.cards.stats { width:100vw; margin-inline: calc(50% - 50vw) }` (full-bleed escape from the wrapper);
+padding 16 mobile → 32 from 768; ul `padding:0 31px` mobile, then centered `max-width: min(708px,100vw-60)`
+@768 (gap 12) and `min(1170px,100vw-30)` @992 (gap 30), `repeat(4,minmax(0,1fr))`. Verified band+image geometry
+now equals source at all 4 widths, and the vertical rhythm (image→number 60/76/76, number→caption 26) held.
+Typography already matched at every width: number Graphik XXCond Bold 90/99 w500 #000 center; caption Graphik
+Semibold 18/27 w500 #000 center; caption wraps to 2 lines like the source. Gates: stylelint ✓ · breakpoints ✓
+· typography ✓ · overflow ✓ (360→1920, full-bleed introduces no horizontal scroll) · a11y ✓.
+
+### 2026-09-04 — Section color styles (section-yellow / section-blue) + cards-stats/support parity
+Made the band colors block-agnostic SECTION styles (per eds-content-modeling — color on the surface the
+block sits on = section style, never baked into a block):
+- brand.css: --section-blue-bg #e2f7ff, --section-yellow-bg #ffefbe.
+- styles.css: main .section.section-blue (aliased with legacy .highlight) paints the blue band;
+  main .section.section-yellow paints the yellow/cream band (pad-V 16px mobile -> 32px @768). Updated the
+  home spacer :has() spacing rules to match .section-blue too.
+- cards.stats: REMOVED the hardcoded cream bg + full-bleed + pad from the block — the yellow now comes from
+  the section-yellow section. Block only lays out its content column (ul inset 16px -> 31px w/ wrapper).
+- Content: cards-stats sample + new section-yellow sample use style: section-yellow; cards-support sample +
+  new section-blue sample + home (highlight->section-blue) use style: section-blue.
+- NEW content/drafts/sections-samples/ (parallel to block-samples): section-yellow.plain.html (wraps
+  cards-stats) and section-blue.plain.html (wraps cards-support). Added both to tests/a11y urls.
+Circular images now IDENTICAL between cards-stats and cards-support at every viewport (both fluid, centered
+content column): 328 @390 -> 168 @768 -> 218 @992 -> 270 @>=1200. Fixed cards-support (was 1-up 688px @768,
+fixed 270 causing 992 overflow) to the same fluid 4-up model as cards-stats. Verified circle sizes match 1:1
+and home cards-support renders on the blue band. Gates: stylelint OK - breakpoints OK - typography OK
+(stats/support/both section samples/home) - overflow OK (360->1920, 992 overflow resolved) - a11y OK.
+
+### 2026-09-04 — Typography parity (cards-support, cards-stats) + cards-tiles wrap fix
+Typography check across 390/768/1200 (measured source live):
+- cards-support: fixed alignment — source TITLE is left-aligned at every width, description + LEARN MORE
+  are CENTERED at every width (mine had all-center mobile → all-left from 768). Set h4 text-align:left,
+  card center, removed the 768 li left-align. Link font-size now responsive 16→18 (var --body-font-size-m)
+  matching source (was fixed 18). Title 18/27 Semibold #000, desc/link 16→18/24 Regular (#000 / #0357b8).
+- cards-stats: number Graphik XXCond Bold 90/99 w500 #000 center; caption Graphik Semibold 18/27 w500 #000
+  center — already 1:1 at all widths, re-verified.
+cards-tiles: source tile TITLE is Graphik Semibold 18/27 w500 #000 CENTER (not left — the screenshot's
+"left" look was a centered single-line title on a 270px tile). The real diff was WIDTH/WRAP: my ul was
+capped by the 1170 wrapper minus a 30px inline padding → 255px images → "CORPORATE & FOUNDATIONS" wrapped
+to 2 lines on wide screens, whereas the source image reaches 270px (fits 1 line) from ~1260px. Removed the
+30px inset and capped the ul at min(1170, 100vw−90) so it steps 255@1200 (2 lines, like source) → 270@≥1300
+(1 line). Verified 1:1 vs source at 390/768/1200/1300/1440: image 328/168/255/270/270, title lines
+1/2/2/1/1, all center. Gates: stylelint ✓ · breakpoints ✓ · typography ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-04 — cards (tiles): mobile container cap = source token (clears the Donate button)
+Mobile screenshot review: at wider mobile widths the migrated tile image kept scaling with the viewport and
+ran under the floating Donate button, while the source card pulls away from the right edge. Root cause: the
+source tiles sit in a `.container` with a FIXED max-width on mobile (measured 336px, image 328), CENTERED —
+so the image stays 328px and the side margins grow (imgL 31@390 → 51@430 → 86@500). Mine used `padding:0 16px`
+which scaled with the viewport. Fixed: `.cards.tiles > ul { max-width: 328px; margin: 0 auto; padding: 0 }`
+on mobile (the source image column, centered), and released the cap at 768 (`max-width: min(708px,100vw−60)`,
+4-up 168px). Verified 1:1 vs source: image 328 fixed with insets 31/51/86 at 390/430/500 (card now clears the
+Donate button exactly like the source); 768 →168 4-up; 1200 →255 (2-line title); ≥1300 →270 (1-line). This is
+Option A — the source's own CSS-grid/container token, not an added button-clearance hack. Title typography
+unchanged (Graphik Semibold 18/27 w500 #000 center at every width). Gates: stylelint ✓ · breakpoints ✓ ·
+typography ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-04 — All cards variants: mobile container cap (clear Donate button) — MOBILE ONLY
+Applied the same source-token mobile fix from cards-tiles to the remaining variants whose single-column
+card SCALED with the viewport (image grew 328→438 @500, staying near the right edge under the floating
+Donate button): cards-content, cards-news, cards-stats, cards-support. Source caps each at a fixed ~328px
+CENTERED on mobile (measured: content/stats/support image 328, imgL 31@390 → 86@500). Set the mobile `> ul`
+to `max-width: 328px` (news 338 = 328 + li's 2×5px), `margin: 0 auto`, removed the scaling `padding: 0 16px`;
+each block's existing 768 tier releases the cap (added `max-width: none` on news which only reset padding
+before). cards-profile (312 fixed), cards-expand (250 fixed) and cards-tiles (328, prior fix) already capped.
+Verified MOBILE-ONLY: all four now 328@390 (imgL 31) → imgL 86 @500 (pulls off the edge, clears the button);
+768 and 1200 UNCHANGED (content 168/255 4-up, news 220/360 3-up, stats/support 168/270 4-up). Home
+cards-support unaffected (390 →328 1-up, 1200 →270 4-up). Gates: stylelint ✓ · breakpoints ✓ · typography ✓
+· overflow ✓ (360→1920) · a11y ✓ on all four sample pages.

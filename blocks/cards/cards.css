@@ -9,14 +9,21 @@
    our wider section container. Mobile inset = 31px each side (content 328). */
 .cards.content {
   box-sizing: border-box;
+
+  /* Mobile: source caps the single-column card at a fixed 328px, CENTERED — so
+     the card pulls away from the edges as the viewport widens (clearing the
+     floating Donate button) rather than scaling to fill. Released at 768 where
+     the 4-up grid takes over. */
+  max-width: 328px;
   margin-inline: auto;
-  padding-inline: 16px; /* +15 section gutter = 31px, source mobile inset */
+  padding-inline: 0;
 }
 
 @media (width >= 768px) {
   .cards.content {
     /* source content sits at a 30px gutter at 768; our section wrapper gives
        24px, so add 6px to align the first card to the source (x30). */
+    max-width: none;
     padding-inline: 6px;
   }
 }
@@ -370,21 +377,54 @@
    + description + "Read More"), 3-up. Values extracted from the source's live
    computed styles (.list-core-component) at 390/768/992/1200. */
 
+/* The "Related Articles" heading is authored as default content in the SAME
+   section as the feed; the source aligns it with the cards (both inside one
+   padded feed container). On mobile our default-content wrapper sits at the 15px
+   section gutter while the cards get +16px — so nudge the heading by the same
+   16px so it lines up with the card column (source heading x31). Scoped to the
+   news-feed section via :has() so it never affects other cards variants. Resets
+   at 768 where the feed padding is removed. The default-content wrapper has a
+   0 base inset (unlike the block wrapper's 15px), so use the full 31px here. */
+.section.cards-container:has(.cards.news) .default-content-wrapper {
+  padding-inline: 31px;
+}
+
+@media (width >= 768px) {
+  .section.cards-container:has(.cards.news) .default-content-wrapper {
+    padding-inline: 0;
+  }
+}
+
 /* Row of cards. Source: flex-wrap row; each card is flex-basis 33% with a 5px
    inline padding (the inter-card gutter is 2×5px = 10px). Mobile stacks. */
 .cards.news > ul {
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
+
+  /* Mobile: source caps the feed card at a fixed ~328px, CENTERED, so it pulls
+     away from the edges as the viewport widens (clearing the floating Donate
+     button) rather than scaling. The 768 tier below resets the cap for the 3-up
+     row. (338 = 328 image + the li's 2×5px inline padding.) */
+  max-width: 338px;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
 }
 
-/* Mobile: full-width stacked cards. Source card padding is 15px block, 0 inline. */
+/* Mobile: full-width stacked cards. Source card padding is 15px block; the
+   image + text carry a further 5px inline inset (source image sits at x36 =
+   31 feed inset + 5), so match with 5px inline padding on the card. */
 .cards.news > ul > li {
   box-sizing: border-box;
   width: 100%;
-  padding: 15px 0;
+  padding: 15px 5px;
+}
+
+@media (width >= 768px) {
+  .cards.news > ul {
+    max-width: none; /* release the mobile cap for the 3-up row */
+    padding: 0; /* 3-up row: gutters come from the li's 5px inline padding */
+  }
 }
 
 /* Landscape image — source is a 400×200 (2:1) image, full card width, no radius. */
@@ -522,19 +562,32 @@
    deliberate consequence of the Grid Rule (one shared grid, never bespoke
    per-block widths); typography matches the source exactly. */
 
+/* Source model (measured live): 1-up mobile → 4-up from 768, FLUID columns
+   (not fixed) on a container = viewport − 60 (30px side gutters). The column
+   gap is 12px at the 768 tier and opens to 30px from 992. Card widths follow:
+   162 @768, 255 @1200 — matching the source exactly (our earlier 1170 grid made
+   the cards 270 = "zoomed"). Constrain the block to the source content column so
+   the 4 columns compute to the source widths.
+   Mobile: single card, inset 39px each side (source card 312 @390); our section
+   gutter is 15px, so add 24px. */
 .cards.profile > ul {
+  box-sizing: border-box;
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: 0 auto;
+  padding: 0 24px;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 40px var(--grid-gap); /* row 40px, column 30px */
+  gap: 40px 30px; /* row 40px; column gap only applies once multi-column */
 }
 
-/* White shadowed card. Source: #fff, box-shadow rgba(0,0,0,.5) 0 2px 5px. */
+/* White shadowed card. Source: #fff, box-shadow rgba(0,0,0,.5) 0 2px 5px.
+   Mobile: single centered card capped at 312 (source card width @390). */
 .cards.profile > ul > li {
   display: flex;
   flex-direction: column;
+  justify-self: center;
+  width: 100%;
+  max-width: 312px;
   background-color: #fff;
   box-shadow: 0 2px 5px 0 rgb(0 0 0 / 50%);
 }
@@ -552,15 +605,22 @@
   object-fit: cover;
 }
 
-/* Text area — source content-wrapper padding 20px 20px 0 (bottom spacing
-   comes from the role's 10px bottom margin below). */
+/* Text area — source content-wrapper padding is `0 20px` at mobile/tablet and
+   `20px 20px 0` from 992 (the extra 20px top only kicks in on desktop). */
 .cards.profile .cards-profile-card-body {
-  padding: 20px 20px 0;
+  padding: 0 20px;
 }
 
-/* Name. Source: Graphik Semibold, weight 400, #000, 20/28 → 22/32. */
+/* Name. Source (measured live at real viewport widths, devtools CLOSED):
+   Graphik Semibold, weight 400, #000 — 20/28 on mobile (≤~700), stepping up to
+   22/32 from the 768 tier and holding at every larger width. Margin is 16px top
+   AND bottom (source h4 `margin: 16px 0`) — this is the image→name gap and the
+   name→divider gap; do NOT use a smaller bottom margin. (A title measured with
+   devtools OPEN reads smaller because the source uses AEM's
+   `cmp-teaser__title_scalable`, which shrinks when the panel squeezes the layout
+   viewport — a devtools artifact, not the real breakpoint.) */
 .cards.profile .cards-profile-card-body h4 {
-  margin: 0 0 5px;
+  margin: 16px 0;
   font-family: var(--heading-semibold-font-family);
   font-weight: 400;
   font-size: 20px;
@@ -569,10 +629,15 @@
   text-transform: none;
 }
 
-/* Role. Source: description <p><i> — Graphik Regular italic, #000, 16/22.857
-   → 18/25.714. A 34x4 black divider bar sits above it. */
+/* Role. Source: a `.cmp-teaser__description` wrapper whose `::before` is the
+   34×4 black divider bar; the role text is Graphik Regular italic, #000,
+   16/22.857 → 18/25.714. Source spacing name→role text = 37px total (h4's 16px
+   bottom margin + the wrapper's 5px top + the 4px bar + 10px below the bar). Use
+   PADDING-top (5px) on the <p> — not margin — so it doesn't margin-collapse with
+   the h4's 16px bottom margin (which would swallow the 5px). */
 .cards.profile .cards-profile-card-body p {
   margin: 0 0 10px;
+  padding-top: 5px;
   font-family: var(--body-font-family);
   font-size: 16px;
   line-height: 22.8571px;
@@ -585,15 +650,28 @@
   display: block;
   width: 34px;
   height: 4px;
-  margin: 0 0 10px;
+  margin: 0 0 10px; /* tuned so name→role text = 37px, matching the source */
   background-color: #000;
 }
 
+/* From 768: 4-up fluid grid. Source column gap is 12px at this tier (card 162),
+   opening to 30px from 992 (card up to 255). Constrain the block to the source
+   content column (viewport − 60, capped) so the 4 columns match the source
+   widths instead of stretching to our wider section container. */
 @media (width >= 768px) {
   .cards.profile > ul {
-    grid-template-columns: repeat(4, 1fr);
+    /* Source 768 card row = 4×162 + 3×12 = 684px, centered. */
+    max-width: min(684px, calc(100vw - 60px));
+    padding: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 40px 12px;
   }
 
+  .cards.profile > ul > li {
+    max-width: none; /* fluid column now drives the width */
+  }
+
+  /* From 768 the name steps up to 22/32 and holds at all larger widths. */
   .cards.profile .cards-profile-card-body h4 {
     font-size: 22px;
     line-height: 32px;
@@ -602,6 +680,36 @@
   .cards.profile .cards-profile-card-body p {
     font-size: 18px;
     line-height: 25.7143px;
+  }
+}
+
+@media (width >= 992px) {
+  .cards.profile > ul {
+    /* Source card row is 1110px (4×255 + 3×30), centered inside its 1140
+       container — cap here so the 4 columns compute to the source's 255px
+       (not 263) instead of filling the full content width. */
+    max-width: min(1110px, calc(100vw - 90px));
+    gap: 40px 30px; /* source opens the column gap to 30px from 992 */
+  }
+
+  /* Desktop title sizing reproduces the source's AEM `cmp-teaser__title_scalable`
+     result: the FIRST card (the CEO — short name + a single-line role) keeps the
+     full 22/32, while every other card's title renders at 18/24 (the longer
+     names/roles cause the scalable script to step them down). Match that exactly:
+     base all names to 18/24, then bump only the first card back to 22/32. */
+  .cards.profile .cards-profile-card-body h4 {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .cards.profile > ul > li:first-child .cards-profile-card-body h4 {
+    font-size: 22px;
+    line-height: 32px;
+  }
+
+  /* Desktop: source content-wrapper adds a 20px top padding (mobile/tablet = 0). */
+  .cards.profile .cards-profile-card-body {
+    padding: 20px 20px 0;
   }
 }
 
@@ -615,18 +723,20 @@
    single stacked card (image → number → caption), which is visually identical
    per column and the natural EDS authoring model. */
 
-.cards.stats {
-  /* cream stat band (source container bg #FFEFBE) */
-  background-color: var(--stats-cream-bg, #ffefbe);
-  padding: 32px 0;
-}
+/* The yellow band is NOT the block's job — it comes from the `section-yellow`
+   section style (styles.css), which paints the full-bleed background + vertical
+   padding. The block only lays out its content column. */
 
 .cards.stats > ul {
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
 
-  /* mobile: single column, source insets ~16px inside the 15px gutter */
-  padding: 0 16px;
+  /* Mobile: source caps the single-column stat card at a fixed 328px, CENTERED,
+     so it pulls away from the edges as the viewport widens (imgL 31@390 → 86@500,
+     clearing the floating Donate button) rather than scaling. The 768 tier below
+     sets its own max-width, releasing this cap. */
+  max-width: 328px;
+  padding: 0;
   display: grid;
   grid-template-columns: 1fr;
   gap: 40px 30px;
@@ -651,9 +761,11 @@
   display: block;
 }
 
-/* Large stat number: 90px / 99px / 500, Graphik XXCond Bold, black, centered. */
+/* Large stat number: 90px / 99px / 500, Graphik XXCond Bold, black, centered.
+   Source gap image→number: 60px on mobile, 76px from the 768 tier (the images
+   sit in a separate grid with generous bottom spacing before the numbers row). */
 .cards.stats .cards-stats-card-number {
-  margin: 24px 0 0;
+  margin: 60px 0 0;
 }
 
 .cards.stats .cards-stats-card-number h2,
@@ -669,9 +781,10 @@
   text-transform: none;
 }
 
-/* Caption: 18px / 27px / 500, Graphik Semibold, black, centered. */
+/* Caption: 18px / 27px / 500, Graphik Semibold, black, centered.
+   Source gap number→caption = 26px. */
 .cards.stats .cards-stats-card-caption {
-  margin: 24px 0 0;
+  margin: 26px 0 0;
 }
 
 .cards.stats .cards-stats-card-caption h4,
@@ -686,18 +799,35 @@
   text-transform: none;
 }
 
-/* Tablet: 2-up (source aem-GridColumn--tablet--6). */
+/* From 768: source lays the images 4-up (168px @768 → 270px @≥992) in a CENTERED
+   content column, and the band's vertical padding grows to 32px. */
 @media (width >= 768px) {
+  .cards.stats {
+    padding: 32px 0; /* source band pad-V from the 768 tier */
+  }
+
   .cards.stats > ul {
-    grid-template-columns: repeat(2, 1fr);
+    /* 4-up, centered; source 768 column ≈ 4×168 + 3×12 = 708, capped to the
+       content width (viewport − 60). */
+    max-width: min(708px, calc(100vw - 60px));
+    margin-inline: auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 40px 12px;
     padding: 0;
+  }
+
+  /* image→number gap grows to 76px from the 768 tier (source). */
+  .cards.stats .cards-stats-card-number {
+    margin-top: 76px;
   }
 }
 
-/* Desktop: single row of 4 (source aem-GridColumn--default--3). */
+/* Desktop: 4-up, source content column = 4×270 + 3×30 = 1170, centered; gap 30px. */
 @media (width >= 992px) {
   .cards.stats > ul {
-    grid-template-columns: repeat(4, 1fr);
+    /* source insets 30px each side (image at x15 @1200 → content 1170). */
+    max-width: min(1170px, calc(100vw - 30px));
+    gap: 40px 30px;
   }
 }
 
@@ -717,13 +847,22 @@
 }
 
 .cards.support {
-  /* cards block sits in the section's 15px-gutter wrapper → +16px = 31px total */
-  padding-inline: 16px;
+  /* mobile inset handled by the ul's 328px cap below; block adds none */
+  padding-inline: 0;
+}
+
+/* From 768 the cards row is a centered, width-capped column, so the block's own
+   mobile inset is no longer needed (it would otherwise shrink the 4 columns
+   below 168 and desync them from cards-stats). The intro keeps its inset until
+   992 where the source removes it. */
+@media (width >= 768px) {
+  .cards.support {
+    padding-inline: 0;
+  }
 }
 
 @media (width >= 992px) {
-  .cards-container:has(.cards.support) .default-content-wrapper,
-  .cards.support {
+  .cards-container:has(.cards.support) .default-content-wrapper {
     padding-inline: 0;
   }
 }
@@ -733,10 +872,15 @@
   color: #000;
 }
 
-/* Row of cards: flex wrap, evenly distributed (source: justify-content space-around). */
+/* Row of cards: flex wrap, evenly distributed (source: justify-content space-around).
+   Mobile: source caps the single-column card at a fixed 328px, CENTERED, so it
+   pulls away from the edges as the viewport widens (clearing the floating Donate
+   button) rather than scaling to fill. The 768 tier below sets its own max-width,
+   releasing this cap. */
 .cards.support > ul {
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
+  max-width: 328px;
   padding: 32px 0;
   display: flex;
   flex-wrap: wrap;
@@ -744,7 +888,9 @@
   gap: 40px 30px;
 }
 
-/* Mobile: source stacks full-width cards with centered text. */
+/* Source card text alignment (consistent at ALL widths): the TITLE is
+   left-aligned while the description + LEARN MORE link are CENTERED. Default the
+   card to center (drives desc/link); the h4 overrides to left below. */
 .cards.support > ul > li {
   background-color: transparent;
   padding: 8px 0;
@@ -782,6 +928,7 @@
   font-size: 18px;
   line-height: 27px;
   color: #000;
+  text-align: left; /* source title is left-aligned at every width (desc/link stay centered) */
   text-transform: none;
 }
 
@@ -811,7 +958,7 @@
   background: transparent;
   color: var(--link-color);
   font-family: var(--body-font-family);
-  font-size: 18px;
+  font-size: var(--body-font-size-m); /* source LEARN MORE: 16px mobile → 18px at 768 */
   font-weight: 400;
   line-height: 24px;
   letter-spacing: normal;
@@ -829,31 +976,44 @@
   text-decoration: underline;
 }
 
-/* Source left-aligns the card text from the 768 tier (mobile base is centered).
-   The intro heading/subtitle above the cards stays centered (handled above). */
+/* From 768: 4-up FLUID columns in a centered content column, mirroring
+   cards-stats so the circular images are the SAME size in both blocks at every
+   width (168 @768 → fluid ~218 @992 → 270 @≥1200). Image is width:100% of its
+   square column, so it tracks the column width exactly. */
 @media (width >= 768px) {
+  .cards.support > ul {
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+
+    /* source 768 row = 4×168 + 3×12 = 708, capped to viewport − 60. */
+    max-width: min(708px, calc(100vw - 60px));
+    margin-inline: auto;
+    gap: 12px;
+    padding: 32px 0;
+  }
+
   .cards.support > ul > li {
-    text-align: left;
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+
+    /* text stays centered (source); only the h4 title is left-aligned */
+  }
+
+  .cards.support .cards-support-card-image img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
   }
 }
 
 @media (width >= 992px) {
-  /* Single row of 4 on desktop; content is 1200px wide → 4×270 + gutters. */
+  /* content column = 4×270 + 3×30 = 1170, capped to viewport − 30 (matches
+     cards-stats), so the fluid columns give 218 @992 → 270 @≥1200 like source. */
   .cards.support > ul {
-    flex-wrap: nowrap;
-    justify-content: space-around;
-    gap: 0;
-  }
-
-  /* fixed 270px cards (mobile base is full-width) */
-  .cards.support > ul > li {
-    width: 270px;
-  }
-
-  .cards.support .cards-support-card-image img {
-    width: 270px;
-    height: 270px;
-    aspect-ratio: auto;
+    max-width: min(1170px, calc(100vw - 30px));
+    gap: 30px;
   }
 }
 
@@ -872,11 +1032,16 @@
 
 .cards.tiles > ul {
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
 
-  /* mobile: single column stack; source insets ~16px beyond the 15px section
-     gutter (→ ≈31px total) and separates stacked tiles by 48px. */
-  padding: 0 16px;
+  /* Mobile: source caps the tiles container at a FIXED width and CENTERS it, so
+     the ~328px image never scales with the viewport — it pulls away from the
+     right edge as the screen widens, clearing the floating Donate button exactly
+     like the source (a plain `padding:0 16px` scaled with the viewport and kept
+     the card near the edge). Cap = the 328px image column, centered (imgL 31 @390,
+     51 @430, 86 @500 — matching the source). */
+  max-width: 328px;
+  padding: 0;
   display: grid;
   grid-template-columns: 1fr;
   row-gap: 48px;
@@ -911,19 +1076,27 @@
   text-transform: none; /* label is authored in uppercase */
 }
 
-/* 4-up from the tablet tier. */
+/* 4-up from the tablet tier. Release the mobile 328px cap (source switches to a
+   wide multi-column grid here) — 720 content at 768 (image 168). */
 @media (width >= 768px) {
   .cards.tiles > ul {
+    max-width: min(708px, calc(100vw - 60px));
     grid-template-columns: repeat(4, 1fr);
     gap: 0 12px;
-    padding-inline: 6px;
+    padding-inline: 0;
   }
 }
 
 @media (width >= 992px) {
   .cards.tiles > ul {
     column-gap: 30px;
-    padding-inline: 30px;
+    padding-inline: 0;
+
+    /* Match the source's container step: content = viewport − 90, capped at 1170.
+       At 1200 → 1110 (image 255, title wraps to 2 lines, exactly like source);
+       from ~1260 → 1170 (image 270, "CORPORATE & FOUNDATIONS" fits on one line). */
+    max-width: min(1170px, calc(100vw - 90px));
+    margin-inline: auto;
   }
 }
 

@@ -424,11 +424,30 @@ main .section.light {
   padding: 40px 0;
 }
 
-/* light-blue support/cards band (from source #e2f7ff) */
-main .section.highlight {
-  background-color: var(--cards-band-bg);
+/* light-blue support/cards band (from source #e2f7ff).
+   `highlight` is the legacy alias; `section-blue` is the semantic, self-describing
+   name — both paint the SECTION background so any block/default content inside
+   sits on the band (the color is never baked into a block). */
+main .section.highlight,
+main .section.section-blue {
+  background-color: var(--section-blue-bg);
   margin: 0;
   padding: 56px 0;
+}
+
+/* yellow/cream impact band (source #FFEFBE) — semantic section color, applied to
+   the SECTION (e.g. the cards-stats section) rather than the cards block itself.
+   Source band vertical padding: 16px on mobile → 32px from the 768 tier. */
+main .section.section-yellow {
+  background-color: var(--section-yellow-bg);
+  margin: 0;
+  padding: 16px 0;
+}
+
+@media (width >= 768px) {
+  main .section.section-yellow {
+    padding: 32px 0;
+  }
 }
 
 /* dark band variant (e.g. stats) */
@@ -461,11 +480,13 @@ main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) {
    a THIN white gap below it (a 17px white "border" the same height as the
    strip), then the support section's own top padding gives the heading its room
    (matches the source ~82px strip-to-heading gap, not the full 76px float). */
-main > .section.spacer-container:has(.spacer[style*='cards-band-bg']):has(+ .section.highlight) {
+main > .section.spacer-container:has(.spacer[style*='cards-band-bg']):has(+ .section.highlight),
+main > .section.spacer-container:has(.spacer[style*='cards-band-bg']):has(+ .section.section-blue) {
   margin-bottom: 17px;
 }
 
-main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) + .section.highlight {
+main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) + .section.highlight,
+main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) + .section.section-blue {
   margin-top: 0;
 }
 
@@ -475,8 +496,9 @@ main > .section.spacer-container:has(.spacer[style*='stats-band-bg']) {
   margin: 0;
 }
 
-/* the support (highlight) section butts the black spacer directly below it */
-main > .section.highlight {
+/* the support (highlight / section-blue) section butts the black spacer below it */
+main > .section.highlight,
+main > .section.section-blue {
   margin-bottom: 0;
 }
 

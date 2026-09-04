@@ -66,5 +66,9 @@ export default {
     '/drafts/block-samples/columns-feature-video',
     '/drafts/block-samples/columns-feature-collage',
     '/drafts/block-samples/cards-support',
+    // Section-style sample pages (drafts/sections-samples/*) — one per
+    // block-agnostic section color, each demonstrated with a representative block.
+    '/drafts/sections-samples/section-yellow',
+    '/drafts/sections-samples/section-blue',
   ],
 };

@@ -21,6 +21,12 @@
   --stats-band-bg: #000;
   --cards-band-bg: #e2f7ff;
 
+  /* Section background colors — block-agnostic, applied via `section-<color>`
+     section styles (see styles.css). Any block/default-content placed in such a
+     section sits on this background; the color is NEVER baked into a block. */
+  --section-blue-bg: #e2f7ff; /* light-blue support band (source #e2f7ff) */
+  --section-yellow-bg: #ffefbe; /* cream/yellow impact-stats band (source #FFEFBE) */
+
   /* spacing */
   --nav-height: 120px;
   --content-max-width: 1200px;
