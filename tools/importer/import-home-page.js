@@ -31,9 +31,10 @@ const PAGE_TEMPLATE = {
     {
       // NOTE: "Mission Statement" is no longer a block — it is DEFAULT CONTENT.
       // The parser unwraps its heading + paragraph into the section; the section
-      // is tagged with the `statement` style (see sections below) which carries
-      // the centered narrow-column treatment in styles.css. Kept in the parser
-      // registry so the section container is still processed/unwrapped.
+      // is tagged with the generic `center, narrow` section styles (see sections
+      // below) which center the text and constrain it to a narrower measure — in
+      // styles.css. Kept in the parser registry so the section container is still
+      // processed/unwrapped.
       name: 'columns-statement',
       instances: ['#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.full-width.justify-content_space-around.aem-GridColumn--default--none.aem-GridColumn.aem-GridColumn--default--10.aem-GridColumn--offset--default--1'],
     },
@@ -63,7 +64,7 @@ const PAGE_TEMPLATE = {
     {
       id: 'rc7', name: 'Mission Statement',
       selector: '#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.full-width.justify-content_space-around.aem-GridColumn--default--none.aem-GridColumn.aem-GridColumn--default--10.aem-GridColumn--offset--default--1',
-      style: 'statement', blocks: ['columns-statement'], defaultContent: [],
+      style: 'center, narrow', blocks: ['columns-statement'], defaultContent: [],
     },
     {
       id: 'rc8', name: 'Beyond Wins Feature',

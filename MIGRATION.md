@@ -37,35 +37,6 @@ _TODO — fill per template/section/block as they land (see IMPORTING-GUIDE if i
 
 ## 6. Open items / TODO
 
-### ⚠️ IN-FLIGHT (half-done — finish this FIRST next session)
-**Convert "Mission Statement" ("Ready on the court. Ready for life.") from a BLOCK → default content.**
-User asked: it should NOT be a block, just plain centered default content. Started but NOT finished — the
-pipeline is edited but not re-run, so the live/local page still renders it as `class="columns statement"`.
-Done so far:
-- `tools/importer/parsers/columns-statement.js` — rewritten to `element.replaceWith(...nodes)` (heading + p,
-  no `createBlock`). ✅
-- `tools/importer/import-home-page.js` + `page-templates.json` — section rc7 `style: null → 'statement'`
-  (so a Section Metadata `statement` style is emitted to carry the centered/narrow treatment). ✅
-Still TODO to complete it:
-1. **Add a section-level style** `main .section.statement { … }` in `styles/styles.css` (or brand.css),
-   porting the centered narrow-column treatment currently in `blocks/columns/columns.css` under
-   `.columns.statement` (max-width 810 mobile→56vw/965 desktop, padding 24/38 → 50/0/80, h2 #000 centered,
-   p 16→18px centered #000, and the desktop margin-collapse vs the stats bar). It must key off the SECTION
-   `.statement` class, not the block.
-2. **Remove the statement variant from the block:** delete `decorateStatement()` + its dispatch branch in
-   `blocks/columns/columns.js` (lines ~114–131, 178–179) and the `.columns.statement*` rules in
-   `blocks/columns/columns.css` (~L388–443).
-3. **Re-bundle + re-import + re-localize** (bundle is currently STALE — predates the parser edit):
-   `bash <excat>/skills/excat-content-import/scripts/aem-import-bundle.sh --importjs tools/importer/import-home-page.js`
-   then `node <excat>/skills/excat-content-import/scripts/run-bulk-import.js --import-script
-   tools/importer/import-home-page.bundle.js --urls tools/importer/urls-home-page.txt --force`
-   then `node tools/assets/localize-assets.mjs en/home` (re-import reverts images to hotlinks — always
-   re-localize after). Playwright browser build **1208** must be installed (see 2026-09-05 log for how).
-4. Remove the `columns-statement` block-sample + its a11y URL (`content/drafts/block-samples/
-   columns-statement.plain.html`, `tests/a11y/a11y.config.js` L65) — content deletes are blocked, so drop it
-   via the import/sample-gen path, not by hand.
-5. Verify home renders the statement as default content (no `columns statement` class); gates + parity.
-
 ### Standing
 - [ ] Capture + enforce the type scale (see ▶ steps below).
 - [ ] Wire the shared grid (`--grid-gap:30px`, `.container-max`, `.grid-*`) into `styles.css` per `docs/source-css-system.md`.
@@ -1131,3 +1102,35 @@ defects. Measured the LIVE source at 360/430 (and desktop for regression) to fin
 Gates (all green): `lint` 0 errors · `breakpoint-check` ✓ (768/992/1200) · `check:overflow` ✓ (360→1920 on
 home + 8 columns/cards sample pages) · `check:typography` ✓ (390/768/992/1200) · `test:a11y` ✓ (/en/home).
 Env: had to `browser_install` the Playwright MCP Chromium before measuring.
+
+### 2026-09-05 — Mission Statement → default content + GENERIC composable section styles (`center`, `narrow`)
+Completed the long-standing IN-FLIGHT item AND generalised it per user direction (don't bake a section-
+specific `statement` class — make reusable width/alignment section styles).
+- **Statement is no longer a block.** `parsers/columns-statement.js` already unwrapped the heading + paragraph
+  to default content; re-bundled + re-imported + re-localized so the live/local page now emits plain default
+  content + a Section Metadata block — NOT `class="columns statement"` (verified count = 0). Removed
+  `decorateStatement()` + its dispatch branch from `blocks/columns/columns.js` and the `.columns.statement`
+  rules from `blocks/columns/columns.css` (left a pointer comment).
+- **NEW generic section styles in `styles/styles.css` (block-agnostic, composable):**
+  - `main .section.center` — centers the section's content column + its text (h1–h6/p → text-align:center,
+    color #000). Keeps the default section width unless combined with `narrow`.
+  - `main .section.narrow` — constrains content to ONE consistent `max-width:810px` centered measure at EVERY
+    viewport (no per-breakpoint width jumps). On phones the standard 15px section gutter keeps it inset; the
+    810 cap only engages above ~840px. Meant for sections (default content), NOT blocks — blocks carry their
+    own width.
+  - Authored together as `style: "center, narrow"` → EDS renders `class="center narrow section"`.
+- **Config:** the home-page template is embedded in `tools/importer/import-home-page.js` (NOT read from
+  page-templates.json at runtime) — set rc7 `style: 'statement'` → **`'center, narrow'`** THERE (also mirrored
+  in page-templates.json for the record). GOTCHA: editing only page-templates.json had no effect; the embedded
+  copy in import-home-page.js is the source of truth for the bundle.
+- **Sample page** regenerated via `migration-work/gen-content-sample.mjs` (overwrite — content is delete-
+  guarded) as a `center, narrow` section-style demo (default content + Section Metadata), replacing the old
+  `columns statement` block markup; re-added its a11y URL.
+- Verified rendered: statement is centered, 810px narrow, black, consistent x195/w810 @1200, x91/w810 @992,
+  full-width-minus-15px-gutter < ~840px, no overflow, matches the source layout. Gates (all green): `lint` 0
+  errors · `breakpoint-check` ✓ · `check:overflow` ✓ (home + statement sample, 360→1920) · `check:typography` ✓
+  (390/768/992/1200) · `test:a11y` ✓ (home + statement sample).
+- **Home-page section-width taxonomy (measured @1200, for future sections):** the source uses just TWO body
+  widths — **full grid (1170)** for stats/feature/decades/cards, and **one narrow centered column** for the
+  mission statement (670@1200, fluid). Hero is bespoke (own block). So `center`+`narrow` covers the only
+  non-default width on the page; everything else stays on the shared 1170 grid.

@@ -888,9 +888,10 @@
   gap: 40px 30px;
 }
 
-/* Source card text alignment (consistent at ALL widths): the TITLE is
-   left-aligned while the description + LEARN MORE link are CENTERED. Default the
-   card to center (drives desc/link); the h4 overrides to left below. */
+/* Source card text alignment (consistent at ALL widths): the title, description
+   AND LEARN MORE link are ALL CENTERED (measured on the live source — the title
+   only *looks* left-aligned because it nearly fills the card width). Center the
+   whole card; the h4 inherits it. */
 .cards.support > ul > li {
   background-color: transparent;
   padding: 8px 0;
@@ -928,7 +929,10 @@
   font-size: 18px;
   line-height: 27px;
   color: #000;
-  text-align: left; /* source title is left-aligned at every width (desc/link stay centered) */
+
+  /* source centers the title too (inherits the card's center) — it only looks
+     left-aligned because it nearly fills the card width */
+  text-align: center;
   text-transform: none;
 }
 

@@ -459,6 +459,42 @@ main .section.dark {
 }
 
 /* ------------------------------------------------------------------
+   Generic, reusable, block-agnostic SECTION layout styles. Composable —
+   author them together in Section Metadata (e.g. style: "center, narrow").
+   These style the SECTION's default content only; blocks carry their own
+   width/layout, so do NOT apply `narrow` to sections whose purpose is a block.
+   ------------------------------------------------------------------ */
+
+/* center — center the section's content column and its text. Keeps the default
+   section width unless combined with `narrow`. Text is pure black to match the
+   brand headings; sizes inherit the global type scale. */
+main .section.center > div {
+  margin-inline: auto;
+  text-align: center;
+}
+
+main .section.center h1,
+main .section.center h2,
+main .section.center h3,
+main .section.center h4,
+main .section.center h5,
+main .section.center h6,
+main .section.center p {
+  color: #000;
+  text-align: center;
+}
+
+/* narrow — constrain the section's content to a single narrower measure than
+   the default grid, CONSISTENT across every viewport (one max-width, no
+   per-breakpoint jumps). On phones the section gutter already keeps it inset,
+   so the cap simply has no effect until there's room. Used for short intros /
+   statements (e.g. "Ready on the court. Ready for life."). */
+main .section.narrow > div {
+  max-width: 810px;
+  margin-inline: auto;
+}
+
+/* ------------------------------------------------------------------
    Section separator bands — authored as Spacer blocks in their own sections
    (see blocks/spacer + tools/importer). The source stacks full-bleed 17px
    colored strips between sections. The spacer section itself owns no margin

@@ -111,25 +111,6 @@ function decorateFeature(block) {
   });
 }
 
-function decorateStatement(block) {
-  const cols = [...block.firstElementChild.children];
-  block.classList.add(`columns-statement-${cols.length}-cols`);
-
-  // setup image columns
-  [...block.children].forEach((row) => {
-    [...row.children].forEach((col) => {
-      const pic = col.querySelector('picture');
-      if (pic) {
-        const picWrapper = pic.closest('div');
-        if (picWrapper && picWrapper.children.length === 1) {
-          // picture is only content in column
-          picWrapper.classList.add('columns-statement-img-col');
-        }
-      }
-    });
-  });
-}
-
 function decorateStats(block) {
   const cols = [...block.firstElementChild.children];
   block.classList.add(`columns-stats-${cols.length}-cols`);
@@ -175,8 +156,6 @@ function decorateDefault(block) {
 export default function decorate(block) {
   if (block.classList.contains('feature')) {
     decorateFeature(block);
-  } else if (block.classList.contains('statement')) {
-    decorateStatement(block);
   } else if (block.classList.contains('stats')) {
     decorateStats(block);
   } else {

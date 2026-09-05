@@ -89,12 +89,10 @@ var CustomImportScript = (() => {
       element.replaceWith(...element.childNodes);
       return;
     }
-    const contentCell = [];
-    if (heading) contentCell.push(heading);
-    if (paragraph) contentCell.push(paragraph);
-    const cells = [[contentCell]];
-    const block = WebImporter.Blocks.createBlock(document, { name: "Columns (statement)", cells });
-    element.replaceWith(block);
+    const nodes = [];
+    if (heading) nodes.push(heading);
+    if (paragraph) nodes.push(paragraph);
+    element.replaceWith(...nodes);
   }
 
   // tools/importer/parsers/columns-feature.js
@@ -348,6 +346,12 @@ var CustomImportScript = (() => {
         instances: ["#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.padding-top-none.padding-bottom-none.justify-content_space-around.background-round.aem-GridColumn.aem-GridColumn--default--12"]
       },
       {
+        // NOTE: "Mission Statement" is no longer a block — it is DEFAULT CONTENT.
+        // The parser unwraps its heading + paragraph into the section; the section
+        // is tagged with the generic `center, narrow` section styles (see sections
+        // below) which center the text and constrain it to a narrower measure — in
+        // styles.css. Kept in the parser registry so the section container is still
+        // processed/unwrapped.
         name: "columns-statement",
         instances: ["#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.full-width.justify-content_space-around.aem-GridColumn--default--none.aem-GridColumn.aem-GridColumn--default--10.aem-GridColumn--offset--default--1"]
       },
@@ -384,7 +388,7 @@ var CustomImportScript = (() => {
         id: "rc7",
         name: "Mission Statement",
         selector: "#mainContent > div.aem-Grid.aem-Grid--12.aem-Grid--default--12 > div.container.responsivegrid.full-width.justify-content_space-around.aem-GridColumn--default--none.aem-GridColumn.aem-GridColumn--default--10.aem-GridColumn--offset--default--1",
-        style: null,
+        style: "center, narrow",
         blocks: ["columns-statement"],
         defaultContent: []
       },

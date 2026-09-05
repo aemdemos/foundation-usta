@@ -406,62 +406,11 @@
   }
 }
 
-/* Block: columns-statement -- centered narrow statement, values from source computed styles */
-
-/* Desktop: source butts this section against the stats bar above and the
-   feature section below. Zero its margin (and the following section's top
-   margin) only at desktop — mobile keeps the default section spacing, which
-   matches the source's mobile rhythm. */
-@media (width >= 992px) {
-  main > .section.columns-container:has(.columns.statement) {
-    margin: 0;
-  }
-
-  main > .section.columns-container:has(.columns.statement) + .section {
-    margin-top: 0;
-  }
-}
-
-.columns.statement > div {
-  max-width: 810px;
-  margin: 0 auto;
-
-  /* Mobile: source insets this statement ~53px from each edge (source: x49 @360,
-     x58 @430 — a mild grow; 38px inline padding = 53px inset splits the range and
-     clears the floating Donate tab). Reset at the desktop tier below. */
-  padding: 24px 38px;
-  text-align: center;
-}
-
-.columns.statement h2 {
-  margin: 0;
-  color: #000;
-
-  /* size/line-height from the global h2 token scale (44px→76px at 768, lh 1.1) */
-  text-align: center;
-}
-
-.columns.statement p {
-  margin: 0;
-  color: #000;
-  font-size: var(--body-font-size-m); /* 16px→18px at 768 (global token) */
-  line-height: var(--body-line-height);
-  text-align: center;
-}
-
-@media (width >= 992px) {
-  /* Centered column, fluid like the source (~56% of viewport → 670@1200,
-     965@1706). Uses vw so it scales past the section's 1200px cap; capped at
-     the source's widest. */
-  .columns.statement > div {
-    width: 56vw;
-    max-width: 965px;
-    padding: 50px 0 80px; /* reset the mobile inline inset */
-  }
-
-  /* h2 + body sizes scale via the global tokens at the 768 tier — no per-block
-     font-size override (the old line-height:110px drifted from the source 83.6). */
-}
+/* NOTE: the "Ready on the court. Ready for life." Mission Statement is NOT a
+   block — it is plain centered DEFAULT CONTENT carried by the generic,
+   composable section styles `center` + `narrow` in styles.css (see
+   `main .section.center` / `main .section.narrow`). The old `.columns.statement`
+   block variant was removed. */
 
 /* Block: columns-stats -- dark rounded stats band */
 
