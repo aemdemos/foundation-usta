@@ -37,15 +37,9 @@
 
 /* --- base / mobile-first: stack everything --- */
 
-/* Mobile: the SOURCE lays the feature content in a FIXED 328px column, CENTERED
-   (not a viewport-scaling gutter) — so the side margins GROW with the viewport
-   (x51 @430, x16 @360). A fixed 16px inline padding was tuned at 390px and drifts
-   left + widens past the source at 430px (colliding with the floating Donate
-   tab). Cap to the source's fixed 328px column, centered. Reset at 768. */
-.columns.feature {
-  max-width: 328px;
-  margin-inline: auto;
-}
+/* Mobile column width is handled GLOBALLY (styles.css: `main > .section > div`
+   caps to the source's 328px centered column on mobile), so the feature block
+   needs no per-block mobile inset. Reset at 768 below. */
 
 .columns.feature .columns-feature-row {
   display: flex;
@@ -263,12 +257,6 @@
    in a centered ROW on top, with the wide portrait (353×401) directly below.
    The VIDEO feature ("We go beyond") stays STACKED until 992 (source). */
 @media (width >= 768px) {
-  /* reset the mobile fixed-column cap — the grid container handles gutters */
-  .columns.feature {
-    max-width: none;
-    margin-inline: 0;
-  }
-
   .columns.feature:has(.columns-feature-collage) .columns-feature-row {
     flex-direction: row;
     align-items: flex-start;

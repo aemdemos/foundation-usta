@@ -6,21 +6,12 @@
   /* Source content column = viewport − 60 (30px side gutters), capped at 1200.
      Our section wrapper is a touch wider (970/1170), which flips the heading +
      featured line-wrap vs the source; constrain to the source widths so they
-     wrap identically (heading 2 lines @992, featured 2 lines @992/1200). */
+     wrap identically (heading 2 lines @992, featured 2 lines @992/1200). Mobile
+     content width (328px) comes from the GLOBAL rule (styles.css) — no per-block
+     inset needed. */
   box-sizing: border-box;
   margin-inline: auto;
-
-  /* Mobile: source insets content ~31px each side (content 328px, vs our 15px
-     section gutter) — add 16px so the heading/featured wrap exactly like the
-     source. Reset at 768 where the tier widths above take over. */
-  padding-inline: 16px;
   text-align: center;
-}
-
-@media (width >= 768px) {
-  .banner-stats-grid {
-    padding-inline: 0;
-  }
 }
 
 /* Source content column grows as viewport − 90px and caps at the parent grid

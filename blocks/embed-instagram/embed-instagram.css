@@ -1,17 +1,39 @@
-/* embed-instagram — Instagram post embed alongside article text (2-column).
-   We render a consent-gated placeholder card (no third-party script by default);
-   a "Load post" button upgrades it to the live blockquote on click. */
+/* embed-instagram — real Instagram embed (Instagram's official embed.js iframe)
+   alongside article text (2-column). Matches the source: on mobile/tablet the
+   article TEXT comes first and the Instagram embed LAST (source DOM order); from
+   992 it's two columns on the shared 12-col grid (embed col-5 ≈ 458px, 30px
+   gutter, text col-7 ≈ 653px, filling the 1170 content width). */
 /* stylelint-disable no-descending-specificity */
 
-/* --- base / mobile-first: stack (embed above text) --- */
+/* --- base / mobile-first: stack, TEXT first then EMBED last (source order).
+   The block is authored embed-cell-first, so flex `order` puts text on top and
+   the embed at the bottom without changing the authored/DOM order. --- */
 .embed-instagram > div {
   display: flex;
   flex-direction: column;
   gap: 32px;
+
+  /* Mobile: cap to the source's FIXED 328px content column, CENTERED — margins
+     grow with the viewport so content never reaches the floating Donate tab. The
+     768 grid tier below releases this cap. */
+  max-width: 328px;
+  margin-inline: auto;
 }
 
 .embed-instagram > div > div {
   min-width: 0;
+}
+
+/* text first, embed last (source mobile order) */
+.embed-instagram .embed-instagram-text {
+  order: 0;
+}
+
+/* embed LAST on mobile (source order); centered on mobile */
+.embed-instagram .embed-instagram-embed {
+  order: 1;
+  display: flex;
+  justify-content: center;
 }
 
 /* --- article text column --- */
@@ -27,146 +49,48 @@
   margin-bottom: 0;
 }
 
-/* --- embed column: center the card on mobile --- */
-.embed-instagram .embed-instagram-embed {
-  display: flex;
-  justify-content: center;
-}
-
-/* --- placeholder card (mirrors Instagram's official embed skeleton) --- */
-.embed-instagram .embed-instagram-card {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 326px;
-  max-width: 658px;
-  padding: 16px;
-  border-radius: 3px;
-  background: #fff;
-  box-shadow: 0 0 1px 0 rgb(0 0 0 / 50%), 0 1px 10px 0 rgb(0 0 0 / 15%);
-}
-
-/* header: round avatar + two skeleton name bars */
-.embed-instagram .embed-instagram-head {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.embed-instagram .embed-instagram-avatar {
-  flex: 0 0 40px;
-  width: 40px;
-  height: 40px;
-  margin-right: 14px;
-  border-radius: 50%;
-  background-color: #f4f4f4;
-}
-
-.embed-instagram .embed-instagram-lines {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  justify-content: center;
-}
-
-.embed-instagram .embed-instagram-bar {
-  display: block;
-  height: 14px;
-  margin-bottom: 6px;
-  border-radius: 4px;
-  background-color: #f4f4f4;
-}
-
-.embed-instagram .embed-instagram-bar:last-child {
-  margin-bottom: 0;
-}
-
-/* Instagram glyph */
-.embed-instagram .embed-instagram-glyph {
-  width: 50px;
-  height: 50px;
-  margin: 19% auto 12px;
-}
-
-.embed-instagram .embed-instagram-glyph svg {
-  display: block;
-  width: 50px;
-  height: 50px;
-}
-
-/* "View this post on Instagram" — Instagram's own placeholder typography */
-.embed-instagram .embed-instagram-cta {
-  display: block;
-  margin-top: 8px;
-  color: #3897f0;
-  font-family: arial, sans-serif;
-  font-size: 14px;
-  font-weight: 550;
-  line-height: 18px;
-  text-align: center;
-  text-decoration: none;
-}
-
-.embed-instagram .embed-instagram-cta:hover,
-.embed-instagram .embed-instagram-cta:focus-visible {
-  color: #3897f0;
-  text-decoration: underline;
-}
-
-/* footer caption skeleton bars */
-.embed-instagram .embed-instagram-footer {
-  margin-top: 12.5%;
-}
-
-.embed-instagram .embed-instagram-caption {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 24px;
-}
-
-/* "Load post" — consent-gated upgrade to the live embed */
-.embed-instagram .embed-instagram-load {
-  display: block;
-  width: 100%;
-  padding: 8px 16px;
-  border: 1px solid #dbdbdb;
-  border-radius: 8px;
-  background-color: #fafafa;
-  color: #262626;
-  font-family: arial, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 18px;
-  text-align: center;
-  cursor: pointer;
-}
-
-.embed-instagram .embed-instagram-load:hover,
-.embed-instagram .embed-instagram-load:focus-visible {
-  background-color: #f0f0f0;
-}
-
-/* live embed, once loaded, sits centered like the placeholder */
+/* The live Instagram embed: `blockquote.instagram-media` before embed.js runs,
+   then an <iframe class="instagram-media"> after. Instagram sets its own inline
+   width (min(100%, 540px)) + a computed height; constrain it to fill the embed
+   column and reset Instagram's default centering margins so it aligns left in the
+   2-col layout (matches the source: embed left-aligned at the column edge). */
 .embed-instagram .instagram-media {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 540px !important; /* Instagram's own max; column caps it to ~458 @1200 */
   margin: 0 auto !important;
 }
 
-/* --- desktop: embed + text side by side (source stacks on mobile AND tablet;
-   goes 2-col only at 992 on the shared 12-col grid: embed = col-5, text = col-6,
-   30px gutter, trailing col left empty — matches source Bootstrap layout) --- */
-@media (width >= 992px) {
+/* --- tablet + desktop (>= 768): embed + text side by side on the shared 12-col
+   grid — the SOURCE goes two-column from the 768 tier (measured: @768 embed
+   x30/w288 col-5 + text x330/w408 col-7; @1200 embed w458 + text w653, filling
+   1170). Embed LEFT (col-5), text RIGHT (col-7). --- */
+@media (width >= 768px) {
   .embed-instagram > div {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: var(--grid-gap); /* 30px shared gutter */
     align-items: start;
+
+    /* release the mobile 328px cap — the section grid container handles width */
+    max-width: none;
+    margin-inline: 0;
   }
 
+  /* tablet+: embed LEFT (col-5), text RIGHT (col-7) — reset the mobile order */
   .embed-instagram .embed-instagram-embed {
     grid-column: span 5;
+    order: 0;
     justify-content: flex-start;
   }
 
   .embed-instagram .embed-instagram-text {
-    grid-column: span 6;
+    grid-column: span 7; /* fills to the content edge (source text col ≈ 408/653) */
+    order: 1;
+  }
+
+  /* embed left-aligned at its column edge on tablet+ (not centered) */
+  .embed-instagram .instagram-media {
+    margin: 0 !important;
   }
 }

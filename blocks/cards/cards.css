@@ -377,23 +377,9 @@
    + description + "Read More"), 3-up. Values extracted from the source's live
    computed styles (.list-core-component) at 390/768/992/1200. */
 
-/* The "Related Articles" heading is authored as default content in the SAME
-   section as the feed; the source aligns it with the cards (both inside one
-   padded feed container). On mobile our default-content wrapper sits at the 15px
-   section gutter while the cards get +16px — so nudge the heading by the same
-   16px so it lines up with the card column (source heading x31). Scoped to the
-   news-feed section via :has() so it never affects other cards variants. Resets
-   at 768 where the feed padding is removed. The default-content wrapper has a
-   0 base inset (unlike the block wrapper's 15px), so use the full 31px here. */
-.section.cards-container:has(.cards.news) .default-content-wrapper {
-  padding-inline: 31px;
-}
-
-@media (width >= 768px) {
-  .section.cards-container:has(.cards.news) .default-content-wrapper {
-    padding-inline: 0;
-  }
-}
+/* The "Related Articles" heading sits in the same section as the feed and is
+   inset by the GLOBAL mobile 328px content column (styles.css) — no per-block
+   nudge needed; it aligns with the card column and clears the Donate tab. */
 
 /* Row of cards. Source: flex-wrap row; each card is flex-basis 33% with a 5px
    inline padding (the inter-card gutter is 2×5px = 10px). Mobile stacks. */
@@ -836,35 +822,10 @@
 
 /* Section intro (default content above the cards): "Your support makes a
    difference." heading + subtitle. Source renders these centered and black
-   (#000); the global default-content styles otherwise leave them #333/left.
-   Mobile: source insets this section ~31px each side (vs the 15px section
-   gutter) — add 16px inline padding on the intro and the cards block. */
+   (#000). Mobile inset is handled by the GLOBAL 328px content column
+   (styles.css) — the intro only needs its center + color here. */
 .cards-container:has(.cards.support) .default-content-wrapper {
   text-align: center;
-
-  /* intro is a direct section child (no 15px wrapper gutter) → full 31px */
-  padding-inline: 31px;
-}
-
-.cards.support {
-  /* mobile inset handled by the ul's 328px cap below; block adds none */
-  padding-inline: 0;
-}
-
-/* From 768 the cards row is a centered, width-capped column, so the block's own
-   mobile inset is no longer needed (it would otherwise shrink the 4 columns
-   below 168 and desync them from cards-stats). The intro keeps its inset until
-   992 where the source removes it. */
-@media (width >= 768px) {
-  .cards.support {
-    padding-inline: 0;
-  }
-}
-
-@media (width >= 992px) {
-  .cards-container:has(.cards.support) .default-content-wrapper {
-    padding-inline: 0;
-  }
 }
 
 .cards-container:has(.cards.support) .default-content-wrapper h2,

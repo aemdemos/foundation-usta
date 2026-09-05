@@ -7,5 +7,8 @@
       "previewSite": "foundation-usta",
       "contentHostUrl": "https://content.da.live/aemdemos/foundation-usta/"
     }
-  }
+  },
+  "features": [
+    "site-planning"
+  ]
 }

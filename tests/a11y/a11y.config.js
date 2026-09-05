@@ -25,6 +25,10 @@ export default {
     'iframe[src*="youtube-nocookie.com"]',
     'iframe[src*="youtu.be"]',
     'iframe[src*="player.vimeo.com"]',
+    // Instagram's official embed iframe — its internal DOM (caption links,
+    // carousel images) is served by Instagram and can't be remediated by us.
+    // Our own wrapper + the iframe's title are still covered.
+    'iframe[src*="instagram.com"]',
   ],
   // Deliberate exceptions — each needs a rationale and sign-off.
   disabledRules: {
@@ -70,5 +74,6 @@ export default {
     // block-agnostic section color, each demonstrated with a representative block.
     '/drafts/sections-samples/section-yellow',
     '/drafts/sections-samples/section-blue',
+    '/drafts/sections-samples/section-center-narrow',
   ],
 };

@@ -32,12 +32,59 @@ on **Bootstrap 3** (served via `/etc.clientlibs/…`).
 - **Type scale:** recorded in `tools/quality/typography.json` (fonts done; per-breakpoint `scale`
   pending the Playwright `discover:typography` pass). → `typography-system`
 
+## 2a. Site scope & migration plan (which template to target, in what order)
+
+> Full report: **[`docs/MIGRATION-SCOPE.md`](docs/MIGRATION-SCOPE.md)**. Discovery artifacts in
+> `catalog/` (`urls-all.json`, `urls-grouped.json`, `urls-sample.json`). Scoped **2026-09-05** via
+> **BOTH sitemap + crawl**, merged & deduped.
+
+**Discovery (site-wide):**
+- Method: sitemap (`/sitemap.xml` + `/sitemap-index.xml` + `/sitemap-images.xml`, 85 urls) **+** same-host
+  Node crawl (65 urls, queue exhausted). Merged, host normalized to `www`, `?form=`/hash/trailing-slash
+  stripped → **86 unique content pages + 21 documents** (mostly annual-report PDFs).
+- **84% of the site (72/86 pages) is ONE template: news detail** (`/en/home/news/*`). Nail it and the
+  site is essentially migrated.
+
+**Template catalog (8 distinct page types):**
+
+| # | Template | Representative URL | Pages | Status |
+|---|---|---|---:|---|
+| T0 | Home | `/en/home.html` | 1 | ✅ done |
+| **T1** | **News detail** | `/en/home/news/2023-njtl-essay-contest-winners.html` | **72** | blocks built; needs importer |
+| T2 | News listing | `/en/home/news.html` | 1 | cards (news) feed |
+| T3 | Section landing | `/en/home/{who-we-are,what-we-do,our-impact,get-involved}.html` | 4 | hero + columns + cards |
+| T4 | Leadership & staff | `/en/home/who-we-are/leadership-and-staff.html` | 1 | cards (profile) + tabs |
+| T5 | Financials | `/en/home/who-we-are/financials.html` | 1 | **all default content** (h2 + PDF lists) + finalize-assets for 21 PDFs |
+| T6 | Special funds / campaign | `/en/home/get-involved/special-funds.html`, `.../young-professional-initiative.html`, `.../chris-evert-50th-anniversary.html`, `.../college-scholarship-opportunities.html` | 4 | cards (expand), quote-image, table |
+| T7 | 404 | `/en/home/404.html` | 1 | hero (error) |
+
+Most component blocks already exist (homepage + block-library phase). The remaining work is **per-template
+import instrumentation** (parser + `page-templates.json` entry + any section styles), **not** net-new blocks.
+
+**TARGET ORDER (highest leverage first):**
+1. **▶ T1 News detail — DO THIS FIRST.** One profile-driven importer instruments **all 72 pages**. Exercises
+   already-built blocks: article body (default content) + `social` share bar + `custom-widget-reactions`
+   (done) + `custom-content-related-articles` feed + `table`. Build ONE parser, measure the live DOM once,
+   bulk-import 72 urls.
+2. **T2 News listing** — feeds T1; reuse `cards` (news). Small.
+3. **T3 Section landings** (4 pages) — reuse hero + columns + cards + the `center`/`narrow` section styles.
+4. **T4–T6 Specialized** (6 pages) — leadership (cards-profile + tabs), financials (default content + wire the
+   21 PDFs via finalize-assets), special-funds/campaign (cards-expand, quote-image, table). One profile per
+   genuinely-distinct variant; reuse first.
+5. **T7 404** — single page, `hero` (error) block already built. Trivial.
+
+**Scope gotchas:** www vs non-www (sitemap lists some no-www; normalized to www). `?form=` urls on
+special-funds are Fundraise Up deep-links, not pages (handled by `scripts/donate.js`). News-detail import
+completeness will read <100% (duplicate hidden mobile/desktop copies, like the homepage collage) — expected.
+
 ## 3. Templates / 4. Sections / 5. Blocks
-_TODO — fill per template/section/block as they land (see IMPORTING-GUIDE if importing)._
+_Per-template/section/block build details are captured in the dated Log below as they land; the template
+landscape + target order is in §2a above (full report: `docs/MIGRATION-SCOPE.md`)._
 
 ## 6. Open items / TODO
 
 ### Standing
+- [ ] **NEXT: build the T1 News-detail importer** (72 pages / 84% of the site) — see §2a target order.
 - [ ] Capture + enforce the type scale (see ▶ steps below).
 - [ ] Wire the shared grid (`--grid-gap:30px`, `.container-max`, `.grid-*`) into `styles.css` per `docs/source-css-system.md`.
 - [ ] Confirm Graphik licensing before publishing.
@@ -1163,3 +1210,139 @@ Instrumented the reactions widget's INTERACTIVE behaviour to match the source
 Verified: alt/accessible-name per icon, hover pill shows the correct label, click
 increments count + updates message, keyboard focus reveals the pill. Gates: lint 0
 errors · breakpoints ✓ · svg ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-05 — Added the `center, narrow` SECTION-STYLE sample (sections-samples/)
+Section styles belong in `content/drafts/sections-samples/` (alongside `section-yellow`
+/ `section-blue`), not only folded into a block sample. Added
+**`content/drafts/sections-samples/section-center-narrow.plain.html`** — demonstrates
+the composable `center` + `narrow` generic section styles on plain default content
+(the "Ready on the court. Ready for life." mission statement), authored via Section
+Metadata `style: center, narrow` (no block). Same scaffold as the other section samples
+(spacer → intro h1 + notes + Source → spacer → styled section → spacer → metadata Title).
+Added its URL to `tests/a11y/a11y.config.js`. Verified: section renders `class="center
+narrow section"`, content centered at 810px (x195/w810 @1200), text centered, no overflow.
+Gates: overflow ✓ (360→1920) · a11y ✓.
+NOTE: the older `block-samples/columns-statement` sample (regenerated earlier as a
+center/narrow demo) is now redundant with this canonical section sample; left in place
+(content is delete-guarded) — it still renders correctly.
+
+### 2026-09-05 — Removed the `downloads` block → plain DEFAULT CONTENT (heading + list)
+The `downloads` block only rendered a heading + a bulleted list of PDF links — which
+IS default content. Confirmed on the live source (financials.html): the "Annual
+Reports" list is authored as a plain `<h2>` + `<ul><li><p><a>`, no block. EDS only
+button-decorates standalone `<p><a>`, never `<li><a>`, so list links stay plain
+underlined text links — no block needed.
+- **Deleted** `blocks/downloads/` (css+js).
+- **Ported the block's styling to GLOBAL default-content rules** in `styles/styles.css`
+  (so any prose heading/list matches the source, not just this one page):
+  - `main .default-content-wrapper :is(h1..h6) { color: var(--dark-color) }` — source
+    renders body-region headings pure black (measured across financials + what-we-do:
+    h2/h3/h4 all `#000`); ours had inherited body `#333`. Hero/blocks that need white/
+    brand colours already set their own, so this only affects plain authored headings.
+  - `main .default-content-wrapper ul { padding-left:40px; list-style:disc }` +
+    `li { color:--text-color; line-height:1.4286 }` + `li + li { margin-top:10px }` —
+    reproduces the source list (disc, 40px indent, 10px item spacing, 22.857/25.714
+    line-height). Placed AFTER the generic `ul` margin rule to satisfy
+    no-descending-specificity.
+- **Regenerated** `content/drafts/block-samples/downloads.plain.html` via
+  gen-content-sample.mjs as default content (h2 + ul, no `downloads` class); kept its
+  a11y URL.
+- Measured parity vs source @1200: h2 76px XXCond Bold 500 **#000**; links #0357b8 18px
+  underline lh 25.71; ul disc/40px; li+li 10px — all exact.
+- Verified NO homepage regression (its default-content headings were already black via
+  explicit rules; typography + overflow still pass). Gates: lint 0 errors · breakpoints ✓
+  · typography ✓ (home) · overflow ✓ (home + sample, 360→1920) · a11y ✓ (sample).
+
+### 2026-09-05 — Site scoped (sitemap + crawl) + migration plan → recorded in §2a
+Ran full site discovery on https://www.ustafoundation.com/ via BOTH sitemap and crawl (merged/deduped):
+**86 content pages + 21 documents**, collapsing to **8 templates**. Key finding: **72/86 pages (84%) are
+one template — news detail.** Wrote the full report to **`docs/MIGRATION-SCOPE.md`** and added a permanent
+**§2a "Site scope & migration plan"** section to this file (template catalog + recommended target order:
+T1 news-detail FIRST, then listing → section landings → specialized → 404). Discovery artifacts saved under
+`catalog/` (`urls-all.json`, `urls-grouped.json`, `urls-sample.json`, all schema-valid). The scripted
+per-page visual catalog (`template-catalog.json`/`summary.json`) was NOT run — it's a heavy 86-page pass
+dominated by 72 near-identical news pages; the decision-useful scope + plan were produced from the discovered
+URL structure cross-referenced against the already-built block library. Next actionable step: build the T1
+news-detail importer.
+
+### 2026-09-05 — embed-instagram: auto-render the REAL embed (was consent-gated placeholder)
+The source (news pages, e.g. newport-njtl-honor-chris-evert.html) renders the FULL live Instagram embed
+automatically via Instagram's official `embed.js` — profile header, carousel image, likes, caption. Ours
+showed a static "View this post on Instagram" placeholder with a "Load post" consent button, which didn't
+match. Per direction ("Instagram should show automatically"), rebuilt to match:
+- **JS (`embed-instagram.js`):** on decorate, emit `blockquote.instagram-media` (with a plain `<a>` fallback
+  for no-JS) and load `https://www.instagram.com/embed.js` immediately — no placeholder, no button. embed.js
+  swaps the blockquote for the live iframe. A MutationObserver adds `title="Instagram post"` to the generated
+  iframe (axe frame-title). Removed the whole placeholder-card builder + `loadLiveEmbed`/`skeletonBar`/glyph.
+- **CSS:** removed all placeholder-card styles; constrained `.instagram-media` to fill its column
+  (`width:100%; max-width:540px`, Instagram's own cap) and left-aligned it on desktop. Kept the source's
+  2-col grid: stacked <992, then embed **col-5** (≈458–470) + **30px** gutter + text **col-7** (≈653–670),
+  filling the 1170 content width. Text 18px/24 Graphik Regular.
+- **a11y:** the live embed's INTERNAL DOM (caption `@mention` link, carousel `cdninstagram` images) throws
+  axe link-in-text-block + image-alt — Instagram-served, not ours, and present on the source too. Added
+  `iframe[src*="instagram.com"]` to `excludeSelectors` in `tests/a11y/a11y.config.js` (same treatment as the
+  already-excluded YouTube/Vimeo iframes); our wrapper + the iframe title are still covered.
+Verified @1200: embed col-5 x15/w470, 30px gutter, text col-7 w670 (matches source grid); @390 stacked,
+full-width, no overflow; real post renders (tennishallofame 140K, carousel, likes, caption). Gates: lint 0
+errors · breakpoints ✓ · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-05 — embed-instagram: mobile order (embed LAST) + widget-clearing inset + 2-col from 768
+Screenshot review of mobile/tablet vs source:
+- **Mobile order:** source stacks the article TEXT first and the Instagram embed LAST; ours had embed on
+  top. The block is authored embed-cell-first, so used flex `order` (text order:0, embed order:1) to flip the
+  visual order without changing DOM/authoring.
+- **Side inset for the Donate tab:** added `padding-inline: 16px` on the block row at mobile/tablet (→ 31px
+  with the section wrapper's 15px = the source's article gutter), so content clears the floating Donate
+  widget. Reset to 0 at the grid tier.
+- **2-column from 768 (not 992):** re-measured the source — it goes 2-col at the **768** tier (embed x30/w288
+  col-5 + text x330/w408 col-7), not 992 as before. Moved the grid media query to `>= 768px`; embed reverts
+  to order:0 (left col-5), text order:1 (right col-7). Verified ours @768: embed w283 (col-5) + text w408
+  (col-7) side by side — matches source (text width 408 exact; gutter uses the project's shared 30px
+  --grid-gap vs the source's 12px here — kept the shared grid per the Grid Rule).
+- Fixed a duplicate `.embed-instagram-embed` selector (merged the order + flex-center rules).
+Verified: @390 text-first/embed-last, both inset x31/w328 (clears Donate), no overflow; @768 2-col embed-left/
+text-right; @1200 unchanged (col-5/col-7, 1170). Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (360→1920)
+· a11y ✓.
+
+### 2026-09-05 — Global mobile FIXED-328px content column (default content never touches the Donate tab)
+User: no content — default content or any block — should touch the floating Donate widget on mobile; proposed
+a global width rule. Root cause found by box-model measurement at **430px** (not 390): the Donate tab is
+`position:fixed` at the right edge, left edge **x377**. The SOURCE lays all content in a **FIXED 328px column,
+CENTERED**, so its side margins GROW with the viewport (31px @390 → 51px @430) and the content right edge stays
+at **379** — just clear of the tab, at every phone width. Our DEFAULT CONTENT used a viewport-SCALING gutter
+(15px, or the reverted 31px), so it widened with the viewport (w368/right399 @430) and ran ~22px UNDER the tab.
+(An earlier attempt at a 31px *padding* gutter was REVERTED — a fixed gutter still scales the width; only a
+fixed max-width column keeps margins growing. This is the correct fix.)
+- **styles.css:** `main > .section > .default-content-wrapper { max-width: 328px; margin-inline: auto;
+  padding-inline: 0 }` (released `max-width: none` at ≥768 where the grid container takes over). Same fixed
+  328px column the source uses and that our cards/columns blocks already cap to — so ALL content shares one
+  mobile measure.
+- **section styles:** `main .section.narrow > div` now caps to **328px on mobile** (was a flat 810 that did
+  nothing < 810px, leaving the mission statement full-width and un-inset); opens to 810 at ≥768.
+- **embed-instagram:** block's mobile `.embed-instagram > div` switched from `padding-inline:16px` to
+  `max-width:328px; margin-inline:auto` (released at 768). Text + embed now both x51/w328/right379.
+Verified @430 (tab left = 377): home statement / decades / cards-intro / go-beyond headings all x51/w328/
+right379; downloads default-content h2 same; embed-instagram text + embed same — every item's right edge (379)
+clears the tab (377) with margins that grow on wider phones. @1200 unchanged (statement 810 centered, decades
+full 1170). Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (360→1920; home + embed + downloads) ·
+typography ✓ (home) · a11y ✓ (home + samples).
+
+### 2026-09-05 — Global mobile 328px column made the SINGLE source of truth (removed per-block padding hacks)
+Followed up the previous change: broadened the mobile 328px cap from just `.default-content-wrapper` to the
+whole `main > .section > div` (every section content wrapper — default content AND block wrappers). Now ONE
+global rule gives every section the source's fixed 328px centered column on mobile, so blocks no longer need
+their own donate-clearance insets. Removed the now-redundant per-block mobile hacks:
+- `blocks/columns/columns.css`: `.columns.feature { max-width:328; margin-inline:auto }` + its 768 reset.
+- `blocks/cards/cards.css`: the `:has(.cards.news) .default-content-wrapper { padding-inline:31px }` +768
+  reset, and the `:has(.cards.support) .default-content-wrapper { padding-inline:31px }` +992 reset (kept the
+  `text-align:center` + `#000` color those rules also carried).
+- `blocks/banner-stats-grid/banner-stats-grid.css`: `padding-inline:16px` +768 reset.
+KEPT (genuinely different widths / not donate hacks): stats band `.columns.stats` 336px (own rounded-band
+width, wrapper set `max-width:none` so it isn't clamped to 328), cards-news ul 338 (328 + li padding),
+cards-profile card 312, cards-expand 250 fixed / full-bleed, and the cards `> ul` 328 caps (they also carry
+the grid/flex layout + centering and equal the global 328, so harmless). Full-bleed blocks (stats/cards-stats
+bands, cards-expand) escape via their own `width:100vw`+negative-margin on the BLOCK — unaffected by the
+wrapper cap. Verified @430 (tab left 377): home stats 336/right383 (band, source-matched), feature/collage/
+cards/banner-stats-grid all 328/right379; every touched sample renders in the 328 column and clears the tab.
+Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (360→1920; home + 6 samples) · typography ✓ (home) ·
+a11y ✓ (home + 4 samples).

@@ -138,6 +138,14 @@ h4 { font-size: var(--heading-font-size-m); }
 h5 { font-size: var(--heading-font-size-s); }
 h6 { font-size: var(--heading-font-size-xs); }
 
+/* Default-content (prose) headings render pure black on the source — e.g. the
+   financials "Annual Reports" list, section intros. Blocks/hero that need a
+   different colour (white on a photo, brand orange, etc.) set their own, so this
+   only colours plain authored headings that would otherwise inherit body #333. */
+main .default-content-wrapper :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--dark-color);
+}
+
 p,
 dl,
 ol,
@@ -146,6 +154,24 @@ pre,
 blockquote {
   margin-top: 0.8em;
   margin-bottom: 0.25em;
+}
+
+/* Default-content lists (e.g. the financials PDF-link list) — the source renders
+   a disc bullet with a 40px indent; links inside stay plain underlined text links
+   (EDS only button-decorates standalone <p><a>, never <li><a>). Placed AFTER the
+   generic `ul` rule above to satisfy no-descending-specificity. */
+main .default-content-wrapper ul {
+  padding-left: 40px;
+  list-style: disc;
+}
+
+main .default-content-wrapper li {
+  color: var(--text-color);
+  line-height: 1.4286; /* source list line-height (22.857/25.714), not the fixed 24 */
+}
+
+main .default-content-wrapper li + li {
+  margin-top: 10px; /* source spaces successive list items ~10px */
 }
 
 code,
@@ -376,14 +402,20 @@ main > .section {
   margin: 40px 0;
 }
 
-/* Section content sits on the SOURCE grid: fluid with a 15px side gutter on
-   phone, then the Bootstrap-3 container widths (720/970/1170) per tier — so
-   every section lands on the same lines as the source (see docs/source-css-system.md
-   §3). Tier widths are layered in the media queries below. */
+/* Section content sits on the SOURCE grid. MOBILE: the source lays ALL content in
+   ONE FIXED 328px column, CENTERED — its side margins GROW with the viewport
+   (31px @390, 51px @430), so nothing ever reaches the floating Donate tab (fixed
+   at the right edge, left ~x377). This is a SINGLE GLOBAL width rule: every
+   section content wrapper (default content AND block wrappers) shares the 328px
+   column on mobile, so blocks no longer need their own per-block mobile caps.
+   From 768 it opens to the Bootstrap-3 container widths (720/970/1170) per tier
+   (layered in the media queries below), matching the source grid. Full-bleed
+   blocks (stats/cards-stats bands, cards-expand) set their own width + negative
+   margin on the BLOCK element to escape this wrapper — unaffected. */
 main > .section > div {
-  max-width: none;
-  margin: auto;
-  padding: 0 15px;
+  max-width: 328px;
+  margin-inline: auto;
+  padding: 0;
 }
 
 main > .section:first-of-type {
@@ -485,13 +517,19 @@ main .section.center p {
 }
 
 /* narrow — constrain the section's content to a single narrower measure than
-   the default grid, CONSISTENT across every viewport (one max-width, no
-   per-breakpoint jumps). On phones the section gutter already keeps it inset,
-   so the cap simply has no effect until there's room. Used for short intros /
-   statements (e.g. "Ready on the court. Ready for life."). */
+   the default grid (max 810px), CONSISTENT across viewports. On MOBILE it caps to
+   the source's 328px content column (centered) like all other content, so it stays
+   clear of the floating Donate tab; from 768 it opens to the 810px measure. Used
+   for short intros / statements (e.g. "Ready on the court. Ready for life."). */
 main .section.narrow > div {
-  max-width: 810px;
+  max-width: 328px;
   margin-inline: auto;
+}
+
+@media (width >= 768px) {
+  main .section.narrow > div {
+    max-width: 810px;
+  }
 }
 
 /* ------------------------------------------------------------------
