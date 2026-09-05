@@ -1,15 +1,25 @@
 /**
  * Custom Widget Reactions
- * Emoji reactions widget — a self-contained, local (no-backend) recreation of the
- * source site's Vue reactions component. Counts are held in client-side state only
- * and reset on reload; there is no persistence or API call.
+ * Emoji reactions widget — a self-contained recreation of the source site's Vue
+ * reactions component (www.ustafoundation.com news pages, `.v-reactions`).
+ *
+ * Source behaviour reproduced (measured on the live site):
+ *   - Each reaction is a fixed SVG icon with an accessible label (Smile / Thumbs
+ *     Up / Love / Clap / Thumbs Down / Lightbulb) and a `data-reaction-type`.
+ *   - HOVER (or keyboard focus) reveals a small black rounded LABEL PILL above the
+ *     icon (`.v-reaction__label`: absolute, #000 @ 0.8 opacity, white 12px/24px,
+ *     border-radius 15px, padding 0 20px) — the "Love" badge in the design.
+ *   - CLICK adds the reaction: the per-icon COUNT value appears and the message
+ *     switches from the empty prompt to the running total. The source persists
+ *     counts via a backend POST; there is no public API, so counts are held in
+ *     client-side state only (reset on reload) — the visible behaviour matches.
  *
  * Authoring model (EDS table):
  *   Row 1: the widget title (e.g. "Reactions")
  *   Row 2 (optional): the empty-state prompt (e.g. "Be the first to add a reaction")
  *
- * The reaction set (emoji + accessible label) is structural to the widget — it mirrors
- * the source component's fixed set — so it lives here rather than in authored content.
+ * The reaction set (icon + label) is structural to the widget — it mirrors the
+ * source component's fixed set — so it lives here rather than in authored content.
  */
 
 // The source renders each reaction as a fixed SVG icon (from its Vue clientlib),
@@ -50,42 +60,54 @@ export default function decorate(block) {
   const counts = {};
 
   const renderMessage = () => {
-    const active = Object.entries(counts).filter(([, n]) => n > 0);
-    if (!active.length) {
+    const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+    if (!total) {
       message.textContent = promptText;
       message.classList.add('is-empty');
       return;
     }
-    const total = active.reduce((sum, [, n]) => sum + n, 0);
     message.classList.remove('is-empty');
-    message.textContent = total === 1 ? '1 reaction' : `${total} reactions`;
+    message.textContent = total === 1 ? '1 Reaction' : `${total} Reactions`;
   };
 
   REACTIONS.forEach((r) => {
+    // Keyboard-operable button wrapper (source uses tabindex=0 on the <img>; a
+    // real <button> is more robust and passes axe). Its accessible name comes
+    // from the <img alt> below.
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'custom-widget-reactions-item';
+    btn.className = 'custom-widget-reactions-item is-pristine';
     btn.dataset.reactionType = r.type;
-    btn.setAttribute('aria-label', r.label);
     btn.setAttribute('aria-pressed', 'false');
 
+    // The per-reaction count value (source `.v-reaction__value`) — hidden until
+    // the reaction is added, then shows above the icon.
+    const value = document.createElement('span');
+    value.className = 'custom-widget-reactions-value';
+    value.setAttribute('aria-hidden', 'true');
+
+    // The icon. `alt` carries the reaction label — this is the button's
+    // accessible name (matches the source's `<img alt="Love">`).
     const emoji = document.createElement('img');
     emoji.className = 'custom-widget-reactions-emoji';
-    emoji.setAttribute('aria-hidden', 'true');
     emoji.setAttribute('loading', 'lazy');
-    emoji.alt = '';
+    emoji.alt = r.label;
     emoji.src = `${ICON_BASE}${r.icon}.svg`;
 
-    const count = document.createElement('span');
-    count.className = 'custom-widget-reactions-count';
-    count.setAttribute('aria-hidden', 'true');
+    // The hover/focus LABEL PILL (source `.v-reaction__label`). aria-hidden so it
+    // doesn't double up on the img alt for assistive tech.
+    const label = document.createElement('span');
+    label.className = 'custom-widget-reactions-label';
+    label.setAttribute('aria-hidden', 'true');
+    label.textContent = r.label;
 
-    btn.append(emoji, count);
+    btn.append(value, emoji, label);
     controls.append(btn);
 
     btn.addEventListener('click', () => {
       counts[r.type] = (counts[r.type] || 0) + 1;
-      count.textContent = counts[r.type];
+      value.textContent = counts[r.type];
+      btn.classList.remove('is-pristine');
       btn.classList.add('is-active');
       btn.setAttribute('aria-pressed', 'true');
       renderMessage();

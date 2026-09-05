@@ -1134,3 +1134,32 @@ specific `statement` class — make reusable width/alignment section styles).
   widths — **full grid (1170)** for stats/feature/decades/cards, and **one narrow centered column** for the
   mission statement (670@1200, fluid). Hero is bespoke (own block). So `center`+`narrow` covers the only
   non-default width on the page; everything else stays on the shared 1170 grid.
+
+### 2026-09-05 — custom-widget-reactions: reproduce source hover pill + click + alt text (news page)
+Instrumented the reactions widget's INTERACTIVE behaviour to match the source
+(`.v-reactions` on the news pages, measured live at
+`/en/home/news/2023-njtl-essay-contest-winners.html`):
+- **Alt text:** each icon `<img>` now carries its real reaction label as `alt`
+  (Smile / Thumbs Up / Love / Clap / Thumbs Down / Lightbulb) — the button's
+  accessible name (was `alt=""`). Matches the source's `<img alt="Love">` etc.
+- **Hover effect:** on hover (and keyboard focus, for a11y) a black rounded LABEL
+  PILL appears above the icon — the "Love" badge in the design. Ported the source
+  `.v-reaction__label` values exactly: `position:absolute; top:0`, centered over
+  the icon (`left:50%; translateX(-50%)`), `#000 @ 0.8 opacity`, white `12px/24px`,
+  `border-radius:15px`, `padding:0 20px`. Replaced the old grey scale-up hover.
+- **Click effect:** clicking adds the reaction — a per-icon COUNT value appears
+  above the icon (source `.v-reaction__value`: Graphik Semibold 22/30 uppercase
+  grey #6d7278) and the message switches from "Be the first to add a reaction" to
+  "N Reaction(s)"; `aria-pressed` toggles. Source persists via a backend POST (no
+  public API) — counts are client-side only, reset on reload; the visible behaviour
+  matches.
+- **Structure:** items are `min-height:70px` column-flex (source reserves this so
+  the pill/count sit above without shifting the row); controls `flex-wrap:wrap`
+  (source), 60px visual icon spacing (52 gap + 4px item padding each side).
+- **Overflow gotcha:** the hidden label pills initially used `visibility:hidden`,
+  whose boxes still counted toward page scroll-width — the rightmost (Lightbulb)
+  centered pill pushed the 360 baseline to 366px. Switched hidden state to
+  `display:none` (→ `display:block` on hover) so hidden pills contribute no width.
+Verified: alt/accessible-name per icon, hover pill shows the correct label, click
+increments count + updates message, keyboard focus reveals the pill. Gates: lint 0
+errors · breakpoints ✓ · svg ✓ · overflow ✓ (360→1920) · a11y ✓.

@@ -14,31 +14,37 @@
   color: var(--text-color, #333);
 }
 
-/* Emoji button row — flex, centered. The source spaces emoji 20px apart on
-   mobile and 60px ≥768 (edge-to-edge). Each button carries 4px side padding for
-   the hover/active pill (+8px between neighbours), so the flex gap is set 8px
-   lower (12 / 52) to land the visual emoji-to-emoji distance exactly on 20 / 60.
-   nowrap keeps all six on one line at the mobile baseline like the source. */
+/* Emoji row — flex, centered. Source `.v-reactions__controls` gap is 60px
+   (edge-to-edge). Each item carries 4px side padding, so the flex gap is set 8px
+   lower (12 / 52) to land the visual icon-to-icon distance on 20 / 60. wrap
+   matches the source `.v-reactions__controls` (wraps only if the row can't fit —
+   at the 360 baseline all six still sit on one line). */
 .custom-widget-reactions .custom-widget-reactions-controls {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
   margin-top: 20px;
 }
 
+/* Reaction item. Source `.v-reaction` is a column flex with `position:relative`
+   so the absolute label pill / count anchor to it. In the PRISTINE state the
+   source reserves a min-height (70px) and reverses the column so the pill sits
+   ABOVE the icon without shifting the row on hover. */
 .custom-widget-reactions .custom-widget-reactions-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: flex-end;
+  position: relative;
+  min-height: 70px;
+  gap: 0;
   padding: 4px;
   margin: 0;
   border: 0;
   border-radius: 6px;
   background: transparent;
   cursor: pointer;
-  transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
 /* Emoji icon — the source's SVG rendered at its exact intrinsic size. Height is
@@ -51,17 +57,35 @@
   height: 36px;
 }
 
-.custom-widget-reactions .custom-widget-reactions-count {
+/* HOVER / FOCUS label pill — source `.v-reaction__label`: a black rounded badge
+   above the icon, revealed on hover (or keyboard focus for parity + a11y).
+   Absolute so it never shifts the row; the item's 70px min-height reserves space. */
+.custom-widget-reactions .custom-widget-reactions-label {
+  position: absolute;
+  top: 0;
+
+  /* center the pill over its icon (source anchors it centrally); translateX keeps
+     it from extending the page width at the narrow mobile baseline. Hidden with
+     `display:none` (not visibility) so the off-screen pills on edge icons don't
+     add to the page scroll width at the 360 baseline. */
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  padding: 0 20px;
+  border-radius: 15px;
+  background-color: #000;
+  opacity: 0.8;
+  color: #fff;
   font-family: var(--body-font-family);
-  font-size: 14px;
-  line-height: 1;
-  color: var(--text-color, #333);
-  min-height: 14px;
+  font-size: 12px;
+  line-height: 24px;
+  white-space: nowrap;
+  z-index: 1;
 }
 
-.custom-widget-reactions .custom-widget-reactions-item:hover {
-  background-color: #f0f0f0;
-  transform: scale(1.15);
+.custom-widget-reactions .custom-widget-reactions-item:hover .custom-widget-reactions-label,
+.custom-widget-reactions .custom-widget-reactions-item:focus-visible .custom-widget-reactions-label {
+  display: block;
 }
 
 .custom-widget-reactions .custom-widget-reactions-item:focus-visible {
@@ -69,8 +93,18 @@
   outline-offset: 2px;
 }
 
-.custom-widget-reactions .custom-widget-reactions-item.is-active {
-  background-color: #e2f7ff;
+/* Per-reaction count value — source `.v-reaction__value`: Graphik Semibold 22/30
+   uppercase grey (#6d7278), sitting above the icon once the reaction is added.
+   Hidden (empty) until then; the pristine min-height keeps the row aligned. */
+.custom-widget-reactions .custom-widget-reactions-value {
+  min-height: 30px;
+  margin-bottom: 4px;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 30px;
+  color: #6d7278;
+  text-transform: uppercase;
 }
 
 /* Prompt / count message — body copy 16px mobile → 18px ≥768; empty state grey. */
@@ -88,7 +122,7 @@
 
 @media (width >= 768px) {
   .custom-widget-reactions .custom-widget-reactions-controls {
-    gap: 52px; /* 52 + 8px button padding = 60px source emoji spacing */
+    gap: 52px; /* 52 + 8px item padding = 60px source icon spacing */
   }
 
   .custom-widget-reactions .custom-widget-reactions-message {
