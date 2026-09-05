@@ -1094,3 +1094,40 @@ State at end of session for the next LLM:
   dedupe artifact (source counts both duplicate copies), not dropped content.
 - **content/ is git-ignored** and delete-guarded — never hand-edit or hand-delete; regenerate via the import
   script. Measure parity at REAL viewport widths with devtools CLOSED (scalable titles shrink otherwise).
+
+### 2026-09-05 — Mobile parity pass: header + columns/cards fixed-width centered columns (source model)
+Side-by-side mobile screenshots (source left / migrated right, iPhone 14 Pro Max 430px) surfaced three
+defects. Measured the LIVE source at 360/430 (and desktop for regression) to find the true model, then fixed:
+1. **Header (blocks/header/header.css):** (a) hamburger icon was BLUE — source is BLACK
+   (`Hamburger-Menu-Black.svg`); set `.nav-hamburger button { color:#000 }`. (b) Header sat too tall (128px);
+   source is ~105px. Blue top bar 8px→**5px** (source); mobile nav `min-height` 72→**60px**, padding
+   `8px 20px`→`0 16px`, gap 16→10px (logo 64px drives the row → ~64px nav). (c) styles.css reserves
+   `header { min-height: var(--nav-height) }` = 120px as a CLS floor, which left a ~15px gap below the
+   breadcrumb — added a mobile `header { min-height:105px }` override in header.css (desktop tier still grows
+   to 128px). Result: header 109px (5 bar + 64 nav + 40 breadcrumb), matches source; hamburger black.
+2. **Donate widget overlap + content "shifting left" — SAME root cause.** The floating Fundraise Up tab is
+   `position:fixed; right:0; width:53px` (x=377–430). The `columns` variants used VIEWPORT-SCALING gutters
+   (`padding-inline`/`padding` tuned at 390px), so at 430px their content was ~40px too wide, drifted left,
+   and its right edge collided with the widget. The SOURCE instead lays all mobile content in **FIXED-WIDTH,
+   CENTERED columns** (stats band 336, feature/cards 328) so side margins GROW with the viewport (verified:
+   stats x12@360→x47@430; card x16→x51). `cards` already did this (matched). Converted `columns` to match
+   (blocks/columns/columns.css):
+   - `.columns.feature` mobile: `padding-inline:16px` → `max-width:328px; margin-inline:auto` (reset to
+     `max-width:none; margin-inline:0` at the 768 tier).
+   - `.columns.stats` band: mobile `max-width:1170`→**336px** + `box-sizing:border-box` (so the 15px inner
+     side padding stays INSIDE 336, band total = 336 = source); wrapper padding `0 27px`→`0`; released to
+     `max-width:1170` at 768.
+   - `.columns.statement > div`: kept centered `max-width:810` + mobile inline padding `38px` (inset ~53px;
+     source x49@360→x58@430 — a mild grow, 38px splits the range and clears the widget).
+   - collage "For decades" default-content H2: capped to `max-width:328px; margin-inline:auto` on mobile
+     (was full 400px, so it wrapped wrong), released at 768.
+   Verified @430: stats x47/w336 (EXACT source), feature x51/w328, decades x51/w328, statement x58/w314
+   (EXACT), cards x51/w328 (EXACT) — all centered, all clear of the widget (right edge ≤379 < widget 377…
+   note stats/feature/cards right=379 sits just at the tab's left inset, matching the source's own clearance).
+   @360 no regression (stats x12/w336, cards x16/w328); @1200 all release to x15/w1170 (desktop untouched).
+3. **Footer typography:** audited source at 360/430/768/1200 — only the "Like us…/follow" text steps 16→18px
+   (mobile→desktop); KEEP UP 14/20 uppercase +1px ls, nav 16, copyright 16, careers 16/blue are constant.
+   Ours already matches all of these (re-verified computed styles) — no change needed.
+Gates (all green): `lint` 0 errors · `breakpoint-check` ✓ (768/992/1200) · `check:overflow` ✓ (360→1920 on
+home + 8 columns/cards sample pages) · `check:typography` ✓ (390/768/992/1200) · `test:a11y` ✓ (/en/home).
+Env: had to `browser_install` the Playwright MCP Chromium before measuring.

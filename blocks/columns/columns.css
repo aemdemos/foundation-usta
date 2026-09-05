@@ -37,10 +37,14 @@
 
 /* --- base / mobile-first: stack everything --- */
 
-/* Mobile: source insets the feature content ~31px each side (vs the 15px
-   section gutter) — add 16px inline padding. Reset at the desktop tier. */
+/* Mobile: the SOURCE lays the feature content in a FIXED 328px column, CENTERED
+   (not a viewport-scaling gutter) — so the side margins GROW with the viewport
+   (x51 @430, x16 @360). A fixed 16px inline padding was tuned at 390px and drifts
+   left + widens past the source at 430px (colliding with the floating Donate
+   tab). Cap to the source's fixed 328px column, centered. Reset at 768. */
 .columns.feature {
-  padding-inline: 16px;
+  max-width: 328px;
+  margin-inline: auto;
 }
 
 .columns.feature .columns-feature-row {
@@ -179,6 +183,22 @@
   color: #000; /* source heading is pure black (#000), not the #333 body text color */
 }
 
+/* Mobile: the SOURCE constrains this heading to the fixed ~328px centered column
+   (like the collage/text below it) so it wraps "For decades, our work has / had
+   an impact nationwide." — ours spanned the full 400px. Cap + center on mobile;
+   release at the desktop tier where the heading runs full-width. */
+.section.columns-container:has(.columns-feature-collage) .default-content-wrapper {
+  max-width: 328px;
+  margin-inline: auto;
+}
+
+@media (width >= 768px) {
+  .section.columns-container:has(.columns-feature-collage) .default-content-wrapper {
+    max-width: none;
+    margin-inline: 0;
+  }
+}
+
 /* Widen the collage section's content container in the 992–1199 tier: the shared
    grid caps sections at 970 there, but the SOURCE runs this section fluid
    (viewport − 30, i.e. a 15px gutter each side, capping at 1170) — so at 1024 its
@@ -243,9 +263,10 @@
    in a centered ROW on top, with the wide portrait (353×401) directly below.
    The VIDEO feature ("We go beyond") stays STACKED until 992 (source). */
 @media (width >= 768px) {
-  /* reset the mobile inline inset — the grid container handles gutters */
+  /* reset the mobile fixed-column cap — the grid container handles gutters */
   .columns.feature {
-    padding-inline: 0;
+    max-width: none;
+    margin-inline: 0;
   }
 
   .columns.feature:has(.columns-feature-collage) .columns-feature-row {
@@ -405,9 +426,9 @@
   max-width: 810px;
   margin: 0 auto;
 
-  /* Mobile: source insets this statement ~53px from each edge (vs the 15px
-     section gutter) — add 38px inline padding so content sits at 53px. Reset
-     at the desktop tier below. */
+  /* Mobile: source insets this statement ~53px from each edge (source: x49 @360,
+     x58 @430 — a mild grow; 38px inline padding = 53px inset splits the range and
+     clears the floating Donate tab). Reset at the desktop tier below. */
   padding: 24px 38px;
   text-align: center;
 }
@@ -468,9 +489,12 @@ main > .section.hero-container:has(.hero.banner) + .section.columns-container:ha
   max-width: none;
   margin: 0;
 
-  /* Mobile: source insets the band ~27px each side; from the 768 tier it uses
-     the 15px grid gutter (→ 1170px band at 1200). */
-  padding: 0 27px;
+  /* Mobile: the SOURCE band is a FIXED 336px wide, CENTERED — its side margins
+     GROW with the viewport (12px @360, 47px @430), NOT a fixed 27px inset (which
+     was tuned at 390 and over-widens the band at 430). The 336px cap is applied
+     on the band itself below; the wrapper just needs 0 padding here. From 768 the
+     band uses the 15px grid gutter (→ 1170px band at 1200). */
+  padding: 0;
 }
 
 @media (width >= 768px) {
@@ -489,7 +513,11 @@ main > .section.hero-container:has(.hero.banner) + .section.columns-container:ha
    ~14px brings the band to the source's 115px height (46 number + 24 label +
    item padding + band padding). */
 .columns.stats {
-  max-width: 1170px;
+  /* Mobile: source band is a FIXED 336px, centered (margins grow with viewport).
+     Widens to the full 1170 band from the 768 tier below. border-box so the 15px
+     side padding is INSIDE the 336 (band total = 336, matching source). */
+  box-sizing: border-box;
+  max-width: 336px;
   margin: 0 auto;
   background-color: #000;
   border-radius: 24px;
@@ -557,6 +585,7 @@ main > .section.hero-container:has(.hero.banner) + .section.columns-container:ha
    wrap exactly as the source (e.g. "YOUNG PEOPLE SERVED ANNUALLY" → 2 lines). */
 @media (width >= 768px) {
   .columns.stats {
+    max-width: 1170px; /* release the mobile 336px cap → full band on tablet+ */
     padding: 9px 0; /* items carry the side margin; band has no side inset */
   }
 

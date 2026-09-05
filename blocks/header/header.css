@@ -4,13 +4,21 @@
    ============================================================ */
 /* stylelint-disable no-descending-specificity */
 
-/* blue accent bar across the very top of the page (source: 8px solid) */
+/* Mobile: the real header is ~105px (5px blue bar + 60px nav + 40px breadcrumb),
+   but styles.css reserves `min-height: var(--nav-height)` (120px) as a CLS floor
+   which left a ~15px gap below the breadcrumb. Lower the mobile floor to match
+   the real content; the desktop tier below grows the nav to 128px anyway. */
+header {
+  min-height: 105px;
+}
+
+/* blue accent bar across the very top of the page (source: 5px solid) */
 header .nav-wrapper {
   position: relative;
   width: 100%;
   z-index: 20;
   background-color: #fff;
-  border-top: 8px solid var(--brand-blue);
+  border-top: 5px solid var(--brand-blue);
   box-shadow: none;
 }
 
@@ -26,11 +34,15 @@ header nav {
   grid-template:
     'hamburger brand tools' auto / auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0 16px;
+  gap: 0 10px;
   margin: 0 auto;
   max-width: 1280px;
-  min-height: 72px;
-  padding: 8px 20px;
+
+  /* source mobile nav row is ~60px tall (logo 64px + minimal padding); total
+     header = 5px blue bar + 60px nav + 40px breadcrumb ≈ 105px (matches source,
+     was 128px which sat too tall). */
+  min-height: 60px;
+  padding: 0 16px; /* source mobile gutter is 16px */
   font-family: var(--body-font-family);
 }
 
@@ -82,7 +94,9 @@ header nav .nav-hamburger button {
   border-radius: 0;
   padding: 0;
   background: transparent;
-  color: var(--brand-blue);
+
+  /* source hamburger icon is BLACK (Hamburger-Menu-Black.svg), not blue */
+  color: #000;
   cursor: pointer;
 }
 
