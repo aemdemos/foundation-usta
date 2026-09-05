@@ -36,9 +36,42 @@ on **Bootstrap 3** (served via `/etc.clientlibs/…`).
 _TODO — fill per template/section/block as they land (see IMPORTING-GUIDE if importing)._
 
 ## 6. Open items / TODO
+
+### ⚠️ IN-FLIGHT (half-done — finish this FIRST next session)
+**Convert "Mission Statement" ("Ready on the court. Ready for life.") from a BLOCK → default content.**
+User asked: it should NOT be a block, just plain centered default content. Started but NOT finished — the
+pipeline is edited but not re-run, so the live/local page still renders it as `class="columns statement"`.
+Done so far:
+- `tools/importer/parsers/columns-statement.js` — rewritten to `element.replaceWith(...nodes)` (heading + p,
+  no `createBlock`). ✅
+- `tools/importer/import-home-page.js` + `page-templates.json` — section rc7 `style: null → 'statement'`
+  (so a Section Metadata `statement` style is emitted to carry the centered/narrow treatment). ✅
+Still TODO to complete it:
+1. **Add a section-level style** `main .section.statement { … }` in `styles/styles.css` (or brand.css),
+   porting the centered narrow-column treatment currently in `blocks/columns/columns.css` under
+   `.columns.statement` (max-width 810 mobile→56vw/965 desktop, padding 24/38 → 50/0/80, h2 #000 centered,
+   p 16→18px centered #000, and the desktop margin-collapse vs the stats bar). It must key off the SECTION
+   `.statement` class, not the block.
+2. **Remove the statement variant from the block:** delete `decorateStatement()` + its dispatch branch in
+   `blocks/columns/columns.js` (lines ~114–131, 178–179) and the `.columns.statement*` rules in
+   `blocks/columns/columns.css` (~L388–443).
+3. **Re-bundle + re-import + re-localize** (bundle is currently STALE — predates the parser edit):
+   `bash <excat>/skills/excat-content-import/scripts/aem-import-bundle.sh --importjs tools/importer/import-home-page.js`
+   then `node <excat>/skills/excat-content-import/scripts/run-bulk-import.js --import-script
+   tools/importer/import-home-page.bundle.js --urls tools/importer/urls-home-page.txt --force`
+   then `node tools/assets/localize-assets.mjs en/home` (re-import reverts images to hotlinks — always
+   re-localize after). Playwright browser build **1208** must be installed (see 2026-09-05 log for how).
+4. Remove the `columns-statement` block-sample + its a11y URL (`content/drafts/block-samples/
+   columns-statement.plain.html`, `tests/a11y/a11y.config.js` L65) — content deletes are blocked, so drop it
+   via the import/sample-gen path, not by hand.
+5. Verify home renders the statement as default content (no `columns statement` class); gates + parity.
+
+### Standing
 - [ ] Capture + enforce the type scale (see ▶ steps below).
 - [ ] Wire the shared grid (`--grid-gap:30px`, `.container-max`, `.grid-*`) into `styles.css` per `docs/source-css-system.md`.
 - [ ] Confirm Graphik licensing before publishing.
+- [ ] **Re-upload corrected pages to DA (production)** — cards-expand donate hrefs, cards-profile JPEGs, and
+  the re-imported home (statement + collage text). This is the USER's step (outward-facing, on request only).
 - [ ] Run `npm run check:overflow` + `npm run check:typography` once deps + dev server are up.
 
 ---
@@ -1037,3 +1070,27 @@ scales down gracefully on very narrow phones. Verified scrolledX=0 at 280/320/34
 cards-tiles; logo/Donate UNCHANGED at 360/390 (151/136px logo, 124px Donate) — only shrinks below ~350 (96px
 logo @320). Gates: lint 0 errors, breakpoints OK, overflow OK (home+cards-tiles), a11y OK.
 NOTE: earlier per-block mobile padding work was correct and is NOT the cause — left as-is.
+
+### 2026-09-05 — SESSION HANDOFF (read § "6. Open items / IN-FLIGHT" first)
+State at end of session for the next LLM:
+- **DONE & verified this session:** columns-feature COLLAGE fully matched to source across all tiers
+  (three per-tier layouts, portrait fixed 401 tall @desktop, tablet reflow to row+band, 10px text top pad,
+  text col 563 with LEARN MORE flush to collage bottom); collage body text corrected via PARSER fix (skip
+  the hidden mobile copy — `aem-GridColumn--default--hide`); all 5 importer parsers renamed to consolidated
+  `'Columns (feature)'`/`(statement)`/`(stats)`, `'Cards (support)'`, `'Hero (banner)'` so DA renders the
+  space-separated variant classes the consolidated blocks/ dispatch on; collage H2 lifted to default content;
+  custom-widget-reactions now uses the source's own SVG icons (self-hosted in the block's icons/) at exact
+  sizes/gaps; mobile horizontal-overflow bug fixed in the HEADER (brand grid track → minmax(0,1fr) + logo
+  max-width:100%) — was NOT cards/columns.
+- **HALF-DONE (finish first):** Mission Statement → default content. Parser + import config edited; NOT
+  re-bundled/re-imported; block JS/CSS + sample still present. Full steps in § 6 IN-FLIGHT.
+- **Env gotchas:** dev server: `npx @adobe/aem-cli up --no-open --html-folder content --html-mount /
+  --prefer-plain-html`. The parser-validator hook + run-bulk-import use Playwright **1.58.2** → need Chromium
+  build **1208**: install via the validator's own cli —
+  `cd <excat>/hooks/import-validator && PLAYWRIGHT_BROWSERS_PATH=/ms-playwright node
+  node_modules/playwright-core/cli.js install chromium-headless-shell`. `<excat>` =
+  `/home/node/.excat-marketplaces/excat-marketplace/excat`.
+- **Expected non-issue:** columns-feature import completeness reads ~83% — the DOCUMENTED desktop/mobile
+  dedupe artifact (source counts both duplicate copies), not dropped content.
+- **content/ is git-ignored** and delete-guarded — never hand-edit or hand-delete; regenerate via the import
+  script. Measure parity at REAL viewport widths with devtools CLOSED (scalable titles shrink otherwise).
