@@ -31,6 +31,6 @@ export default function parse(element, { document }) {
 
   const cells = [row];
 
-  const block = WebImporter.Blocks.createBlock(document, { name: 'columns-stats', cells });
+  const block = WebImporter.Blocks.createBlock(document, { name: 'Columns (stats)', cells });
   element.replaceWith(block);
 }

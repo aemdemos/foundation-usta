@@ -76,7 +76,7 @@ export default function parse(element, { document }) {
     cells.push([img ? [img] : [''], textCell.length ? textCell : ['']]);
   });
 
-  const block = WebImporter.Blocks.createBlock(document, { name: 'cards-support', cells });
+  const block = WebImporter.Blocks.createBlock(document, { name: 'Cards (support)', cells });
 
   // Preserve intro as default content before the cards block.
   if (introEls.length) {

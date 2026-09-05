@@ -14,12 +14,16 @@
   color: var(--text-color, #333);
 }
 
-/* Emoji button row — flex, centered, wraps; gap 20px mobile → 60px ≥768. */
+/* Emoji button row — flex, centered. The source spaces emoji 20px apart on
+   mobile and 60px ≥768 (edge-to-edge). Each button carries 4px side padding for
+   the hover/active pill (+8px between neighbours), so the flex gap is set 8px
+   lower (12 / 52) to land the visual emoji-to-emoji distance exactly on 20 / 60.
+   nowrap keeps all six on one line at the mobile baseline like the source. */
 .custom-widget-reactions .custom-widget-reactions-controls {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
-  gap: 20px;
+  gap: 12px;
   margin-top: 20px;
 }
 
@@ -37,13 +41,14 @@
   transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
-/* Emoji glyph rendered at the source's 36px icon size. */
+/* Emoji icon — the source's SVG rendered at its exact intrinsic size. Height is
+   fixed at 36px (source icon height at every breakpoint); width is auto so each
+   glyph keeps the source aspect ratio (Love is wider at 40, Light_Bulb narrower
+   at 22, etc.). */
 .custom-widget-reactions .custom-widget-reactions-emoji {
   display: block;
-  width: 36px;
+  width: auto;
   height: 36px;
-  font-size: 30px;
-  line-height: 36px;
 }
 
 .custom-widget-reactions .custom-widget-reactions-count {
@@ -73,6 +78,7 @@
   margin: 20px 0 0;
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-m);
+  line-height: 22px; /* source message line-height at mobile (1.375 × 16) */
   color: var(--text-color, #333);
 }
 
@@ -82,10 +88,11 @@
 
 @media (width >= 768px) {
   .custom-widget-reactions .custom-widget-reactions-controls {
-    gap: 60px;
+    gap: 52px; /* 52 + 8px button padding = 60px source emoji spacing */
   }
 
   .custom-widget-reactions .custom-widget-reactions-message {
     margin-top: 36px;
+    line-height: 25.71px; /* source message line-height at ≥768 (1.43 × 18) */
   }
 }

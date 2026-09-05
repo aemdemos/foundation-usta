@@ -12,14 +12,23 @@
  * the source component's fixed set — so it lives here rather than in authored content.
  */
 
+// The source renders each reaction as a fixed SVG icon (from its Vue clientlib),
+// NOT an OS text emoji — so parity requires shipping those exact SVGs. They are
+// self-hosted under this block's icons/ folder. Each has the source's intrinsic
+// size baked into its viewBox (Smile 36×36, Thumbs_Up/Down 33×36, Love 40×36,
+// Clap 36×36, Light_Bulb 22×35); the CSS caps HEIGHT at 36px so widths keep the
+// source aspect ratio at every breakpoint.
 const REACTIONS = [
-  { type: 'smile', emoji: '😀', label: 'Smile' },
-  { type: 'thumbsUp', emoji: '👍', label: 'Thumbs Up' },
-  { type: 'love', emoji: '❤️', label: 'Love' },
-  { type: 'clap', emoji: '👏', label: 'Clap' },
-  { type: 'thumbsDown', emoji: '👎', label: 'Thumbs Down' },
-  { type: 'lightBulb', emoji: '💡', label: 'Lightbulb' },
+  { type: 'smile', icon: 'Smile', label: 'Smile' },
+  { type: 'thumbsUp', icon: 'Thumbs_Up', label: 'Thumbs Up' },
+  { type: 'love', icon: 'Love', label: 'Love' },
+  { type: 'clap', icon: 'Clap', label: 'Clap' },
+  { type: 'thumbsDown', icon: 'Thumbs_Down', label: 'Thumbs Down' },
+  { type: 'lightBulb', icon: 'Light_Bulb', label: 'Lightbulb' },
 ];
+
+// Resolve icon URLs relative to this module so they load regardless of the page path.
+const ICON_BASE = new URL('./icons/', import.meta.url).href;
 
 export default function decorate(block) {
   const rows = [...block.children];
@@ -60,10 +69,12 @@ export default function decorate(block) {
     btn.setAttribute('aria-label', r.label);
     btn.setAttribute('aria-pressed', 'false');
 
-    const emoji = document.createElement('span');
+    const emoji = document.createElement('img');
     emoji.className = 'custom-widget-reactions-emoji';
     emoji.setAttribute('aria-hidden', 'true');
-    emoji.textContent = r.emoji;
+    emoji.setAttribute('loading', 'lazy');
+    emoji.alt = '';
+    emoji.src = `${ICON_BASE}${r.icon}.svg`;
 
     const count = document.createElement('span');
     count.className = 'custom-widget-reactions-count';

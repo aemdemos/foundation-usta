@@ -978,3 +978,62 @@ live source wording. SOURCE (exact):
   2) "…not only benefit from tennis and education, but ARE surrounded by people…"  (mine: "but they are surrounded by")
 Flag: content/en/home.plain.html + block sample carry the older copy; regenerate via the import script to
 match source verbatim (content is never hand-edited per the Content-Import Rule).
+
+### 2026-09-05 — columns (feature) collage: fix line-wrap via CORRECT source text (parser fix, re-import)
+Root cause of the desktop wrap mismatch ("combination" staying on line 1 instead of wrapping to line 2):
+the imported body text was the WRONG variant. The source ships TWO near-identical copies of each paragraph
+— a hidden mobile copy and the visible desktop copy — differing by a word ("organizations TO use" vs "THAT
+use"; "but THEY ARE surrounded" vs "but ARE surrounded"). columns-feature.js deduped by 40-char prefix and
+kept the FIRST (hidden mobile, wrong) copy. Fixed the PARSER (never hand-edit content): skip any .cmp-text
+inside `aem-GridColumn--default--hide` so the visible desktop copy wins.
+While re-importing, discovered the parsers emitted PRE-CONSOLIDATION block names (columns-feature,
+cards-support, hero-banner) — which don't match the consolidated blocks/ (columns/cards/hero dispatch on a
+space-separated variant class), so the collage stopped decorating entirely. Fixed all 5 parser createBlock
+names to the parenthesized form: 'Columns (feature)'/'(statement)'/'(stats)', 'Cards (support)', 'Hero
+(banner)' → DA renders class="columns feature" etc. Also added a heading-lift in columns-feature.js: for the
+collage instance (cell contains images) hoist the leading <h2> OUT as default content before the block (the
+migrated block renders "For decades…" as separate centered default content, per earlier work).
+Re-bundled (aem-import-bundle.sh) + re-imported (run-bulk-import --force) + re-localized assets
+(localize-assets.mjs, 6 imgs, 0 hotlinks). Verified @1440: text col 563=563, FIRST-LINE 464=464, 4 lines —
+"combination" now wraps to line 2 exactly like source; collage decorates; LEARN MORE flush to collage bottom.
+Env: had to install Playwright browser build 1208 (validator uses playwright 1.58.2) via the validator's own
+playwright-core cli into /ms-playwright.
+Completeness reads 83% — the DOCUMENTED dedupe artifact (source text counts both duplicate copies), not
+dropped content. Gates: stylelint OK, breakpoints OK, overflow OK, typography OK, a11y OK.
+NOTE: content/ is git-ignored; these fixes are reproducible from the parsers/import script, not hand-edits.
+
+### 2026-09-05 — columns (feature) collage: 10px top padding on text column (source parity)
+Source starts the text column ~10px BELOW the top of the collage images (first line at y=115 vs collage top
+105); mine was flush (offset 0). Added `padding-top: 10px` to the text cell (non-collage row child) in the
+768 tier so it applies tablet + desktop. Verified @1440 offset now 10=10; LEARN MORE still flush to collage
+bottom (margin-top:auto absorbs the padding, lmVsCollageBottom=0 @1200/1440). Gates: stylelint OK,
+breakpoints OK, overflow OK, a11y OK.
+
+### 2026-09-05 — custom-widget-reactions: use source SVG icons (was OS text emoji) + exact spacing
+Root cause of the emoji mismatch: the block rendered OS TEXT emoji (😀👍❤️…), which vary by platform/font
+and don't match the source. The SOURCE renders each reaction as a fixed SVG from its Vue clientlib
+(/etc.clientlibs/usta/clientlibs/clientlib-vue/resources/img/{Smile,Thumbs_Up,Love,Clap,Thumbs_Down,
+Light_Bulb}.svg). Self-hosted all 6 SVGs under blocks/custom-widget-reactions/icons/ (447B–4.4KB, well under
+budget). JS now renders <img src=icons/{Icon}.svg> (URL resolved via import.meta.url) instead of text; CSS
+sizes them by HEIGHT:36px, width:auto so each keeps its source aspect ratio (Smile 36×36, Thumbs_Up/Down
+33×36, Love 40×36, Clap 36×36, Light_Bulb 22×35).
+Spacing fixes: the buttons carry 4px side padding (+8px between neighbours), so set the flex gap 8px lower —
+12px mobile / 52px ≥768 — to land the visual emoji-to-emoji distance exactly on the source's 20 / 60. Set
+controls to flex-wrap:nowrap so all six stay on one line at the 360 baseline (source does). Message
+line-height set to source: 22px mobile (16px), 25.71px ≥768 (18px), color #6d7278.
+Verified @1440/768/375: title 56/56/36 (lh 61.6/61.6/39.6), emoji 36/33/40/36/33/23, gap 60/60/20, message
+18/18/16 (lh 25.71/25.71/22) — all match source. Gates: lint 0 errors, breakpoints OK, svg OK, overflow OK
+(no wrap 360→1920), a11y OK.
+
+### 2026-09-05 — FIX: mobile horizontal overflow was the HEADER, not cards/columns
+User reported horizontal scroll on mobile. Traced it precisely (measured actual window.scrollX after
+scrollTo): overflow occurred ONLY below ~355px (320→35px scroll, 344→11px, 360+ clean) — which is why the
+360-baseline overflow checker never caught it. Culprit was NOT the cards/columns blocks (cards.tiles correctly
+caps at 328 centred, no overflow) but the HEADER nav: its grid `auto 1fr auto` (hamburger/brand/tools) used
+the default `1fr` = minmax(auto,1fr), whose `auto` min floors at the logo's intrinsic width; combined with the
+fixed hamburger + 124px Donate tools, the nav couldn't shrink below ~355px and pushed page scroll on narrow
+phones. Fix (header.css): brand track → `minmax(0, 1fr)` so it can shrink, + logo img `max-width:100%` so it
+scales down gracefully on very narrow phones. Verified scrolledX=0 at 280/320/344/360/390/430 on both home and
+cards-tiles; logo/Donate UNCHANGED at 360/390 (151/136px logo, 124px Donate) — only shrinks below ~350 (96px
+logo @320). Gates: lint 0 errors, breakpoints OK, overflow OK (home+cards-tiles), a11y OK.
+NOTE: earlier per-block mobile padding work was correct and is NOT the cause — left as-is.

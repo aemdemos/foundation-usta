@@ -259,6 +259,13 @@
     text-align: left;
   }
 
+  /* the source nudges the text column ~10px below the top of the collage images
+     (its first line sits 10px lower than the collage top) — match that so the
+     text isn't flush with the image top and the CTA gap below reads naturally. */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) {
+    padding-top: 10px;
+  }
+
   /* collage feature: left-align its text (the separate default-content h2 above
      stays centered). */
   .columns.feature:has(.columns-feature-collage) h3,
@@ -324,6 +331,37 @@
     flex: 52.7 1 0; /* proportional: ~252 of the 475 image px @1024 */
     width: auto;
     height: 401px; /* source fixed portrait height (taller than the stack) */
+  }
+}
+
+/* FULL DESKTOP (>=1200): the source lays this out at a FIXED size, not stretched
+   to the container — collage 577, gap 23, text column a constant 563px, centered
+   (≈1163 total). Mine had let the text flex to fill 1170 (579 wide), so it wrapped
+   in fewer lines → shorter text block → LEARN MORE floated ~59px above the collage
+   bottom. Pin the source dimensions and push the CTA to the bottom so its baseline
+   aligns with the collage bottom (source: LEARN MORE bottom == collage bottom). */
+@media (width >= 1200px) {
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row {
+    gap: 23px; /* source desktop gap between collage and text */
+    align-items: stretch; /* text column stretches to the collage's 401 height */
+    justify-content: center; /* center the fixed-width content (even side gutters) */
+  }
+
+  .columns.feature:has(.columns-feature-collage) .columns-feature-collage {
+    flex: 0 0 577px; /* 266 + 15 + 296 */
+  }
+
+  /* the text cell (the row child that ISN'T the collage) */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) {
+    flex: 0 0 563px; /* source constant desktop text-column width */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* push the LEARN MORE button to the bottom of the (stretched) text column so it
+     aligns with the collage bottom, keeping the paragraphs condensed at the top. */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p:has(> a:only-child) {
+    margin-top: auto;
   }
 }
 

@@ -65,6 +65,16 @@ export default function parse(element, { document }) {
         seen.add(key);
         cell.push(img);
       } else if (unit.matches('.cmp-text')) {
+        // The source ships two near-identical copies of each text block — a
+        // DESKTOP copy and a MOBILE copy that differ by a word or two (e.g.
+        // "organizations that use" vs "to use", "but are surrounded" vs "but
+        // they are surrounded"). The mobile copy is hidden on desktop via an
+        // ancestor flagged `aem-GridColumn--default--hide`, and it comes FIRST
+        // in DOM order — so a naive prefix-dedupe would keep the WRONG (mobile)
+        // wording. Skip any text hidden at the default (desktop) breakpoint so
+        // the visible desktop copy is the one imported (parity with the live
+        // rendered page).
+        if (unit.closest('.aem-GridColumn--default--hide')) return;
         // Dedupe near-identical desktop/mobile copies by normalized text prefix.
         const key = `txt:${prefixKey(unit.textContent)}`;
         if (key === 'txt:' || seen.has(key)) return;
@@ -92,8 +102,34 @@ export default function parse(element, { document }) {
   };
 
   const row = columns.map(buildCell);
-  const cells = [row];
 
-  const block = WebImporter.Blocks.createBlock(document, { name: 'columns-feature', cells });
-  element.replaceWith(block);
+  // Collage instance ("For decades…"): the source authors the section heading
+  // inside the left image cell, but the migrated block renders it as SEPARATE
+  // default content ABOVE the block (so it centers full-width like the source
+  // instead of shrink-wrapping inside a cell). Detect the collage cell (a cell
+  // that contains images) and, if its first element is a heading, hoist that
+  // heading out to sit before the block. The video feature has no images, so it
+  // is unaffected and keeps its in-cell heading.
+  let liftedHeading = null;
+  const hasImages = row.some((cell) => cell.some((n) => n && n.nodeType === 1 && (n.matches?.('img, picture') || n.querySelector?.('img, picture'))));
+  if (hasImages) {
+    row.forEach((cell) => {
+      const idx = cell.findIndex((n) => n && n.nodeType === 1 && n.matches?.('h1, h2, h3, h4, h5, h6'));
+      // only lift a heading that leads an image cell (not the text column)
+      const cellHasImg = cell.some((n) => n && n.nodeType === 1 && (n.matches?.('img, picture') || n.querySelector?.('img, picture')));
+      if (idx !== -1 && cellHasImg && !liftedHeading) {
+        [liftedHeading] = cell.splice(idx, 1);
+      }
+    });
+  }
+
+  const cells = [row];
+  const block = WebImporter.Blocks.createBlock(document, { name: 'Columns (feature)', cells });
+
+  if (liftedHeading) {
+    // Place the hoisted heading as default content immediately before the block.
+    element.replaceWith(liftedHeading, block);
+  } else {
+    element.replaceWith(block);
+  }
 }

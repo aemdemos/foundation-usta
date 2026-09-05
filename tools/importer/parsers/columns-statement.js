@@ -1,14 +1,14 @@
 /* eslint-disable */
 /* global WebImporter */
 /**
- * Parser for columns-statement. Base: columns.
+ * Parser for the "Mission Statement" section ("Ready on the court…").
  * Source: https://www.ustafoundation.com/en/home.html
- * Generated: 2026-08-21
  *
- * Structure (from library-description.txt): columns block — first row is the
- * block name, subsequent rows have as many cells as visual columns.
- * This variant: a single content row with a single cell holding a centered
- * statement (heading + paragraph).
+ * This is NOT a block — it is plain DEFAULT CONTENT (a centered heading +
+ * paragraph). The section-level `statement` style (added via Section Metadata)
+ * carries the centered, narrow-column treatment in styles.css, so we simply
+ * unwrap the heading and paragraph into the section as default content instead
+ * of emitting a Columns block.
  */
 export default function parse(element, { document }) {
   const heading = element.querySelector('h1, h2, h3, .cmp-text h2, [class*="title"]');
@@ -20,13 +20,12 @@ export default function parse(element, { document }) {
     return;
   }
 
-  // Single column: one row, one cell holding all statement content.
-  const contentCell = [];
-  if (heading) contentCell.push(heading);
-  if (paragraph) contentCell.push(paragraph);
+  const nodes = [];
+  if (heading) nodes.push(heading);
+  if (paragraph) nodes.push(paragraph);
 
-  const cells = [[contentCell]];
-
-  const block = WebImporter.Blocks.createBlock(document, { name: 'columns-statement', cells });
-  element.replaceWith(block);
+  // Replace the source container with just the heading + paragraph (default
+  // content). The section transformer tags this section with the `statement`
+  // style so the layout/typography is applied at the section level.
+  element.replaceWith(...nodes);
 }

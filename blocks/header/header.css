@@ -17,8 +17,14 @@ header .nav-wrapper {
 header nav {
   box-sizing: border-box;
   display: grid;
+
+  /* brand track is minmax(0, 1fr) — NOT the default `1fr` (= minmax(auto, 1fr)),
+     whose `auto` min floors at the logo's intrinsic width and, together with the
+     fixed hamburger + Donate tools, pushed the nav wider than very narrow phones
+     (< ~355px), causing horizontal page scroll. minmax(0, …) lets the track
+     shrink so the nav never exceeds the viewport. */
   grid-template:
-    'hamburger brand tools' auto / auto 1fr auto;
+    'hamburger brand tools' auto / auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0 16px;
   margin: 0 auto;
@@ -47,6 +53,8 @@ header nav .nav-brand {
 header nav .nav-brand img {
   width: auto;
   height: 64px; /* source mobile logo ≈150x64 */
+  max-width: 100%; /* allow the logo to scale down on very narrow phones so the
+                      brand track can shrink and the nav never overflows */
 }
 
 header nav .nav-brand-link {

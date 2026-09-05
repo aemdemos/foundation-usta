@@ -1,9 +1,26 @@
 /* eslint-disable */
 var CustomImportScript = (() => {
   var __defProp = Object.defineProperty;
+  var __defProps = Object.defineProperties;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
   var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __propIsEnum = Object.prototype.propertyIsEnumerable;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __spreadValues = (a, b) => {
+    for (var prop in b || (b = {}))
+      if (__hasOwnProp.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    if (__getOwnPropSymbols)
+      for (var prop of __getOwnPropSymbols(b)) {
+        if (__propIsEnum.call(b, prop))
+          __defNormalProp(a, prop, b[prop]);
+      }
+    return a;
+  };
+  var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -43,7 +60,7 @@ var CustomImportScript = (() => {
     if (paragraph) contentCell.push(paragraph);
     contentCell.push(...ctaLinks);
     cells.push([contentCell]);
-    const block = WebImporter.Blocks.createBlock(document, { name: "hero-banner", cells });
+    const block = WebImporter.Blocks.createBlock(document, { name: "Hero (banner)", cells });
     element.replaceWith(block);
   }
 
@@ -60,7 +77,7 @@ var CustomImportScript = (() => {
       return paragraphs.length ? paragraphs : [content];
     });
     const cells = [row];
-    const block = WebImporter.Blocks.createBlock(document, { name: "columns-stats", cells });
+    const block = WebImporter.Blocks.createBlock(document, { name: "Columns (stats)", cells });
     element.replaceWith(block);
   }
 
@@ -76,7 +93,7 @@ var CustomImportScript = (() => {
     if (heading) contentCell.push(heading);
     if (paragraph) contentCell.push(paragraph);
     const cells = [[contentCell]];
-    const block = WebImporter.Blocks.createBlock(document, { name: "columns-statement", cells });
+    const block = WebImporter.Blocks.createBlock(document, { name: "Columns (statement)", cells });
     element.replaceWith(block);
   }
 
@@ -108,6 +125,7 @@ var CustomImportScript = (() => {
           seen.add(key);
           cell.push(img);
         } else if (unit.matches(".cmp-text")) {
+          if (unit.closest(".aem-GridColumn--default--hide")) return;
           const key = `txt:${prefixKey(unit.textContent)}`;
           if (key === "txt:" || seen.has(key)) return;
           seen.add(key);
@@ -130,9 +148,33 @@ var CustomImportScript = (() => {
       return cell.length ? cell : [""];
     };
     const row = columns.map(buildCell);
+    let liftedHeading = null;
+    const hasImages = row.some((cell) => cell.some((n) => {
+      var _a, _b;
+      return n && n.nodeType === 1 && (((_a = n.matches) == null ? void 0 : _a.call(n, "img, picture")) || ((_b = n.querySelector) == null ? void 0 : _b.call(n, "img, picture")));
+    }));
+    if (hasImages) {
+      row.forEach((cell) => {
+        const idx = cell.findIndex((n) => {
+          var _a;
+          return n && n.nodeType === 1 && ((_a = n.matches) == null ? void 0 : _a.call(n, "h1, h2, h3, h4, h5, h6"));
+        });
+        const cellHasImg = cell.some((n) => {
+          var _a, _b;
+          return n && n.nodeType === 1 && (((_a = n.matches) == null ? void 0 : _a.call(n, "img, picture")) || ((_b = n.querySelector) == null ? void 0 : _b.call(n, "img, picture")));
+        });
+        if (idx !== -1 && cellHasImg && !liftedHeading) {
+          [liftedHeading] = cell.splice(idx, 1);
+        }
+      });
+    }
     const cells = [row];
-    const block = WebImporter.Blocks.createBlock(document, { name: "columns-feature", cells });
-    element.replaceWith(block);
+    const block = WebImporter.Blocks.createBlock(document, { name: "Columns (feature)", cells });
+    if (liftedHeading) {
+      element.replaceWith(liftedHeading, block);
+    } else {
+      element.replaceWith(block);
+    }
   }
 
   // tools/importer/parsers/cards-support.js
@@ -164,7 +206,7 @@ var CustomImportScript = (() => {
       }
       cells.push([img ? [img] : [""], textCell.length ? textCell : [""]]);
     });
-    const block = WebImporter.Blocks.createBlock(document, { name: "cards-support", cells });
+    const block = WebImporter.Blocks.createBlock(document, { name: "Cards (support)", cells });
     if (introEls.length) {
       element.replaceWith(...introEls, block);
     } else {
@@ -384,7 +426,7 @@ var CustomImportScript = (() => {
     ...PAGE_TEMPLATE.sections && PAGE_TEMPLATE.sections.length > 1 ? [transform2] : []
   ];
   function executeTransformers(hookName, element, payload) {
-    const enhancedPayload = { ...payload, template: PAGE_TEMPLATE };
+    const enhancedPayload = __spreadProps(__spreadValues({}, payload), { template: PAGE_TEMPLATE });
     transformers.forEach((transformerFn) => {
       try {
         transformerFn.call(null, hookName, element, enhancedPayload);
