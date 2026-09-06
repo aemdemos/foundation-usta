@@ -1742,3 +1742,10 @@ flex-start` (mobile: equal-share growth, text stays left); `@media (width>=768px
 width). tab→track gap was already 0 (flush) both source + ours. Verified @390: STAFF 91 / BOARD 237 (fills 328),
 BOARD indicator reaches right edge, STAFF doesn't; indicator matches active tab; screenshot confirms. @1200:
 unchanged (natural width 78/224, left-packed). Gates: lint 0 · breakpoints ✓ · overflow ✓ · a11y ✓.
+
+### 2026-09-06 — toc-profile: more gap between tab text and the bar (align text to top)
+User wanted more space between the STAFF/tab text and the sage bar below. Measured source: tab is 38px tall but
+the text sits near the TOP (line-height 22), leaving ~21px below the text before the track; ours centered the
+text, leaving only ~13px. Changed `.toc-profile-item` `align-items: center → flex-start` so the text sits at the
+tab top — text→track gap now 21px at mobile + desktop, matching source. Gates: lint 0 · breakpoints ✓ · overflow
+✓ · a11y ✓.

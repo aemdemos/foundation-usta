@@ -63,7 +63,8 @@
    (indicator = text width). Text stays left-aligned within the grown tab. */
 .toc-profile .toc-profile-item {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start; /* source: text sits near the tab TOP, leaving ~21px
+                              below it before the track (not vertically centered) */
   justify-content: flex-start;
   flex: 1 1 auto;
   box-sizing: border-box;
