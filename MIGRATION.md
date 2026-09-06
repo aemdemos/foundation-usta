@@ -1761,3 +1761,108 @@ Embed (consent placeholder) on the right, per the source screenshot. Verified @1
 1185, same top, 30px gutter (mirrors source); @390 stacks text→video (both 328). Video placeholder unchanged
 (14/21 #333 centered, blue link, 16:9). Gates: lint 0 · breakpoints ✓ · overflow ✓ (split-right + split-left
 regression) · typography ✓ · a11y ✓.
+
+### 2026-09-06 — custom-form-donate: wire submit hand-off + NEW `split-even` section (quote beside form)
+User asked (a) whether the inline donation form actually hands its payload off to the FundraiseUp hosted page
+(`https://ustaf.donorsupport.co/page/CHRIS50?elementTitle=…&elementName=Chris%2050%20Donation%20Embed`) like the
+source, and (b) for a sample section placing the source's supporter Quote beside the form (2 blocks side by side).
+
+Finding: the source form is a third-party **FundraiseUp** iframe embed (campaign `AURLRFGR`, element "Chris 50
+Donation Embed"); clicking Donate opens FundraiseUp's hosted checkout at that donorsupport.co URL. Our block was a
+STATIC reproduction — submit did `preventDefault()` only, no hand-off. The donorsupport.co/CHRIS50 URL is
+FundraiseUp-internal (not in the inline DOM); the exact query-param names FundraiseUp's hosted page consumes are
+opaue, so we use readable params as a best-effort prefill.
+
+Wiring (`blocks/custom-form-donate/custom-form-donate.js`): submit now builds the hand-off URL from a base
+(authored row 5, or the CHRIS50 default `DEFAULT_DONATE_URL` that preserves the source's elementTitle/elementName)
+and appends the collected payload — `amount` (from the custom-amount input / active tier), `frequency`
+(`once|monthly` from the active toggle), and when Dedicate is checked `dedicate=true` + `honoreeName`. Preserves
+any params already on the base. Opens the secure hosted page in a NEW TAB (`window.open(_blank, noopener`)) —
+outward-facing action, matches the source opening its checkout. Extended the authoring contract with an optional
+**row 5** = donation URL (link href or plain text). Verified the built URL:
+`…/page/CHRIS50?elementTitle=Donation+Form&elementName=Chris+50+Donation+Embed&amount=50&frequency=once&dedicate=true&honoreeName=Jane+Doe`.
+
+NEW section style `split-even` (`styles/styles.css`, after split-right): a SYMMETRIC, block-agnostic two-column
+section for TWO blocks side by side. Unlike split-left/right (which key off default-content vs block), it just
+flows each direct wrapper into its own equal column via `grid-auto-flow: column` + `grid-auto-columns: 1fr` in
+source order (first→left, second→right) — no nth-child logic, works for any block pair. Same page content width
+(720/970/1170), 30px gutter, from 768; mobile stacks (block layout). Two fixes needed: `min-width: 0` on the grid
+items (a wide block's min-content was stealing >1fr → unequal columns) and a specificity-matched
+`… > div[..-wrapper] + div[..-wrapper] { margin-top: 0 }` to cancel the global inter-wrapper spacing (which pushed
+the 2nd block down out of row alignment). Sample:
+`content/drafts/sections-samples/section-split-even-donate.plain.html` — source supporter Quote (Selah Stibbins)
+left + custom-form-donate right, per the source screenshot. Verified @1280: equal 570px columns, same top, 30px
+gap; @390 stacks quote→form (both 328). Gates: lint 0 · breakpoints ✓ · overflow ✓ · typography ✓ · a11y ✓.
+
+### 2026-09-06 — custom-form-donate: CORRECTED hand-off param keys (verified on live hosted page)
+Follow-up: user wants the typed dedicate name (e.g. "Meet") to land in the hosted page's "Dedicate this
+donation" field. My first-pass keys (`frequency`, `honoreeName`, `dedicate=true`) were GUESSES. Empirically
+probed the live `ustaf.donorsupport.co/page/CHRIS50` widget with Playwright (read the field values after each
+navigate, ~8s settle):
+  - `amount=<dollars>`      → prefills the amount field ✓ CONFIRMED (tested 100/250)
+  - `recurring=once|monthly`→ sets the frequency toggle ✓ CONFIRMED (my `frequency=` did NOTHING)
+  - dedicate/tribute NAME   → tried ~15 keys (tribute, honoree, honoreeName, dedication, tributeName,
+      tribute_name, honoree_name, dedicateName, dedicateTo, inHonorOf(Name), tributeText, tribute[name],
+      donation[tribute], name, …) — NONE populated the field. FundraiseUp exposes no working URL param for it
+      that we could find (its docs site was 522/down at check time). Bracket `donation[...]` scheme also did
+      nothing.
+Fix (`custom-form-donate.js`): submit now sets `amount` + `recurring` (confirmed keys) and passes the honoree as
+`tribute=<name>` best-effort (harmless if ignored). Verified the block emits
+`…/page/CHRIS50?…&amount=100&recurring=monthly&tribute=Meet`, and that URL on the live page prefills $100 +
+Monthly (tribute still blank — hosted-page limitation, not ours). Gates: lint 0 errors.
+NOTE: getting the dedicate name to truly prefill would require the FundraiseUp-supported param (needs their docs
+or account owner) — flag for the client if that field must round-trip.
+
+### 2026-09-06 — custom-form-donate: deep-dive on how the source carries the dedicate name (URL never changes)
+User observed the redirect URL never includes the typed dedicate name — always the bare
+`…/page/CHRIS50?elementTitle=…&elementName=…`. Deep-dived the live hosted page: instrumented fetch/XHR/
+sendBeacon, dumped local+sessionStorage, set the tribute field via the native setter (React-registered input),
+then clicked Donate. Findings: (1) the typed value is in NO network request, NO localStorage, NO sessionStorage
+at input time — `netCount:0`, no storage hits; (2) the URL stays unchanged through checkout; (3) clicking Donate
+opens the "Secure donation" checkout INSIDE THE SAME widget instance (no navigation), and the checkout's
+"Dedicate this donation (optional)" field shows the typed value — proving it lives ONLY in the widget's
+in-memory React state and survives because the same instance renders both screens. Conclusion: FundraiseUp does
+not read the dedicate name from the URL at all; no query param (ours or theirs) can prefill it — the only way to
+reproduce that round-trip is the real FundraiseUp embed. Removed the dead best-effort `tribute=` param; submit
+now appends ONLY the confirmed keys `amount` + `recurring`. Generated URL verified:
+`…/page/CHRIS50?…&amount=100&recurring=monthly`. Header comment documents the widget-internal data path. Gates:
+lint 0 errors.
+
+### 2026-09-06 — custom-form-donate: NEW `.embed` variant = the REAL FundraiseUp widget (dedicate name round-trips)
+User: use the real embed so the "Dedicate this donation" honoree name carries to the checkout URL the same way
+the amount does. Extracted the source's live install: loader `cdn.fundraiseup.com/widget/AURLRFGR` + an inline
+element the widget upgrades from `<a href="#XJYDXZPC">` into `<iframe id="XJYDXZPC" title="Donation Form">`
+(fluid, min 286 / max 376px, ~716px tall).
+Added an `.embed` variant to the block (dispatch by class; the native reproduction stays the DEFAULT):
+`decorateEmbed()` appends `<a class="cfd-embed-anchor" href="#<ELEMENT>">` and injects the loader script ONCE per
+account (deduped by src). Authoring: row1 = account code (default AURLRFGR), row2 = element code (default
+XJYDXZPC), row3 = fallback label. Codes are sanitized to `[A-Za-z0-9]` before use in the src/href (never inject
+raw author text into a script tag). CSS: `.custom-form-donate.embed` centers, reserves 716px min-height to cut
+layout shift, caps the iframe at 376px (source).
+VERIFIED END-TO-END on localhost: the loader upgraded the anchor into the real widget iframe (same fields as
+source). Typed "Meet" into Honoree full name → clicked Donate and Support → widget navigated to
+`ustaf.donorsupport.co/page/CHRIS50?…` and the checkout's "Dedicate this donation" field showed **Meet** — the
+name round-trips natively (amount also carried), exactly as the source does. This is the ONLY way to carry the
+dedicate name (see prior entry: it's not a URL param — lives in widget state).
+Sample: `content/drafts/sections-samples/section-split-even-donate-embed.plain.html` — Selah Stibbins quote left +
+`.embed` form right in a `split-even` section. Desktop: equal 570px cols, same top, 30px gap, iframe capped 376px;
+mobile stacks. Trade-off vs the native default: a third-party script + iframe (consent/perf) — so the native copy
+remains the default; use `.embed` when the dedicate name must round-trip. Gates: lint 0 · breakpoints ✓ ·
+overflow ✓ · a11y ✓ (all @ the embed sample).
+
+### 2026-09-06 — custom-form-donate: REVERTED the `.embed` (real FundraiseUp) variant — CSP blocks it two ways
+Tried embedding the real FundraiseUp widget so the dedicate name would round-trip. Hit TWO hard CSP walls:
+(1) In-page: the widget renders via `document.write(<raw string>)`, blocked by the site's
+`require-trusted-types-for 'script'` in `head.html` (untouchable) → "This document requires 'TrustedHTML'
+assignment." (2) Isolated in a same-origin host iframe (blocks/custom-form-donate/fundraiseup.html) to dodge the
+Trusted Types policy — the form rendered AND captured the typed honoree ("Meet"), but at checkout FundraiseUp
+tried to frame `ustaf.donorsupport.co`, which sends `frame-ancestors 'none'` → "refused to connect". Confirmed
+against the source: there the widget is a DIRECT child of the top page, so Donate does a TOP-LEVEL navigation
+(whole tab → donorsupport.co, name carried); our extra iframe nesting makes it navigate the host frame instead,
+which is refused. Making it behave like the source would require running FundraiseUp's loader in-page, i.e.
+adding a site-wide Trusted Types default policy in scripts.js — a global weakening of XSS protection. Per user
+decision, NOT doing that. Removed: `decorateEmbed`/dispatcher + `.embed` CSS, deleted
+`blocks/custom-form-donate/fundraiseup.html`; the embed draft sample is obsolete (content/ is gitignored, so it
+never ships). The block is back to the single native reproduction: renders the form + hands off amount/recurring
+to the hosted page on submit (dedicate name can't round-trip via URL — FundraiseUp platform limitation, see prior
+entries). Gates: lint 0 · breakpoints ✓ · overflow ✓ · a11y ✓.

@@ -670,6 +670,57 @@ main .section.narrow > div {
   }
 }
 
+/* split-even — a symmetric, block-agnostic TWO-COLUMN section for TWO blocks
+   side by side (e.g. a Quote block left + a donation form block right, as on the
+   source's Chris Evert campaign page). Unlike split-left/right (which key off
+   default-content vs block to decide sides), this simply flows EACH direct
+   wrapper into its own equal column in source order — first→left, second→right —
+   so it works for any pair of blocks without nth-child logic. Same centered page
+   content width as the rest of the site (720/970/1170 per tier).
+
+   MOBILE (<768): no grid — the global 328px rule stacks the two blocks in the
+   single content column, in authored order. Two-column split is desktop-only. */
+@media (width >= 768px) {
+  main > .section.split-even {
+    box-sizing: border-box;
+    max-width: 720px;
+    margin-inline: auto;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    column-gap: 30px;
+    align-items: start;
+  }
+
+  /* wrappers are grid items — drop the global per-wrapper width cap/centering.
+     min-width:0 stops a wide block's min-content from stealing >1fr (keeps the
+     two columns equal); margin-top:0 cancels the global inter-wrapper spacing
+     (which would otherwise push the 2nd block down out of row alignment). */
+  main .section.split-even > div {
+    max-width: none;
+    margin-inline: 0;
+    min-width: 0;
+  }
+
+  /* cancel the global inter-wrapper spacing (which pushes a 2nd block down out
+     of row alignment) — matched at equal specificity to the rule that adds it */
+  main .section.split-even > div[class$='-wrapper'] + div[class$='-wrapper'] {
+    margin-top: 0;
+  }
+}
+
+@media (width >= 992px) {
+  main > .section.split-even {
+    max-width: 970px;
+  }
+}
+
+@media (width >= 1200px) {
+  main > .section.split-even {
+    max-width: 1170px;
+  }
+}
+
 /* ------------------------------------------------------------------
    Section separator bands — authored as Spacer blocks in their own sections
    (see blocks/spacer + tools/importer). The source stacks full-bleed 17px
