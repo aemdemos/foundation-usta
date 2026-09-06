@@ -455,6 +455,24 @@ main > .section:empty {
   }
 }
 
+/* Vertical rhythm INSIDE a section between successive wrappers. EDS gives every
+   block/default-content wrapper `margin: 0`, so a block sits flush against the
+   content that follows it — on the source these are clearly separated. Add a
+   top gap to any wrapper that FOLLOWS a block wrapper (i.e. block → next block,
+   or block → default content), matching the source's ~40px block separation.
+   A default-content wrapper that comes FIRST (a heading introducing the block
+   right below it) keeps its tight heading-to-block gap — we only space AFTER
+   blocks, not after a lead-in heading. Mobile uses a slightly smaller gap. */
+main .section > div[class$="-wrapper"]:not(.default-content-wrapper) + div[class$="-wrapper"] {
+  margin-top: 32px;
+}
+
+@media (width >= 768px) {
+  main .section > div[class$="-wrapper"]:not(.default-content-wrapper) + div[class$="-wrapper"] {
+    margin-top: 40px;
+  }
+}
+
 /* section metadata */
 main .section.light {
   background-color: var(--light-color);

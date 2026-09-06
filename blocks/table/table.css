@@ -79,3 +79,73 @@
     padding-left: var(--grid-gap);
   }
 }
+
+/* ==================================================================
+   Variant: directory — multi-column name directory (source: Board of
+   Directors "Officers and Directors / Advisory Board / Honorary Board").
+   Measured on the live source at 1200: 3 columns (each ~330px), separated by a
+   thin vertical divider; headings 28px/30.8 Graphik Semibold black, 10px below;
+   names 18/24 Graphik Regular black — name bold (<b>), role italic (<i>).
+   Mobile: columns stack, dividers become a top border between them.
+   ================================================================== */
+
+.table.directory {
+  display: grid;
+  grid-template-columns: 1fr; /* mobile: stacked */
+  gap: 40px 0;
+}
+
+.table.directory .table-directory-col {
+  min-width: 0;
+}
+
+/* heading — source h4: 28/30.8 Graphik Semibold black, 10px bottom margin. */
+.table.directory .table-directory-col h4 {
+  margin: 0 0 10px;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 28px;
+  line-height: 30.8px;
+  font-weight: 500;
+  color: #000;
+  text-transform: none;
+}
+
+/* name/role lines — 18/24 body, black; name bold, role italic (as authored). */
+.table.directory .table-directory-col p {
+  margin: 0;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-m); /* 16 mobile → 18 at 768 (matches source) */
+  line-height: 24px;
+  color: #000;
+}
+
+.table.directory .table-directory-col b {
+  font-weight: 700;
+}
+
+.table.directory .table-directory-col i {
+  font-style: italic;
+}
+
+/* From 768: lay the columns side by side with a divider between them. The source
+   columns are ~330px wide with ~60px gaps; equal 1fr columns + a 60px gap and a
+   left border (drawn in the gap) reproduce the divider look at the content width. */
+@media (width >= 768px) {
+  .table.directory.table-directory-2-cols {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 60px;
+  }
+
+  .table.directory.table-directory-3-cols {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 60px;
+  }
+
+  /* vertical divider before every column except the first — a 1px line centered
+     in the 60px gap (30px of negative offset via padding on the column). */
+  .table.directory .table-directory-col + .table-directory-col {
+    padding-left: 30px;
+    border-left: 1px solid #d8d8d8;
+    margin-left: -30px; /* pull the border into the middle of the 60px gap */
+  }
+}

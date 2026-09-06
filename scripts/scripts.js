@@ -12,6 +12,7 @@ import {
   buildBlock,
   readBlockConfig,
   toClassName,
+  toCamelCase,
 } from './aem.js';
 
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -160,7 +161,10 @@ function decorateSectionMetadata(main) {
       if (key === 'style') {
         meta.style.split(',').map((s) => toClassName(s.trim())).filter((s) => s).forEach((s) => section.classList.add(s));
       } else {
-        section.dataset[toClassName(key)] = meta[key];
+        // dataset keys must be camelCase — a hyphenated key (e.g. "profile-anchor")
+        // throws a SyntaxError and would break decoration. toCamelCase maps
+        // "profile-anchor" → "profileAnchor" → the data-profile-anchor attribute.
+        section.dataset[toCamelCase(key)] = meta[key];
       }
     });
     metaBlock.remove();

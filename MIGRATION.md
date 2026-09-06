@@ -1568,3 +1568,106 @@ Verified all fixes at 390/768/1200 on the migrated samples (tabs body #000, coll
 support CTA wt400+underline, reactions text-left + emoji-centered, cards-profile staff #000 + role italic #000,
 statement center+#000). Gates: lint 0 errors · breakpoints ✓ · typography ✓ (all changed samples) · overflow ✓
 (collage/video/support) · a11y ✓ (statement/support/reactions — #000 on #fff also improves contrast).
+
+### 2026-09-06 — NEW block `toc-profile` (replaces "tabs" with a scroll-spy anchor TOC) + section-metadata camelCase fix
+The source Leadership & Staff page uses "tabs" (Staff / Board of Directors) that each just reveal a different
+SECTION. Per direction, replaced the tab pattern with a page-level table-of-contents: a sticky anchor bar that
+scroll-spies real sections — so each entry targets a whole SECTION that can host ANY blocks (no block-in-block,
+which EDS can't author). Adapted from a provided petrobras `master-toc`; renamed per request to **`toc-profile`**
+(block) with metadata key **`profile-anchor`** (dataset `profileAnchor` → attr `data-profile-anchor`), CSS classes
+`toc-profile-*`. USTA-branded: active entry gets a **brand-blue** underline (not petrobras green); tab text is
+18px Graphik Semibold uppercase (matches the source tab row).
+- `blocks/toc-profile/toc-profile.js`: parse `label | slug` rows → sticky nav; bind targets by
+  `data-profile-anchor` (falls back to heading-token match); IntersectionObserver scroll-spy; smooth
+  click-scroll (respects 56px header offset); scroll-progress bar; reveal-on-scroll `.is-stuck` (fixed below
+  header); horizontal scroll + arrows on mobile overflow; prefers-reduced-motion → instant. English a11y labels.
+- `blocks/toc-profile/toc-profile.css`: in-flow tab strip (sage underline track) → `.is-stuck` fixed bar
+  (top:56, centered content width, shadow). Mobile: `overflow-x:auto` + edge arrows; ≥768 static strip.
+- **`scripts/scripts.js` `decorateSectionMetadata` FIX (load-bearing):** it set `section.dataset[toClassName(key)]`
+  — `toClassName('profile-anchor')` stays hyphenated, and `dataset['profile-anchor']=…` THROWS a SyntaxError
+  ('not a valid property name'), which would break decoration for ANY hyphenated metadata key. Switched to
+  `toCamelCase(key)` (→ `profileAnchor` → the `data-profile-anchor` attribute). Verified existing `style`-based
+  section metadata (split-left, center/narrow) still applies with no regression. (Only `style` keys had been used
+  before, so this latent bug never fired until now.)
+- Sample: `content/drafts/block-samples/toc-profile.plain.html` — replicates leadership-and-staff: intro h1 +
+  toc-profile bar (Staff / Board of Directors); a `staff` section = Cards (profile) 8-up grid + staff text list;
+  a `board-of-directors` section = Cards (profile) 2-up (Chris Evert, Kathleen Wu) + Officers/Advisory/Honorary
+  lists. Board content transcribed from the live source's Board tab. (Board portraits reuse staff drafts images
+  as placeholders — real headshots would arrive via import.)
+Verified @1200 + @390: both sections bound (`data-profile-anchor`), TOC renders, scroll-spy activates the right
+entry (Board active when scrolled into view), bar goes fixed at top:56 once scrolled past, click smooth-scrolls
+to the section, progress bar tracks scroll; mobile nav scrolls horizontally (arrows appear only on overflow).
+Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (360→1920) · typography ✓ · a11y ✓. No regression on other
+section-metadata pages.
+
+### 2026-09-06 — toc-profile: match source tab strip exactly (no sticky/progress) + align content to cards
+User feedback on the toc-profile parity. Measured the live source tab row at 1200 and fixed:
+- REMOVED the sticky "moving bar at top" and the scroll-progress bar (those were master-toc example-only; not on
+  the USTA source). The strip now stays in flow.
+- Tab metrics → source: `padding: 0 12px` (was 8px 20px), height 38px, tabs abut (gap 0), 18px Graphik Semibold
+  uppercase black.
+- Underline system → source uses a full-width **6px sage (#dcdfcf) track** + a single **6px BLACK indicator**
+  (computed rgb(0,0,0), not blue) that SLIDES under the active tab. Replaced the per-tab `border-bottom` toggle
+  (which just appeared/disappeared) with one absolutely-positioned indicator translated via `transform`+`width`
+  with a `0.3s` transition → seamless movement matching the source. `blocks/toc-profile/toc-profile.js` now sets
+  `is-active` + `moveIndicator()`; syncs on init/resize/load; reduced-motion disables the transition.
+- Verified indicator settles exactly under the active tab (Staff: left15 w78; Board: left93 w224 — exact).
+- CONTENT ALIGNMENT: source lays heading ("Our Staff"/"Board of Directors") + cards + lists in ONE column whose
+  left edge matches the first card. Ours had the heading/lists at the section edge (left 15/31) while the cards
+  inset (45/55) → misaligned. Added `main .section:has(.cards.profile) .default-content-wrapper` rules to match
+  the card inset: 24px padding on mobile (matches the card `ul` padding), then the centered max-width column
+  (684 @768, 1110 @992) with padding reset. Now heading = image = list left at every viewport
+  (55/55/55 @390, 42/42/42 @768, 45/45/45 @1200).
+Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (360→1920; toc-profile + cards-profile) · typography ✓ ·
+a11y ✓.
+
+### 2026-09-06 — table `directory` variant (3-column name directory) + section wrapper spacing
+Two asks on the Board of Directors layout:
+1. NEW table variant `directory` — a multi-column name directory (source Board panel: "Officers and Directors /
+   Advisory Board / Honorary Board"). Measured live @1200: 3 columns (~330px each, ~60px gaps, thin vertical
+   divider between), headings 28/30.8 Graphik Semibold black (10px below), names 18/24 body black with the NAME
+   bold (`<b>`) + role italic (`<i>`), lines separated by `<br>`.
+   - `blocks/table/table.js`: dispatch on `.directory` → `decorateDirectory()` tags each authored cell as a
+     `.table-directory-col` (flattening multi-row authoring column-wise), adds `table-directory-N-cols`. Default
+     variant unchanged (still builds the semantic `<table>`).
+   - `blocks/table/table.css`: `.table.directory` = CSS grid, 1 col mobile → N cols from 768 with a 60px column
+     gap and a 1px divider drawn in the gap (border-left + negative margin). Heading/name/`<b>`/`<i>` styling per
+     source.
+   - Sample: `content/drafts/block-samples/table-directory.plain.html`. Also swapped the toc-profile sample's
+     Board plain-list default content for this directory table.
+2. SECTION SPACING — EDS gives every block/default-content wrapper `margin:0`, so a block sat flush against the
+   next block/content (heading→cards→list all ~14px on our page; the source clearly separates them, e.g.
+   cards→directory ~66px). Added `styles/styles.css`: a wrapper that FOLLOWS a block wrapper gets `margin-top`
+   (32px mobile → 40px ≥768). Scoped to `div[class$="-wrapper"]:not(.default-content-wrapper) + div[...-wrapper]`
+   so a lead-in HEADING before a block keeps its tight gap (only space AFTER blocks), matching the source rhythm.
+Verified @390/768/1200: directory 3 cols (stacks on mobile), bold names + italic roles, dividers from 768;
+spacing now heading→cards ~9–14px (source ~17) + cards→list/directory 32/40px (was 14). Gates: lint 0 errors ·
+breakpoints ✓ · overflow ✓ (360→1920; table-directory + toc-profile + regression on columns-media/cards-support/
+banner-stats-grid) · typography ✓ · a11y ✓.
+
+### 2026-09-06 — toc-profile: TAB behaviour (show one section, hide others) + bar parity confirmed
+User saw BOTH sections stacked (Board of Directors visible while on Staff). The source is a real TAB SET — only
+the active panel shows. Reworked `blocks/toc-profile/toc-profile.js`: removed the scroll-to + IntersectionObserver
+scroll-spy; `setActive()` now toggles `section.hidden` so ONLY the active `profile-anchor` section renders and the
+others are hidden (initial = first entry, or the URL hash if it names a panel — honours the source's #tab= deep
+link). Tabs get `role=tab` / nav `role=tablist`. Removed now-unused HEADER_OFFSET + prefersReduced (lint).
+Bar/border parity re-measured on the live source @1200 and confirmed identical to ours: full-width 6px sage track
+(#dcdfcf), 6px BLACK sliding indicator, tabs 38px tall / `padding:0 12px` / 18px Graphik Semibold uppercase,
+indicator left15·w78 under Staff → left93·w224 under Board. Bumped the indicator transition 0.3s→0.5s to match
+the source. (The apparent "thicker bar" in the migrated screenshot was just 2× DPR, not a real size diff.)
+Verified @1200 + @390: load shows only Staff (Board hidden); clicking Board hides Staff + shows Board; indicator
+matches the active tab at both; screenshot confirms the strip matches the source. Gates: lint 0 errors ·
+breakpoints ✓ · overflow ✓ · typography ✓ · a11y ✓.
+
+### 2026-09-06 — cards.profile: match source card body padding + card-height behaviour
+User flagged the profile cards' internal positioning/dimensions differed from source. Re-measured live @1200:
+card 255px, img 255×255 square, 30px col gap, box-shadow rgba(0,0,0,.5) 0 2px 5px, name indent 20px — ALL
+already matched. The two real diffs:
+1. img→name gap: source **16px** (just the h4's 16px top margin) but ours was **36px** — the desktop card body
+   had `padding: 20px 20px 0` adding 20px on top. Changed to `padding: 0 20px` (keep the 20px side inset only).
+2. Card height: source cards HUG their content (a 3-line role makes only THAT card taller; others stay short —
+   measured 471/477/471/471). Our grid stretched all cards to the tallest (default `align-items:stretch`),
+   padding empty space below short cards. Added `align-items: start` to `.cards.profile > ul`.
+Verified @390/768/1200: img→name 16px, role→card-bottom ~10px (source ~11), cards hug content (heights vary by
+role length) at every viewport. Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (toc-profile + cards-profile
+regression) · a11y ✓.

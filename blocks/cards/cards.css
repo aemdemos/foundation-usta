@@ -564,6 +564,12 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 40px 30px; /* row 40px; column gap only applies once multi-column */
+
+  /* Source cards HUG their content (each card's height = its own content — a
+     3-line role makes only that card taller). Default grid `align-items:stretch`
+     equalizes row heights, adding empty space below shorter cards; `start` makes
+     each card size to its content like the source. */
+  align-items: start;
 }
 
 /* White shadowed card. Source: #fff, box-shadow rgba(0,0,0,.5) 0 2px 5px.
@@ -693,9 +699,41 @@
     line-height: 32px;
   }
 
-  /* Desktop: source content-wrapper adds a 20px top padding (mobile/tablet = 0). */
+  /* Desktop: source content-wrapper has NO top padding — the image→name gap is
+     just the h4's 16px top margin (measured on the live source: img bottom→name
+     top = 16px). Keep the 20px side inset (name indent) only. */
   .cards.profile .cards-profile-card-body {
-    padding: 20px 20px 0;
+    padding: 0 20px;
+  }
+}
+
+/* Align a profile section's DEFAULT CONTENT (the "Our Staff" / "Board of
+   Directors" heading and the plain-text staff/board lists) with the card grid.
+   The source lays the heading, cards and lists in ONE column whose left edge
+   matches the first card's. Our card grid insets from the section edge (24px on
+   mobile via the `ul` padding; a centered max-width column from 768), leaving the
+   default-content wrapper at the section edge — which mis-aligns it LEFT of the
+   cards. Match the card inset so heading + list line up with the images.
+   MOBILE: the card `ul` has `padding: 0 24px`, so add the same 24px to the
+   default content. */
+main .section:has(.cards.profile) .default-content-wrapper {
+  box-sizing: border-box;
+  padding-inline: 24px;
+}
+
+/* From 768 the card grid is a centered max-width column (no side padding); match
+   that width + centering instead of the 24px inset. */
+@media (width >= 768px) {
+  main .section:has(.cards.profile) .default-content-wrapper {
+    max-width: min(684px, calc(100vw - 60px));
+    margin-inline: auto;
+    padding-inline: 0;
+  }
+}
+
+@media (width >= 992px) {
+  main .section:has(.cards.profile) .default-content-wrapper {
+    max-width: min(1110px, calc(100vw - 90px));
   }
 }
 
