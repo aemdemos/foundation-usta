@@ -99,15 +99,23 @@
   min-width: 0;
 }
 
-/* heading — source h4: 28/30.8 Graphik Semibold black, 10px bottom margin. */
+/* heading — source h4 (Graphik Semibold, w500, black, 10px bottom margin).
+   RESPONSIVE: 22/24.2 on mobile → 28/30.8 from 768 (measured on the source). */
 .table.directory .table-directory-col h4 {
   margin: 0 0 10px;
   font-family: var(--heading-semibold-font-family);
-  font-size: 28px;
-  line-height: 30.8px;
+  font-size: 22px;
+  line-height: 24.2px;
   font-weight: 500;
   color: #000;
   text-transform: none;
+}
+
+@media (width >= 768px) {
+  .table.directory .table-directory-col h4 {
+    font-size: 28px;
+    line-height: 30.8px;
+  }
 }
 
 /* name/role lines — 18/24 body, black; name bold, role italic (as authored). */

@@ -145,7 +145,8 @@
 }
 
 .custom-form-donate .cfd-currency {
-  font-size: 20px;
+  font-size: 21px; /* source: 21/26 */
+  line-height: 26px;
   font-weight: 400;
   color: var(--cfd-ink);
 }
@@ -155,8 +156,9 @@
   min-width: 0;
   padding: 0;
   font-family: var(--body-font-family);
-  font-size: 26px;
-  line-height: 1;
+  font-size: 36px; /* source: big blue value 36/44 */
+  line-height: 44px;
+  font-weight: 400;
   color: var(--cfd-blue);
   background: transparent;
   border: 0;
@@ -237,9 +239,12 @@
 
 .custom-form-donate .cfd-field label {
   display: block;
+
+  /* Source renders this floating label at 16px then scale(0.75) when floated →
+     effective 12px. We reproduce the RENDERED size directly at 12/16, muted. */
   font-size: 12px;
   line-height: 16px;
-  color: var(--cfd-muted);
+  color: rgb(33 40 48 / 80%);
 }
 
 .custom-form-donate .cfd-honoree {
@@ -264,9 +269,9 @@
   position: relative;
   margin: 10px 0 0;
   padding: 11px 16px;
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--cfd-ink);
+  font-size: 13px; /* source: 13/18 */
+  line-height: 18px;
+  color: #2f2f30; /* source tooltip ink */
   background-color: var(--cfd-tooltip-bg);
   border-radius: 6px;
 }
@@ -307,7 +312,8 @@
 }
 
 .custom-form-donate .cfd-comment a {
-  font-size: 14px;
+  font-size: 14px; /* source: 14/18 */
+  line-height: 18px;
   color: var(--cfd-ink);
   text-decoration: underline;
 }

@@ -1908,3 +1908,30 @@ rule centers the row for ALL variants below 768. No JS change (pure class-based)
 justify-content: @1280 default=flex-start, center=center, right=flex-end; @390 all three = center. Sample
 `content/drafts/block-samples/social.plain.html` now shows all three (default/center/right) with h2 labels.
 Gates: lint 0 · breakpoints ✓ · overflow ✓ · a11y ✓.
+
+### 2026-09-06 — Typography parity pass: custom-form-donate + table.directory (all viewports)
+Measured source typography element-by-element at 1280/768/390 (into the FundraiseUp iframe for the form; the
+Board panel for the directory).
+
+table.directory — the ONE gap was the section heading: source is RESPONSIVE 22/24.2 mobile → 28/30.8 @768
+(Graphik Semibold w500 #000); ours was fixed 28/30.8. Added a mobile base (22/24.2) + @768 bump. Name entries
+already correct (16/24 mobile → 18/24 @768 via --body-font-size-m, Graphik Regular #000). Verified @390/768/1280.
+
+custom-form-donate — source is IBM Plex Sans (FundraiseUp's font) at a FIXED card, NO responsive font changes at
+any viewport. We keep the site brand (Graphik) per prior direction but matched every NUMERIC value
+(size/weight/line-height/color/alignment). Fixes: big amount value 26→**36/44** w400 blue; currency 20→**21/26**;
+tooltip 14/20→**13/18** #2f2f30; add-comment added **lh 18**; honoree floating label kept 12/16 (source renders
+16px then scale(0.75)=12 effective) with color → ink@80%. Already-correct (unchanged): freq pill 16 w600 blue,
+heading 16/24 w400, amount tile 16 w400, USD 16/24, dedicate label 14/20, honoree input 16/24, designation 14/20,
+CTA 16/24 w600 white. Re-measured: currency 21/26, value 36/44, label 12/16, tooltip 13/18, comment 14/18 — all
+match. Card height stayed ~662 (no wrap/overflow regressions); screenshot confirms the big blue $50.
+Gates: lint 0 · breakpoints ✓ · overflow ✓ (both, 360–1920) · a11y ✓ (both).
+
+### 2026-09-06 — Removed unused `tabs` block + flagged 2 draft samples for deletion
+Cleanup: the `tabs` block and its sample, plus the `columns-statement` sample, aren't needed. Confirmed the tabs
+block is referenced NOWHERE in code (grep across scripts/styles/blocks, excluding the block itself and the
+unrelated toc-profile). Deleted `blocks/tabs/` (tabs.js + tabs.css). The two draft sample pages live under
+content/ (deletion blocked by the content-preservation safeguard, and content/ is gitignored so they never ship)
+— handed to the user to delete manually: `content/drafts/block-samples/columns-statement.plain.html` and
+`content/drafts/block-samples/tabs.plain.html`. Note: `columns-statement` was only a variant DEMO of the columns
+block (no separate block dir), so nothing to remove in blocks/. Gates: lint 0 errors.
