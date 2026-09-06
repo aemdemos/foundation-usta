@@ -619,6 +619,57 @@ main .section.narrow > div {
   }
 }
 
+/* split-right — mirror of split-left: default-content text sits ENTIRELY in the
+   LEFT column and a block sits ENTIRELY in the RIGHT column (two equal columns,
+   30px gutter). Author the TEXT first, then the block (e.g. a video-embed), so on
+   MOBILE they stack text→block in reading order; from 768 the section becomes the
+   centered content-width grid and the block moves to the right column beside the
+   text. Matches the source's "text left / video right" article layout. */
+@media (width >= 768px) {
+  main > .section.split-right {
+    box-sizing: border-box;
+    max-width: 720px;
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 30px;
+    align-items: start;
+  }
+
+  /* wrappers are grid items — drop the global per-wrapper cap/centering. Default:
+     span both columns (a heading row above the split, if any). */
+  main .section.split-right > div {
+    grid-column: 1 / -1;
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  /* the block wrapper → RIGHT column, second row */
+  main .section.split-right > div[class$='-wrapper']:not(.default-content-wrapper) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  /* the default content that PRECEDES the block → LEFT column, same row */
+  main .section.split-right
+    > .default-content-wrapper:has(~ div[class$='-wrapper']:not(.default-content-wrapper)) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+@media (width >= 992px) {
+  main > .section.split-right {
+    max-width: 970px;
+  }
+}
+
+@media (width >= 1200px) {
+  main > .section.split-right {
+    max-width: 1170px;
+  }
+}
+
 /* ------------------------------------------------------------------
    Section separator bands — authored as Spacer blocks in their own sections
    (see blocks/spacer + tools/importer). The source stacks full-bleed 17px

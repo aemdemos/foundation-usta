@@ -1749,3 +1749,15 @@ the text sits near the TOP (line-height 22), leaving ~21px below the text before
 text, leaving only ~13px. Changed `.toc-profile-item` `align-items: center → flex-start` so the text sits at the
 tab top — text→track gap now 21px at mobile + desktop, matching source. Gates: lint 0 · breakpoints ✓ · overflow
 ✓ · a11y ✓.
+
+### 2026-09-06 — NEW section style `split-right` + video-beside-article sample
+Added a `split-right` section style (mirror of `split-left`): default-content TEXT in the LEFT column, a block in
+the RIGHT column, two equal columns at the page content width (720/970/1170), 30px gutter, from 768; mobile
+stacks (text → block). Authored text-first so reading order is text→video on mobile; grid places the block into
+col 2 / row 2 and the preceding default content into col 1 (`:has(~ …-wrapper)`), so no block-in-block.
+`styles/styles.css` after the split-left rules. Sample: `content/drafts/sections-samples/section-split-right-
+video.plain.html` — the Community Impact Hub article body (Brian Vahaly quote) in the left column + a Video
+Embed (consent placeholder) on the right, per the source screenshot. Verified @1200: text 15→585 / video 615→
+1185, same top, 30px gutter (mirrors source); @390 stacks text→video (both 328). Video placeholder unchanged
+(14/21 #333 centered, blue link, 16:9). Gates: lint 0 · breakpoints ✓ · overflow ✓ (split-right + split-left
+regression) · typography ✓ · a11y ✓.
