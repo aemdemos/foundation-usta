@@ -1717,3 +1717,28 @@ a `.toc-profile-track` span alongside the indicator; CSS drops the border for a 
 and moves the indicator to `bottom:0`. Verified pixel-flush @390 + @1200: track+indicator share the same
 bottom/height, indicator matches the active tab left/width, track full-width. Gates: lint 0 · breakpoints ✓ ·
 overflow ✓ · a11y ✓.
+
+### 2026-09-06 — cards.profile: img→name gap (desktop 36) + tight staff list (typography parity)
+Two source-parity fixes on the profile cards + staff list:
+1. IMAGE→NAME gap: source = 16px mobile/tablet, **36px desktop** (≥992: content-wrapper adds 20px top + h4's
+   16px margin). I'd previously flattened this to 16px everywhere (padding `0 20px`). Restored the 20px top
+   padding but ONLY at ≥992 (`.cards.profile .cards-profile-card-body` → `padding: 20px 20px 0`); mobile/tablet
+   keep `0 20px` (16px). Verified 16/16/36 @390/768/1200.
+2. STAFF LIST line spacing: the source packs the plain-text list tight (18/24, NO inter-line gap); our default-
+   content `<p>` rhythm added ~14px between lines. Added `main .section:has(.cards.profile)
+   .default-content-wrapper p { margin:0; line-height:24px }` → 0 gap at all viewports, matching source.
+(Also fixed a stray CSS syntax error introduced when the cards-stats block comment opener got clipped.)
+Gates: lint 0 · breakpoints ✓ · overflow ✓ (toc-profile + cards-profile) · typography ✓ · a11y ✓.
+NOTE: the source also italicises the ROLE portion of each staff-list line (`Name, <i>role</i>`); ours is plain
+because the DA-authored content has no <i> — that's a content change (not CSS) and would need editing on DA.
+
+### 2026-09-06 — toc-profile: mobile tabs fill row width (indicator reaches edge on active BOARD)
+User: on MOBILE the black indicator should extend to the right edge (as in source screenshot 3), and the
+tab→bar gap. Measured source @390: the two tabs GROW to fill the 328 track (STAFF 91, BOARD 237 = full width),
+so the active BOARD indicator reaches the right edge; STAFF's does not. Desktop keeps tabs natural-width,
+left-packed. Ours had `flex: 0 0 auto` at all widths (tabs 78+224=302 < 328) so BOARD stopped short on mobile.
+Fix (`blocks/toc-profile/toc-profile.css`): base `.toc-profile-item` → `flex: 1 1 auto` + `justify-content:
+flex-start` (mobile: equal-share growth, text stays left); `@media (width>=768px)` → `flex: 0 0 auto` (natural
+width). tab→track gap was already 0 (flush) both source + ours. Verified @390: STAFF 91 / BOARD 237 (fills 328),
+BOARD indicator reaches right edge, STAFF doesn't; indicator matches active tab; screenshot confirms. @1200:
+unchanged (natural width 78/224, left-packed). Gates: lint 0 · breakpoints ✓ · overflow ✓ · a11y ✓.

@@ -702,11 +702,14 @@
     line-height: 32px;
   }
 
-  /* Desktop: source content-wrapper has NO top padding — the image→name gap is
-     just the h4's 16px top margin (measured on the live source: img bottom→name
-     top = 16px). Keep the 20px side inset (name indent) only. */
+}
+
+/* Desktop (≥992): source content-wrapper adds 20px top padding, so the image→name
+   gap is 20px + the h4's 16px top margin = 36px (measured live @1200). Mobile +
+   tablet keep the 16px gap (base `padding: 0 20px`, source img→name = 16px). */
+@media (width >= 992px) {
   .cards.profile .cards-profile-card-body {
-    padding: 0 20px;
+    padding: 20px 20px 0;
   }
 }
 
@@ -738,6 +741,16 @@ main .section:has(.cards.profile) .default-content-wrapper {
   main .section:has(.cards.profile) .default-content-wrapper {
     max-width: min(1110px, calc(100vw - 90px));
   }
+}
+
+/* The plain-text staff/board LIST below the cards: the source packs the lines
+   tight (18/24, NO gap between lines — a continuous list). Our default-content
+   <p> rhythm adds ~14px between paragraphs, spreading the list out. Zero the
+   inter-paragraph margin so the lines sit at their 24px line-height like the
+   source. (Applies only inside a profile section's default content.) */
+main .section:has(.cards.profile) .default-content-wrapper p {
+  margin: 0;
+  line-height: 24px;
 }
 
 /* cards-stats — 4-up stat cards on the cream band: circular photo + a large

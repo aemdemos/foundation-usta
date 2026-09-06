@@ -55,11 +55,17 @@
 }
 
 /* each tab — source: 18px Graphik Semibold, uppercase, black, 0 12px padding,
-   38px tall, no per-tab underline (the shared indicator draws it). */
+   38px tall, no per-tab underline (the shared indicator draws it).
+   MOBILE: the source tabs GROW to fill the row width (the spare space is split
+   between them: STAFF→91, BOARD→237 = the full 328 column), so the active
+   indicator under BOARD reaches the right edge. `flex: 1 1 auto` reproduces that
+   equal-share growth. From 768 the tabs revert to natural width, left-packed
+   (indicator = text width). Text stays left-aligned within the grown tab. */
 .toc-profile .toc-profile-item {
   display: inline-flex;
   align-items: center;
-  flex: 0 0 auto;
+  justify-content: flex-start;
+  flex: 1 1 auto;
   box-sizing: border-box;
   height: 38px;
   padding: 0 12px;
@@ -73,6 +79,12 @@
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
+}
+
+@media (width >= 768px) {
+  .toc-profile .toc-profile-item {
+    flex: 0 0 auto; /* desktop/tablet: natural width, left-packed */
+  }
 }
 
 .toc-profile .toc-profile-item:hover {
