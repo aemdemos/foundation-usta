@@ -134,17 +134,34 @@ function decorateDefault(block) {
   const cols = [...block.firstElementChild.children];
   block.classList.add(`columns-${cols.length}-cols`);
 
-  // setup image columns
+  // Set up image columns. A cell that holds a picture is an image column; its
+  // side (left/right) follows the AUTHORED cell order — the CSS lays the row out
+  // left-to-right in DOM order, so authoring the image cell first puts the image
+  // on the left, second puts it on the right. No per-side class needed.
   [...block.children].forEach((row) => {
     [...row.children].forEach((col) => {
       const pic = col.querySelector('picture');
-      if (pic) {
-        const picWrapper = pic.closest('div');
-        if (picWrapper && picWrapper.children.length === 1) {
-          // picture is only content in column
-          picWrapper.classList.add('columns-img-col');
-        }
+      if (!pic) return;
+      col.classList.add('columns-img-col');
+
+      // Keep any caption attached to its image: the source authors the caption
+      // as the text paragraph that follows the picture inside the same cell.
+      // Wrap image (+ caption) in a <figure>/<figcaption> so it's semantic and
+      // the caption tracks the image regardless of which side it's on.
+      const caption = [...col.querySelectorAll('p')]
+        .find((p) => !p.querySelector('picture') && p.textContent.trim());
+      const figure = document.createElement('figure');
+      figure.className = 'columns-figure';
+      figure.append(pic);
+      if (caption) {
+        const figcaption = document.createElement('figcaption');
+        figcaption.className = 'columns-caption';
+        // Move caption content (preserving inline markup / links).
+        while (caption.firstChild) figcaption.append(caption.firstChild);
+        figure.append(figcaption);
       }
+      // Replace the cell's contents (empty <p> wrappers included) with the figure.
+      col.replaceChildren(figure);
     });
   });
 }

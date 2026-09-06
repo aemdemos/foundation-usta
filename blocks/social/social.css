@@ -1,17 +1,25 @@
 /*
  * social — share bar. Source (USTA Foundation) renders five 48x48 icon
- * buttons in a left-aligned row that abut (no gap): each is a 24px glyph
- * centred in 12px padding. Icon size + layout are constant across viewports.
+ * buttons in a row that abut (no gap): each is a 24px glyph centred in 12px
+ * padding. The ROW ALIGNMENT is viewport-dependent (measured on the live source
+ * at the 768 breakpoint): CENTERED on mobile (<768), LEFT-ALIGNED from 768 up.
+ * The source wraps the bar in 8px top/bottom padding.
  */
 
 .social .social-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center; /* mobile: source centers the icon row */
   gap: 0;
-  padding: 0;
+  padding: 8px 0; /* source wrapper padding */
   margin: 0;
+}
+
+@media (width >= 768px) {
+  .social .social-bar {
+    justify-content: flex-start; /* tablet/desktop: source left-aligns the row */
+  }
 }
 
 .social .social-btn {

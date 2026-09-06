@@ -77,7 +77,13 @@ body {
   display: none;
   margin: 0;
   background-color: var(--background-color);
-  color: var(--text-color);
+
+  /* Source default body/copy text is pure BLACK (measured on article + home
+     templates: default <p> = rgb(0,0,0)). --text-color (#333) is reserved for
+     the specific components that measured #333 (quote-tweet body, image
+     captions), so set the default here to #000 rather than repurposing the
+     token. */
+  color: var(--dark-color);
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-m);
   line-height: var(--body-line-height);
@@ -166,7 +172,7 @@ main .default-content-wrapper ul {
 }
 
 main .default-content-wrapper li {
-  color: var(--text-color);
+  color: var(--dark-color); /* source default copy is black (matches body) */
   line-height: 1.4286; /* source list line-height (22.857/25.714), not the fixed 24 */
 }
 
@@ -529,6 +535,69 @@ main .section.narrow > div {
 @media (width >= 768px) {
   main .section.narrow > div {
     max-width: 810px;
+  }
+}
+
+/* split-left — a block-agnostic TWO-COLUMN section: a block sits ENTIRELY in the
+   left column and the default-content text that FOLLOWS it sits ENTIRELY in the
+   right column (two equal columns, 30px gutter) — exactly like the source article
+   that places an embedded tweet beside its body copy. Unlike a float, the two
+   columns are independent grid cells: the taller right column NEVER wraps back
+   under the left one. Any default content BEFORE the block (a heading) spans the
+   full width above both columns.
+
+   Because EDS breaks a section into separate wrappers (heading → block → body),
+   we grid the SECTION and place its wrappers — no block-in-block needed. The grid
+   uses the SAME default page content width as the rest of the site (720/970/1170
+   per tier), so it's as wide as the home page — not narrowed.
+
+   MOBILE (<768): no grid. The global 328px rule stacks everything in the single
+   content column (heading, then tweet, then body). The two-column split is a
+   desktop affordance only. */
+@media (width >= 768px) {
+  /* the section becomes the centered content-width grid (matches the page width) */
+  main > .section.split-left {
+    box-sizing: border-box;
+    max-width: 720px;
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 30px;
+    align-items: start;
+  }
+
+  /* wrappers are grid items now — drop the global per-wrapper width cap/centering.
+     Default: span both columns (this is the heading row above the split). */
+  main .section.split-left > div {
+    grid-column: 1 / -1;
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  /* the block wrapper → left column, second row */
+  main .section.split-left > div[class$='-wrapper']:not(.default-content-wrapper) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  /* the default content that FOLLOWS the block → right column, same row */
+  main .section.split-left
+    > div[class$='-wrapper']:not(.default-content-wrapper)
+    ~ .default-content-wrapper {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+@media (width >= 992px) {
+  main > .section.split-left {
+    max-width: 970px;
+  }
+}
+
+@media (width >= 1200px) {
+  main > .section.split-left {
+    max-width: 1170px;
   }
 }
 

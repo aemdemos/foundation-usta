@@ -1,8 +1,11 @@
+/* Source: the TEXT (title + prompt) is LEFT-aligned; only the emoji controls row
+   is centered. Measured on the live source (essay-winners article) at 390 + 1200:
+   h3 + message compute text-align:start; `.v-reactions__controls` is centered. */
 .custom-widget-reactions {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: stretch;
+  text-align: left;
 }
 
 /* Title — matches source h3 (36px mobile → 56px ≥768, lh 1.1, #333). */

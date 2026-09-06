@@ -25,8 +25,14 @@
   text-align: left;
 }
 
+/* Source header ("Winners" / "NJTL Chapter") is NOT bold — it's plain body text,
+   weight 400, just the first line of each column (measured on the live source).
+   The source also separates the header from the first group with a 24px blank
+   line (an empty in-column paragraph); reproduce it as padding under the header
+   so the spacing matches even when no blank paragraph is authored. */
 .table thead th {
-  font-weight: 700;
+  padding-bottom: 24px;
+  font-weight: 400;
 }
 
 .table tbody td {

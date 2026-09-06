@@ -1,34 +1,56 @@
 .columns > div {
   display: flex;
   flex-direction: column;
+
+  /* Stacked (mobile + tablet, <992): space the cells vertically so the image /
+     caption doesn't butt up against the body text. The row becomes horizontal at
+     992 below, where this same gap sits between the columns instead. */
+  gap: 24px;
 }
 
 .columns img {
   width: 100%;
 }
 
-.columns > div > div {
-  order: 1;
+/* Image column: a <figure> wraps the image (+ optional caption) — see columns.js.
+   The image side follows the AUTHORED cell order (image cell first = left,
+   second = right); no per-side class, no order overrides, so it just works. */
+.columns .columns-figure {
+  margin: 0;
 }
 
-.columns > div > .columns-img-col {
-  order: 0;
-}
-
-.columns > div > .columns-img-col img {
+.columns .columns-figure img {
   display: block;
+}
+
+/* Caption — matches the source figure caption: Graphik Regular 16/22.857, #333,
+   left-aligned, upright (author it with <em>; we normalize the slant), sitting
+   just below the image. */
+.columns .columns-caption {
+  margin-top: 4px;
+  color: var(--text-color); /* #333 */
+  font-family: var(--body-font-family);
+  font-size: 16px;
+  line-height: 22.857px;
+  font-weight: 400;
+  font-style: normal;
+  text-align: left;
+}
+
+.columns .columns-caption em {
+  font-style: normal;
 }
 
 @media (width >= 992px) {
   .columns > div {
-    align-items: center;
+    align-items: start;
     flex-direction: unset;
-    gap: 24px;
+
+    /* gap (24px) is inherited from the base rule — sits between columns here */
   }
 
   .columns > div > div {
     flex: 1;
-    order: unset;
   }
 }
 
@@ -273,13 +295,6 @@
      text isn't flush with the image top and the CTA gap below reads naturally. */
   .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) {
     padding-top: 10px;
-  }
-
-  /* collage feature: left-align its text (the separate default-content h2 above
-     stays centered). */
-  .columns.feature:has(.columns-feature-collage) h3,
-  .columns.feature:has(.columns-feature-collage) p {
-    text-align: left;
   }
 
   /* image column: thumbnail ROW on top, wide portrait BELOW (touching). In the

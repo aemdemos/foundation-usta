@@ -1346,3 +1346,225 @@ wrapper cap. Verified @430 (tab left 377): home stats 336/right383 (band, source
 cards/banner-stats-grid all 328/right379; every touched sample renders in the 328 column and clears the tab.
 Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (360→1920; home + 6 samples) · typography ✓ (home) ·
 a11y ✓ (home + 4 samples).
+
+### 2026-09-05 — hero (error / 404): source blue bouncing-ball SVG + black pill CTA (was green ball + blue btn)
+Screenshot review of the 404 hero vs source (ustafoundation.com/en/home/404.html): two mismatches.
+- **Illustration:** source is the blue LINE-ART bouncing-tennis-ball **SVG** (`tennis-ball-bouncing.svg`,
+  viewBox 128×193, rendered 116×174 desktop), NOT our solid-green CSS `::before` ball. Fetched + self-hosted
+  the source SVG at `blocks/hero/icons/tennis-ball-bouncing.svg` (1.4KB, well under budget); `hero.js`
+  `decorateError()` now prepends `<img class="hero-error-ball" alt="" aria-hidden>` (decorative; the h1 carries
+  the message). CSS renders it centered, width 96 mobile → 116 @768. Removed the old radial-gradient ball +
+  bounce keyframes.
+- **CTA button:** source is a **BLACK PILL** — `#000` bg, white text, `border-radius: 9999px`, **56px** tall,
+  18px Graphik Semibold uppercase +1px letter-spacing. Ours was brand-blue, 40px, radius 3px. Fixed to match.
+- h1 already matched (Graphik XXCond Bold 100/110 #000 centered @desktop, via global h1 tokens).
+Verified @1200: ball x542/w116 (EXACT source x542/w116), h1 100/110 #000, CTA #000 / radius 9999 / 56px —
+all match. Gates: lint 0 errors · breakpoints ✓ · svg ✓ (check:svg) · overflow ✓ (360→1920) · a11y ✓.
+NOTE: the block is parity-correct; the repo's `404.html` still ships the EDS BOILERPLATE 404 (big "404" SVG
++ "Page Not Found"), not this block — wiring `404.html` to author the `hero error` block is a separate
+follow-up (out of scope for this block-parity task).
+
+### 2026-09-05 — Typography parity validation: quote, quote-image, social, table, tabs, video-embed (all VPs)
+Per-text-element typography audit of all six blocks vs their source pages at 390/768/1200 (measured computed
+ff/fs/fw/lh/ls/color/align/style + responsive steps). Two blocks had real drifts, fixed; four already matched.
+- **quote (blocks/quote/quote.css):** attribution was **weight 700 + italic** → source is **weight 500,
+  UPRIGHT** (Graphik Semibold), size **22/24.2 mobile → 28/30.8 @768**, centered #000. Fixed weight,
+  font-style, and added the mobile line-height. Quote text already matched (32/48 Graphik Regular wt500
+  italic left #000, constant).
+- **quote-image:** (a) h2 had a `text-align:left` desktop override → source **CENTERS** the pull-quote at
+  EVERY viewport (44/48.4 → 76/83.6 XXCond Bold wt500 #000); removed the override. (b) attribution was
+  `font-style: italic` → source is **UPRIGHT** Graphik Regular wt400 right #000 (16/24 → 18/24); the sample
+  authors the name in `<em>`, so also added `.quote-image-text p em { font-style: normal }` to undo it.
+- **table:** already matches — header wt700 / body wt400, both **16/24 mobile → 18 @768**, #000, left; 30px
+  inter-column gutter from 768. No change.
+- **tabs:** already matches — tab label 18/22 Graphik Semibold wt400 uppercase #000, padding 0 12px, height
+  38, constant across VPs (sage track + black active indicator reproduced). No change.
+- **video-embed:** already matches — consent-placeholder message 14/21 Graphik Regular wt400 #333 centered;
+  "cookie preferences" link 14px #418fde underlined. No change.
+- **social:** icon-only share bar (Facebook/X/LinkedIn/copy/print) — NO visible text on source or ours, so no
+  typography to match; geometry already built to parity. No change.
+Verified our samples reproduce the corrected values at 390/768/1200. Gates: lint 0 errors · breakpoints ✓ ·
+overflow ✓ (360→1920; quote + quote-image) · a11y ✓ (quote, quote-image, tabs, video-embed).
+
+### 2026-09-06 — quote: CORRECTION — attribution is BOLD 700 (prior 500 reading was the h4, not the <b>)
+The prior entry set the quote attribution to weight 500 — WRONG. Re-measured with the child selector: the
+source attribution is an **`<h4>` wrapping a `<b>`**; the h4 element computes 500 but the VISIBLE text is the
+inner `<b>` at **weight 700**. So the name renders BOLD (matches the user's screenshot — source is clearly
+bolder than ours was). Reverted `.quote .quote-attribution p` to `font-weight: 700` (kept upright/not-italic,
+centered, 22/24.2 → 28/30.8 @768). Verified @390 (22/24.2 wt700) and @1200 (28/30.8 wt700), upright, centered.
+Lesson: when the source wraps text in `<b>`/`<em>`/`<strong>`, measure the INNER element — the block-level
+computed weight can differ from what's actually painted. Gates: lint 0 errors · overflow ✓ · a11y ✓.
+
+### 2026-09-06 — quote: attribution is BOLD + ITALIC (source nests <h4><b><i>, not just <b>)
+User flagged the attribution still looked wrong — the source is bold AND slanted. Walked the FULL element
+chain: the source nests `<h4>` > `<b>` > **`<i>`** — the innermost `<i>` computes **italic 700**. My prior
+walk stopped at the `<b>` (700, upright) and missed the `<i>`, so I'd wrongly set `font-style: normal`.
+Restored `.quote .quote-attribution p` to `font-weight: 700` + **`font-style: italic`** (Graphik Semibold,
+black, centered, 22/24.2 → 28/30.8 @768). Verified @1200 (28/30.8 wt700 italic) + @390 (22/24.2 wt700 italic),
+screenshot confirms the slant matches the source. Lesson reinforced: walk to the DEEPEST text-bearing element
+(`<h4><b><i>`), not just the first wrapper — each nested tag can add weight/style.
+
+### 2026-09-06 — quote-image: attribution is ITALIC (source wraps it in <i>) — reverted the upright override
+Same deep-element issue on quote-image: the source attribution is `<p>` > **`<i>`** — the `<i>` computes
+**italic**, weight 400, Graphik Regular, 16/24 @390 → 18/24 @1200, right, #000. In the earlier pass I'd wrongly
+set it upright + added `.quote.image .quote-image-text p em { font-style: normal }`. Reverted: attribution `p`
+is now `font-style: italic` and removed the em-normalize rule (the sample's `<em>` now renders italic like the
+source `<i>`). Verified @1200 (18/24 wt400 italic right) + @390 (16/24 wt400 italic right); quote h2 unchanged
+(44→76 XXCond Bold wt500 centered). Gates: lint 0 errors · overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-06 — quote.tweet: source is a BARE blockquote (no card, no bird) + new `float-left` section style
+User's source/migrated screenshots showed our tweet as a bordered CARD with a Twitter bird glyph — the SOURCE
+renders it as a **bare blockquote** (the platform.twitter.com widget never upgrades the markup): plain tweet
+text + inline blue links, then a plain "— Name (@handle) Date" line, NO border/background/radius/shadow and
+NO bird. Measured on the live source (carol-ngounoue-runner-up-wimbledon-event.html) at 390/768/1200:
+padding **10px 20px**; body/footer `<p>` Graphik Regular wt400 **#333** left, **16/22.857 → 18/25.714 @768**;
+links **#0357b8** wt400 (date link 17.5/25 — a hair smaller in-source, we normalize to body size); footer sits
+one blank line (~1× line-height) below the body.
+- `blocks/quote/quote.js` `decorateTweet()`: removed the bird SVG; now just tags row0 `quote-tweet-body`,
+  row1 `quote-tweet-footer`.
+- `blocks/quote/quote.css` `.quote.tweet*`: stripped ALL card chrome + the `.quote-tweet-bird` rules; set the
+  bare-blockquote type scale above. Inline body links keep an underline (WCAG link-in-text-block) — a minimal,
+  documented deviation from the source's color-only links so axe passes; the standalone handle/date links stay
+  clean like the source.
+- **New block-agnostic section style `float-left`** (`styles/styles.css`): reproduces the source article that
+  embeds a tweet mid-copy (the 3rd screenshot). Because EDS splits a section into separate wrappers
+  (heading → block → body text), floating the block's wrapper lets the FOLLOWING default-content paragraphs
+  reflow around it — **no block-in-block needed**. @≥768 the section becomes an 810px centered container and the
+  first non-default-content wrapper floats left (width 350, max 45%, 30px right gutter); MOBILE stacks (no float,
+  global 328px column). Sample: `content/drafts/sections-samples/section-float-tweet.plain.html`.
+Verified: tweet renders as bare blockquote (border/bg/radius/shadow all 0/none, no bird) matching source values
+@1200 + @390; float sample — tweet floats left (x195–545), body first line insets to x575 (30px past the float)
+and wraps on the right @1200, stacks vertically @390. Gates: lint 0 errors · breakpoints ✓ · overflow ✓
+(360→1920, both pages) · typography ✓ · a11y ✓ (both pages).
+
+### 2026-09-06 — CORRECTION: tweet-in-article is a TWO-COLUMN split, NOT a float (`float-left` → `split-left`)
+The prior `float-left` entry was wrong. User's source/migrated screenshots showed two problems: (1) I'd
+NARROWED the section to 810px — it should stay the DEFAULT page content width (720/970/1170, same as the home
+page); (2) with a float, the taller text column wrapped its tail paragraphs BACK UNDER the tweet (full-width),
+"spreading" the content. Measured the LIVE source at 1200: the blockquote and the body text are **two equal
+independent columns** (each 555px, 30px gutter, same top) — `float:none` on both; the text NEVER flows under
+the tweet. So the correct model is a 2-col GRID, not a float.
+- Replaced `.section.float-left` with **`.section.split-left`** (`styles/styles.css`): @≥768 the SECTION becomes
+  the centered default content-width grid (720/970/1170 per tier — as wide as the home page), `grid-template-
+  columns: 1fr 1fr`, 30px gutter, `align-items:start`. Wrappers are grid items: default content spans both
+  columns (heading row); the block wrapper → col 1 / row 2; the `.default-content-wrapper` that FOLLOWS the
+  block (`~` sibling) → col 2 / row 2. MOBILE (<768) stays `display:block` so everything stacks in the global
+  328px column (tweet then body). No block-in-block needed — the section grids EDS's own per-wrapper divs.
+- Sample `content/drafts/sections-samples/section-float-tweet.plain.html` updated to `style: split-left`.
+Verified @1200: section 1170px full width, tweet left col (15→585) + text right col (615→1185), same top (763),
+30px gutter, text column taller (bottom 1219) and stays entirely right — no wrap-under. @390: stacks, both
+328px. Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (360→1920) · typography ✓ · a11y ✓.
+
+### 2026-09-06 — quote.tweet: blank line between body paragraphs (source uses <br><br>)
+User flagged the missing gap below "What an experience! Still taking it all in." The source blockquote is a
+SINGLE `<p>` that separates its two sentences with a **double `<br>`** (one blank line ≈ one line-height). Our
+body is authored as two separate `<p>` with `margin:0`, so there was no gap. Added
+`.quote.tweet .quote-tweet-body p + p { margin-top: 22.857px }` (→ 25.714px @768) so the gap between body
+paragraphs equals one line-height, matching the source's blank line (only BETWEEN paragraphs, not after the
+last). Verified @1200: 26px gap between the two body paragraphs. Gates: lint 0 errors · breakpoints ✓ ·
+overflow ✓ · a11y ✓.
+
+### 2026-09-06 — columns (default): image captions + smart image-side (left/right)
+Source (carol-ngounoue article) places body text in one column and an image WITH a caption in the other; the
+default columns block had TWO gaps: (1) NO caption handling — an authored caption paragraph just rendered as a
+stray italic <p>; (2) the image could ONLY sit left — the CSS pinned the image column with `order:0` and gave
+the other cell `order:1` (reset to `unset` only on the non-image cell at 992), so authoring the image second
+still forced it left.
+- `blocks/columns/columns.js` `decorateDefault()`: for any cell containing a `<picture>`, wrap the image (+ the
+  following caption paragraph, if any) in a semantic `<figure class="columns-figure">` / `<figcaption
+  class="columns-caption">`, moving caption content (inline links preserved), then replace the cell contents.
+  Dropped nothing else — the image SIDE now simply follows the AUTHORED cell order (image cell first = left,
+  second = right), since the row lays out in DOM order.
+- `blocks/columns/columns.css`: removed the `order:0/1/unset` overrides (they broke image-right) and the now-dead
+  `.columns-img-col` img rule; base `.columns > div` at ≥992 changed `align-items: center → start` (so a short
+  text column top-aligns with a tall image, like the source) and dropped `order:unset`. Added `.columns-figure`
+  (margin 0) + `.columns-caption` styled to the source figure caption: Graphik Regular **16/22.857**, wt400,
+  **#333**, left, **upright** (`em`→normal), **4px** below the image.
+Sample: `content/drafts/block-samples/columns-caption.plain.html` — two blocks: text-first (image RIGHT, matches
+the source screenshot) and image-first (image LEFT). Verified @1200: block0 image right (612→1185) + block1 image
+left (15→588), caption 16/22.857 #333 upright 4px below image on both; @390 stacks in authored order, image+
+caption together, 328px. Regression: columns-feature-collage/-video/-stats/-statement overflow ✓ (base-rule
+change didn't affect the feature/stats variants — they own their row layout). Gates: lint 0 errors ·
+breakpoints ✓ · overflow ✓ (360→1920) · typography ✓ · a11y ✓.
+
+### 2026-09-06 — columns (default): vertical gap between stacked cells on mobile/tablet
+The stacked layout (<992) had `flex-direction:column` with NO gap, so the image/caption butted directly against
+the body text. Moved the `gap: 24px` up from the ≥992 rule to the base `.columns > div` so it applies in BOTH
+states: stacked (mobile+tablet) it's the vertical gap between the text cell and the image/caption cell; from 992
+the row goes horizontal and the same gap sits between the columns. Verified 24px gap @390 and @768. Gates: lint
+0 errors · breakpoints ✓ · overflow ✓ · a11y ✓.
+
+### 2026-09-06 — columns (default): reframed as a MEDIA column (caption optional)
+Per feedback, the feature is a two-column block with a MEDIA (image) column — the caption is optional, not the
+defining trait. No code change needed: `decorateDefault()` already wraps any picture cell in a `<figure>` and
+only adds a `<figcaption>` when a caption paragraph is present, so a media cell with no caption renders the image
+alone (verified: block with a bare `<picture>` → `<figure>` with just the `<img>`, no empty figcaption). Added a
+clearer sample `content/drafts/block-samples/columns-media.plain.html` showing BOTH: image-right WITH a caption
+(text cell first) and image-left with NO caption (image cell first). Verified @1200 both render correctly; gates:
+overflow ✓ · typography ✓ · a11y ✓. (The earlier `columns-caption` sample stays — content dir is preserved — but
+`columns-media` is the canonical one.)
+
+### 2026-09-06 — social: icon row alignment is viewport-dependent (centered <768, left ≥768)
+User's source/migrated mobile screenshots differed: ours left-aligned the 5 share icons at ALL viewports; the
+SOURCE (.v-social-media-sharing) CENTERS them on mobile and only left-aligns from 768. Measured the live source
+across the 768 boundary: at 767 the group is `display:block; text-align:center` (icon row centered in the 328px
+column — mobile icons span x75→315 of 31→359); at 768 it flips to `inline-block; text-align:start` (row starts
+at content-left x30). Icon geometry constant everywhere: 48×48 buttons, 12px padding, 0 gap (they abut); the
+source wraps the bar in `padding: 8px 0`. Earlier MIGRATION note ("left-aligned, constant across viewports") was
+wrong for mobile.
+- `blocks/social/social.css`: `.social-bar` base `justify-content: center` (mobile) + `padding: 8px 0`; added
+  `@media (width>=768px){ justify-content: flex-start }`. Icon size/padding/gap unchanged (already matched).
+Verified our sample @390: bar 31→359, icons centered 75→315 (240px row), 48×48, 8px vpad — matches source
+mobile exactly; @768: left-aligned (icons start at content-left). Gates: lint 0 errors · breakpoints ✓ ·
+overflow ✓ (360→1920) · a11y ✓.
+
+### 2026-09-06 — table: header is NOT bold + 24px header→body gap (source is plain two-column text)
+User's source/migrated screenshots differed. Measured the live source (2023-njtl-essay-contest-winners): the
+"Winners"/"NJTL Chapter" header is NOT a bold table header — it's plain body text (Graphik Regular, weight 400,
+18/24, black), just the first line of each column, followed by a 24px BLANK LINE (empty in-column <p>) before
+the first group. Our table block rendered the header as `<th>` at weight 700 with NO gap to the body — two
+visible mismatches. Body typography already matched (18/24, wt400, black, margin 0; source cols 555px + 30px
+gutter → our fixed table-layout + `--grid-gap` padding reproduces this).
+- `blocks/table/table.css` `.table thead th`: weight 700 → **400**; added **padding-bottom: 24px** to reproduce
+  the source's blank-line header→body separation (works even when no blank <p> is authored). Merged into one rule
+  to avoid a duplicate-selector lint.
+Verified across viewports: @1200 header wt400 + 24px gap to first group; @390 stacked (header wt400, 24px gap,
+all 328px); @768 two columns side-by-side (360px each), header wt400, 24px gap. Gates: lint 0 errors ·
+breakpoints ✓ · overflow ✓ (360→1920) · typography ✓ · a11y ✓.
+
+### 2026-09-06 — Typography parity sweep across ALL block samples (non-heading text elements)
+Ran the automated h1..h6/body checker across all 27 block samples — ALL pass at 390/768/992/1200. Then did
+deep per-ELEMENT source-vs-migrated measurement (buttons, captions, labels, dates, tab labels, stat numbers,
+CTAs — things the global checker doesn't cover) via Playwright at 3 viewports. Delegated measurement to parallel
+subagents, then VERIFIED every reported drift on the live source myself (subagents made several errors — see
+"rejected" below). Genuine, source-confirmed drifts fixed:
+
+GLOBAL (root cause of most drift): source DEFAULT body/copy text is pure **BLACK** (rgb(0,0,0)), measured on
+article + home templates; ours used `--text-color: #333` on `body`. Changed `styles/styles.css` `body` color and
+`main .default-content-wrapper li` color to `var(--dark-color)` (#000) — WITHOUT touching the `--text-color`
+token (still #333, correctly used by quote-tweet body + columns image caption, which measured #333 on source).
+This one change fixed the grey drift on: columns-statement body, tabs panel body, cards-profile staff list.
+
+BLOCK-SPECIFIC:
+- columns-feature-collage: body `<p>` was forced `text-align:left` (collage override) — source is **center**.
+  Removed the `.columns.feature:has(.columns-feature-collage) h3, p { text-align:left }` override (base
+  `.columns.feature p` is already center = source).
+- cards-support: LEARN MORE authored as `<a><strong>` rendered bold+no-underline; source is regular-weight
+  underlined blue link. Added `.cards.support …a strong/b { font-weight:400; text-decoration:inherit }`.
+- custom-widget-reactions: source TEXT (title + prompt) is LEFT-aligned; only the emoji controls row is centered.
+  Changed the block from all-centered to `align-items:stretch; text-align:left` (controls keep their own
+  `justify-content:center`). "Be the first" color already matched (#333 both).
+- columns-statement (sample authoring bug): the `center, narrow` Section Metadata was in a SEPARATE section div
+  from the h2/p, so the style never applied (left + grey). Fixed the sample so metadata sits in the content
+  section → now center + black like source.
+
+REJECTED (subagent claims that were WRONG on live-source re-measurement, left unchanged): h2 does NOT shrink to
+44px at 1200 (source = 76px/83.6 at 1200, matches our recorded scale + checker); collage CTA letter-spacing 1px
+is CORRECT (it's a blue button, not a plain link); cards-profile role IS italic on source (inner `<i>`), our
+italic is correct; related-articles/cards-news date weight is 900 at mobile/tablet but 400 at desktop — a real
+responsive change but on the single-weight "Graphik Regular" face (synthetic bold, negligible), left as-is.
+
+Verified all fixes at 390/768/1200 on the migrated samples (tabs body #000, collage body center+#000, cards-
+support CTA wt400+underline, reactions text-left + emoji-centered, cards-profile staff #000 + role italic #000,
+statement center+#000). Gates: lint 0 errors · breakpoints ✓ · typography ✓ (all changed samples) · overflow ✓
+(collage/video/support) · a11y ✓ (statement/support/reactions — #000 on #fff also improves contrast).

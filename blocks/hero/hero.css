@@ -243,26 +243,14 @@ main > .section.hero-container:has(.hero.banner) {
   margin: 0 auto;
 }
 
-/* bouncing tennis-ball graphic above the heading (source uses an animated ball) */
-.hero.error > div > div::before {
-  content: '';
+/* Bouncing-ball illustration above the heading — the source's blue line-art SVG
+   (tennis-ball-bouncing.svg), NOT a solid ball. Source renders it 116×174 (of a
+   128×193 viewBox) on desktop; ~96px wide on mobile. Centered, decorative. */
+.hero.error .hero-error-ball {
   display: block;
   width: 96px;
-  height: 96px;
+  height: auto;
   margin: 0 auto 32px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #d4e94a, #b6d40a 70%);
-  box-shadow: inset -6px -8px 0 rgb(0 0 0 / 8%);
-  animation: hero-error-bounce 1.2s ease-in-out infinite;
-}
-
-@keyframes hero-error-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-24px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero.error > div > div::before { animation: none; }
 }
 
 .hero.error h1 {
@@ -273,18 +261,20 @@ main > .section.hero-container:has(.hero.banner) {
   text-align: center;
 }
 
-/* CTA — filled brand-blue button, 40px tall, matches the site button style */
+/* CTA — source is a BLACK PILL (not brand-blue): #000 bg, white text, fully
+   rounded (border-radius 9999px), 56px tall, 18px Graphik Semibold uppercase
+   with +1px letter-spacing. */
 .hero.error a.button:any-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  height: 40px;
+  height: 56px;
   margin: 32px 0 0;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: 9999px;
   padding: 14px 24px;
-  background-color: var(--brand-blue);
+  background-color: #000;
   color: #fff;
   font-family: var(--heading-semibold-font-family);
   font-size: 18px;
@@ -307,9 +297,9 @@ main > .section.hero-container:has(.hero.banner) {
     padding: 120px 0;
   }
 
-  .hero.error > div > div::before {
-    width: 120px;
-    height: 120px;
+  /* desktop: source renders the illustration 116×174 */
+  .hero.error .hero-error-ball {
+    width: 116px;
     margin-bottom: 40px;
   }
 }

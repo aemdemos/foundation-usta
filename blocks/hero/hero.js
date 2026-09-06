@@ -9,18 +9,25 @@
  */
 
 /**
- * Hero Error (404) variant — centered "page not found" message with a
- * bouncing tennis-ball graphic above a heading and a "back to homepage" CTA.
+ * Hero Error (404) variant — centered "page not found" message with the source's
+ * blue line-art bouncing-tennis-ball graphic above a heading and a "back to
+ * homepage" CTA (a black pill).
  * Source: https://www.ustafoundation.com/en/home/404.html
  *
  * Authoring model (rows):
  *   row 1 → cell: <h1> heading + a <p><a> CTA link
- * The CTA link is decorated as a filled button.
+ * The CTA link is decorated as a pill button; the graphic is prepended here.
  *
  * @param {Element} block the hero block element
  */
+
+// The source renders the illustration as an SVG (tennis-ball-bouncing.svg) — the
+// blue line-art of a bouncing ball, NOT a solid green ball. Self-hosted in this
+// block's icons/ folder; resolved relative to this module so it loads on any path.
+const ERROR_BALL_SRC = new URL('./icons/tennis-ball-bouncing.svg', import.meta.url).href;
+
 function decorateError(block) {
-  // Standalone CTA link renders as a filled button (matches the source CTA).
+  // Standalone CTA link renders as a filled (pill) button — matches the source.
   block.querySelectorAll('p > a').forEach((a) => {
     const p = a.parentElement;
     if (p.childElementCount === 1 && p.textContent.trim() === a.textContent.trim()) {
@@ -28,6 +35,20 @@ function decorateError(block) {
       p.classList.add('button-container');
     }
   });
+
+  // Prepend the source's bouncing-ball illustration above the heading.
+  const cell = block.querySelector(':scope > div > div') || block.firstElementChild;
+  if (cell && !cell.querySelector('.hero-error-ball')) {
+    const img = document.createElement('img');
+    img.className = 'hero-error-ball';
+    img.src = ERROR_BALL_SRC;
+    img.alt = ''; // decorative — the h1 carries the message
+    img.setAttribute('aria-hidden', 'true');
+    img.setAttribute('loading', 'lazy');
+    img.width = 128;
+    img.height = 193;
+    cell.prepend(img);
+  }
 }
 
 /**

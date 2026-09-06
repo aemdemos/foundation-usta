@@ -933,6 +933,15 @@
   white-space: normal;
 }
 
+/* Source LEARN MORE is regular weight. Authors sometimes wrap it in <strong>
+   (bold, undecorated), which would override the link — normalize the inner
+   emphasis back to regular weight + inherit the link's underline. */
+.cards.support .cards-support-card-body a strong,
+.cards.support .cards-support-card-body a b {
+  font-weight: 400;
+  text-decoration: inherit;
+}
+
 .cards.support .cards-support-card-body a.button:hover,
 .cards.support .cards-support-card-body a.button.primary:hover {
   background: transparent;
