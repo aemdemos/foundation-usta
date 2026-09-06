@@ -560,16 +560,19 @@
   box-sizing: border-box;
   list-style: none;
   margin: 0 auto;
-  padding: 0 24px;
+
+  /* Mobile side inset: source card is 310 wide inside the 328 content column →
+     ~9px each side (NOT 24px, which shrank the card to 280 and over-indented). */
+  padding: 0 9px;
   display: grid;
   grid-template-columns: 1fr;
   gap: 40px 30px; /* row 40px; column gap only applies once multi-column */
 
-  /* Source cards HUG their content (each card's height = its own content — a
-     3-line role makes only that card taller). Default grid `align-items:stretch`
-     equalizes row heights, adding empty space below shorter cards; `start` makes
-     each card size to its content like the source. */
-  align-items: start;
+  /* Cards in a row share EQUAL height (source: every card in a row lines up to
+     the same bottom — a longer role just makes the whole row taller). The grid's
+     default `align-items: stretch` does this; the flex-column card below fills
+     that height with white so the shadowed box bottoms align across the row. */
+  align-items: stretch;
 }
 
 /* White shadowed card. Source: #fff, box-shadow rgba(0,0,0,.5) 0 2px 5px.
@@ -714,11 +717,11 @@
    mobile via the `ul` padding; a centered max-width column from 768), leaving the
    default-content wrapper at the section edge — which mis-aligns it LEFT of the
    cards. Match the card inset so heading + list line up with the images.
-   MOBILE: the card `ul` has `padding: 0 24px`, so add the same 24px to the
-   default content. */
+   MOBILE: the card `ul` has `padding: 0 9px`, so match that 9px inset on the
+   default content (source: "Our Staff" left 39 vs tab 31 ≈ 8–9px). */
 main .section:has(.cards.profile) .default-content-wrapper {
   box-sizing: border-box;
-  padding-inline: 24px;
+  padding-inline: 9px;
 }
 
 /* From 768 the card grid is a centered max-width column (no side padding); match

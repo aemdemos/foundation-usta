@@ -12,21 +12,46 @@
 .toc-profile {
   box-sizing: border-box;
   width: 100%;
+
+  /* Space ABOVE the tab bar — the sample authors the intro heading/paragraph in
+     the SAME section as the bar, so there's no spacer between them; the source
+     leaves ~77px above the tab row. Add it here (a bit less on mobile). Bottom
+     margin gives the ~32px source gap from the bar down to the active panel's
+     heading (the panel section's own top margin/spacer adds the rest). */
+  margin-top: 48px;
+  margin-bottom: 8px;
 }
 
-/* the tab row. `position: relative` anchors the absolutely-positioned indicator;
-   the 6px bottom border is the source's full-width sage track. */
+@media (width >= 768px) {
+  .toc-profile {
+    margin-top: 77px; /* source content→tab-row gap */
+  }
+}
+
+/* the tab row. `position: relative` anchors the absolutely-positioned track +
+   indicator; `padding-bottom: 6px` reserves the band they occupy at the bottom. */
 .toc-profile .toc-profile-nav {
   position: relative;
   display: flex;
   gap: 0;
   overflow-x: auto;
   scrollbar-width: none; /* Firefox */
-  border-bottom: 6px solid #dcdfcf; /* source full-width sage track */
+  padding-bottom: 6px; /* room for the 6px track + indicator band */
 }
 
 .toc-profile .toc-profile-nav::-webkit-scrollbar {
   display: none; /* WebKit */
+}
+
+/* full-width sage track — the base bar under the whole tab row. */
+.toc-profile .toc-profile-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: #dcdfcf;
+  pointer-events: none;
 }
 
 /* each tab — source: 18px Graphik Semibold, uppercase, black, 0 12px padding,
@@ -59,12 +84,13 @@
   outline-offset: -2px;
 }
 
-/* the single sliding indicator — sits on top of the sage track, black, 6px,
-   translated/resized to the active tab. The transition makes the move seamless
-   (source parity). */
+/* the single sliding indicator — sits ON the sage track (same 6px band, same
+   bottom:0), black, translated/resized to the active tab. Sharing the exact
+   bottom+height as the track keeps them pixel-flush (no doubled/offset line).
+   The transition makes the move seamless (source parity). */
 .toc-profile .toc-profile-indicator {
   position: absolute;
-  bottom: -6px; /* overlay the 6px sage track */
+  bottom: 0;
   left: 0;
   width: 0;
   height: 6px;

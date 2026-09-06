@@ -630,6 +630,36 @@ main .section.narrow > div {
 
 /* stylelint-disable no-descending-specificity */
 
+/* toc-profile tabs: collapse a spacer section that borders a HIDDEN panel. When
+   a tab hides a panel section (`.toc-profile-panel[hidden]`), the spacer authored
+   next to it would otherwise stay and open a large empty gap before the visible
+   panel. Hide the spacer that immediately precedes or follows a hidden panel. */
+main > .section.spacer-container:has(+ .section.toc-profile-panel[hidden]),
+main > .section.toc-profile-panel[hidden] + .section.spacer-container {
+  display: none;
+}
+
+/* Tighten the gap from the tab bar down to the active panel to the source's
+   ~32px. The toc section, an optional spacer, and the panel section each carry
+   40px section margins that stack into a large gap; zero the toc's bottom margin
+   and cap the visible panel's top margin so the tab-row→panel distance matches
+   the source regardless of which panel (and how many orphaned spacers) sit
+   between them. */
+main > .section.toc-profile-container {
+  margin-bottom: 0;
+}
+
+main > .section.toc-profile-container ~ .section.toc-profile-panel:not([hidden]) {
+  margin-top: 32px;
+}
+
+/* A spacer that survives between the toc and the visible first panel (its
+   neighbours are the toc + a VISIBLE panel, so it isn't collapsed above) would
+   re-inflate the gap — zero it so only the 32px panel margin remains. */
+main > .section.toc-profile-container + .section.spacer-container {
+  display: none;
+}
+
 /* Blue spacer floating after the video / impact feature sections: give the
    spacer section whitespace above and below (source ~56 above / 76 below on
    desktop, 40/60 on mobile). */

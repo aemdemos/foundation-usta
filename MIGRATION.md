@@ -1671,3 +1671,49 @@ already matched. The two real diffs:
 Verified @390/768/1200: img→name 16px, role→card-bottom ~10px (source ~11), cards hug content (heights vary by
 role length) at every viewport. Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (toc-profile + cards-profile
 regression) · a11y ✓.
+
+### 2026-09-06 — toc-profile: fix published-page spacing (space above bar, tab→panel gap, orphaned spacers)
+On the pushed EDS page the tab section had 3 spacing faults (root cause: the sample authors intro+bar in one
+section and separate spacer sections around each panel; when a tab hides a panel, its spacers orphan):
+- NO space above the bar (intro→bar 5px): added `.toc-profile` `margin-top` 48px mobile / **77px ≥768** (source
+  content→tab-row gap) + small `margin-bottom`.
+- HUGE tab→panel gap (125–185px): the hidden panel's bordering spacers stayed, and the toc + spacer + panel
+  section margins stacked. Fixes in `styles.css`: (a) hide spacers bordering a hidden panel
+  (`.spacer-container:has(+ .toc-profile-panel[hidden])` and the after-variant); (b) hide any spacer directly
+  after the toc section; (c) zero `.toc-profile-container` bottom margin and cap the visible panel's top margin
+  to **32px** (source). JS marks each panel section `.toc-profile-panel` (AFTER the entries loop populates the
+  panels map — the earlier bug was marking before it was populated, so the class never applied).
+- Result is uniform: tab-row→panel heading = 45px @1200 / 32px @390 for BOTH tabs (source ~32).
+Also confirmed the bar/indicator geometry already matches source (6px sage track #dcdfcf + 6px black sliding
+indicator, tabs 38px, 0 12px padding) — the "black border" seen was the pre-fix published state.
+NOTE: these are CODE changes (blocks/toc-profile/* + styles.css) — must be committed+pushed to `main` for the
+aem.live page to update (content was already on DA). Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (toc +
+table-directory + cards-profile regression) · a11y ✓.
+
+### 2026-09-06 — cards.profile: equal-height cards per row (revert prior hug-content)
+User wants the profile cards the SAME height. Reverted the previous `align-items: start` (hug-content) back to
+the grid default `align-items: stretch` on `.cards.profile > ul`, so every card in a row stretches to the row's
+tallest — the shadowed white box bottoms line up across the row (a longer role makes the whole row taller,
+matching how the source rows read as aligned). Verified equal height per row at all viewports: @768 all 441px,
+@1200 all 417px, @390 one-per-row. Gates: lint 0 errors · breakpoints ✓ · overflow ✓ (toc-profile + cards-profile)
+· a11y ✓.
+
+### 2026-09-06 — cards.profile MOBILE inset: match source (9px, not 24px)
+User: mobile title/bar/image vertical alignment off. Measured source @390: tab/track left 31, "Our Staff" left
+39, card image left 40 / width 310 (≈9px inset each side of the 328 column). Ours had a 24px inset → heading+
+image at 55, image only 280 wide. Fixed: `.cards.profile > ul` mobile `padding: 0 24px → 0 9px`, and the
+profile-section default-content `padding-inline: 24px → 9px`. Now @390: "Our Staff" 40, image 40 / width 310,
+heading aligns image — matches source; tab bar stays at the 31 content edge (source parity: bar ~8px left of the
+indented heading/image). No regression @768 (42/162) or @1200 (45/255). Gates: lint 0 · breakpoints ✓ · overflow
+✓ (toc-profile + cards-profile) · a11y ✓.
+
+### 2026-09-06 — toc-profile: track + indicator as flush siblings (fix doubled/offset bar)
+User saw an inconsistent black underline with an "extra layer" over the sage track. Cause: the sage track was
+the nav's `border-bottom` and the black indicator was `position:absolute; bottom:-6px` overlaying it — a
+border + negative-offset overlay can drift a subpixel (esp. at mobile DPR), reading as a doubled/offset line.
+Fix: made BOTH the track and indicator absolutely-positioned sibling spans at `bottom:0; height:6px` inside a nav
+with `padding-bottom:6px` (source model — a `.cmp-tabs__background-border` + `.cmp-tabs__border`). JS now creates
+a `.toc-profile-track` span alongside the indicator; CSS drops the border for a full-width `.toc-profile-track`
+and moves the indicator to `bottom:0`. Verified pixel-flush @390 + @1200: track+indicator share the same
+bottom/height, indicator matches the active tab left/width, track full-width. Gates: lint 0 · breakpoints ✓ ·
+overflow ✓ · a11y ✓.

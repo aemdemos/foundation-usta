@@ -86,7 +86,14 @@ export default function decorate(block) {
   nav.className = 'toc-profile-nav';
   nav.setAttribute('aria-label', 'Page sections');
 
-  // sliding indicator bar (single element translated under the active tab)
+  // Full-width sage track + the black sliding indicator, as TWO absolutely-
+  // positioned siblings sharing the exact same 6px band at the nav's bottom
+  // (source model). Keeping both as elements — rather than a border for the track
+  // — guarantees they sit pixel-flush (a border + negative-offset overlay can
+  // drift a subpixel and read as a doubled/offset line).
+  const track = document.createElement('span');
+  track.className = 'toc-profile-track';
+  track.setAttribute('aria-hidden', 'true');
   const indicator = document.createElement('span');
   indicator.className = 'toc-profile-indicator';
   indicator.setAttribute('aria-hidden', 'true');
@@ -119,7 +126,8 @@ export default function decorate(block) {
         link.removeAttribute('aria-current');
       }
     });
-    panels.forEach((section, slug) => {
+    panels.forEach((el, slug) => {
+      const section = el.closest('.section') || el;
       section.hidden = slug !== anchor;
     });
     moveIndicator(activeLink);
@@ -141,9 +149,18 @@ export default function decorate(block) {
     if (section) panels.set(entry.anchor, section);
   });
 
+  // Mark each panel SECTION so CSS can collapse spacers adjacent to a hidden
+  // panel (`.toc-profile-panel`; the CSS uses `:has()`/sibling selectors to hide
+  // a spacer bordering a hidden panel — see styles.css). Must run AFTER the
+  // entries loop above has populated `panels`.
+  panels.forEach((el) => {
+    const section = el.closest('.section') || el;
+    section.classList.add('toc-profile-panel');
+  });
+
   nav.setAttribute('role', 'tablist');
   block.textContent = '';
-  nav.append(indicator);
+  nav.append(track, indicator);
   block.append(nav);
 
   // Ensure each target section has an id matching its slug so the hash links work
