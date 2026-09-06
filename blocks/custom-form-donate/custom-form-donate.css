@@ -1,8 +1,9 @@
 /* custom-form-donate — STATIC reproduction of the inline FundraiseUp donation
-   widget on the source page. The live source is a third-party embed that cannot
-   be measured programmatically, so geometry/typography are matched by eye to
-   migration-work/report-imgs/custom-form-donate.png, using project brand tokens
-   (colors, fonts) for consistency with the rest of the site. Pixel-first units. */
+   widget on the source page. The source is a fixed-width (~360px) card that
+   renders identically at every viewport (a third-party iframe, min 286 / max
+   376px). Geometry/typography below are measured from the live widget at the
+   element level (card, pills, tiers, honoree, tooltip, CTA) so positions,
+   dimensions and paddings match 1:1 across all breakpoints. Pixel-first units. */
 
 .custom-form-donate {
   --cfd-blue: var(--brand-blue); /* #0373f3 */
@@ -10,21 +11,25 @@
   --cfd-ink: #21272a;            /* near-black form text */
   --cfd-muted: #697077;          /* placeholder / secondary labels */
   --cfd-border: #c1c7cd;         /* neutral control border */
+  --cfd-card-border: #dedfe3;    /* card outline (source: 2px solid) */
   --cfd-tooltip-bg: #fcf3d2;     /* cream info bubble */
 
   font-family: var(--body-font-family);
   color: var(--cfd-ink);
 }
 
+/* The card — source: fixed ~360px wide, centered, 20px padding, 14px radius,
+   2px neutral border. Same at every viewport (fluid down, capped at 360). */
 .custom-form-donate .cfd-form {
   box-sizing: border-box;
-  max-width: 700px;
+  width: 100%;
+  max-width: 360px;
   margin-inline: auto;
-  padding: 32px;
+  padding: 20px;
   background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 16px;
-  box-shadow: 0 8px 28px rgb(0 0 0 / 8%);
+  border: 2px solid var(--cfd-card-border);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 6%);
 }
 
 .custom-form-donate .cfd-form *,
@@ -51,27 +56,28 @@
   border: 0;
 }
 
-/* ---- Frequency toggle -------------------------------------------------- */
+/* ---- Frequency toggle — two pills, 40px tall, 16px semibold --------------- */
 .custom-form-donate .cfd-frequency {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 8px;
 }
 
 .custom-form-donate .cfd-freq {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   justify-content: center;
-  min-height: 54px;
-  padding: 8px 16px;
+  min-height: 40px;
+  padding: 6px 12px;
   font-family: var(--heading-semibold-font-family);
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1.2;
+  font-weight: 600;
   color: var(--cfd-ink);
   background-color: #fff;
   border: 2px solid var(--cfd-border);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -82,63 +88,64 @@
 }
 
 .custom-form-donate .cfd-heart {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   fill: #f0475f;
 }
 
-/* ---- Title ------------------------------------------------------------- */
+/* ---- Title — 16px/24 regular, centered ----------------------------------- */
 .custom-form-donate .cfd-title {
-  margin: 32px 0;
+  margin: 20px 0;
   font-family: var(--body-font-family);
-  font-size: 22px;
-  line-height: 1.3;
+  font-size: 16px;
+  line-height: 24px;
   font-weight: 400;
   text-align: center;
   color: var(--cfd-ink);
 }
 
-/* ---- Amount tiers ------------------------------------------------------ */
+/* ---- Amount tiers — 3-col grid, 40px tall tiles, 16px --------------------- */
 .custom-form-donate .cfd-amounts {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 4px;
 }
 
 .custom-form-donate .cfd-amount {
-  min-height: 56px;
-  padding: 8px;
+  min-height: 40px;
+  padding: 4px;
   font-family: var(--body-font-family);
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1.2;
   color: var(--cfd-ink);
   background-color: #fff;
-  border: 1px solid var(--cfd-border);
-  border-radius: 8px;
+  border: 2px solid var(--cfd-border);
+  border-radius: 6px;
   cursor: pointer;
 }
 
 .custom-form-donate .cfd-amount[aria-pressed="true"] {
   font-family: var(--heading-semibold-font-family);
+  font-weight: 600;
   color: var(--cfd-blue);
   background-color: var(--cfd-blue-soft);
-  border: 2px solid var(--cfd-blue);
+  border-color: var(--cfd-blue);
 }
 
-/* ---- Custom amount ----------------------------------------------------- */
+/* ---- Custom amount — single input row, ~48px ----------------------------- */
 .custom-form-donate .cfd-custom {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 20px;
-  padding: 12px 20px;
-  min-height: 72px;
-  border: 1px solid var(--cfd-border);
-  border-radius: 8px;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  min-height: 48px;
+  border: 2px solid var(--cfd-border);
+  border-radius: 6px;
 }
 
 .custom-form-donate .cfd-currency {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 400;
   color: var(--cfd-ink);
 }
@@ -148,7 +155,7 @@
   min-width: 0;
   padding: 0;
   font-family: var(--body-font-family);
-  font-size: 40px;
+  font-size: 26px;
   line-height: 1;
   color: var(--cfd-blue);
   background: transparent;
@@ -157,34 +164,34 @@
 }
 
 .custom-form-donate .cfd-unit {
-  font-size: 18px;
+  font-size: 16px;
   color: var(--cfd-ink);
 }
 
-/* ---- Dedicate checkbox ------------------------------------------------- */
+/* ---- Dedicate checkbox — 20px box, 14px label ---------------------------- */
 .custom-form-donate .cfd-dedicate {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 8px;
+  margin-top: 20px;
 }
 
 .custom-form-donate .cfd-checkbox {
   position: relative;
   display: inline-flex;
-  width: 28px;
-  height: 28px;
-  flex: 0 0 28px;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
 }
 
 .custom-form-donate .cfd-checkbox input {
   appearance: none;
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   margin: 0;
   background-color: #fff;
-  border: 1px solid var(--cfd-border);
-  border-radius: 6px;
+  border: 2px solid var(--cfd-border);
+  border-radius: 4px;
   cursor: pointer;
 }
 
@@ -196,9 +203,9 @@
 .custom-form-donate .cfd-checkbox svg {
   position: absolute;
   inset: 0;
-  width: 28px;
-  height: 28px;
-  padding: 5px;
+  width: 20px;
+  height: 20px;
+  padding: 3px;
   fill: none;
   stroke: #fff;
   stroke-width: 3;
@@ -213,25 +220,25 @@
 }
 
 .custom-form-donate .cfd-dedicate label {
-  font-size: 20px;
-  line-height: 1.3;
+  font-size: 14px;
+  line-height: 20px;
   color: var(--cfd-ink);
   cursor: pointer;
 }
 
-/* ---- Honoree field ----------------------------------------------------- */
+/* ---- Honoree field — floating-label box, 52px tall ----------------------- */
 .custom-form-donate .cfd-field {
   position: relative;
-  margin-top: 16px;
-  padding: 12px 16px 8px;
+  margin-top: 8px;
+  padding: 6px 11px 4px;
   border: 2px solid var(--cfd-blue);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .custom-form-donate .cfd-field label {
   display: block;
-  font-size: 15px;
-  line-height: 1.2;
+  font-size: 12px;
+  line-height: 16px;
   color: var(--cfd-muted);
 }
 
@@ -239,8 +246,8 @@
   width: 100%;
   padding: 0;
   font-family: var(--body-font-family);
-  font-size: 22px;
-  line-height: 1.3;
+  font-size: 16px;
+  line-height: 24px;
   color: var(--cfd-ink);
   background: transparent;
   border: 0;
@@ -252,13 +259,13 @@
   opacity: 1;
 }
 
-/* ---- Tooltip ----------------------------------------------------------- */
+/* ---- Tooltip — 14px/20, 11/16 padding ------------------------------------ */
 .custom-form-donate .cfd-tooltip {
   position: relative;
-  margin: 16px 0 0;
-  padding: 16px 20px;
-  font-size: 18px;
-  line-height: 1.45;
+  margin: 10px 0 0;
+  padding: 11px 16px;
+  font-size: 14px;
+  line-height: 20px;
   color: var(--cfd-ink);
   background-color: var(--cfd-tooltip-bg);
   border-radius: 6px;
@@ -267,25 +274,25 @@
 .custom-form-donate .cfd-tooltip::before {
   content: "";
   position: absolute;
-  top: -8px;
-  left: 24px;
-  width: 16px;
-  height: 16px;
+  top: -6px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
   background-color: var(--cfd-tooltip-bg);
   transform: rotate(45deg);
 }
 
-/* ---- Designation ------------------------------------------------------- */
+/* ---- Designation — 14px/20 ----------------------------------------------- */
 .custom-form-donate .cfd-designation {
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
 .custom-form-donate .cfd-designation select {
   width: 100%;
   padding: 0;
   font-family: var(--body-font-family);
-  font-size: 20px;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 20px;
   color: var(--cfd-ink);
   background: transparent;
   border: 0;
@@ -294,13 +301,13 @@
   white-space: normal;
 }
 
-/* ---- Add comment ------------------------------------------------------- */
+/* ---- Add comment — 14px underline link ----------------------------------- */
 .custom-form-donate .cfd-comment {
-  margin: 20px 0 0;
+  margin: 14px 0 0;
 }
 
 .custom-form-donate .cfd-comment a {
-  font-size: 18px;
+  font-size: 14px;
   color: var(--cfd-ink);
   text-decoration: underline;
 }
@@ -310,20 +317,21 @@
   color: var(--cfd-blue);
 }
 
-/* ---- Submit ------------------------------------------------------------ */
+/* ---- Submit — full-width, 56px, 16px semibold ---------------------------- */
 .custom-form-donate .cfd-submit {
   display: block;
   width: 100%;
-  min-height: 72px;
-  margin-top: 24px;
-  padding: 16px 24px;
+  min-height: 56px;
+  margin-top: 20px;
+  padding: 12px 24px;
   font-family: var(--heading-semibold-font-family);
-  font-size: 22px;
-  line-height: 1.2;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
   color: #fff;
   background-color: var(--cfd-blue);
   border: 2px solid var(--cfd-blue);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -333,7 +341,7 @@
   border-color: var(--link-hover-color);
 }
 
-/* ---- Focus-visible (accessibility) ------------------------------------- */
+/* ---- Focus-visible (accessibility) --------------------------------------- */
 .custom-form-donate .cfd-freq:focus-visible,
 .custom-form-donate .cfd-amount:focus-visible,
 .custom-form-donate .cfd-checkbox input:focus-visible,
@@ -348,11 +356,4 @@
 .custom-form-donate .cfd-field:focus-within {
   outline: 2px solid var(--cfd-blue);
   outline-offset: 1px;
-}
-
-/* ---- Tablet / desktop -------------------------------------------------- */
-@media (width >= 768px) {
-  .custom-form-donate .cfd-form {
-    padding: 40px;
-  }
 }

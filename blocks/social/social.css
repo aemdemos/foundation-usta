@@ -20,6 +20,17 @@
   .social .social-bar {
     justify-content: flex-start; /* tablet/desktop: source left-aligns the row */
   }
+
+  /* Alignment variants — desktop/tablet only; mobile stays centered for all.
+     .social.center → icon row centered; .social.right → right-aligned (as on
+     the source news-article share bar). Default (no variant) = left. */
+  .social.center .social-bar {
+    justify-content: center;
+  }
+
+  .social.right .social-bar {
+    justify-content: flex-end;
+  }
 }
 
 .social .social-btn {

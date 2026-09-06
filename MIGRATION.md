@@ -1866,3 +1866,45 @@ decision, NOT doing that. Removed: `decorateEmbed`/dispatcher + `.embed` CSS, de
 never ships). The block is back to the single native reproduction: renders the form + hands off amount/recurring
 to the hosted page on submit (dedicate name can't round-trip via URL — FundraiseUp platform limitation, see prior
 entries). Gates: lint 0 · breakpoints ✓ · overflow ✓ · a11y ✓.
+
+### 2026-09-06 — custom-form-donate: EXACT-parity re-measure (fixed 360px card, not full-width)
+User: migrated form differs from source in positions/dimensions/paddings. Root cause found by measuring the live
+FundraiseUp widget element-by-element (Playwright into the iframe): the source is a FIXED ~360px card (iframe 376,
+card 360, 20px pad, 14px radius, 2px #dedfe3 border, 316px inner column) that renders identically at every
+viewport — but our reproduction stretched to fill the column (700px in the block sample) with ~40%-oversized
+fonts/controls. Rewrote `custom-form-donate.css` to the measured source spec: card max-width 360 (was 700), pad
+20 (was 32/40), radius 14 (was 16), border 2px #dedfe3; freq pills 40px tall / 16px w600 (was 54 / 20); heading
+16/24 (was 22); amount tiles 3-col gap 4, 40px tall, 16px, r6 (was 56 / 22 / r8); custom-amount row 48px, input
+26px (was 72 / 40); dedicate checkbox 20px + label 14/20 (was 28 / 20); honoree field 52px, floating label 12px,
+value 16/24, r6; tooltip pad 11/16, 14/20 (was 16/20, 18); designation 14/20; comment link 14; CTA 56px, 16
+w600, r6 (was 72 / 22 / r8). Verified ours vs source at 1280 — every element within 1-3px (card 360/pad20/r14,
+freq 40h, tile 103×40, honoree 316×52, tooltip pad 11/16, CTA 56h/16w600). Screenshot confirms visual match.
+Fixed-width card ⇒ identical at all viewports (no per-breakpoint rules needed; dropped the old @768 padding bump).
+Gates: lint 0 · breakpoints ✓ · overflow ✓ (360–1920) · a11y ✓ (block sample).
+NOTE: the split-even section sample 404'd locally (dev-server proxy cached the miss before the draft indexed) —
+transient, not a code issue; form parity verified on the block sample.
+
+### 2026-09-06 — split-even donate sample: quote content now matches source (real testimonial, 1-line attribution)
+The split-even sample showed placeholder quote text ("Chris Evert gave so much…") with a TWO-line attribution
+(name / affiliation), not the source's real testimonial. Fixed the sample content
+(`content/drafts/sections-samples/section-split-even-donate.plain.html`) to the source's actual quote: two
+quoted paragraphs (opening/closing “ ” marks) + a SINGLE-line attribution `- Selah Stibbins, Howard University
+'26` — identical to the served `quote` block sample. No code change: the `quote` block CSS was already
+source-matched (32/48 italic quotation, 20px inset, 40px gap, centered bold-italic attribution) and the block
+sample renders it correctly (verified: two quoted <p> + single attribution <p>; a11y ✓, overflow ✓).
+GOTCHA (why the section sample looked wrong): the AEM CLI serves *previewed* drafts from the content-bus and only
+proxies local CODE — draft `.plain.html` pages render ONLY if they've been previewed/pushed. `section-yellow` /
+`block-samples/*` render because they're on the bus; `section-split-even-donate` 404s BOTH locally and on remote
+preview because it was never previewed (confirmed via remote curl). So this sample can't render until the draft
+is pushed to preview (outward-facing, on request). The quote-block correctness is proven on the served block
+sample.
+
+### 2026-09-06 — social: added `center` + `right` alignment variants (news-article share bar sits right)
+On the news-article template the share bar (FB/Twitter/LinkedIn/copy/print) is RIGHT-aligned on desktop, but our
+social block defaulted to LEFT (centered mobile). Added two block variants in `social.css`, desktop/tablet only
+(inside the existing @768 block): `.social.center .social-bar { justify-content: center }` and `.social.right
+.social-bar { justify-content: flex-end }`. Default (no variant) stays left. MOBILE behaviour unchanged — the base
+rule centers the row for ALL variants below 768. No JS change (pure class-based). Verified computed
+justify-content: @1280 default=flex-start, center=center, right=flex-end; @390 all three = center. Sample
+`content/drafts/block-samples/social.plain.html` now shows all three (default/center/right) with h2 labels.
+Gates: lint 0 · breakpoints ✓ · overflow ✓ · a11y ✓.
