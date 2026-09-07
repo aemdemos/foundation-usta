@@ -2216,3 +2216,9 @@ source rule `.cmp-breadcrumb__navigation-item--inactive` = color #0357b8 + text-
 `a:hover` = text-decoration: none. Fixed blocks/header/header.css: split the anchor out of the shared `li, a` rule
 — `.nav-breadcrumb a { color:#0357b8; text-decoration:underline }` and `a:hover { text-decoration:none }`. The
 current-page crumb is a plain <li> (no anchor) so it stays grey. Gates: lint 0 · breakpoints ✓.
+
+### 2026-09-07 — Breadcrumb separator: `>` chevron (green), not `/`
+User: the crumb separator is a `>`, not a slash. Source `.cmp-breadcrumb__navigation-item-divider` = content `>`,
+color #01675a (brand green), padding-left 6px / padding-right 8px. Updated the `li + li::before` in
+blocks/header/header.css: content `>`, color #01675a, padding 0 8px 0 6px (was `/`, #383838, margin-right 4px).
+Gate: lint 0 errors.

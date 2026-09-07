@@ -363,10 +363,13 @@ header .nav-breadcrumb a:hover {
   text-decoration: none;
 }
 
+/* Separator between crumbs: the source uses a `>` chevron in brand green
+   (`.cmp-breadcrumb__navigation-item-divider` = #01675a, padding 6px/8px), NOT a
+   slash. */
 header .nav-breadcrumb li + li::before {
-  content: '/';
-  margin-right: 4px;
-  color: #383838;
+  content: '>';
+  padding: 0 8px 0 6px;
+  color: #01675a;
 }
 
 /* ============================================================
