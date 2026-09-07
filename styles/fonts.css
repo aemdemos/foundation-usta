@@ -26,7 +26,15 @@
   font-family: 'Graphik XXCond Bold';
   font-style: normal;
   font-weight: 700;
-  font-display: swap;
+
+  /* `block` for the big condensed display face (h1/h2): the browser briefly
+     blocks (renders invisible) until this font is ready, then paints the REAL
+     condensed font — it does NOT show the wide fallback and does NOT get stuck on
+     it (which is what `optional` did). Because we preload this 24KB woff2 + inline
+     this @font-face in the eager phase, it's ready almost immediately, so the
+     block period is tiny and the headline ALWAYS renders in Graphik XXCond Bold —
+     never the fallback. */
+  font-display: block;
   src: url('../fonts/graphik-xxcond-bold.woff2') format('woff2');
 }
 

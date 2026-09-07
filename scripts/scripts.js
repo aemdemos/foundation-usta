@@ -58,6 +58,17 @@ function preloadDisplayFont() {
   link.crossOrigin = 'anonymous';
   link.href = href;
   document.head.appendChild(link);
+
+  // Also declare the @font-face INLINE now. fonts.css loads lazily on mobile, so
+  // without this the browser wouldn't know the display face early and the H1 would
+  // render in the wide fallback. Declaring it here (eager) + the preload above
+  // means the real condensed font is known AND fetched immediately, so with
+  // `font-display: block` the H1 ALWAYS paints in Graphik XXCond Bold from the
+  // start on every viewport — never the fallback. (Matches the rule in fonts.css;
+  // identical family/src/display, so harmless if both apply.)
+  const style = document.createElement('style');
+  style.textContent = `@font-face{font-family:'Graphik XXCond Bold';font-style:normal;font-weight:700;font-display:block;src:url('${href}') format('woff2')}`;
+  document.head.appendChild(style);
 }
 
 /**

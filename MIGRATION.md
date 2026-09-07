@@ -2158,3 +2158,24 @@ scrollbar-hiding (scrollbar-width:none + ::-webkit-scrollbar{display:none}) from
 horizontal scrollbar shows and moves, exactly like the source. Kept flex-wrap:nowrap + overflow-x:auto. Verified
 @390 with a long title: ol scrollable (scrollWidth 844 > client 390), row stays 40px, no page overflow. Desktop
 unchanged (overflow-x:hidden + ellipsis, fits without scroll). Gates: lint 0 · overflow ✓ · a11y ✓.
+
+### 2026-09-07 — Fix visible H1 font FLASH on mobile (font-display: optional + eager @font-face)
+User saw the H1 render in one size then flip to another on load (FOUT). Root cause verified: the fallback H1 box
+(772px) is ~356px taller than the real Graphik XXCond Bold (416px) — and this headless Chromium IGNORES
+`size-adjust` (plain Arial, size-adjust 30/50%, Arial Narrow all measured 772px), so the metrics-matched fallback
+can't be relied on to hide the swap. Switched the display face to `font-display: optional` (fonts.css): the browser
+gives the web font a ~100ms window then LOCKS the choice for the pageview — it never swaps mid-render, so no size
+flip. To make `optional` actually pick the real font on mobile (where fonts.css loads lazily), preloadDisplayFont()
+now ALSO injects the `@font-face` inline in the eager phase (was preload-only), so the face is known + fetched
+within the window on every viewport → H1 paints in Graphik XXCond from the start. H1 SIZE is uniform site-wide
+(54/100px @ lh 1.1) — news inherits the global h1 (verified our news mobile H1 = 54/59.4, matching source).
+Gates: lint 0 · breakpoints ✓ · a11y ✓.
+
+### 2026-09-07 — H1 font: optional → block (headline must ALWAYS be the condensed font)
+`font-display: optional` (prev fix) mis-fired: on mobile the ~100ms window lapsed, so it LOCKED the wide fallback
+for the whole pageview → the H1 showed the non-condensed font and never corrected (user screenshot). Switched the
+display face to `font-display: block` in BOTH places (styles/fonts.css + the eager inline @font-face in
+scripts.js): the browser briefly renders the headline invisible until the font is ready, then paints the REAL
+Graphik XXCond Bold — it never uses the wide fallback and never gets stuck on it. The block period is tiny because
+we preload the 24KB woff2 AND inline-declare the face in the eager phase, so it's ready almost immediately on every
+viewport. Net: H1 is ALWAYS the condensed font (the desired one), same size site-wide (54/100px). Gates: lint 0.
