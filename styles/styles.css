@@ -21,9 +21,12 @@
   --link-color: #0357b8;
   --link-hover-color: #23527c;
 
-  /* fonts */
+  /* fonts. Each web face is paired with a metrics-matched fallback (size-adjust
+     faces below) BEFORE the generic fallbacks, so the pre-swap render has ~the
+     same box as the loaded font → minimal CLS when `font-display: swap` fires.
+     The condensed display face (h1/h2, up to 100px) especially needs this. */
   --body-font-family: "Graphik Regular", roboto-fallback, tahoma, sans-serif;
-  --heading-font-family: "Graphik XXCond Bold", "Arial Narrow", tahoma, sans-serif;
+  --heading-font-family: "Graphik XXCond Bold", graphik-xxcond-fallback, "Arial Narrow", tahoma, sans-serif;
 
   /* body sizes — mobile-first (source: 16px body @ <768, 18px @ >=768) */
   --body-font-size-m: 16px;
@@ -47,7 +50,7 @@
   --nav-height: 120px;
 }
 
-/* fallback fonts */
+/* fallback fonts (metrics-matched, so the pre-swap render ≈ the loaded font). */
 @font-face {
   font-family: roboto-condensed-fallback;
   size-adjust: 88.82%;
@@ -58,6 +61,21 @@
   font-family: roboto-fallback;
   size-adjust: 99.529%;
   src: local('Arial');
+}
+
+/* Graphik XXCond Bold is an ULTRA-condensed display face used at up to 100px for
+   h1/h2 — its glyphs are only ~50.6% the width of Arial (measured), so a normal
+   Arial fallback wraps the headline to ~1.85× the height and the page jumps
+   hundreds of px when the web font swaps in (huge CLS). This fallback squeezes
+   Arial to the same advance width + matches Graphik's vertical metrics, so the
+   pre-swap headline occupies almost the same box → near-zero CLS. */
+@font-face {
+  font-family: graphik-xxcond-fallback;
+  src: local('Arial Narrow'), local('Arial');
+  size-adjust: 50.6%;
+  ascent-override: 141%;   /* Graphik ascent (~0.715em) ÷ size-adjust 0.506 */
+  descent-override: 42%;   /* Graphik descent (~0.215em) ÷ 0.506 */
+  line-gap-override: 0%;
 }
 
 @media (width >= 768px) {

@@ -27,36 +27,26 @@ body.news main > .section:first-of-type {
 }
 
 /* ---- Article headline (H1) ------------------------------------------------
-   Source H1 computes to #333 (NOT jet black). The global prose rule
-   `main .default-content-wrapper :is(h1..) { color: var(--dark-color) }` paints
-   headings #000, so we override it here. Belt-and-suspenders: (a) an explicit
-   #333 on the H1 at higher specificity, AND (b) re-point --dark-color to #333 on
-   the H1 so even if that global rule wins the cascade, it still resolves to #333. */
+   SIZE is intentionally NOT set here — the H1 inherits the GLOBAL scale
+   (54/59.4 mobile → 100/110 @768) so the headline is identical site-wide and the
+   font-preload/fallback-metrics CLS fix applies uniformly. This template only
+   manages what's genuinely news-specific: COLOR and the source margin.
+
+   Source news H1 is #333 (NOT the global prose black). The global rule
+   `main .default-content-wrapper :is(h1..){color:var(--dark-color)}` paints it
+   #000, so override: explicit #333 at higher specificity, plus re-point
+   --dark-color to #333 on the H1 as a belt-and-suspenders. */
 body.news main h1 {
   --dark-color: #333;
 
   margin: 0 0 10px;
-  font-family: var(--heading-font-family);
-  font-size: 54px;
-  line-height: 59.4px;
-  font-weight: 500;
-
-  /* re-pointing --dark-color above guarantees #333 even if the global prose rule
-     wins the cascade; this explicit color covers the non-wrapper case. */
   color: #333;
 }
 
-/* Higher-specificity twin (0,2,3) so the explicit #333 also wins outright over
-   the global `main .default-content-wrapper :is(h1..)` rule (0,1,2). */
+/* Higher-specificity twin (0,2,3) so the explicit #333 wins over the global
+   `main .default-content-wrapper :is(h1..)` rule (0,1,2). */
 body.news main .default-content-wrapper h1 {
   color: #333;
-}
-
-@media (width >= 768px) {
-  body.news main h1 {
-    font-size: 100px;
-    line-height: 110px;
-  }
 }
 
 /* ---- Article body copy ---------------------------------------------------- */

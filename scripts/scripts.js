@@ -42,6 +42,25 @@ if (window.trustedTypes && window.trustedTypes.createPolicy) {
 }
 
 /**
+ * Preload the condensed display font (Graphik XXCond Bold) used by h1/h2 at up to
+ * 100px. It's the LCP headline face and an ultra-condensed cut, so a fallback
+ * swap reflows the whole page (large CLS). Preloading the tiny (~24KB) woff2 in
+ * the eager phase makes the real font available at/near first paint, so the H1
+ * paints in its final metrics — eliminating the swap-driven shift.
+ */
+function preloadDisplayFont() {
+  const href = `${window.hlx.codeBasePath}/fonts/graphik-xxcond-bold.woff2`;
+  if (document.querySelector(`link[rel="preload"][href="${href}"]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'font';
+  link.type = 'font/woff2';
+  link.crossOrigin = 'anonymous';
+  link.href = href;
+  document.head.appendChild(link);
+}
+
+/**
  * load fonts.css and set a session storage flag
  */
 async function loadFonts() {
@@ -251,6 +270,7 @@ let templateName = null;
 
 async function loadEager(doc) {
   document.documentElement.lang = 'en';
+  preloadDisplayFont();
   decorateTemplateAndTheme();
   templateName = await loadTemplateCSS();
   const main = doc.querySelector('main');

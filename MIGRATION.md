@@ -2112,3 +2112,28 @@ now (a) sets an explicit #333 on `body.news main h1`, (b) a higher-specificity t
 --dark-color:#333 on the H1 so it resolves to #333 even if the global rule wins. Belt-and-suspenders — guaranteed
 #333. (Couldn't render a body.news page locally to eyeball; verified by specificity + source value. The earlier
 "still black" screenshot was the pre-fix preview.) Gates: lint 0 · breakpoints ✓.
+
+### 2026-09-07 — Fixed large CLS (0.47) on news page — H1 display-font swap
+PageSpeed flagged heavy layout shift on load. Measured live CLS = 0.4694; dominant shift 0.317 = the H1. Root
+cause: the H1 (Graphik XXCond Bold, up to 100px, the LCP headline) renders in a fallback first, then swaps →
+measured the wrapping H1 at 416px with the real font vs 772px with the Arial fallback = a ~356px page jump.
+Graphik XXCond is ULTRA-condensed: canvas-measured at 50.6% of Arial's advance width (the old
+`roboto-condensed-fallback` at 88.82% was tuned for a different font, so it under-corrected badly).
+Two fixes:
+1. PRELOAD the display woff2 (24KB) in loadEager → `preloadDisplayFont()` injects <link rel=preload as=font> so
+   the real font is available ~first paint and the H1 paints in final metrics (primary fix; no swap → no shift).
+2. Metrics-matched fallback face `graphik-xxcond-fallback` (styles.css): size-adjust 50.6% + ascent-override 141%
+   / descent-override 42% / line-gap 0 (Graphik metrics ÷ 0.506), wired into --heading-font-family before Arial
+   Narrow — so even pre-preload the fallback box ≈ the real font (safety net).
+Font file verified reachable (served woff2). NOTE: the sandbox headless browser can't load local() fonts, so the
+final CLS number must be re-checked on PageSpeed after deploy — the diagnosis (356px H1 jump) and both fixes are
+sound. Gates: lint 0 · breakpoints ✓.
+
+### 2026-09-07 — News H1: inherit GLOBAL size, manage only color per-template
+Per direction: H1 SIZE should be identical site-wide (so the font-preload/fallback CLS fix applies uniformly);
+only COLOR varies by template. Verified the source H1 color is genuinely contextual — news #333, section-landing
+(leadership) #000, hero #fff — so color stays per-template, NOT global. The global h1 already computes to the
+exact news size (54/100px @ line-height 1.1 = 59.4/110), so news.css no longer redeclares font-size/line-height/
+family — it inherits the global scale. news.css now only sets the news-specific color (#333, via explicit rule +
+--dark-color re-point to beat the global prose-black rule) and the source margin (0 0 10px). Global h1 unchanged
+(stays the shared size for all templates). Gates: lint 0 · breakpoints ✓.
