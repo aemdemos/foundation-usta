@@ -489,6 +489,13 @@ header .nav-breadcrumb li + li::before {
     display: flex;
     align-items: center;
 
+    /* stretch each top-level item to the full nav-row height and make it the
+       positioning context for its dropdown, so the panel's `top: 100%` lands at
+       the BOTTOM of the nav bar (at the breadcrumb row) exactly like the source —
+       not at the shorter label's bottom (which floated the panel too high). */
+    position: relative;
+    align-self: stretch;
+
     /* remove the mobile row divider — desktop items have no underline */
     border-bottom: 0;
   }
@@ -502,9 +509,16 @@ header .nav-breadcrumb li + li::before {
     transition: color 0.15s ease;
   }
 
+  /* Hover / open state: blue label + a 4px blue underline hugging the text —
+     source applies this to EVERY top-level item on hover (not only the open
+     megamenu item), e.g. "WHAT WE DO" which has no submenu. Use the inset
+     box-shadow (same as the expanded rule) so the underline adds no layout
+     height and never shifts the row. */
   header nav .nav-sections > ul > li:hover > a,
   header nav .nav-sections > ul > li[aria-expanded='true'] > a {
+    display: inline-block;
     color: rgb(36 86 178);
+    box-shadow: inset 0 -4px 0 rgb(36 86 178);
   }
 
   /* desktop caret sits inline after the label as a solid ▼ triangle (18x12) */
@@ -541,9 +555,17 @@ header .nav-breadcrumb li + li::before {
     position: absolute;
     top: 100%;
     left: 0;
-    min-width: 246px;
+
+    /* Source panel is 246px WIDE (border-box) and shifted 26px LEFT of the label
+       (margin-left:-26px) so its 26px left padding brings the item text back to
+       align exactly under the label. Match box-sizing + width + offset so our
+       panel occupies the same rectangle (source left 891 / right 1137, text @917
+       under the "GET INVOLVED" label). */
+    box-sizing: border-box;
+    width: 246px;
+    min-width: 0;
     max-height: none;
-    margin: 0;
+    margin: 0 0 0 -26px;
     padding: 12px 20px 36px 26px;
     overflow: visible;
     background: #fff;
@@ -556,8 +578,9 @@ header .nav-breadcrumb li + li::before {
     display: block;
   }
 
-  /* sub-items: 15px gap below each, with a 1px DASHED divider between items
-     (source uses a dashed rule, not a solid one). No divider after the last. */
+  /* sub-items: a taller panel to match the source — a 1px DASHED divider between
+     items (source uses a dashed rule, not a solid one), with generous spacing so
+     the panel has the same open, airy height as the source dropdown. */
   header nav .nav-sections > ul > li > ul > li {
     margin-bottom: 15px;
     border-top: 0;

@@ -2222,3 +2222,35 @@ User: the crumb separator is a `>`, not a slash. Source `.cmp-breadcrumb__naviga
 color #01675a (brand green), padding-left 6px / padding-right 8px. Updated the `li + li::before` in
 blocks/header/header.css: content `>`, color #01675a, padding 0 8px 0 6px (was `/`, #383838, margin-right 4px).
 Gate: lint 0 errors.
+
+### 2026-09-07 — Desktop dropdown panel height: keep it TALL like the source
+First attempt shrank the panel (link padding-bottom 15px → 6px, advance 54px → 45px) — WRONG direction: the source
+panel is the TALLER one, so the migrated panel should match that airy height, not be tightened. Reverted: sub-item
+link `padding: 0 0 15px` + li `margin-bottom: 15px` restored, giving the generous open panel that matches the
+source's GET INVOLVED → Special Funds / NJTL Chapter Portal dropdown. Dashed 1px #e6e6e6 divider between items,
+panel padding 12/20/36/26. Gate: lint 0 errors.
+
+### 2026-09-07 — Desktop dropdown panel POSITION + width to match source exactly
+User: the migrated dropdown differs from the source in position/dimensions — the panel should drop to the nav
+bottom (first item at the breadcrumb row) and align text under the label. Measured source (GET INVOLVED @1280):
+panel left 891 / right 1137 / width 246 (border-box), top 128 = nav bottom (crumb row), text @917 under the label,
+margin-left -26px, padding 12/20/36/26. Ours was: panel top 84 (floated above the crumb, anchored to the short
+label), left 917 + width 270 (content-box) so text indented to 941 and panel too wide. Fixes in
+blocks/header/header.css:
+  • top-level li: `position: relative; align-self: stretch` so the li fills the nav-row height and the panel's
+    `top:100%` lands at the nav BOTTOM (breadcrumb row), not the label bottom.
+  • panel: `box-sizing: border-box; width: 246px; min-width: 0; margin: 0 0 0 -26px` (was min-width 246
+    content-box + no negative margin). Now text aligns under the label.
+Verified live (injected): panel left 891 / right 1137 / width 246, item text @917, panel top ≈ crumb top — all
+match the source. Gate: lint 0 errors.
+
+### 2026-09-07 — Nav hover underline on ALL top-level items + typography parity check
+(1) HOVER UNDERLINE: source applies a 4px blue underline (border-bottom: 4px solid rgb(36 86 178)) + blue text to
+EVERY top-level nav item on hover — including non-megamenu items like WHAT WE DO / OUR IMPACT. Ours only showed it
+on the OPEN (aria-expanded) megamenu item; plain :hover had blue text but no underline. Fixed blocks/header/header.css:
+added `display:inline-block; box-shadow: inset 0 -4px 0 rgb(36 86 178)` to the `li:hover > a` rule (reusing the
+inset-shadow technique from the expanded rule so the underline adds no row height / no layout shift). Verified live
+(injected): hover box-shadow = inset 0 -4px 0 #2456b2, blue text, link box unchanged (612–716, bottom 84).
+(2) TYPOGRAPHY PARITY: measured source vs migrated top-level nav labels at desktop — IDENTICAL: Graphik Semibold,
+16px, weight 400, line-height 24px, letter-spacing normal, color #000, text-transform none. No change needed. (Nav
+collapses to hamburger below 992 on both, so only the desktop tier renders these labels.) Gate: lint 0 errors.
