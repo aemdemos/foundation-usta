@@ -13,6 +13,7 @@ import {
   readBlockConfig,
   toClassName,
   toCamelCase,
+  getMetadata,
 } from './aem.js';
 
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -208,9 +209,50 @@ export function decorateMain(main) {
  * Loads everything needed to get to LCP.
  * @param {Element} doc The container element
  */
+/**
+ * Load a page-template's CSS eagerly (for LCP-correct layout). The template name
+ * comes from the `template` metadata (decorateTemplateAndTheme adds it as a body
+ * class); the matching stylesheet lives at templates/<name>/<name>.css. The
+ * template's JS module (if any) is loaded later in loadLazy. No-ops when the
+ * page declares no template.
+ * @returns {Promise<string|null>} the resolved template name, or null
+ */
+async function loadTemplateCSS() {
+  const template = getMetadata('template');
+  if (!template) return null;
+  const name = toClassName(template);
+  try {
+    await loadCSS(`${window.hlx.codeBasePath}/templates/${name}/${name}.css`);
+  } catch (e) {
+    // template CSS is optional — a missing file must not break the page
+  }
+  return name;
+}
+
+/**
+ * Load a page-template's JS module (templates/<name>/<name>.js) and run its
+ * default export against <main>, if the file exists. Kept in the lazy phase so
+ * it never blocks LCP.
+ * @param {string|null} name resolved template name from loadTemplateCSS
+ * @param {Element} main the page main element
+ */
+async function loadTemplateJS(name, main) {
+  if (!name) return;
+  try {
+    const mod = await import(`${window.hlx.codeBasePath}/templates/${name}/${name}.js`);
+    if (mod.default) await mod.default(main);
+  } catch (e) {
+    // template JS is optional
+  }
+}
+
+// Template name resolved in loadEager (via CSS load), consumed in loadLazy for JS.
+let templateName = null;
+
 async function loadEager(doc) {
   document.documentElement.lang = 'en';
   decorateTemplateAndTheme();
+  templateName = await loadTemplateCSS();
   const main = doc.querySelector('main');
   if (main) {
     decorateMain(main);
@@ -236,6 +278,7 @@ async function loadLazy(doc) {
   loadHeader(doc.querySelector('body > header'));
 
   const main = doc.querySelector('main');
+  await loadTemplateJS(templateName, main);
   await loadSections(main);
 
   const { hash } = window.location;

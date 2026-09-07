@@ -510,19 +510,21 @@
   text-decoration: underline;
 }
 
-/* Tablet+ : 3-up flex row. Source: flex-basis 33%, 5px inline padding, and a
-   per-card max-width (32% at 768, 370px from 992). */
+/* Tablet (768–991): 3-up flex row (source: card ≈227 in the 708 column). */
 @media (width >= 768px) {
   .cards.news > ul > li {
-    flex: 0 1 33%;
-    max-width: 32%;
+    flex: 0 1 33.333%;
+    max-width: 33.333%;
     padding: 15px 5px;
   }
 }
 
+/* Desktop (≥992): 4-up flex row — source lays the Related Articles feed out as
+   FOUR cards across (card ≈293 in the 1170 content column). */
 @media (width >= 992px) {
   .cards.news > ul > li {
-    max-width: 370px;
+    flex: 0 1 25%;
+    max-width: 25%;
   }
 
   .cards.news .cards-news-card-title {

@@ -1,0 +1,95 @@
+/*
+ * news template — article page layout (USTA Foundation news articles).
+ * Scoped to `body.news` so it only affects news pages. Values measured from the
+ * live source at 390 / 768 / 1280:
+ *   • H1 "hero" headline: Graphik XXCond Bold w500, #333 — 54/59.4 mobile →
+ *     100/110 from 768. (Larger than the global h1 scale — article-specific.)
+ *   • Body copy: Graphik Regular, #000 — 16/24 mobile → 18/24 from 768.
+ *   • Inline links: brand blue (#0357b8).
+ *   • Image caption: Graphik Regular, #333, 16/22.86 at every viewport.
+ * The content column + gutters come from the global site grid (55/30/31 →
+ * 1170/708/328); this file only sets the article's typography + media layout.
+ */
+
+/* ---- Space above the headline (breadcrumb → H1 gap) -----------------------
+   Source puts 64px top padding on the first content section (32px mobile) — with
+   the H1's own line-box leading this yields the measured breadcrumb→H1 gap of
+   ~108px desktop / ~76px mobile. Apply it to the article's first section so our
+   gap matches. (main > .section:first-of-type already has margin-top:0.) */
+body.news main > .section:first-of-type {
+  padding-top: 32px;
+}
+
+@media (width >= 768px) {
+  body.news main > .section:first-of-type {
+    padding-top: 64px;
+  }
+}
+
+/* ---- Article headline (H1) ------------------------------------------------
+   Source H1 computes to #333 (NOT jet black). The global prose rule
+   `main .default-content-wrapper :is(h1..) { color: var(--dark-color) }` paints
+   headings #000, so we override it here. Belt-and-suspenders: (a) an explicit
+   #333 on the H1 at higher specificity, AND (b) re-point --dark-color to #333 on
+   the H1 so even if that global rule wins the cascade, it still resolves to #333. */
+body.news main h1 {
+  --dark-color: #333;
+
+  margin: 0 0 10px;
+  font-family: var(--heading-font-family);
+  font-size: 54px;
+  line-height: 59.4px;
+  font-weight: 500;
+
+  /* re-pointing --dark-color above guarantees #333 even if the global prose rule
+     wins the cascade; this explicit color covers the non-wrapper case. */
+  color: #333;
+}
+
+/* Higher-specificity twin (0,2,3) so the explicit #333 also wins outright over
+   the global `main .default-content-wrapper :is(h1..)` rule (0,1,2). */
+body.news main .default-content-wrapper h1 {
+  color: #333;
+}
+
+@media (width >= 768px) {
+  body.news main h1 {
+    font-size: 100px;
+    line-height: 110px;
+  }
+}
+
+/* ---- Article body copy ---------------------------------------------------- */
+body.news main .default-content-wrapper p {
+  font-family: var(--body-font-family);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  color: #000;
+}
+
+@media (width >= 768px) {
+  body.news main .default-content-wrapper p {
+    font-size: 18px;
+  }
+}
+
+/* inline links in article body — brand blue, underline on hover */
+body.news main .default-content-wrapper a {
+  color: var(--link-color, #0357b8);
+}
+
+body.news main .default-content-wrapper a:hover {
+  text-decoration: underline;
+}
+
+/* ---- Image caption --------------------------------------------------------
+   The source renders an article image immediately followed by its caption text.
+   Caption = a paragraph that directly follows a picture-only paragraph. */
+body.news main .default-content-wrapper p:has(> picture) + p {
+  margin-top: 8px;
+  font-family: var(--body-font-family);
+  font-size: 16px;
+  line-height: 22.86px;
+  color: #333;
+}

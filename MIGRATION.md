@@ -1935,3 +1935,180 @@ content/ (deletion blocked by the content-preservation safeguard, and content/ i
 — handed to the user to delete manually: `content/drafts/block-samples/columns-statement.plain.html` and
 `content/drafts/block-samples/tabs.plain.html`. Note: `columns-statement` was only a variant DEMO of the columns
 block (no separate block dir), so nothing to remove in blocks/. Gates: lint 0 errors.
+
+### 2026-09-06 — Breadcrumb: metadata + query-index driven (labels ≠ URL slug; /news/ skipped; ancestor links)
+Discovered the source breadcrumb is NOT derived from the URL path: (1) labels are MANAGED titles (slug
+`financials` → "Annual Reports and Financial Information"); (2) news articles COLLAPSE to "Home > {title}" (the
+/news/ ancestor is hidden); (3) each ancestor crumb links to its real page (.html), current page is plain text
+(verified all source targets 200). Our old `buildBreadcrumb()` in blocks/header/header.js derived crumbs from the
+slug — wrong labels + would show a News crumb.
+Rewrote it (per user decision "page metadata + query-index", "match source / skip news"): now async, fetches
+`/query-index.json` (root, then /content fallback) ONCE into a path→title map (prefers row `breadcrumbtitle` →
+`navtitle` → `title`); ancestor labels come from that map (slug de-hyphenation only as last-resort fallback);
+current page label prefers its own `breadcrumb-title` metadata → document.title. `BREADCRUMB_HIDDEN_SEGMENTS =
+{content, en, news}` are dropped from the trail (hrefs still accumulate correctly); `home` collapses to a single
+"Home" crumb → /en/home.html. Because the query-index regenerates on every publish, a NEW page automatically gets
+the correct crumb label on publish — no separate breadcrumb sheet to maintain; authors can override per page via a
+`breadcrumb-title` (and we can add pages to BREADCRUMB_HIDDEN_SEGMENTS for other hidden sections).
+Verified the segment logic against source-shaped paths: news → "Home > 2023 NJTL Essay Contest Winners" (news
+skipped); financials → "Home > Who We Are > Annual Reports and Financial Information"; chris-evert → "Home > Get
+Involved > Special Funds > {title}" — all matching source, ancestor links to real .html. Local drafts page falls
+back to slug labels + document.title (no index locally) and renders correctly. Gates: lint 0 · a11y ✓ · overflow ✓.
+AUTHORING NOTE for new pages: set the page Metadata `Title` (used as the breadcrumb label via the index); to show
+a different crumb label than the browser title, add a `Breadcrumb Title` metadata field; the page's parent chain
+comes from its URL folder path.
+
+### 2026-09-06 — Added helix-query.yaml (query-index) — powers breadcrumb labels + news feed (image/title/desc/date)
+Created `helix-query.yaml` at repo root defining TWO indices:
+  • `default` → /query-index.json (one row per published page; excludes /drafts, nav, footer, fragments).
+    Properties: title (og:title), breadcrumbtitle (meta breadcrumb-title override), description, image (og:image),
+    publicationdate (meta publication-date), lastModified (from Last-Modified header), robots.
+  • `news` → /news-index.json (scoped to /**/news/**) with title/description/image/publicationdate/lastModified —
+    the feed the Related Articles cards can query dynamically (image + title + description + date per article).
+The breadcrumb header (blocks/header/header.js) reads this: ancestor labels = row.breadcrumbtitle || row.title
+(managed title, not URL slug); current page still prefers its own breadcrumb-title meta → document.title. Tidied
+the map builder to the real field names (dropped the speculative navtitle).
+IMPORTANT: the index is built by the AEM pipeline on PUBLISH — it does NOT exist on localhost (`/query-index.json`
+404s locally, which is why breadcrumbs fall back to slug + document.title in local dev; they light up on
+preview/prod once pages are published). YAML validated; lint 0.
+AUTHORING model for a news article to appear correctly in the feed + breadcrumb:
+  - Title (Metadata) → og:title → card title + breadcrumb label
+  - Description (Metadata) → card description
+  - Image → og:image (first image / set via metadata) → card image
+  - Publication Date (Metadata `publication-date`) → card date (falls back to last-modified)
+  - Breadcrumb Title (Metadata `breadcrumb-title`) → optional crumb-label override
+
+### 2026-09-06 — [WIP] News template — SOURCE measurements (EG: offline-by-aerie article), all viewports
+Measured the live source news article at 390/768/1280. Structure: H1 → default-content article body (paragraphs +
+inline links, some with a right-column image = columns media-right) → <hr> → social share bar (right-aligned) →
+Related Articles (cards-news, 4 cards). Content column = site grid (gutters 55/30/31 → 1170/708/328).
+TYPE SCALE (source):
+  • H1: Graphik XXCond Bold, weight 500, color #333; 100px/110 desktop+tablet(≥768), 54px/59.4 mobile; mb 10px.
+  • Body paragraphs: Graphik Regular 400, #000; 18/24 desktop+tablet, 16/24 mobile; left.
+  • Inline link: same size, color #0357b8 (brand blue).
+  • Image caption: Graphik Regular 400, #333, 16/22.86 all viewports.
+  • Related Articles H2: Graphik XXCond Bold 500 #000; 76/83.6 desktop+tablet, 44/48.4 mobile (global h2 scale).
+  • Card title h3: (matches cards-news) ; card date 16/20 #000; card desc 16/24 #000; Read More Graphik Semibold
+    #0357b8 (16/24 desktop, 14/24 tablet+mobile).
+ARTICLE IMAGE (media-right): desktop left=655 w=570 (right half, text left); tablet+mobile full width (708/328),
+stacked. Caption directly under image (547/657/321 wide).
+RELATED CARDS: flex row; desktop 4-up card≈293 w, img 283×141 (~2:1); tablet 2-up card≈227, img 217×108; mobile
+1-up card 328 full, img 318×159. Maps to existing cards-news block.
+NEXT: build `news` template (JS+CSS) → importer → import EG page → pixel parity. (tasks #14–17)
+
+### 2026-09-06 — [WIP] News TEMPLATE + importer + first page imported (offline-by-aerie)
+Built the full news pipeline while user was away. Status by piece:
+DONE:
+  • Template mechanism: added loadTemplateCSS/loadTemplateJS to scripts.js — reads `template` metadata, loads
+    templates/<name>/<name>.css eagerly (LCP) + <name>.js in lazy. Added `getMetadata` import. (No boilerplate
+    template loader existed before.)
+  • templates/news/news.css + news.js: article typography from SOURCE measurements — H1 Graphik XXCond Bold w500
+    #333, 54/59.4 mobile → 100/110 @768; body 16/24 → 18/24 @768 #000; inline links #0357b8; caption 16/22.86 #333
+    (via `p:has(>picture)+p`). JS is a no-op hook (layout is content+CSS driven). Scoped to `body.news`.
+  • tools/importer/import-news-v1.js (+ .bundle.js): ONE importer for the news TEMPLATE. Reuses the cleanup
+    transformer; converts the source's dynamic SOCIAL widget → `social (right)` block (matches tightest container
+    holding the fb/li/copy/print labels, drops the checkmark/"Link Copied!" bits); converts the Related Articles
+    <ul> → `cards (news)` block (image via data-src→src, date, desc, Read More; title via <h3> with an aria-label
+    "Visit the <title> page" fallback). Metadata: Title/Description/Image auto (createMetadata) + Template=news
+    (+ Publication Date when the runner passes one).
+  • Imported the EG page → content/en/home/news/usta-foundation-offline-by-aerie-and-the-aerie-real-foundatio.
+    Completeness 91.4%. Ran localize-assets.mjs → 5 images pulled to /media-da (hero + 4 card thumbs).
+  • Structural check of the fragment: H1 ✓, body ¶ ✓, local inline image ✓, social-right ✓ (no raw share SVGs),
+    cards-news 4 rows ✓, template=news ✓, title ✓. Lint 0 errors (added tools/importer/*.bundle.js to
+    .eslintignore; bundles carry /* eslint-disable */).
+BLOCKED / NOT DONE:
+  • Pixel-parity pass (task #17): the AEM CLI renders only PREVIEWED content at the real route — a brand-new local
+    page under a published path (/en/home/news/…) is shadowed by the remote proxy and 404s at the rendered URL
+    (serves only as /content/…​.plain.html). So the page can't render locally to measure. Needs a preview
+    (outward-facing, on request) before the parity measurement + tuning can run. Template CSS is seeded from source
+    numbers but NOT yet verified against our render.
+  • cards-news card TITLE (<h3>) came through empty on some runs — the Related Articles feed is a flaky JS-hydrated
+    Vue widget (guide §2 warns about this); the aria-label fallback helps but isn't 100%. Since this feed is
+    DYNAMIC and will be wired from /news-index.json later (helix-query.yaml already defines it + user said "wire
+    later"), scraping specific cards is a stopgap — the block placeholder is what matters.
+NEXT (when back / on preview enabled): preview the page → pixel-parity at 390/768/1280 → tune templates/news/news.css
+→ run overflow/typography/a11y → then import the remaining news URLs through the same script.
+
+### 2026-09-07 — News page parity fixes (from preview screenshots): cards 4-up, media-right image, breadcrumb
+Page is now on preview; user flagged 3 diffs vs source. Fixed all three, driven by SOURCE measurements:
+1. cards-news column count — source Related Articles is 4-UP desktop (card 293 in 1170), 3-UP tablet (227), 1-UP
+   mobile (328). Ours was 3-up desktop. blocks/cards/cards.css: @768 → flex 33.333% (3-up); @992 → flex 25% /
+   max-width 25% (4-up). Verified LIVE on the cards-news sample: 328 @390 (1-up), 240 @768 (3-up), 293/243 @992
+   (4-up). Overflow ✓ a11y ✓.
+2. Article body image → columns media-right. Source lays the merch image text-left / image-right on desktop
+   (image left=655 w=570 in the right half; text 3 paragraphs left), stacking on tablet/mobile — a columns media
+   block, NOT inline default content. importer `wrapMediaColumns()`: finds the body image (bare <img> or in <p>,
+   excludes related-card thumbs), takes the 3 nearest preceding body paragraphs as the left cell, image + caption
+   (from same wrapper, else next <p>, wrapped in <em>) as the right cell, emits `Columns (media-right)`.
+   Verified in the imported .plain.html: 1 columns media-right block, image + <em> caption in right cell, text in
+   left cell, no duplicated copy. Re-localized images (5, 0 leftover hotlinks).
+3. Breadcrumb width/height. blocks/header/header.css @992: constrained the crumb <ol> to the CONTENT column
+   (max-width 1170, was 1440) so crumbs align to the H1 gutter; added flex-wrap:nowrap + last-crumb
+   ellipsis (overflow hidden / text-overflow ellipsis / white-space nowrap / min-width 0) so a long article-title
+   crumb stays ONE line and the row never grows taller.
+Gates: lint 0 · breakpoints ✓ · overflow ✓ · a11y ✓ (cards-news sample; header CSS is global). NOTE: the imported
+news page itself renders only on the auth'd preview (preview-aemcoder.adobe.io) — couldn't re-measure it live
+here; fixes are from source numbers + verified on the served cards-news sample. Re-import/preview to confirm the
+columns-media + breadcrumb on the actual article.
+
+### 2026-09-07 — Breadcrumb alignment fix (crumbs now land on the content column)
+User: migrated breadcrumb "HOME" sat far left (near viewport edge) instead of aligned with the H1/content like the
+source. Root cause: the crumb <ol> used its own width scheme (1440→1170 + 40px padding) that never matched the
+page content column. Fix (blocks/header/header.css): the <ol> now mirrors `main > .section > div` EXACTLY — width
+100%, margin-inline auto, zero padding, tiered max-width 328 → 720 @768 → 970 @992 → 1170 @1200. Removed the old
+@992 override (was 1170 + 40px padding); kept only flex-wrap:nowrap + last-crumb ellipsis there. Verified LIVE
+(crumb left edge vs source): @1280 = 55px (matches source H1 @55), @1440 = 135px (centered 1170), @768 = 24px,
+@390 = 31px. Row height steady ~59px. The full-width top/bottom border still runs edge-to-edge (on .nav-breadcrumb,
+not the ol). Gates: lint 0 · breakpoints ✓ · overflow ✓ · a11y ✓.
+
+### 2026-09-07 — Breadcrumb alignment CORRECTED (align to LOGO, not content column)
+My prior entry aligned the crumb <ol> to the narrow content column (970/1170) — WRONG: that pushed "HOME" too far
+RIGHT (crumb-left 55 @1280, 135 @1440) while the source sits under the LOGO. Source dev tools confirm: breadcrumb
+lives in the site's 1440 container with ~38px padding-left = logo gutter. Reverted the content-column tiers;
+restored the crumb <ol> to max-width 1440 + padding 0 40px (same as the nav/logo container). Verified LIVE: crumb-
+left == logo-left = 40px @1280 AND @1440 (exact match). Kept flex-wrap:nowrap + last-crumb ellipsis. Header/logo
+untouched. Gates: lint 0 · breakpoints ✓ · a11y ✓.
+
+### 2026-09-07 — Breadcrumb desktop HEIGHT fix (30px, was 40px) — removes content shift
+User: header shift vs source + breadcrumb div taller on migrated. Measured both in dev tools at desktop: nav is
+128px on BOTH (already correct — the perceived shift was the taller breadcrumb pushing content down). Source
+breadcrumb row = 30px; ours was 40px (crumb line-height 38 + 2×1px border). Added @992 rule dropping the crumb
+line-height 38 → 28px, so the row = 28 + 2px borders = 30px, matching source. Verified LIVE @1728: navH 128,
+bcH 30. Article content below now starts at the same Y as the source (shift gone). Header/logo untouched. Gates:
+lint 0 · breakpoints ✓ · a11y ✓.
+
+### 2026-09-07 — News H1 top gap (breadcrumb → H1) matched to source
+Measured source gap breadcrumb-bottom → H1-top: 108px desktop/tablet (≥768), 76px mobile. Driven by the source's
+first content section `padding-top: 64px` (32px mobile) + the H1 line-box leading. Ours had no equivalent top
+padding on the news article's first section, so the H1 sat too close to the breadcrumb. Added to
+templates/news/news.css (scoped body.news): `main > .section:first-of-type { padding-top: 32px }` + `@768 → 64px`.
+With our matching 100/110 (54/59.4 mobile) H1 scale this reproduces the source gap. Scoped to news pages only;
+verify on preview (can't render the news template on the local cards-news sample — no body.news there). Gates:
+lint 0 · breakpoints ✓.
+
+### 2026-09-07 — News page: 6 parity fixes from source-vs-migrated compare
+1. Top blue accent bar: source is 8px (measured), ours was 5px → header.css border-top 5→8px.
+2. H1 color: source #333 (NOT jet black); global `main .default-content-wrapper :is(h1..){color:var(--dark-color)}`
+   (jet black) was overriding our news h1. Fixed news.css to also target `.default-content-wrapper h1` so #333 wins.
+3. columns media-right text: source pairs the merch image with "This grant…"/"To celebrate…" (level with it), NOT
+   the earlier "Central…" (full-width above). importer wrapMediaColumns now takes the image's PREVIOUS sibling
+   group (fallback: 2 nearest preceding paragraphs) → block now starts "This grant…". Verified.
+4. Breadcrumb "Home" is a clickable link → /en/home.html (already in header.js buildBreadcrumb; the stale screenshot
+   predated that; confirmed in code).
+5. Related Articles missing card titles: hydration left <h3> empty; strengthened importer fallback to also read the
+   image alt "Visit the <title> page" → all 4 titles now populate (WHM 2026 / USTAF partners / USTA Foundation
+   pledges / Black History Month). Verified h3 count 4.
+6. Stray "Title / Template / news" text at page bottom: the Metadata block was a bare top-level `<div class=
+   metadata>` (renders visibly). Added `main.appendChild(<hr>)` before createMetadata (like the home importer) so
+   metadata lands in its OWN section → serializes as `<div><div class="metadata">` which EDS strips. Verified.
+Re-import completeness 94.7%; images re-localized (5, 0 hotlinks). Gates: lint 0 · breakpoints ✓ · top-bar 8px
+verified live. Header/logo otherwise untouched. News template CSS (#2) verifies on preview (needs body.news).
+
+### 2026-09-07 — News H1 color hardened to #333 (was inheriting jet-black)
+Confirmed source H1 computes to rgb(51,51,51)=#333 (inherits body #333; H1 color:inherit/unset in source CSS).
+Our global `main .default-content-wrapper :is(h1..){color:var(--dark-color=#000)}` was painting it black. news.css
+now (a) sets an explicit #333 on `body.news main h1`, (b) a higher-specificity twin
+`body.news main .default-content-wrapper h1{color:#333}` (0,2,3 beats the global 0,1,2), AND (c) re-points
+--dark-color:#333 on the H1 so it resolves to #333 even if the global rule wins. Belt-and-suspenders — guaranteed
+#333. (Couldn't render a body.news page locally to eyeball; verified by specificity + source value. The earlier
+"still black" screenshot was the pre-fix preview.) Gates: lint 0 · breakpoints ✓.

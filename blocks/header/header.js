@@ -1,38 +1,116 @@
+import { getMetadata } from '../../scripts/aem.js';
+
 // media query match that indicates desktop width (matches the CSS breakpoint)
 const isDesktop = window.matchMedia('(min-width: 992px)');
 
+// Segments that never appear as their own crumb. The DA/EDS mount prefix and the
+// locale are infrastructure; `home` collapses into the single "Home" crumb; and
+// `news` is HIDDEN from the trail so news articles read "Home > {title}" — exactly
+// as the source does (breadcrumb ≠ URL path). Extend this set for any other
+// section the source hides from breadcrumbs.
+const BREADCRUMB_HIDDEN_SEGMENTS = new Set(['content', 'en', 'news']);
+
+// Turn a URL slug into a human label as a LAST resort (when the index has no
+// managed title for that ancestor): de-hyphenate; CSS handles casing.
+const slugToLabel = (slug) => slug.replace(/-/g, ' ');
+
 /**
- * Build the page breadcrumb row from the URL path (matches the source's
- * third header row, e.g. "HOME"). Locale segment (en) is dropped; hyphenated
- * slugs become spaced labels; CSS uppercases them. Parent crumbs link, the
- * current page is plain text.
- * @returns {Element|null} a <nav class="nav-breadcrumb"> or null when at root
+ * Fetch the published query-index once and build a path→title map so ancestor
+ * crumbs use each page's MANAGED title (e.g. `financials` →
+ * "Annual Reports and Financial Information"), not the URL slug. The index is
+ * regenerated on every publish, so a NEW page automatically gets the right
+ * label with no separate breadcrumb sheet to maintain. Resolves to an empty map
+ * if the index isn't available (we then fall back to slug labels).
  */
-function buildBreadcrumb() {
+async function fetchPathTitleMap() {
+  const norm = (p) => (p || '').replace(/\.html$/, '').replace(/\/$/, '');
+  const tryFetch = async (url) => {
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return null;
+      const json = await resp.json();
+      return json.data || [];
+    } catch {
+      return null;
+    }
+  };
+  // /query-index.json at root (DA/EDS) then /content (local `aem up`).
+  const data = (await tryFetch('/query-index.json'))
+    || (await tryFetch('/content/query-index.json'))
+    || [];
+  const map = new Map();
+  data.forEach((row) => {
+    if (!row.path) return;
+    // Prefer an explicit breadcrumb-title override (helix-query.yaml
+    // `breadcrumbtitle`), then the managed page title.
+    const label = row.breadcrumbtitle || row.title;
+    if (label) map.set(norm(row.path), label.trim());
+  });
+  return map;
+}
+
+/**
+ * Build the page breadcrumb row. The trail comes from the URL's ancestor paths,
+ * but LABELS are managed titles (from the query-index) and the source's hidden
+ * segments (locale, `home`, `news`) are dropped — so the breadcrumb matches the
+ * source's content hierarchy, NOT the raw URL path. Each ancestor crumb links to
+ * its real page; the current page is plain text.
+ * @returns {Promise<Element|null>} a <nav class="nav-breadcrumb"> or null at root
+ */
+async function buildBreadcrumb() {
   const path = window.location.pathname.replace(/\.html$/, '').replace(/\/$/, '');
-  // Drop infrastructure/locale segments so the crumb matches the source: the
-  // DA/EDS 'content' mount prefix and the 'en' locale never appear as crumbs.
-  const segments = path.split('/').filter(Boolean)
-    .filter((s) => s !== 'content' && s !== 'en');
-  if (!segments.length) return null;
+  const allSegments = path.split('/').filter(Boolean);
+  if (!allSegments.length) return null;
+
+  const titleMap = await fetchPathTitleMap();
 
   const bcNav = document.createElement('nav');
   bcNav.className = 'nav-breadcrumb';
   bcNav.setAttribute('aria-label', 'Breadcrumb');
   const ol = document.createElement('ol');
 
-  let href = '/en';
-  segments.forEach((seg, i) => {
+  // Walk every URL segment to keep hrefs correct (hidden segments still exist in
+  // the path), but only EMIT a crumb for non-hidden segments. `home` maps to the
+  // single "Home" crumb pointing at /en/home.
+  let href = '';
+  const isLastVisibleIndex = (() => {
+    // index of the final segment that will actually render a crumb
+    for (let i = allSegments.length - 1; i >= 0; i -= 1) {
+      const s = allSegments[i];
+      if (s === 'home' || !BREADCRUMB_HIDDEN_SEGMENTS.has(s)) return i;
+    }
+    return -1;
+  })();
+
+  allSegments.forEach((seg, i) => {
     href += `/${seg}`;
+    if (seg === 'home') {
+      // collapse locale+home into a single "Home" crumb
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '/en/home.html';
+      a.textContent = 'Home';
+      li.append(a);
+      ol.append(li);
+      return;
+    }
+    if (BREADCRUMB_HIDDEN_SEGMENTS.has(seg)) return; // e.g. content, en, news
+
     const li = document.createElement('li');
-    const label = seg.replace(/-/g, ' ');
-    if (i === segments.length - 1) {
+    if (i === isLastVisibleIndex) {
+      // Current page: prefer this page's OWN managed label (a `breadcrumb-title`
+      // metadata override, else the document <title>), then the index, then slug.
+      const label = getMetadata('breadcrumb-title')
+        || document.title
+        || titleMap.get(href)
+        || slugToLabel(seg);
       li.textContent = label;
       li.setAttribute('aria-current', 'page');
     } else {
+      // Ancestor crumb: managed title from the index, else de-hyphenated slug.
       const a = document.createElement('a');
-      a.href = href;
-      a.textContent = label;
+      a.href = `${href}.html`;
+      a.textContent = titleMap.get(href) || slugToLabel(seg);
       li.append(a);
     }
     ol.append(li);
@@ -236,7 +314,7 @@ export default async function decorate(block) {
   navWrapper.append(nav);
 
   // Third row: page breadcrumb (matches the source's "HOME" row).
-  const breadcrumb = buildBreadcrumb();
+  const breadcrumb = await buildBreadcrumb();
   if (breadcrumb) navWrapper.append(breadcrumb);
 
   block.append(navWrapper);

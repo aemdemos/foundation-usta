@@ -1,0 +1,74 @@
+version: 1
+
+indices:
+  # ---------------------------------------------------------------------------
+  # Site-wide index — one row per published page. Powers:
+  #   • the breadcrumb (path → managed `title`, so ancestor crumbs use the real
+  #     page title, not the URL slug), and
+  #   • any listing/feed that needs title/description/image/date.
+  # Fetch at /query-index.json. Regenerated on every publish, so new pages appear
+  # automatically with no separate sheet to maintain.
+  # ---------------------------------------------------------------------------
+  default:
+    include:
+      - '/**'
+    exclude:
+      - '/drafts/**'      # working samples never ship in the index
+      - '/nav'
+      - '/footer'
+      - '/**/fragments/**'
+    target: /query-index.json
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: attribute(el, "content")
+      # Author-facing breadcrumb label override (Metadata: "Breadcrumb Title").
+      # Falls back to `title` at read time when empty.
+      breadcrumbtitle:
+        select: head > meta[name="breadcrumb-title"]
+        value: attribute(el, "content")
+      description:
+        select: head > meta[name="description"]
+        value: attribute(el, "content")
+      image:
+        select: head > meta[property="og:image"]
+        value: attribute(el, "content")
+      # Publication date shown on news cards (Metadata: "Publication Date").
+      # ISO or a parseable date string; falls back to lastModified when empty.
+      publicationdate:
+        select: head > meta[name="publication-date"]
+        value: attribute(el, "content")
+      lastModified:
+        select: none
+        value: parseTimestamp(headers("last-modified"), "ddd, DD MMM YYYY hh:mm:ss GMT")
+      robots:
+        select: head > meta[name="robots"]
+        value: attribute(el, "content")
+
+  # ---------------------------------------------------------------------------
+  # News feed index — the subset that powers Related Articles / news listings.
+  # Same properties, scoped to /**/news/** so a feed can query just articles.
+  # Fetch at /news-index.json.
+  # ---------------------------------------------------------------------------
+  news:
+    include:
+      - '/**/news/**'
+    exclude:
+      - '/drafts/**'
+    target: /news-index.json
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: attribute(el, "content")
+      description:
+        select: head > meta[name="description"]
+        value: attribute(el, "content")
+      image:
+        select: head > meta[property="og:image"]
+        value: attribute(el, "content")
+      publicationdate:
+        select: head > meta[name="publication-date"]
+        value: attribute(el, "content")
+      lastModified:
+        select: none
+        value: parseTimestamp(headers("last-modified"), "ddd, DD MMM YYYY hh:mm:ss GMT")

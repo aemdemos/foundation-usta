@@ -12,13 +12,13 @@ header {
   min-height: 105px;
 }
 
-/* blue accent bar across the very top of the page (source: 5px solid) */
+/* blue accent bar across the very top of the page (source: 8px solid) */
 header .nav-wrapper {
   position: relative;
   width: 100%;
   z-index: 20;
   background-color: #fff;
-  border-top: 5px solid var(--brand-blue);
+  border-top: 8px solid var(--brand-blue);
   box-shadow: none;
 }
 
@@ -368,8 +368,10 @@ header .nav-breadcrumb a:hover {
   }
 
   /* breadcrumb: reset the generic `header nav { height:120px, max-width:1440px }`
-     (this row is a <nav>). The border must run edge-to-edge, so the row itself is
-     FULL WIDTH; only the inner <ol> content is centered to the 1440px container. */
+     (this row is a <nav>). The border runs edge-to-edge, so the row itself is FULL
+     WIDTH; the inner <ol> is centered to the SAME 1440 container + 40px gutter as
+     the nav/logo, so the first crumb ("HOME") lines up under the LOGO — matching
+     the source (breadcrumb aligns to the logo, not the narrower content column). */
   header .nav-breadcrumb {
     height: auto;
     max-width: none;
@@ -381,8 +383,30 @@ header .nav-breadcrumb a:hover {
     max-width: 1440px;
     margin: 0 auto;
 
-    /* horizontal 40px gutter only; height from crumb line-height (see below) */
+    /* 40px gutter = logo gutter, so crumb-left == logo-left at every width */
     padding: 0 40px;
+
+    /* single-line row: keep the crumbs on ONE line (source never wraps the long
+       article title), so the row height stays at the crumb line-height. */
+    flex-wrap: nowrap;
+  }
+
+  /* Source desktop breadcrumb row is 30px tall (measured in dev tools): a 28px
+     crumb line-height + the 1px top/bottom borders. Drop from the 38px
+     phone/tablet line-height so our row matches (removes the extra ~10px that was
+     shifting the article content down vs the source). */
+  header .nav-breadcrumb li,
+  header .nav-breadcrumb a {
+    line-height: 28px;
+  }
+
+  /* the current-page (last) crumb can be a long article title — clamp it to a
+     single line with an ellipsis so the breadcrumb row never grows taller. */
+  header .nav-breadcrumb li:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
   }
 
   header nav .nav-hamburger {
