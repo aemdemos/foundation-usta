@@ -19,10 +19,15 @@
  * profile; only a genuinely different article layout would.
  *
  * Metadata contract (feeds the query-index → breadcrumb + Related-Articles feed):
- *   Title / Description / Image — auto-extracted by WebImporter.rules.createMetadata
- *   Template = news            — drives templates/news/news.(css|js)
- *   Publication Date           — injected from the URL→date map when available
- *   Breadcrumb Title           — optional short label (left blank; title is used)
+ *   Title            — from WebImporter.rules.createMetadata (source <title>)
+ *   Description      — derived from the article lede (first substantial <p>); the
+ *                      source head has no meta description (JS-injected, absent)
+ *   Image            — the article's hero/body image (source head has no og:image)
+ *   Template = news  — drives templates/news/news.(css|js)
+ *   Publication Date — resolved from the site /sitemap.xml <lastmod> in onLoad
+ *                      (the article page never exposes its own date), formatted
+ *                      "Month DD, YYYY"; params.publicationDate overrides
+ *   Breadcrumb Title — optional short label (left blank; title is used)
  */
 
 import cleanupTransformer from './transformers/ustafoundation-cleanup.js';
@@ -38,6 +43,38 @@ const PAGE_TEMPLATE = {
 };
 
 const parsers = {};
+
+/*
+ * Publication date resolution.
+ *
+ * The source article page does NOT expose its publish date — not in the <head>
+ * (og / article:published_time are absent), not in the rendered body (the only
+ * "Month DD, YYYY" strings there belong to the Related-Articles cards, which are
+ * OTHER articles). The authoritative per-URL date lives in the site's
+ * `/sitemap.xml` as each entry's <lastmod>. We fetch it once in `onLoad` (same
+ * origin as the page being imported, so the fetch is allowed) and stash the
+ * matching, formatted date in this module-scoped var for `transform` to read.
+ * If anything fails we leave it blank — the query-index lastModified is the
+ * documented fallback.
+ */
+let resolvedPublicationDate = '';
+
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
+// "2026-08-20T18:16:45.868Z" → "August 20, 2026" (zero-padded day, as the
+// source's own date lines render, e.g. "May 06, 2026").
+function formatIsoDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+  if (!m) return '';
+  const name = MONTH_NAMES[parseInt(m[2], 10) - 1];
+  return name ? `${name} ${m[3]}, ${m[1]}` : '';
+}
+
+// Normalize a URL/path to a comparable key (strip trailing slash + .html).
+function normPath(p) {
+  return (p || '').replace(/\.html?$/, '').replace(/\/$/, '');
+}
 
 // cleanup runs first; sections only when 2+ sections (this template = 1).
 const transformers = [
@@ -247,8 +284,59 @@ function wrapMediaColumns(document, root) {
 }
 
 export default {
+  // Runs in-page BEFORE transform. Resolve this article's publication date from
+  // the site sitemap (<lastmod>), matched by pathname. Same-origin fetch, awaited
+  // by the runner. Best-effort: on any failure the date is simply omitted.
+  onLoad: async ({ document }) => {
+    resolvedPublicationDate = '';
+    try {
+      const here = normPath(document.location.pathname);
+      const res = await fetch('/sitemap.xml', { credentials: 'omit' });
+      if (!res.ok) return;
+      const xml = await res.text();
+      // pair each <loc> with its following <lastmod>
+      const entries = [...xml.matchAll(/<loc>([^<]+)<\/loc>\s*(?:<lastmod>([^<]+)<\/lastmod>)?/gi)];
+      const match = entries.find((e) => {
+        try { return normPath(new URL(e[1]).pathname) === here; } catch { return false; }
+      });
+      if (match && match[2]) resolvedPublicationDate = formatIsoDate(match[2].trim());
+    } catch (e) {
+      // leave blank — query-index lastModified is the documented fallback
+    }
+  },
+
   transform: ({ document, url, params }) => {
     const main = document.querySelector('#mainContent') || document.querySelector('main') || document.body;
+
+    // 0. Capture Description + Image from the ORIGINAL article DOM, before any
+    //    mutation. The source head has no og:description / og:image (JS-injected,
+    //    absent in the imported DOM), so createMetadata can only recover Title.
+    //    We derive them from the article itself so the query-index gets real
+    //    values:
+    //      • Description = the first substantial body paragraph (the article lede).
+    //      • Image       = the article's hero/body image (its <picture>/<img>).
+    const descP = [...main.querySelectorAll('p')].find((p) => {
+      if (p.querySelector('picture, img, a[href]') && (p.textContent || '').trim().length < 60) return false;
+      if (p.closest('ul')) return false; // skip related-cards text
+      return (p.textContent || '').trim().length >= 40;
+    });
+    const metaDescription = descP ? (descP.textContent || '').trim().replace(/\s+/g, ' ') : '';
+
+    const heroImg = [...main.querySelectorAll('img, picture')].find((el) => {
+      if (el.closest('ul')) return false; // skip related-cards thumbnails
+      const alt = (el.getAttribute('alt') || el.querySelector?.('img')?.getAttribute('alt') || '');
+      return !/facebook|twitter|linkedin|copy|print|checkmark/i.test(alt);
+    });
+    let metaImage = null;
+    if (heroImg) {
+      const imgEl = heroImg.tagName === 'IMG' ? heroImg : heroImg.querySelector('img');
+      const rawSrc = imgEl && (imgEl.getAttribute('src') || imgEl.getAttribute('data-src'));
+      if (rawSrc) {
+        metaImage = document.createElement('img');
+        metaImage.setAttribute('src', new URL(rawSrc, 'https://www.ustafoundation.com').href);
+        metaImage.setAttribute('alt', (imgEl.getAttribute('alt') || '').trim());
+      }
+    }
 
     // 1. cleanup (isolate content root, strip chrome/tracking).
     executeTransformers('beforeTransform', main, { url, params });
@@ -310,33 +398,49 @@ export default {
     //    (Matches the home-page importer.)
     main.appendChild(document.createElement('hr'));
     WebImporter.rules.createMetadata(main, document);
-    WebImporter.rules.transformBackgroundImages(main, document);
-    WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
 
-    // 5. Ensure the page carries the `news` template + a publication date.
-    //    createMetadata builds a Metadata block at the end of `main`; append our
-    //    extra rows to it (or create one) rather than overwrite.
+    // 5. Enrich the Metadata block. createMetadata builds a `.metadata` table at
+    //    the end of `main` (only Title survives from this source's head); append
+    //    our derived rows to it (or create one) rather than overwrite.
     const metaTable = [...main.querySelectorAll('table')].find((t) => {
       const first = t.querySelector('th, td');
       return first && /metadata/i.test(first.textContent);
     });
+    // value may be a string OR a DOM node (e.g. the Image <img>). Skip empties,
+    // and don't duplicate a key createMetadata already emitted (e.g. Description
+    // if the head ever provides it).
+    const hasRow = (key) => !!metaTable && [...metaTable.querySelectorAll('tr')]
+      .some((tr) => /^(td|th)$/i.test(tr.firstElementChild?.tagName || '')
+        && (tr.firstElementChild.textContent || '').trim().toLowerCase() === key.toLowerCase());
     const addMetaRow = (key, value) => {
-      if (!metaTable || !value) return;
+      if (!metaTable || !value || hasRow(key)) return;
       const tr = document.createElement('tr');
       const k = document.createElement('td');
       k.textContent = key;
       const v = document.createElement('td');
-      v.textContent = value;
+      if (typeof value === 'string') v.textContent = value;
+      else v.append(value);
       tr.append(k, v);
       metaTable.querySelector('tbody')?.append(tr) || metaTable.append(tr);
     };
+    // Description + Image derived from the article (see step 0). Add the Image row
+    // BEFORE adjustImageUrls so its <img src> is normalized/localized identically
+    // to the body images.
+    addMetaRow('Description', metaDescription);
+    addMetaRow('Image', metaImage);
     addMetaRow('Template', 'news');
-    // Publication date: injected by the runner via params if a URL→date map is
-    // provided; otherwise left for the author / query-index lastModified fallback.
-    if (params?.publicationDate) addMetaRow('Publication Date', params.publicationDate);
+    // Publication Date resolved from the sitemap <lastmod> in onLoad; params may
+    // override it explicitly. If neither is available it's omitted (query-index
+    // lastModified is the documented fallback).
+    addMetaRow('Publication Date', params?.publicationDate || resolvedPublicationDate);
+
+    // 6. Image + link URL rules — run AFTER the Image metadata row is in place so
+    //    the metadata image URL is adjusted alongside the body images.
+    WebImporter.rules.transformBackgroundImages(main, document);
+    WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
 
 
-    // 6. Sanitized path.
+    // 7. Sanitized path.
     const rawPath = new URL(params.originalURL).pathname
       .replace(/\/$/, '')
       .replace(/\.html?$/, '');

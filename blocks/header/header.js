@@ -88,7 +88,7 @@ async function buildBreadcrumb() {
       // collapse locale+home into a single "Home" crumb
       const li = document.createElement('li');
       const a = document.createElement('a');
-      a.href = '/en/home.html';
+      a.href = '/en/home';
       a.textContent = 'Home';
       li.append(a);
       ol.append(li);
@@ -108,8 +108,10 @@ async function buildBreadcrumb() {
       li.setAttribute('aria-current', 'page');
     } else {
       // Ancestor crumb: managed title from the index, else de-hyphenated slug.
+      // Link to the extensionless route (EDS serves `/en/home`, not
+      // `/en/home.html` — the `.html` form 404s, so the crumb wasn't clickable).
       const a = document.createElement('a');
-      a.href = `${href}.html`;
+      a.href = href;
       a.textContent = titleMap.get(href) || slugToLabel(seg);
       li.append(a);
     }

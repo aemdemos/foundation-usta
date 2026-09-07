@@ -150,6 +150,30 @@ var CustomImportScript = (() => {
     // Single section — the article. Section metadata sets the template.
     sections: []
   };
+  var resolvedPublicationDate = "";
+  var MONTH_NAMES = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+  function formatIsoDate(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || "");
+    if (!m) return "";
+    const name = MONTH_NAMES[parseInt(m[2], 10) - 1];
+    return name ? `${name} ${m[3]}, ${m[1]}` : "";
+  }
+  function normPath(p) {
+    return (p || "").replace(/\.html?$/, "").replace(/\/$/, "");
+  }
   var transformers = [
     transform,
     ...PAGE_TEMPLATE.sections && PAGE_TEMPLATE.sections.length > 1 ? [transform2] : []
@@ -289,8 +313,51 @@ var CustomImportScript = (() => {
     return true;
   }
   var import_news_v1_default = {
+    // Runs in-page BEFORE transform. Resolve this article's publication date from
+    // the site sitemap (<lastmod>), matched by pathname. Same-origin fetch, awaited
+    // by the runner. Best-effort: on any failure the date is simply omitted.
+    onLoad: async ({ document }) => {
+      resolvedPublicationDate = "";
+      try {
+        const here = normPath(document.location.pathname);
+        const res = await fetch("/sitemap.xml", { credentials: "omit" });
+        if (!res.ok) return;
+        const xml = await res.text();
+        const entries = [...xml.matchAll(/<loc>([^<]+)<\/loc>\s*(?:<lastmod>([^<]+)<\/lastmod>)?/gi)];
+        const match = entries.find((e) => {
+          try {
+            return normPath(new URL(e[1]).pathname) === here;
+          } catch {
+            return false;
+          }
+        });
+        if (match && match[2]) resolvedPublicationDate = formatIsoDate(match[2].trim());
+      } catch (e) {
+      }
+    },
     transform: ({ document, url, params }) => {
       const main = document.querySelector("#mainContent") || document.querySelector("main") || document.body;
+      const descP = [...main.querySelectorAll("p")].find((p) => {
+        if (p.querySelector("picture, img, a[href]") && (p.textContent || "").trim().length < 60) return false;
+        if (p.closest("ul")) return false;
+        return (p.textContent || "").trim().length >= 40;
+      });
+      const metaDescription = descP ? (descP.textContent || "").trim().replace(/\s+/g, " ") : "";
+      const heroImg = [...main.querySelectorAll("img, picture")].find((el) => {
+        if (el.closest("ul")) return false;
+        const alt = el.getAttribute("alt") || el.querySelector?.("img")?.getAttribute("alt") || "";
+        return !/facebook|twitter|linkedin|copy|print|checkmark/i.test(alt);
+      });
+      let metaImage = null;
+      if (heroImg) {
+        const imgEl = heroImg.tagName === "IMG" ? heroImg : heroImg.querySelector("img");
+        const rawSrc = imgEl && (imgEl.getAttribute("src") || imgEl.getAttribute("data-src"));
+        if (rawSrc) {
+          metaImage = document.createElement("img");
+          metaImage.setAttribute("src", new URL(rawSrc, "https://www.ustafoundation.com").href);
+          metaImage.setAttribute("alt", (imgEl.getAttribute("alt") || "").trim());
+        }
+      }
       executeTransformers("beforeTransform", main, { url, params });
       executeTransformers("afterTransform", main, { url, params });
       wrapMediaColumns(document, main);
@@ -323,24 +390,28 @@ var CustomImportScript = (() => {
       }
       main.appendChild(document.createElement("hr"));
       WebImporter.rules.createMetadata(main, document);
-      WebImporter.rules.transformBackgroundImages(main, document);
-      WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
       const metaTable = [...main.querySelectorAll("table")].find((t) => {
         const first = t.querySelector("th, td");
         return first && /metadata/i.test(first.textContent);
       });
+      const hasRow = (key) => !!metaTable && [...metaTable.querySelectorAll("tr")].some((tr) => /^(td|th)$/i.test(tr.firstElementChild?.tagName || "") && (tr.firstElementChild.textContent || "").trim().toLowerCase() === key.toLowerCase());
       const addMetaRow = (key, value) => {
-        if (!metaTable || !value) return;
+        if (!metaTable || !value || hasRow(key)) return;
         const tr = document.createElement("tr");
         const k = document.createElement("td");
         k.textContent = key;
         const v = document.createElement("td");
-        v.textContent = value;
+        if (typeof value === "string") v.textContent = value;
+        else v.append(value);
         tr.append(k, v);
         metaTable.querySelector("tbody")?.append(tr) || metaTable.append(tr);
       };
+      addMetaRow("Description", metaDescription);
+      addMetaRow("Image", metaImage);
       addMetaRow("Template", "news");
-      if (params?.publicationDate) addMetaRow("Publication Date", params.publicationDate);
+      addMetaRow("Publication Date", params?.publicationDate || resolvedPublicationDate);
+      WebImporter.rules.transformBackgroundImages(main, document);
+      WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
       const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
       const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
       return [{

@@ -2179,3 +2179,32 @@ scripts.js): the browser briefly renders the headline invisible until the font i
 Graphik XXCond Bold — it never uses the wide fallback and never gets stuck on it. The block period is tiny because
 we preload the 24KB woff2 AND inline-declare the face in the eager phase, so it's ready almost immediately on every
 viewport. Net: H1 is ALWAYS the condensed font (the desired one), same size site-wide (54/100px). Gates: lint 0.
+
+### 2026-09-07 — News importer: extract Description, Image, Publication Date into Metadata
+The imported article's Metadata block previously held only Title + Template. The source is classic AEM with
+JS-injected head meta, so `WebImporter.rules.createMetadata` recovered only Title (no og:description / og:image /
+publish date in the static DOM). Enhanced `tools/importer/import-news-v1.js` to derive the missing fields so the
+query-index (`helix-query.yaml`: title/description/image/publicationdate) gets real values:
+  • **Description** — first substantial body paragraph (article lede), captured from the ORIGINAL DOM before any
+    mutation, whitespace-collapsed.
+  • **Image** — the article's hero/body `<img>` (excludes related-cards + share icons); added as a Metadata row
+    BEFORE `adjustImageUrls` so its URL is normalized/localized identically to body images. After
+    localize-assets it points at `/media-da/…` like the rest.
+  • **Publication Date** — NOT on the article page or its head; the ONLY authoritative source is the site
+    `/sitemap.xml` `<lastmod>` per URL. Resolved in a new `onLoad` hook (same-origin fetch, awaited by the runner),
+    matched by pathname, formatted `Month DD, YYYY` (e.g. Aerie → "August 20, 2026", matching the story +
+    image filename 20260820-aerie). `params.publicationDate` still overrides; blank → query-index lastModified
+    fallback. Helpers: formatIsoDate(), normPath(), MONTH_NAMES.
+`addMetaRow` now accepts a string OR a DOM node (for the Image <picture>) and skips a key createMetadata already
+emitted (hasRow guard). Re-bundled (esbuild IIFE → import-news-v1.bundle.js, re-prepended `/* eslint-disable */`),
+re-imported the EG page (completeness 95.8%), localized assets (5 imgs, incl. metadata hero → /media-da/).
+Verified Metadata block now = Title / Description / Image(/media-da) / Template=news / Publication Date. Gates:
+lint 0 errors.
+
+### 2026-09-07 — Breadcrumb "Home" (and all ancestor crumbs) not clickable → drop the `.html`
+User reported clicking the breadcrumb "Home" didn't go to the homepage. Root cause: the crumb linked to
+`/en/home.html`, but EDS serves the EXTENSIONLESS route — verified on preview: `/en/home` → 200, `/en/home.html`
+→ 404 (so the link resolved to a 404, i.e. effectively dead). The logo + footer already use `/en/home`. Fixed in
+blocks/header/header.js: the hardcoded Home crumb now `href="/en/home"`, and the ancestor-crumb builder uses
+`a.href = href` (was `${href}.html`). titleMap lookups are unaffected — its keys are already `.html`-stripped, so
+`titleMap.get(href)` still matches. Gate: lint 0 errors.
