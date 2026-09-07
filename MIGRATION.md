@@ -2137,3 +2137,24 @@ exact news size (54/100px @ line-height 1.1 = 59.4/110), so news.css no longer r
 family — it inherits the global scale. news.css now only sets the news-specific color (#333, via explicit rule +
 --dark-color re-point to beat the global prose-black rule) and the source margin (0 0 10px). Global h1 unchanged
 (stays the shared size for all templates). Gates: lint 0 · breakpoints ✓.
+
+### 2026-09-07 — Mobile breadcrumb (single-line scroll) + mobile LCP (unblock template CSS)
+DESKTOP PageSpeed now 99, CLS 0 (font-preload + metrics fallback worked). Two mobile fixes:
+1. Breadcrumb wrapped into a tall multi-line block on mobile (the long article-title crumb). Source keeps it ONE
+   line that scrolls horizontally. header.css base `ol`: flex-wrap:wrap → nowrap + overflow-x:auto + hidden
+   scrollbar (WebKit/FF); `li { flex:0 0 auto; white-space:nowrap }`. Desktop tier overrides: overflow-x:hidden +
+   `li:last-child { flex:0 1 auto; text-overflow:ellipsis }` (has room, no scroll). Verified @390: bc height 40px,
+   nowrap, overflow-x auto, no page-level horizontal overflow.
+2. Mobile LCP 5.1s / H1 element-render-delay 2270ms. `loadTemplateCSS()` was AWAITED in loadEager, adding a full
+   CSS round-trip before the H1 could render. Since the LCP H1's SIZE now lives in global styles.css (news template
+   only sets color/spacing, not LCP-critical), made template CSS load NON-BLOCKING: fire the promise, render eager,
+   await it only for loadLazy's templateName. Font already preloaded (prev fix). Gates: lint 0 · overflow ✓ · a11y ✓.
+NOTE: mobile LCP/FCP re-verify on PageSpeed after deploy. Remaining audit items (efficient cache lifetimes, minify
+CSS/JS, network dependency tree) are largely platform/EDS-pipeline controlled, not app CSS/JS.
+
+### 2026-09-07 — Mobile breadcrumb: keep the scrollbar VISIBLE (match source)
+Follow-up: source shows a working, draggable horizontal scrollbar on the breadcrumb; I'd hidden it. Removed the
+scrollbar-hiding (scrollbar-width:none + ::-webkit-scrollbar{display:none}) from header.css so the native
+horizontal scrollbar shows and moves, exactly like the source. Kept flex-wrap:nowrap + overflow-x:auto. Verified
+@390 with a long title: ol scrollable (scrollWidth 844 > client 390), row stays 40px, no page overflow. Desktop
+unchanged (overflow-x:hidden + ellipsis, fits without scroll). Gates: lint 0 · overflow ✓ · a11y ✓.

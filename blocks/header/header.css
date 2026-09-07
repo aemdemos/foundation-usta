@@ -311,16 +311,30 @@ header .nav-breadcrumb {
 
 header .nav-breadcrumb ol {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
   gap: 4px;
   margin: 0;
 
+  /* Single line that scrolls horizontally (source behaviour) — the long article
+     title must NOT wrap into a tall multi-line block on mobile. Keep the row one
+     crumb-line tall and let it scroll sideways. The scrollbar is left VISIBLE so
+     users can see/drag it, exactly as the source does. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
   /* horizontal gutter only — row height comes from the crumb line-height so it
      matches the source's 38px/28px (no vertical padding) */
   padding: 0 20px;
   list-style: none;
+}
+
+/* crumbs never shrink/wrap; the last (title) crumb can be long → it just extends
+   the scrollable row rather than wrapping. */
+header .nav-breadcrumb li {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 header .nav-breadcrumb li,
@@ -386,9 +400,9 @@ header .nav-breadcrumb a:hover {
     /* 40px gutter = logo gutter, so crumb-left == logo-left at every width */
     padding: 0 40px;
 
-    /* single-line row: keep the crumbs on ONE line (source never wraps the long
-       article title), so the row height stays at the crumb line-height. */
-    flex-wrap: nowrap;
+    /* desktop has room — no sideways scroll; the long title crumb ellipsizes
+       instead (rule below). (base sets flex-wrap:nowrap + overflow-x:auto.) */
+    overflow-x: hidden;
   }
 
   /* Source desktop breadcrumb row is 30px tall (measured in dev tools): a 28px
@@ -400,9 +414,11 @@ header .nav-breadcrumb a:hover {
     line-height: 28px;
   }
 
-  /* the current-page (last) crumb can be a long article title — clamp it to a
-     single line with an ellipsis so the breadcrumb row never grows taller. */
+  /* the current-page (last) crumb can be a long article title — on desktop clamp
+     it to a single line with an ellipsis (row has room; no scroll). Override the
+     base `flex: 0 0 auto` so it can shrink to allow the ellipsis. */
   header .nav-breadcrumb li:last-child {
+    flex: 0 1 auto;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

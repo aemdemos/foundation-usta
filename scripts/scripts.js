@@ -272,13 +272,18 @@ async function loadEager(doc) {
   document.documentElement.lang = 'en';
   preloadDisplayFont();
   decorateTemplateAndTheme();
-  templateName = await loadTemplateCSS();
+  // Kick off template CSS but DON'T block the eager render on it — the LCP H1's
+  // size lives in global styles.css, so the template stylesheet (news color/
+  // spacing) isn't LCP-critical. Awaiting it added a full CSS round-trip to the
+  // H1 render delay on slow mobile. Resolve `templateName` for loadLazy's JS.
+  const templateCssPromise = loadTemplateCSS();
   const main = doc.querySelector('main');
   if (main) {
     decorateMain(main);
     document.body.classList.add('appear');
     await loadSection(main.querySelector('.section'), waitForFirstImage);
   }
+  templateName = await templateCssPromise;
 
   try {
     /* if desktop (proxy for fast connection) or fonts already loaded, load fonts.css */
