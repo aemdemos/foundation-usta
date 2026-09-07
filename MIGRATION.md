@@ -2208,3 +2208,11 @@ User reported clicking the breadcrumb "Home" didn't go to the homepage. Root cau
 blocks/header/header.js: the hardcoded Home crumb now `href="/en/home"`, and the ancestor-crumb builder uses
 `a.href = href` (was `${href}.html`). titleMap lookups are unaffected — its keys are already `.html`-stripped, so
 `titleMap.get(href)` still matches. Gate: lint 0 errors.
+
+### 2026-09-07 — Breadcrumb link crumb: match source (blue + default underline, hover removes underline)
+User: the "Home" crumb should look like the source's link — blue with an underline, and the underline goes away on
+hover. Our crumbs were grey (#383838) with NO default underline and underline-on-hover (inverted). Confirmed the
+source rule `.cmp-breadcrumb__navigation-item--inactive` = color #0357b8 + text-decoration: underline, and its
+`a:hover` = text-decoration: none. Fixed blocks/header/header.css: split the anchor out of the shared `li, a` rule
+— `.nav-breadcrumb a { color:#0357b8; text-decoration:underline }` and `a:hover { text-decoration:none }`. The
+current-page crumb is a plain <li> (no anchor) so it stays grey. Gates: lint 0 · breakpoints ✓.
