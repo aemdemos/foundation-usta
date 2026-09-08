@@ -358,9 +358,12 @@ export default {
       });
       main.append(WebImporter.DOMUtils.createTable(rows, document));
       main.append(WebImporter.Blocks.createBlock(document, {
-        name: 'Section Metadata', cells: { style: 'section-yellow' },
+        // `center` centers the leading default content (the "We make a difference"
+        // intro + "The numbers speak to it." heading), matching the source; the
+        // cards-stats block carries its own centered grid so it's unaffected.
+        name: 'Section Metadata', cells: { style: 'section-yellow, center' },
       }));
-      emittedBlocks.push('cards-stats(yellow)');
+      emittedBlocks.push('cards-stats(yellow,center)');
     }
 
     // SECTION 6 — trailing black band

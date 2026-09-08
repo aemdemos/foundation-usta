@@ -2,7 +2,7 @@
   "status": "success",
   "url": "https://www.ustafoundation.com/en/home/our-impact.html",
   "path": "en/home/our-impact",
-  "timestamp": "2026-09-08T17:15:46.020Z",
+  "timestamp": "2026-09-08T18:00:46.773Z",
   "title": "Our Impact",
   "template": "general",
   "blocks": [
@@ -13,7 +13,7 @@
     "columns(reach,image-left,yellow,center-intro)",
     "banner-stats-grid",
     "spacer(yellow-strip)",
-    "cards-stats(yellow)",
+    "cards-stats(yellow,center)",
     "spacer(trailing-black-band)"
   ]
 }

@@ -254,6 +254,15 @@ body.general .hero.banner.block > div > div {
   padding: 0;
 }
 
+/* The homepage banner CTA is a fixed 238px pill (its "LEARN MORE"); the general-
+   template banner buttons are CONTENT-width with generous horizontal padding
+   (source "WHAT WE DO" = 183px: ~118px label + ~32px each side). Drop the fixed
+   238px width and use 24px side padding so it sizes to the label like the source. */
+body.general .hero.banner a.button:any-link {
+  width: auto;
+  padding: 14px 24px;
+}
+
 @media (width >= 768px) {
   body.general .hero.banner.block {
     /* desktop: 136px above the h1, 200px below the button (banner framing). */

@@ -2879,6 +2879,19 @@ refreshed (SHA1 `d5a7c7ee…`). Gates: lint 0 · breakpoint ✓.
   → 24px too short) — heights now match. Homepage banner untouched (body `appear`, not `general`).
 - Re-imported, localized (7 img, 0 hotlinks). Gates: lint 0 · breakpoint ✓. Renders on DA re-upload.
 
+### 2026-09-08 — our-impact round 5: banner CTA width (was fixed 238px, source 183px)
+Deployed our-impact review: the hero WHAT WE DO button was **238px** wide (the homepage banner CTA is a fixed
+`width: 238px` "LEARN MORE" pill), but the source our-impact button is **content-width ~183px** (label + generous
+padding). Added to the `body.general .hero.banner a.button` override: `width: auto` + `padding: 14px 24px` → **178px**
+(within ~5px of source, consistent with the who-we-are/get-involved CTAs). Homepage banner CTA stays 238px (not
+body.general). Gates: lint 0 · breakpoint ✓. CSS-only (hero.css) → next GitHub push.
+
+### 2026-09-08 — our-impact round 6: "We make a difference" intro should be centered
+The final yellow section's intro (H2 "We make a difference that matters." + 2 paras + "The numbers speak to it." H2)
+rendered LEFT but the source is `text-align: center` across the full 1170 content width. Added `center` to that
+section's metadata (`section-yellow, center`) — centers the leading default content; the cards-stats block keeps its
+own centered grid. Re-imported (7 img, 0 hotlinks). Gates: lint 0 · breakpoint ✓. Content change → renders on DA re-upload.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session
