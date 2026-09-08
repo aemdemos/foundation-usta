@@ -339,42 +339,69 @@ main > .section.hero-container:has(.hero.text-up) {
    fluid formulas (width ≈ 50vw, left ≈ 8.33vw + gutter), capped on very wide
    screens so the h1 wraps as the source does. */
 @media (width >= 768px) {
+  /* Source vertical framing (measured live at 1200–1920): the hero top→h1 gap is
+     a constant 80px and the buttons→hero-bottom gap a constant 378px; the band
+     height then follows the wrapping text (782px @992–1280 → 672 @1440 → 648
+     @1920). Our earlier 32/224 padding made it ~200px too short. */
   .hero.text-up.block {
-    padding: 32px 0 224px;
+    padding: 80px 0 378px;
   }
 
-  /* centered container at the tier width, with the panel indented from the left
-     edge to track the source's left offset. */
+  /* Source text-up panel is FLUID across the whole ≥768 range: width exactly
+     50vw, left exactly 8.333vw (768→384/64, 900→450/75, 991→496/83, 1280→640/107,
+     1440→720/120, 1920→960/160). One formula for the entire desktop range. */
   .hero.text-up.block > div {
     box-sizing: border-box;
-    width: min(calc(50vw - 40px), 720px);
+    width: 50vw;
     max-width: none;
-    margin-left: max(calc(8.333vw + 6px), 64px);
+    margin-left: 8.333vw;
   }
 
-  /* buttons side by side */
+  /* Source has a 15px inner gutter inside the panel (its Bootstrap column
+     padding): the text sits 15px in from the panel edge (h1 left 122 vs panel
+     107 @1280, 98 vs 83 @992), so the h1 content width is panel−30 → wraps
+     exactly like the source. Ours had text flush to the panel edge (15px too
+     far left, 30px too wide). */
+  .hero.text-up.block > div > div {
+    padding: 0 15px;
+  }
+
+  /* buttons side by side, 30px gap (source gutter). */
   .hero.text-up .button-container {
     display: inline-block;
-    margin-right: 16px;
+    margin-right: 0;
   }
 
   .hero.text-up .button-container + .button-container {
     margin-top: 0;
+
+    /* 30px source gutter minus the ~5px inline-block whitespace between the two
+       containers (they're inline-block, so the HTML newline renders as a space). */
+    margin-left: 25px;
   }
 
+  /* 768–991: source buttons are CONTENT-width (~148/142px — the label + 14px
+     padding), not yet fluid. Use the source's 14px padding (not 24px) so both
+     buttons + the 30px gap fit inside the 50vw (384px @768) panel without
+     wrapping to two rows. */
   .hero.text-up a.button:any-link {
     width: auto;
-    min-width: 143px;
-    padding: 14px 24px;
+    padding: 14px;
   }
 }
 
 @media (width >= 992px) {
-  .hero.text-up.block > div {
-    width: min(calc(50vw - 90px), 870px);
-    margin-left: min(calc(8.333vw + 45px), 205px);
+  /* From 992 the source buttons become FLUID — each grows with the panel (~29%
+     of the 50vw panel: 148@992, 183@1280, 210@1440, 237@1600, 290@1920), NOT a
+     fixed width. ≈14.5vw tracks that growth (our earlier fixed ~178px stayed the
+     same on wide screens while the source kept growing). Label centered via the
+     base flex rule. */
+  .hero.text-up a.button:any-link {
+    width: 14.5vw;
+    padding: 14px;
   }
 }
+
 
 /* ==================================================================
    Variant: error

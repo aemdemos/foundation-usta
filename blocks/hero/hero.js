@@ -107,12 +107,23 @@ function decorateTextUp(block) {
   const rows = [...block.children];
 
   // Row 1 holds the background image — pull it out and apply it as the block's
-  // own background so the text panel can overlay it (source uses cover / 50%
-  // center, no overlay). Keep the src on the element for CSS to consume.
+  // own background so the text panel can overlay it. The source composites a 40%
+  // black overlay (a full-cover rgba(0,0,0,0.4) layer) over the photo to darken
+  // it and keep the white text legible — reproduce it as a gradient layered in
+  // FRONT of the image so background-size:cover still applies to the photo.
   const imgRow = rows.find((r) => r.querySelector('img'));
   const bgImg = imgRow ? imgRow.querySelector('img') : null;
   if (bgImg && bgImg.src) {
-    block.style.backgroundImage = `url("${bgImg.src}")`;
+    // The hero photo is a FULL-BLEED background (up to ~1920px wide). The EDS
+    // <img> src is the smallest rendition (?width=750), which — stretched to
+    // cover the hero — looks soft and washed-out (lighter) vs the source's
+    // full-res image. Request a large optimized rendition instead so the photo
+    // is sharp and matches the source's tone. Rewrite width= to 2000 (or add it).
+    let bgUrl = bgImg.src;
+    bgUrl = (/([?&])width=\d+/.test(bgUrl))
+      ? bgUrl.replace(/([?&])width=\d+/, '$1width=2000')
+      : `${bgUrl}${bgUrl.includes('?') ? '&' : '?'}width=2000&format=webply&optimize=medium`;
+    block.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("${bgUrl}")`;
     imgRow.remove();
   }
 

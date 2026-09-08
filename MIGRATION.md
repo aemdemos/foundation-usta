@@ -2684,6 +2684,54 @@ section ENDING in a CTA has zero buffer and only the 40px section-margin separat
 Gates: lint **0 errors** · breakpoint-check ✓ · overflow ✓ (360/768/992/1200/1920) · typography ✓ · a11y ✓.
 **Deploy note:** CSS → next GitHub push (no re-import; content unchanged).
 
+### 2026-09-08 — who-we-are round 7: hero text-up — washed-out image, height, panel position/dimensions
+Source-vs-migrated hero comparison showed the migrated hero (a) LIGHTER/softer image, (b) shorter, (c) text panel
+mispositioned/mis-sized. Measured all three vs the live source and fixed:
+1. **LIGHTER image = low-res rendition.** hero.js set the full-bleed background from `bgImg.src`, which is the EDS
+   **?width=750** rendition — stretched over a 1280–1920px hero it looked soft/washed-out vs the source's full-res
+   `who-we-are-header.jpg` (1920×1080). Fix (blocks/hero/hero.js): rewrite the bg URL's `width=750` → **`width=2000`**
+   (or append `?width=2000&format=webply&optimize=medium` if absent) so the full-bleed photo is sharp + matches the
+   source tone. NOT a dimming/overlay issue — measured: neither site has a hero overlay (text-up has no dark layer,
+   unlike banner).
+2. **HERO HEIGHT too short.** Source vertical framing (measured 1200–1920): top→h1 **80px**, buttons→bottom **378px**
+   constant; band height then follows the wrapping text (782 @992–1280 → 672 @1440 → 648 @1920). Ours used
+   `padding: 32px 0 224px` → 580px (~200 short). Fix: desktop padding → **`80px 0 378px`**.
+3. **PANEL POSITION/DIMENSIONS.** Source text-up panel is FLUID across the WHOLE ≥768 range: width exactly **50vw**,
+   left exactly **8.333vw** (768→384/64 … 1920→960/160), with a **15px inner gutter** (Bootstrap column padding) so
+   the h1 sits 15px in (left 122 vs panel 107 @1280) and its content width is panel−30 → wraps like the source. Ours
+   used a banner-derived `min(50vw−90)/min(8.333vw+45)` (capped, offset) with no inner gutter → h1 15px too far left,
+   30px too wide, wrong wrap (2 lines @1440 where source is 1). Fix: unified the ≥768 panel to plain `width: 50vw;
+   margin-left: 8.333vw` (removed the redundant ≥992 override) + added `.hero.text-up.block > div > div { padding:
+   0 15px }`. Verified EXACT match @992/1280/1440/1920 (h1 left 98/122/135/175, width 466/610/690/930, lines 2/2/1/1,
+   height 782/782/672/648); @768 within ~9px (source's 768 inner gutter is 6px vs our 15px — negligible edge case).
+   Mobile heights (708/625/625/601 @360/390/430/500) unchanged.
+Gates: lint **0 errors** · breakpoint-check ✓ · overflow ✓ (360/768/992/1200/1920) · typography ✓ · a11y ✓.
+**Deploy note:** CSS (hero.css) + JS (hero.js) → next GitHub push; no re-import (content unchanged).
+
+### 2026-09-08 — who-we-are round 8: hero text-up 40% black overlay (correcting round-7's "no overlay")
+Round 7 claimed the text-up hero has NO dark overlay — WRONG. Re-scanned the source (my first scan only checked
+position:absolute/fixed elements; this overlay is an IN-FLOW `cmp-container`): the source composites a **full-cover
+`rgba(0,0,0,0.4)` layer** over the photo (exact hero size 1280×782, behind the text), same treatment as the `banner`
+variant. That's why the source reads darker/richer and the white text stays legible. Fix (blocks/hero/hero.js): the
+text-up bg is now `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(...)` — the gradient dims the photo while
+`background-size: cover` still applies. Verified: overlay renders, image darkened to match source, a11y contrast ✓.
+Gates: lint 0 · breakpoint ✓ · overflow ✓ · typography ✓ · a11y ✓. Deploy: hero.js → next GitHub push.
+
+### 2026-09-08 — who-we-are round 9: hero text-up CTA buttons — fluid width + 30px gap
+Source-vs-migrated CTA comparison. Measured both across 768–1920: the source buttons are NOT fixed-width — from
+992 they're **FLUID** (~29% of the 50vw panel: 148@992, 183@1280, 210@1440, 237@1600, 290@1920) with a **30px**
+inter-button gap; at 768–991 they're **content-width** (~148/142px, 14px padding). Ours were a FIXED ~178px (24px
+padding) with a 21px gap — so on wide screens the source grew and ours stayed put (the mismatch the screenshots
+showed), and the gap was wrong. Fixes (blocks/hero/hero.css):
+- **≥768–991:** button `width: auto; padding: 14px` (source's 14px padding, not 24px — else the two buttons + 30px
+  gap overflow the 384px @768 panel and wrap to two rows).
+- **≥992:** button `width: 14.5vw` (tracks the source's fluid growth within ~10px across 992–1920).
+- **Gap:** `.button-container + .button-container { margin-left: 25px }` — 30px source gutter minus the ~5px
+  inline-block whitespace between the two containers → measured 30px at every width.
+Verified: @768/900 content-width same-row 30px gap; @992–1920 fluid 144/186/209/278 (src 148/183/210/290) 30px gap;
+mobile stacked 48vw (187/206/240) unchanged. Gates: lint 0 · breakpoint ✓ · overflow ✓ · typography ✓ · a11y ✓.
+Deploy: hero.css → next GitHub push.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session
