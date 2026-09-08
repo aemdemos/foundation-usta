@@ -140,7 +140,11 @@ header nav[aria-expanded='true'] .nav-hamburger-icon::after {
 
 /* ---------- sections (nav links) ---------- */
 
-/* Mobile: off-canvas panel that slides in from the right (matches source). */
+/* Mobile: off-canvas panel that slides in from the LEFT (matches source, which
+   parks the menu at left:-100% and animates it to 0). Both open AND close
+   animate: the panel always keeps its 0.3s transform transition, and visibility
+   is delayed on close (transitioned) so the slide-out is visible before the
+   panel is hidden — previously `visibility:hidden` snapped it away instantly. */
 header nav .nav-sections {
   grid-area: sections;
   position: fixed;
@@ -153,14 +157,15 @@ header nav .nav-sections {
   padding: 8px 20px 40px;
   overflow-y: auto;
   background: #fff;
-  transform: translateX(100%);
-  transition: transform 0.3s ease-out;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-out, visibility 0s linear 0.3s;
   visibility: hidden;
 }
 
 header nav[aria-expanded='true'] .nav-sections {
   transform: translateX(0);
   visibility: visible;
+  transition: transform 0.3s ease-out, visibility 0s linear 0s;
 }
 
 header nav .nav-sections ul {
@@ -207,15 +212,17 @@ header nav .nav-drop-toggle {
   cursor: pointer;
 }
 
+/* Same solid ▼ chevron as desktop: an 18×12 grey triangle (border-left/right 9px
+   transparent + border-top 12px in mid-grey #6e7277) — NOT the smaller blue one. */
 header nav .nav-drop-toggle::after {
   content: '';
   display: block;
   width: 0;
   height: 0;
   margin: 0 auto;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid var(--brand-blue);
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 12px solid rgb(110 114 119);
   transition: transform 0.2s ease;
 }
 

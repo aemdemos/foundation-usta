@@ -2418,3 +2418,15 @@ lint 0 · breakpoints ✓.
 The top blue accent bar was a flat 8px at all widths; the source is 5px on mobile, 8px from desktop (measured 5px
 @430 / 8px @1280). blocks/header/header.css: base border-top 8px → 5px, added an 8px override in the ≥992 media
 query. Gates: lint 0 · breakpoints ✓.
+
+### 2026-09-08 — Mobile header: chevron parity + panel slide-from-left with close animation
+Two mobile-nav fixes (blocks/header/header.css):
+1. CHEVRON — the mobile drop-toggle used a small BLUE triangle (border 5/5/6px, brand-blue); source uses the SAME
+   grey chevron as desktop. Matched desktop: 18×12 grey triangle (border-left/right 9px transparent, border-top 12px
+   rgb(110 114 119)).
+2. SLIDE DIRECTION + CLOSE ANIMATION — panel slid in from the RIGHT (translateX(100%)) and, on close,
+   `visibility:hidden` snapped it away with no animation. Source parks the menu off-screen LEFT and animates in.
+   Fixed: transform translateX(-100%) (slide from left); keep the 0.3s transform transition in BOTH states; delay
+   visibility on close (`transition: transform .3s, visibility 0s linear .3s`) and apply it immediately on open
+   (`…visibility 0s linear 0s`) so the slide-OUT is visible before the panel hides. JS only toggles aria-expanded
+   (no display:none), so the CSS transition drives both directions. Gates: lint 0 · breakpoints ✓.
