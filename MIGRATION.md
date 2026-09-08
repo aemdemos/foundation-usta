@@ -2639,6 +2639,51 @@ check:overflow ✓ (360/768/992/1200/1920) · check:typography ✓ (390/768/992/
 on next DA upload of who-we-are.plain.html (dev server serves `/en/**` from the DA bus, so the italic won't render
 on localhost until uploaded — the button fix DOES render locally since CSS is served from the working copy).
 
+### 2026-09-08 — who-we-are round 5: missing leading YELLOW STRIP above the yellow band
+User flagged a white seam directly above "Our Leadership and Staff". Measured the live source at the History→band
+seam (full-bleed bg sampling at x=5): the source stacks **yellow strip (~17px) → white gap (~17px) → main yellow
+band** — exactly the homepage colored-spacer pattern (`cards-band-bg` blue strip, `stats-band-bg` black strip). Ours
+had NO strip — the yellow band began flush at the heading.
+- **Importer:** added SECTION 3b — a Spacer block (`color: section-yellow-bg` #ffefbe, `desktop: 17px`) in its own
+  section between History (SECTION 3) and the yellow band (SECTION 4). Re-bundled, re-imported (85.9%), re-localized
+  (7 images, 0 hotlinks). Content now has 2 spacers (leading yellow strip + trailing black band).
+- **styles.css:** added the `:has(.spacer[style*='section-yellow-bg'])` rules mirroring the blue-strip ones — the
+  spacer section floats **40px above / 17px white gap below** (mobile), **56px / 17px** ≥992, and the following
+  `.section-yellow` band gets `margin-top: 0` so it butts the white gap. (spacer.js `resolveColor` turns the token
+  name into `var(--section-yellow-bg)`, so the inline style contains the `section-yellow-bg` substring the `:has()`
+  selector keys on.)
+- **Verified** (DOM-injection on the live-served page, since localhost serves `/en/**` from the DA bus so the new
+  strip won't render locally until uploaded): strip 17px tall, bg rgb(255,239,190)=#ffefbe (matches source),
+  section margin 56/17, band margin-top 0, 17px white gap strip→band — reproduces the source seam exactly.
+Backup refreshed → `tools/importer/backups/general/` (SHA1 `81f042f7…`, manifest round-5).
+**Gates:** lint **0 errors** · breakpoint-check ✓ · check:overflow ✓ (360/768/992/1200/1920) · check:typography ✓
+(390/768/992/1200) · test:a11y ✓.
+**Deploy note:** CSS (strip rules) → next GitHub push; content (the strip section) → next DA upload of who-we-are.
+
+### 2026-09-08 — who-we-are: confirmed "Chris Evert" bold-italic deployed
+"Chris Evert, Chairperson" DID deploy correctly — live renders it `<em><strong>` computed **fw 700 + italic**
+(bold italic, matches source); the earlier non-bold screenshot was the pre-DA-upload state.
+
+### 2026-09-08 — who-we-are round 6: supporters CTA had no breathing room below it (button flush to section edge)
+User (with a DevTools overlay) showed the LEARN MORE button in the "Our Supporters" band sits FLUSH at the section's
+bottom edge, so the cards-tiles section below is jammed close — the gap should belong to the section regardless of
+what content ends it, not be occupied by the button. Measured: source button-bottom→first-card-image **70px**, ours
+**40px**; ours `spaceBtnToSecBottom: 0` (button touches the boundary) vs the source keeping room below. Root cause:
+the `p.button-wrapper` 12px bottom margin COLLAPSES into the section boundary (section `padding-bottom: 0`), so a
+section ENDING in a CTA has zero buffer and only the 40px section-margin separates it from the next section.
+- **Fix (styles.css, CSS-only):** guaranteed bottom breathing room via PADDING (padding doesn't collapse) on a
+  general-page section whose LAST content is a CTA button —
+  `body.general main > .section:has(> .default-content-wrapper:last-child > p.button-wrapper:last-child)
+  { padding-bottom: 30px }` (+ zero that button-wrapper's own bottom margin). 30px pad + 40px margin = **70px**
+  button→cards, exact source match. Independent of trailing-content type; NOT a per-section magic margin — a
+  reusable `:has(...ends in CTA)` rule. Verified only the `center wide` supporters section (ends in a button) gets
+  the 30px; the `center medium` intro (ends in a paragraph) and the yellow band are unaffected.
+- Verified local: gap now 70px; supporters section padding-bottom 30px; no other section changed.
+- (Earlier this turn I tried a `.cards-container { margin-top: 70px }` override and reverted it — that was the wrong
+  model; the space must live in the SECTION that ends in the button, as padding, per this fix.)
+Gates: lint **0 errors** · breakpoint-check ✓ · overflow ✓ (360/768/992/1200/1920) · typography ✓ · a11y ✓.
+**Deploy note:** CSS → next GitHub push (no re-import; content unchanged).
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session

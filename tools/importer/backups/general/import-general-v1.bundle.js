@@ -260,6 +260,12 @@ var CustomImportScript = (() => {
         emittedBlocks.push("columns(history,image-right)");
       }
       main.append(document.createElement("hr"));
+      main.append(WebImporter.Blocks.createBlock(document, {
+        name: "Spacer",
+        cells: { color: "section-yellow-bg", desktop: "17px" }
+      }));
+      emittedBlocks.push("spacer(leading-yellow-strip)");
+      main.append(document.createElement("hr"));
       leadText.forEach((n) => main.append(n));
       if (leadCta) main.append(ctaParagraph(document, leadCta.href, leadCta.text));
       {

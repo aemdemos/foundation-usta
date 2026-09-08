@@ -612,6 +612,21 @@ body.general main a.button.accent:focus-visible {
   color: var(--background-color);
 }
 
+/* A general-page intro section that ENDS IN A CTA button (e.g. the "Our
+   Supporters" band before the cards) leaves the button flush against the section
+   edge — its 12px button-wrapper bottom margin collapses into the section boundary
+   (section padding-bottom is 0), so the following section sits only the 40px
+   section-margin away (button→next-content 40px vs the source's ~70px). Add
+   guaranteed bottom breathing room via PADDING (padding doesn't collapse) when the
+   section's last content is a button, independent of the trailing content type. */
+body.general main > .section > .default-content-wrapper:last-child > p.button-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+body.general main > .section:has(> .default-content-wrapper:last-child > p.button-wrapper:last-child) {
+  padding-bottom: 30px;
+}
+
 /* ------------------------------------------------------------------
    Generic, reusable, block-agnostic SECTION layout styles. Composable —
    author them together in Section Metadata (e.g. style: "center, narrow").
