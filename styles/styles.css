@@ -537,6 +537,24 @@ main .section.dark {
 }
 
 /* ------------------------------------------------------------------
+   Page themes. A `Theme` metadata row adds its value as a <body> class via the
+   stock decorateTemplateAndTheme() — NO extra CSS/JS fetch (unlike `Template`),
+   so a CSS-only interior page layers cleanly here in the global sheet.
+
+   leadership — the Leadership & Staff page (who-we-are/leadership-and-staff).
+   The source page's H1 sits ~41px below the breadcrumb with no heading margin,
+   whereas our global `h1` carries a 0.8em (~80px at 100px) top margin. Zero that
+   margin and set the first section's top padding to the measured source gap.
+   ------------------------------------------------------------------ */
+body.leadership main > .section:first-of-type {
+  padding-top: 41px;
+}
+
+body.leadership main h1 {
+  margin-top: 0;
+}
+
+/* ------------------------------------------------------------------
    Generic, reusable, block-agnostic SECTION layout styles. Composable —
    author them together in Section Metadata (e.g. style: "center, narrow").
    These style the SECTION's default content only; blocks carry their own

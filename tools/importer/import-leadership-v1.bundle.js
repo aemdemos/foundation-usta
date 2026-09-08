@@ -270,7 +270,7 @@ var CustomImportScript = (() => {
         tr.append(k, v);
         metaTable.querySelector("tbody")?.append(tr) || metaTable.append(tr);
       };
-      addMetaRow("Template", "leadership");
+      addMetaRow("Theme", "leadership");
       WebImporter.rules.transformBackgroundImages(main, document);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
       const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");

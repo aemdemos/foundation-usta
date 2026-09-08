@@ -583,7 +583,9 @@
   align-items: stretch;
 }
 
-/* White shadowed card. Source: #fff, box-shadow rgba(0,0,0,.5) 0 2px 5px.
+/* White shadowed card. Source `.tile .cmp-teaser`: #fff, a 1px hairline border
+   (rgba(0,0,0,.05)), 4px rounded corners, box-shadow rgba(0,0,0,.5) 0 2px 5px.
+   `overflow: hidden` clips the square photo to the rounded top corners.
    Mobile: single centered card capped at 312 (source card width @390). */
 .cards.profile > ul > li {
   display: flex;
@@ -591,7 +593,10 @@
   justify-self: center;
   width: 100%;
   max-width: 312px;
+  overflow: hidden;
   background-color: #fff;
+  border: 1px solid rgb(0 0 0 / 5%);
+  border-radius: 4px;
   box-shadow: 0 2px 5px 0 rgb(0 0 0 / 50%);
 }
 
@@ -606,6 +611,11 @@
   height: auto;
   aspect-ratio: 1 / 1;
   object-fit: cover;
+
+  /* Source anchors the square crop to the TOP of the portrait (object-position
+     50% 0%) so headshots frame the face, not the chest — matters for the taller
+     source portraits (Kim, Kasey). */
+  object-position: 50% 0%;
 }
 
 /* Text area — source content-wrapper padding is `0 20px` at mobile/tablet and

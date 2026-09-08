@@ -26,7 +26,7 @@
  *   section 3: <h3>Board of Directors</h3> + `cards (profile)` +
  *              `table (directory)` + Section Metadata (profile-anchor:
  *              board-of-directors)
- *   Metadata block: Title (source) + Template = leadership
+ *   Metadata block: Title (source) + Theme = leadership
  *
  * Each `.cmp-teaser` ships the name in TWO <h4>s (a visible `_scalable` one and a
  * hidden `_hidden` link copy) — we read the visible one only, so no duplicate.
@@ -330,7 +330,11 @@ export default {
       tr.append(k, v);
       metaTable.querySelector('tbody')?.append(tr) || metaTable.append(tr);
     };
-    addMetaRow('Template', 'leadership');
+    // A `Theme` (not `Template`) — leadership is a CSS-only page, styled via a
+    // `body.leadership` class in the global sheet. `Theme` adds the class with no
+    // extra CSS/JS fetch (there is no templates/leadership/); `Template` would
+    // trigger a 404 fetch for a template stylesheet that intentionally doesn't exist.
+    addMetaRow('Theme', 'leadership');
 
     // 5. Image + link URL rules.
     WebImporter.rules.transformBackgroundImages(main, document);

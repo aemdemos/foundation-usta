@@ -2519,3 +2519,38 @@ staff cards, 18 list lines, 2 board cards, 3 dir columns), 10 images localized (
 tools/importer/backups/leadership/ (script + bundle + urls + manifest). Gate: lint 0 errors.
 NOTE: the `leadership` template has no templates/leadership/ CSS/JS yet — the page relies on the toc-profile/cards/
 table block styles. If per-template tweaks are needed (e.g. section spacing/H1 color), add templates/leadership/.
+
+### 2026-09-08 — Leadership page: rasterize SVG headshots (DA image validation 409)
+DA preview rejected the page: "Images 2 and 5 have failed validation." Cause: two staff headshots (Kim Borza
+Donaldson, Kasey O'Connor) were exported by the source as **SVG-wrapped rasters** (Inkscape `<image
+xlink:href="data:image/jpeg;base64,…">`, 2.8MB/815KB) — DA's pipeline rejects SVG as a content-image source.
+Fix: extracted the embedded base64 JPEG from each SVG (decoding &#10; entities + stripping whitespace),
+wrote real .jpeg files (same media-<hash> stem, .svg→.jpeg), downscaled to 500×750 @q82 (~33KB/44KB) with
+ImageMagick, and rewrote the .plain.html refs .svg→.jpeg. Also downscaled the oversized Ginny Ehrlich headshot
+(1500² 870KB → 750² 90KB). Final: 10/10 images real rasters, 0 SVGs, none >100KB. NOTE for future imports:
+localize-assets keeps source SVGs as-is; SVG-wrapped raster headshots must be rasterized before DA publish.
+
+### 2026-09-08 — Leadership page parity fixes + Template→Theme (CSS-only page)
+Three source-parity fixes on who-we-are/leadership-and-staff:
+1. **Breadcrumb→H1 gap** was 80px (global `h1` carries `margin-top: 0.8em` ≈ 80px at the 100px display size) vs the
+   source's **41px** (source H1 has margin 0). Fixed as a **page theme**, not a template: styled `body.leadership`
+   in the GLOBAL styles.css — `main > .section:first-of-type { padding-top: 41px }` + `main h1 { margin-top: 0 }`.
+2. **Profile card decoration** — source `.tile .cmp-teaser` has `border: 1px solid rgba(0,0,0,.05)` +
+   `border-radius: 4px` on top of the box-shadow. This is NOT page-specific (applies to every profile tile), so
+   added it to the shared `blocks/cards/cards.css` `.cards.profile > ul > li` (+ `overflow: hidden` to clip the
+   square photo to the rounded top corners).
+3. **Kim Borza Donaldson image "not properly placed"** — her extracted headshot is a 500×750 PORTRAIT (from the
+   SVG-wrapped raster); a centered square crop framed the chest. Source uses `object-position: 50% 0%` (top-
+   anchored — the SVG lays the 1504×2256 portrait into the 1500² square showing only the top ~66.5%). Added
+   `object-position: 50% 0%` to `.cards.profile .cards-profile-card-image img` so `object-fit: cover` takes the
+   top square — faces framed correctly for both taller portraits (Kim, Kasey).
+
+**Template→Theme decision:** switched the importer's metadata row from `Template: leadership` to `Theme: leadership`.
+Rationale: this is a CSS-only page. `decorateTemplateAndTheme()` (aem.js) adds BOTH template and theme metadata as
+`<body>` classes, but scripts.js additionally does an EAGER `loadCSS(templates/<name>/<name>.css)` for `template` —
+which would 404 for a template stylesheet we intentionally don't have. `theme` adds the `body.leadership` class with
+**no extra fetch**, and the same class drives the global-sheet rules above. Deleted the stub templates/leadership/.
+Re-bundled + re-imported (SHA1 c2148877…); re-localized assets (0 hotlinks) and re-rasterized the two SVG headshots
+(re-import reverts both — documented in the leadership backup manifest as required post-import steps).
+Gates (all pass): lint 0 errors; breakpoint-check ✓; overflow 360/768/992/1200/1920 ✓; typography 390/768/992/1200 ✓;
+a11y ✓. Verified crumb→H1 = 41px and card border/radius/crop against the source live DOM.
