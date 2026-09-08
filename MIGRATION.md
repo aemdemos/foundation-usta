@@ -2400,3 +2400,10 @@ evert-speaks-on-rally-to-rebuild) has NO padding band → ~25px gap from the H1'
 (e.g. Aerie) author an extra padding-top band. Matched the common/default case: first-section padding-top 64→24px
 desktop (verified: 24px pad → 24px gap ≈ source 25px), 32→8px mobile. Gates: lint 0 · breakpoints ✓. Renders on
 preview once published.
+
+### 2026-09-08 — News H1→body gap matched to source (was too tight)
+User: the body content sits too close under the H1 vs the source. Measured H1-bottom→first-body-paragraph gap:
+source ~89px mobile / ~105px desktop; migrated only ~54px. The source leaves a big gap below the article headline.
+Reproduced via the news H1's bottom margin (it collapses with the following block's top gap): margin-bottom
+10px → 75px mobile / 91px desktop. Verified live-injected: 75→88px mobile (src 89), 91→105px desktop (src 105) —
+match. templates/news/news.css only; renders on preview once deployed. Gates: lint 0 · breakpoints ✓.

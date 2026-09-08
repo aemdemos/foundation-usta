@@ -42,8 +42,19 @@ body.news main > .section:first-of-type {
 body.news main h1 {
   --dark-color: #333;
 
-  margin: 0 0 10px;
+  /* Source leaves a large gap below the article H1 before the body content
+     (measured H1→first-paragraph: ~89px mobile, ~105px desktop). Reproduce it
+     with the H1's bottom margin (it collapses with the following block's top gap,
+     so the effective gap lands on the source values: 75→~88px mobile, 91→~105px
+     desktop, both matching the source). */
+  margin: 0 0 75px;
   color: #333;
+}
+
+@media (width >= 768px) {
+  body.news main h1 {
+    margin-bottom: 91px;
+  }
 }
 
 /* Higher-specificity twin (0,2,3) so the explicit #333 wins over the global
