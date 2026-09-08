@@ -2,13 +2,14 @@
   "status": "success",
   "url": "https://www.ustafoundation.com/en/home/news/newport-njtl-honor-chris-evert.html",
   "path": "en/home/news/newport-njtl-honor-chris-evert",
-  "timestamp": "2026-09-07T17:12:30.053Z",
+  "timestamp": "2026-09-08T04:46:47.185Z",
   "title": "Home of Newport NJTL named in honor of Chris Evert",
   "template": "news",
   "blocks": [
     "cards-news",
     "social",
     "reactions",
+    "instagram-split×1",
     "columns-media×1"
   ]
 }

@@ -242,13 +242,34 @@ var CustomImportScript = (() => {
     ], document);
   }
   function instaPermalinkFrom(url) {
-    const m = /instagram\.com\/p\/([A-Za-z0-9_-]+)/.exec(url || "");
-    return m ? `https://www.instagram.com/p/${m[1]}/` : "";
+    const m = /instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/.exec(url || "");
+    return m ? `https://www.instagram.com/${m[1]}/${m[2]}/` : "";
   }
   function isHiddenDup(el) {
     if (!el.getBoundingClientRect) return false;
     const r = el.getBoundingClientRect();
     return r.width === 0 && r.height === 0;
+  }
+  function buildSplitLeftSection(document, embedEl, embedBlock) {
+    const embedCol = embedEl.closest('[class*="GridColumn--default--5"], [class*="GridColumn--default--6"], [class*="GridColumn--default--7"]');
+    if (!embedCol || !embedCol.parentElement) return false;
+    const sibs = [...embedCol.parentElement.children].filter((c) => c.className && /GridColumn--default--\d+/.test(c.className));
+    const idx = sibs.indexOf(embedCol);
+    const textCol = [sibs[idx + 1], sibs[idx - 1]].find((c) => c && !c.querySelector("blockquote, iframe, picture, img") && (c.textContent || "").trim().length > 20 && !/GridColumn--default--12/.test(c.className));
+    if (!textCol) return false;
+    const frag = document.createElement("div");
+    frag.append(document.createElement("hr"));
+    frag.append(embedBlock);
+    const t = textCol.cloneNode(true);
+    while (t.firstChild) frag.append(t.firstChild);
+    frag.append(WebImporter.Blocks.createBlock(document, {
+      name: "Section Metadata",
+      cells: { style: "split-left" }
+    }));
+    frag.append(document.createElement("hr"));
+    embedCol.replaceWith(...frag.childNodes);
+    textCol.remove();
+    return true;
   }
   function wrapTweetSections(document, root) {
     let built = 0;
@@ -257,27 +278,26 @@ var CustomImportScript = (() => {
         bq.remove();
         return;
       }
-      const tweetCol = bq.closest('[class*="GridColumn--default--5"], [class*="GridColumn--default--6"], [class*="GridColumn--default--7"]');
-      if (!tweetCol || !tweetCol.parentElement) return;
-      const sibs = [...tweetCol.parentElement.children].filter((c) => c.className && /GridColumn--default--\d+/.test(c.className));
-      const idx = sibs.indexOf(tweetCol);
-      const textCol = [sibs[idx + 1], sibs[idx - 1]].find((c) => c && !c.querySelector("blockquote, iframe, picture, img") && (c.textContent || "").trim().length > 20 && !/GridColumn--default--12/.test(c.className));
-      if (!textCol) return;
-      const tweetBlock = buildTweetBlock(document, bq);
-      const frag = document.createElement("div");
-      frag.append(document.createElement("hr"));
-      frag.append(tweetBlock);
-      const t = textCol.cloneNode(true);
-      while (t.firstChild) frag.append(t.firstChild);
-      const meta = WebImporter.Blocks.createBlock(document, {
-        name: "Section Metadata",
-        cells: { style: "split-left" }
-      });
-      frag.append(meta);
-      frag.append(document.createElement("hr"));
-      tweetCol.replaceWith(...frag.childNodes);
-      textCol.remove();
-      built += 1;
+      if (buildSplitLeftSection(document, bq, buildTweetBlock(document, bq))) built += 1;
+    });
+    return built;
+  }
+  function wrapInstagramSections(document, root) {
+    let built = 0;
+    const nodes = [
+      ...root.querySelectorAll('iframe[src*="instagram.com/"]'),
+      ...root.querySelectorAll("blockquote.instagram-media")
+    ];
+    nodes.forEach((el) => {
+      if (isHiddenDup(el)) {
+        el.remove();
+        return;
+      }
+      const raw = el.getAttribute("src") || el.getAttribute("data-instgrm-permalink") || (el.querySelector && el.querySelector('a[href*="instagram.com/"]') || {}).getAttribute?.("href") || "";
+      const permalink = instaPermalinkFrom(raw);
+      if (!permalink) return;
+      const block = buildInstagramBlock(document, permalink);
+      if (block && buildSplitLeftSection(document, el, block)) built += 1;
     });
     return built;
   }
@@ -290,12 +310,20 @@ var CustomImportScript = (() => {
       bq.replaceWith(buildTweetBlock(document, bq));
     });
     root.querySelectorAll("blockquote.instagram-media").forEach((bq) => {
-      const permalink = bq.getAttribute("data-instgrm-permalink") || (bq.querySelector('a[href*="instagram.com/p/"]') || {}).getAttribute?.("href") || "";
+      if (isHiddenDup(bq)) {
+        bq.remove();
+        return;
+      }
+      const permalink = bq.getAttribute("data-instgrm-permalink") || (bq.querySelector('a[href*="instagram.com/"]') || {}).getAttribute?.("href") || "";
       const block = buildInstagramBlock(document, instaPermalinkFrom(permalink) || permalink);
       if (block) bq.replaceWith(block);
       else bq.remove();
     });
-    root.querySelectorAll('iframe[src*="instagram.com/p/"]').forEach((iframe) => {
+    root.querySelectorAll('iframe[src*="instagram.com/"]').forEach((iframe) => {
+      if (isHiddenDup(iframe)) {
+        iframe.remove();
+        return;
+      }
       const permalink = instaPermalinkFrom(iframe.getAttribute("src"));
       const block = buildInstagramBlock(document, permalink);
       if (!block) {
@@ -396,29 +424,31 @@ var CustomImportScript = (() => {
     const ytIframes = [...root.querySelectorAll("iframe")].filter((f) => /youtube\.com|youtu\.be/.test(f.getAttribute("data-src") || f.getAttribute("src") || ""));
     ytIframes.forEach((iframe) => {
       const ytUrl = iframe.getAttribute("data-src") || iframe.getAttribute("src");
-      const vidCol = iframe.closest('[class*="GridColumn--default--6"]') || iframe.closest('[class*="GridColumn"]');
-      if (!vidCol || !vidCol.parentElement) return;
-      const grid = vidCol.parentElement;
-      const cols = [...grid.children];
-      const vi = cols.indexOf(vidCol);
-      const textCol = vi > 0 ? cols[vi - 1] : null;
       const videoBlock = buildVideoEmbedBlock(document, ytUrl);
-      const frag = document.createElement("div");
-      const before = document.createElement("hr");
-      frag.append(before);
-      if (textCol) {
+      const partialCol = iframe.closest('[class*="GridColumn--default--5"], [class*="GridColumn--default--6"], [class*="GridColumn--default--7"]');
+      let textCol = null;
+      if (partialCol && partialCol.parentElement) {
+        const sibs = [...partialCol.parentElement.children].filter((c) => c.className && /GridColumn--default--\d+/.test(c.className));
+        const idx = sibs.indexOf(partialCol);
+        textCol = [sibs[idx - 1], sibs[idx + 1]].find((c) => c && !c.querySelector("iframe, blockquote, picture, img") && (c.textContent || "").trim().length > 20 && !/GridColumn--default--12/.test(c.className));
+      }
+      if (partialCol && textCol) {
+        const frag = document.createElement("div");
+        frag.append(document.createElement("hr"));
         const t = textCol.cloneNode(true);
         while (t.firstChild) frag.append(t.firstChild);
+        frag.append(videoBlock);
+        frag.append(WebImporter.Blocks.createBlock(document, {
+          name: "Section Metadata",
+          cells: { style: "split-right" }
+        }));
+        frag.append(document.createElement("hr"));
+        partialCol.replaceWith(...frag.childNodes);
+        textCol.remove();
+      } else {
+        const host = iframe.closest('[class*="GridColumn"]') || iframe.closest("p") || iframe;
+        host.replaceWith(videoBlock);
       }
-      frag.append(videoBlock);
-      const meta = WebImporter.Blocks.createBlock(document, {
-        name: "Section Metadata",
-        cells: { style: "split-right" }
-      });
-      frag.append(meta);
-      frag.append(document.createElement("hr"));
-      vidCol.replaceWith(...frag.childNodes);
-      if (textCol) textCol.remove();
       built += 1;
     });
     return built;
@@ -505,6 +535,48 @@ var CustomImportScript = (() => {
     });
     return built;
   }
+  function wrapGradeListTable(document, root) {
+    let built = 0;
+    const isGroupHead = (t) => /^(freshmen|sophomores?|juniors?|seniors?|boys|girls|men|women|\d+\s*(and)?\s*(under|over))\b/i.test(t) && t.length <= 30 && !/\s[-–—]\s/.test(t) && !/[.]$/.test(t);
+    [...root.querySelectorAll(".cmp-text, .text")].forEach((host) => {
+      const ps = [...host.querySelectorAll(":scope > p")];
+      if (!ps.length) return;
+      const leadIdx = ps.findIndex((p) => /following categories:?\s*$/i.test((p.textContent || "").trim()));
+      if (leadIdx === -1) return;
+      const groups = [];
+      let cur = null;
+      for (let i = leadIdx + 1; i < ps.length; i += 1) {
+        const t = (ps[i].textContent || "").replace(/ /g, " ").trim();
+        if (!t) {
+          cur = null;
+          continue;
+        }
+        if (isGroupHead(t)) {
+          cur = [ps[i]];
+          groups.push(cur);
+          continue;
+        }
+        if (cur) cur.push(ps[i]);
+      }
+      if (groups.length < 2) return;
+      const rows = [["Table"]];
+      groups.forEach((g) => {
+        const cell = document.createElement("div");
+        g.forEach((p) => cell.append(p.cloneNode(true)));
+        rows.push([cell]);
+      });
+      const table = WebImporter.DOMUtils.createTable(rows, document);
+      const firstEl = groups[0][0];
+      firstEl.parentNode.insertBefore(table, firstEl);
+      let removing = false;
+      ps.forEach((p) => {
+        if (p === firstEl) removing = true;
+        if (removing) p.remove();
+      });
+      built += 1;
+    });
+    return built;
+  }
   var OUR_BLOCK_NAMES = /^(columns|social|cards|table|video embed|embed instagram|quote|custom widget reactions|section metadata|metadata)\b/i;
   function flattenLayoutTables(document, root) {
     const layout = [...root.querySelectorAll("table")].filter((t) => {
@@ -552,26 +624,34 @@ var CustomImportScript = (() => {
         captionText = (clone.textContent || "").trim();
       }
       const textCell = document.createElement("div");
-      const pairedParas = [];
+      const paired = [];
       const ir = pic.getBoundingClientRect ? pic.getBoundingClientRect() : null;
       if (ir && ir.width) {
         const imgIsLeft = ir.left < viewportCentre;
-        [...root.querySelectorAll("p")].forEach((p) => {
-          if (!(p.textContent || "").trim() || p.querySelector("picture, img") || p.closest("ul")) return;
-          if (p.closest(".socialmediasharing, .reactions")) return;
-          const pr = p.getBoundingClientRect();
-          if (!pr.width) return;
-          const vOverlap = pr.bottom > ir.top - 20 && pr.top < ir.bottom + 20 && pr.top > ir.top - 110;
-          const opposite = imgIsLeft ? pr.left >= viewportCentre - 40 : pr.right <= viewportCentre + 40;
-          if (vOverlap && opposite) pairedParas.push(p);
+        const blocks = [...root.querySelectorAll("p, ul, ol")].filter((el) => {
+          if (el.closest(".socialmediasharing, .reactions")) return false;
+          if (el.querySelector("picture, img")) return false;
+          if (el.tagName === "P" && el.closest("ul, ol")) return false;
+          if ((el.tagName === "UL" || el.tagName === "OL") && el.parentElement.closest("ul, ol")) return false;
+          if ((el.tagName === "UL" || el.tagName === "OL") && el.querySelector('a[href*="/news/"]')) return false;
+          return (el.textContent || "").trim().length > 0;
+        });
+        blocks.forEach((el) => {
+          const r = el.getBoundingClientRect();
+          if (!r.width) return;
+          const vOverlap = r.bottom > ir.top - 20 && r.top < ir.bottom + 20 && r.top > ir.top - 110;
+          const opposite = imgIsLeft ? r.left >= viewportCentre - 40 : r.right <= viewportCentre + 40;
+          if (vOverlap && opposite) paired.push(el);
         });
       }
-      if (pairedParas.length) {
-        pairedParas.forEach((p) => textCell.append(p.cloneNode(true)));
-        pairedParas.forEach((p) => p.remove());
+      if (paired.length) {
+        paired.sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+        paired.forEach((el) => textCell.append(el.cloneNode(true)));
+        paired.forEach((el) => el.remove());
       }
       if (!textCell.childNodes.length && textCol) {
-        [...textCol.querySelectorAll("p")].filter((p) => (p.textContent || "").trim() && !p.querySelector("picture, img")).forEach((p) => textCell.append(p.cloneNode(true)));
+        const host = textCol.querySelector(".cmp-text") || textCol;
+        [...host.querySelectorAll("p, ul, ol")].filter((el) => (el.tagName !== "P" || !el.closest("ul, ol")) && !((el.tagName === "UL" || el.tagName === "OL") && el.parentElement.closest("ul, ol")) && !el.querySelector("picture, img") && !((el.tagName === "UL" || el.tagName === "OL") && el.querySelector('a[href*="/news/"]')) && (el.textContent || "").trim()).forEach((el) => textCell.append(el.cloneNode(true)));
       }
       if (!textCell.childNodes.length) {
         const beforeImg = (el) => !!(pic.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING);
@@ -662,9 +742,13 @@ var CustomImportScript = (() => {
       if (videoSections) emittedBlocks.push(`video-embed\xD7${videoSections}`);
       const tweetSections = wrapTweetSections(document, main);
       if (tweetSections) emittedBlocks.push(`tweet-split\xD7${tweetSections}`);
+      const igSections = wrapInstagramSections(document, main);
+      if (igSections) emittedBlocks.push(`instagram-split\xD7${igSections}`);
       wrapEmbeds(document, main);
       const tablesBuilt = wrapDataTables(document, main);
       if (tablesBuilt) emittedBlocks.push(`table\xD7${tablesBuilt}`);
+      const gradeTables = wrapGradeListTable(document, main);
+      if (gradeTables) emittedBlocks.push(`table-grade\xD7${gradeTables}`);
       const mediaBlocks = wrapMediaColumns(document, main);
       if (mediaBlocks) emittedBlocks.push(`columns-media\xD7${mediaBlocks}`);
       flattenLayoutTables(document, main);

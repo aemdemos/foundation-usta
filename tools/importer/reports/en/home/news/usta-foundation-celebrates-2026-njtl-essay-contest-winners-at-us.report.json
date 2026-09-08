@@ -2,12 +2,13 @@
   "status": "success",
   "url": "https://www.ustafoundation.com/en/home/news/usta-foundation-celebrates-2026-njtl-essay-contest-winners-at-us.html",
   "path": "en/home/news/usta-foundation-celebrates-2026-njtl-essay-contest-winners-at-us",
-  "timestamp": "2026-09-07T17:14:20.641Z",
+  "timestamp": "2026-09-08T05:09:55.395Z",
   "title": "USTA Foundation celebrates 2026 NJTL essay contest winners at US Open Fan Week experience presented by Deloitte",
   "template": "news",
   "blocks": [
     "cards-news",
     "social",
+    "table-grade×1",
     "columns-media×1"
   ]
 }

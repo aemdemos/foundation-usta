@@ -217,3 +217,30 @@
     margin-left: -30px; /* pull the border into the middle of the 60px gap */
   }
 }
+
+/* ==================================================================
+   Single-column LIST table (news winners grouped by grade/category). Built by
+   table.js as `.table-list > .table-list-group` — one group per row (a header
+   line + its "Name - Chapter" lines). Tight lines within a group, a clear 24px
+   gap between groups — matching the source's plain grouped list.
+   ================================================================== */
+.table-list {
+  color: #000;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-m);
+  line-height: 24px;
+}
+
+.table-list-group {
+  margin: 0 0 24px;
+}
+
+.table-list-group:last-child {
+  margin-bottom: 0;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.table-list-group p {
+  margin: 0;
+  line-height: 24px;
+}

@@ -54,6 +54,26 @@ function decorateGroupedColumns(block, rows) {
 
 function decorateDefault(block) {
   const rows = [...block.children];
+
+  // Single-column LIST table (e.g. the 2026 NJTL essay winners): every row has
+  // exactly ONE cell, each holding a group (header + its lines). Render each row
+  // as a spaced group block — no <table>, no header row — so it reads like the
+  // source's plain grouped list with clear gaps between groups.
+  const isList = rows.length > 1 && rows.every((r) => r.children.length === 1);
+  if (isList) {
+    const list = document.createElement('div');
+    list.className = 'table-list';
+    rows.forEach((r) => {
+      const group = document.createElement('div');
+      group.className = 'table-list-group';
+      group.innerHTML = r.firstElementChild.innerHTML;
+      list.append(group);
+    });
+    block.innerHTML = '';
+    block.append(list);
+    return;
+  }
+
   // A grouped data table = 2 columns with MORE THAN ONE body row (each body row
   // is a sub-group). Render it column-major (see decorateGroupedColumns) so it
   // stacks like the source on mobile. A plain single-body-row table stays a

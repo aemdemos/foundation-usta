@@ -2430,3 +2430,70 @@ Two mobile-nav fixes (blocks/header/header.css):
    visibility on close (`transition: transform .3s, visibility 0s linear .3s`) and apply it immediately on open
    (`…visibility 0s linear 0s`) so the slide-OUT is visible before the panel hides. JS only toggles aria-expanded
    (no display:none), so the CSS transition drives both directions. Gates: lint 0 · breakpoints ✓.
+
+### 2026-09-08 — Media-columns: capture LISTS beside the image (frances-tiafoe fund page)
+frances-tiafoe-fund-surpasses-1-million-raised dropped its bulleted list (3 grant types) — the list sat in the
+left col-6 BESIDE the image, but wrapMediaColumns' beside-image pairing only queried <p> (and excluded p-in-ul),
+so the <ul> was neither captured in the media block nor left as default content. Fixed: the geometric beside-image
+capture (and the DOM-sibling fallback) now select top-level BLOCKS — <p> AND <ul>/<ol> — preserving document order,
+skipping nested lists, p-inside-list, and the related-cards feed lists. Re-imported: bullets now present (3 li) with
+intro + quote in order. Re-verified jabeiro (3 alternating media), laver ("Located in…" text intact), aerie (1
+media) — no regressions. Gates: lint 0. Note: pages whose lists are NOT beside an image were already fine (top-level
+lists survive WebImporter as default content).
+
+### 2026-09-08 — Instagram beside text → split-left section; /reel/ + /tv/ permalinks
+how-the-usta-foundation-and-realize-the-dream page dropped its Instagram embed entirely. Two causes:
+1. instaPermalinkFrom only matched /p/ — this embed is a /reel/ (video), so the permalink came back empty and the
+   block was dropped. Fixed: match /p/, /reel/ AND /tv/, keeping the type in the rebuilt permalink; wrapEmbeds iframe
+   selector broadened from instagram.com/p/ to instagram.com/.
+2. The IG embed sits in a col BESIDE text (embed-left / text-right) — there was no IG equivalent of the tweet
+   split-left handling. Refactored the tweet split logic into a shared buildSplitLeftSection(), and added
+   wrapInstagramSections() that wraps an IG-beside-text embed as an embed-instagram block in a split-left section
+   (runs before wrapEmbeds; full-width IG embeds fall through to the inline handler). Verified: realize-the-dream now
+   has embed-instagram in a split-left section with the beside-text; page metadata intact; ngounoue's 2 standalone
+   full-width IG embeds still render inline (no split), no regression. Gates: lint 0.
+
+### 2026-09-08 — newport-njtl-honor-chris-evert: IG split-left + hidden-dup dedup
+Re-imported to pick up the IG-split-left fix. Its IG embed sits beside text → now an embed-instagram block in a
+split-left section (IG left, "TeamFAME serves…" text right). Also found the source ships the IG iframe TWICE (one
+visible, one width=0 hidden dup) — same pattern as tweets — which produced a 2nd stray inline embed. Extended the
+isHiddenDup guard to BOTH IG paths (wrapInstagramSections + wrapEmbeds blockquote/iframe handlers) so hidden
+duplicate embeds are dropped. Result: exactly 1 embed-instagram (split-left). Regression check: ngounoue's 2
+DISTINCT IG posts (CP-j8egAsRO, CQBRMbwgdav) both still present. Localized (0 hotlinks). Gates: lint 0.
+
+### 2026-09-08 — Single-column grade winners list → table (2026 NJTL essay winners)
+usta-foundation-celebrates-2026-njtl-essay-contest-winners-at-us authors its winners as a SINGLE col-12 list
+("…following categories:" + Freshmen/Sophomores/Juniors/Seniors groups, each a header + "Name - Chapter" lines,
+blank-separated) — not the two-col layout wrapDataTables handles, so it was importing as plain paragraphs. Added
+wrapGradeListTable(): after a "following categories:" lead-in, detect group headers (Freshmen/Sophomores/…/boys/
+girls/N-and-under) and "Name - Chapter" lines (split on the dash), emit a Table block (Winner | NJTL Chapter) with a
+sub-heading row per group + a row per winner. Replaces only the group run (lead-in + earlier paras stay content).
+Verified: proper table w/ 4 groups × 2 winners. Regression: 2023-essay 2-col table unchanged (its wrapDataTables
+path; grade-list detector requires the "following categories:" lead-in it lacks). Localized. Gates: lint 0.
+
+### 2026-09-08 — Video-embed: full-width (col-12) → centered block, not forced split-right
+usta-foundation-pledges-800-000-service-hours page rendered its video as a half-width split-right when the source
+has it FULL-WIDTH/centered (col-12). Bug in wrapVideoSections: it matched the video's column via
+`.closest('[GridColumn--default--6]') || .closest('[GridColumn]')` — for a col-12 video the fallback matched the
+col-12 and it then treated the preceding col-12 paragraph as fake beside-text and forced a split-right section.
+Fixed: only build the split-right section when the video sits in a PARTIAL-width col (5/6/7) with a genuine adjacent
+TEXT-only sibling column; otherwise emit a plain full-width video-embed block in place. Verified: pledges page →
+plain video-embed (split-right=0, centered); community-impact-hub (video genuinely beside text) → still video-embed
++ split-right section. Localized. Gates: lint 0.
+
+### 2026-09-08 — Revert grade-list→table (2026 NJTL essay winners): source is a plain list
+Correction: the previous turn converted the 2026 NJTL essay winners single-column list into a table, but the SOURCE
+renders it as a PLAIN paragraph list (grade headers + "Name - Chapter" lines), not a table. Removed
+wrapGradeListTable() and its transform call; the list now imports as default-content paragraphs matching the source
+(0 table blocks; all 8 winners + Freshmen/Sophomores/Juniors/Seniors headers present in order). Only the genuine
+TWO-COLUMN "Winners | NJTL Chapter" layout (2023 essay page) still becomes a table via wrapDataTables. Localized.
+Gates: lint 0.
+
+### 2026-09-08 — 2026 NJTL essay winners → SINGLE-column list table (one row per group)
+Correction of the prior revert: the winners ARE a table, but a ONE-COLUMN list table — each grade group (Freshmen /
+Sophomores / Juniors / Seniors) is its own ROW containing its header + "Name - Chapter" lines (kept as-is), NOT a
+two-column Winner|Chapter split. Re-added wrapGradeListTable() building one single-cell row per group (detected via
+the "…following categories:" lead-in + group-header lines). table.js: added an isList path — when every row has 1
+cell, render `.table-list > .table-list-group` (no <table>, no header row) so each group is a spaced block. table.css:
+`.table-list-group` 24px bottom gap between groups, tight lines within. Verified: 4 rows (Freshmen…Seniors) each with
+header + 2 winner lines. Localized. Gates: lint 0 · breakpoints ✓.
