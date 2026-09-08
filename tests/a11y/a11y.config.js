@@ -52,6 +52,7 @@ export default {
     '/drafts/block-samples/cards-expand',
     '/drafts/block-samples/cards-news',
     '/drafts/block-samples/tabs',
+    '/drafts/block-samples/spacer',
     '/drafts/block-samples/downloads',
     '/drafts/block-samples/quote',
     '/drafts/block-samples/quote-image',
@@ -75,5 +76,7 @@ export default {
     '/drafts/sections-samples/section-yellow',
     '/drafts/sections-samples/section-blue',
     '/drafts/sections-samples/section-center-narrow',
+    '/drafts/sections-samples/section-center-intro',
+    '/drafts/sections-samples/section-center-wide',
   ],
 };

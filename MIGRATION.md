@@ -2957,6 +2957,18 @@ total). The source stacks them with NO gap (each item 97px → 309px). Fixed: `.
 Verified: @430 band now **309** (exact), items abut; desktop 3-across row unaffected (@1280 still 115). Gates: lint 0 ·
 breakpoint ✓ · overflow ✓. CSS-only (columns.css) → next GitHub push.
 
+### 2026-09-08 — Sample pages: section center-intro / center-wide + Spacer block (all bands)
+Added missing sample pages (drafts/):
+- `sections-samples/section-center-intro` — demonstrates `center-intro` (centers ONLY the leading intro heading above
+  a left-aligned columns block; vs `center` which centers all default content).
+- `sections-samples/section-center-wide` — demonstrates `center, wide` (centered intro at the full content measure
+  708/902/1170 per breakpoint).
+- `block-samples/spacer` — the Spacer block with EVERY band variant: plain gap, yellow (`section-yellow-bg`), blue
+  (`section-blue-bg`), cards-band blue (`cards-band-bg`, homepage strip), black (`stats-band-bg`, trailing strip), and
+  a raw-color example (#23527c) — each labelled with its `color` token + heights.
+All three added to `tests/a11y/a11y.config.js`. Lint 0. NOTE: the running dev server indexes drafts at startup, so new
+draft files 404 until a restart/deploy — files are structurally consistent with the existing samples.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session
