@@ -2969,6 +2969,17 @@ Added missing sample pages (drafts/):
 All three added to `tests/a11y/a11y.config.js`. Lint 0. NOTE: the running dev server indexes drafts at startup, so new
 draft files 404 until a restart/deploy — files are structurally consistent with the existing samples.
 
+### 2026-09-08 — Migrate who-we-are/financials (simplest page: all default content)
+Built `tools/importer/import-financials-v1.js`. The page is ALL default content, no hero/blocks: H1 "Annual Reports and
+Financial Information" + three H2 sections — Annual Reports (13 PDFs), Audited Financial Statements (intro + 4), IRS
+Form 990 (intro + 3) — each a `<ul><li><a>` bulleted list of PDF download links (authored as ul/li so decorateButtons
+leaves them plain underlined links, not buttons). Content is a FIXED list hard-wired in the script (deterministic).
+`Theme=general`. Imported 73.1% (source footer social/copyright/donor-privacy chrome intentionally excluded — page
+chrome, not content). 20 PDF links (13+4+3), 3 lists, 0 images (0 hotlinks). Backed up to
+`tools/importer/backups/financials/` (SHA1 `08bc66ed…` + manifest). Gates: lint 0 · breakpoint ✓.
+FOLLOW-UP: PDF hrefs point at the source `/content/dam/…` (absolutized) — no doc-localizer yet (images only); localize
+to `content/assets/docs/…` when a doc-finalize step is added. Render/gates pending DA upload.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session
