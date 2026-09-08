@@ -20,13 +20,7 @@
    top pad; the earlier blanket 64px pushed every headline down too far vs the
    source. (main > .section:first-of-type already has margin-top:0.) */
 body.news main > .section:first-of-type {
-  padding-top: 8px;
-}
-
-@media (width >= 768px) {
-  body.news main > .section:first-of-type {
-    padding-top: 24px; /* → ~24px breadcrumb→H1 gap, matching the source default */
-  }
+  padding-top: 24px; /* → ~24px breadcrumb→H1 gap, matching the source (mobile + desktop both ~25px) */
 }
 
 /* ---- Article headline (H1) ------------------------------------------------

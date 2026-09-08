@@ -2407,3 +2407,9 @@ source ~89px mobile / ~105px desktop; migrated only ~54px. The source leaves a b
 Reproduced via the news H1's bottom margin (it collapses with the following block's top gap): margin-bottom
 10px → 75px mobile / 91px desktop. Verified live-injected: 75→88px mobile (src 89), 91→105px desktop (src 105) —
 match. templates/news/news.css only; renders on preview once deployed. Gates: lint 0 · breakpoints ✓.
+
+### 2026-09-08 — News breadcrumb→H1 gap: fix mobile (was 8px, source ~25px)
+Desktop was already right (24px→~24px gap). Mobile first-section padding was only 8px → breadcrumb→H1 gap 8px vs
+source 25px. Bumped mobile first-section padding-top 8→24px (verified injected: 24px pad → 24px gap ≈ source 25px);
+now both breakpoints use 24px so the redundant 768 media query was removed. templates/news/news.css only. Gates:
+lint 0 · breakpoints ✓.
