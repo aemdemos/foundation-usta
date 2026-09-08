@@ -12,13 +12,14 @@ header {
   min-height: 105px;
 }
 
-/* blue accent bar across the very top of the page (source: 8px solid) */
+/* blue accent bar across the very top of the page. Source is thinner on mobile:
+   5px on phones, 8px from the desktop tier (measured 5px @430 / 8px @1280). */
 header .nav-wrapper {
   position: relative;
   width: 100%;
   z-index: 20;
   background-color: #fff;
-  border-top: 8px solid var(--brand-blue);
+  border-top: 5px solid var(--brand-blue);
   box-shadow: none;
 }
 
@@ -376,6 +377,11 @@ header .nav-breadcrumb li + li::before {
    Desktop (>= 992px): single row, centered nav, hover dropdowns
    ============================================================ */
 @media (width >= 992px) {
+  /* desktop tier: the top blue accent bar thickens to 8px (source) */
+  header .nav-wrapper {
+    border-top-width: 8px;
+  }
+
   /* Centered max-width:1440px container (matches the source + the hero). The
      logo therefore tracks the hero heading at every viewport: 40px gutter until
      1440, then centered with equal side margins beyond. */

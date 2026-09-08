@@ -2413,3 +2413,8 @@ Desktop was already right (24px→~24px gap). Mobile first-section padding was o
 source 25px. Bumped mobile first-section padding-top 8→24px (verified injected: 24px pad → 24px gap ≈ source 25px);
 now both breakpoints use 24px so the redundant 768 media query was removed. templates/news/news.css only. Gates:
 lint 0 · breakpoints ✓.
+
+### 2026-09-08 — Header top blue bar: thinner on mobile (5px), 8px desktop
+The top blue accent bar was a flat 8px at all widths; the source is 5px on mobile, 8px from desktop (measured 5px
+@430 / 8px @1280). blocks/header/header.css: base border-top 8px → 5px, added an 8px override in the ≥992 media
+query. Gates: lint 0 · breakpoints ✓.
