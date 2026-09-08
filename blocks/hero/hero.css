@@ -482,6 +482,24 @@ main > .section.hero-container:has(.hero.text-up) {
   }
 }
 
+/* text-up, tall — YPI's hero is a FIXED-height box in the source (~601px mobile,
+   ~790px desktop) rather than following its (short) copy like the other text-up
+   heroes. The default padding-driven height matches at 768/992 but collapses at
+   1280 (676 vs 790) and 390 (522 vs 601) where the YPI text wraps short. A
+   min-height floor restores the source box: text stays top-anchored (padding-top
+   unchanged), the background just fills down to the floor, and taller content
+   (768: 810 > 790; source 814) still wins. Scoped to `.tall` so the approved
+   who-we-are/get-involved/what-we-do heroes are untouched. */
+.hero.text-up.tall.block {
+  min-height: 601px;
+}
+
+@media (width >= 768px) {
+  .hero.text-up.tall.block {
+    min-height: 790px;
+  }
+}
+
 
 /* ==================================================================
    Variant: error

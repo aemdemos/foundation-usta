@@ -262,8 +262,11 @@ export default {
     if (heroSubhead) heroContentCell.push(p(heroSubhead));
     if (heroCta) heroContentCell.push(ctaParagraph(document, heroCta.href, heroCta.text));
     heroCells.push([heroContentCell]);
-    main.append(WebImporter.Blocks.createBlock(document, { name: 'Hero (text-up)', cells: heroCells }));
-    emittedBlocks.push('hero-text-up');
+    // "tall" variant: the source YPI hero is a fixed-height box (~790px desktop /
+    // ~601px mobile), taller than the default single-CTA text-up hero — reproduced
+    // by the `tall` min-height floor in hero.css.
+    main.append(WebImporter.Blocks.createBlock(document, { name: 'Hero (text-up, tall)', cells: heroCells }));
+    emittedBlocks.push('hero-text-up-tall');
 
     // Emit a Columns section: heading + body paras + optional CTA in the text cell,
     // image on the given side. Optional yellow band (leading strip + section-yellow).

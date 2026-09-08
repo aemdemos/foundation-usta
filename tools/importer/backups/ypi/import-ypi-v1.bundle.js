@@ -219,8 +219,8 @@ var CustomImportScript = (() => {
       if (heroSubhead) heroContentCell.push(p(heroSubhead));
       if (heroCta) heroContentCell.push(ctaParagraph(document, heroCta.href, heroCta.text));
       heroCells.push([heroContentCell]);
-      main.append(WebImporter.Blocks.createBlock(document, { name: "Hero (text-up)", cells: heroCells }));
-      emittedBlocks.push("hero-text-up");
+      main.append(WebImporter.Blocks.createBlock(document, { name: "Hero (text-up, tall)", cells: heroCells }));
+      emittedBlocks.push("hero-text-up-tall");
       const columnsSection = ({
         heading,
         paras,

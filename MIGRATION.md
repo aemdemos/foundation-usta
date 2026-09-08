@@ -3043,6 +3043,16 @@ Two fixes to `import-ypi-v1.js` after comparing to source screenshots:
 - Re-imported (completeness 79%, expected — verify by eye), localized **5 images, 0 hotlinks**. Backup + manifest
   refreshed. Gates: lint 0 errors · breakpoint ✓ (no CSS change). Renders on DA upload.
 
+### 2026-09-08 — YPI hero too short: new `text-up` `tall` variant (min-height floor)
+Source YPI hero is a **fixed-height box** (~601px mobile / ~790px desktop), but our text-up hero is padding-driven
+so it follows the (short) YPI copy. Measured source vs migrated: matched at 768 (814/810) and 992 (790/790) but the
+migrated collapsed at **1280 (676 vs 790)** and **390 (522 vs 601)** — the YPI h1/subhead wrap to fewer lines there.
+Fix: added a scoped **`.hero.text-up.tall`** variant in `blocks/hero/hero.css` with `min-height:601px` (mobile) /
+`790px` (≥768). Text stays top-anchored (padding-top unchanged); the background just fills down to the floor; taller
+content still wins (768 → 810). Importer now emits `Hero (text-up, tall)`. Verified locally by simulating `.tall` on
+the served page: heights → 390:601, 768:810, 992:790, 1280:790 (exact source parity). The plain `text-up` heroes
+(who-we-are/get-involved/what-we-do) are untouched. Gates: lint 0 errors · breakpoint ✓. Renders on DA upload.
+
 **MIGRATION STATUS:** all general-template + specialized pages now imported. Only **404.html** (T7, hero-error)
 remains from the full scope.
 
