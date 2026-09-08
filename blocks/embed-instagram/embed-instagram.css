@@ -93,4 +93,20 @@
   .embed-instagram .instagram-media {
     margin: 0 !important;
   }
+
+  /* TEXT-LESS variant: when the block has no article-text column (a standalone
+     embed authored as a single cell, e.g. the Ngounoue article), the embed
+     should be CENTERED across the full content width — not sit alone in the
+     left col-5 leaving the right half empty. Span all 12 columns and centre. */
+  .embed-instagram > div:not(:has(.embed-instagram-text)) {
+    display: block;
+  }
+
+  .embed-instagram > div:not(:has(.embed-instagram-text)) .embed-instagram-embed {
+    justify-content: center;
+  }
+
+  .embed-instagram > div:not(:has(.embed-instagram-text)) .instagram-media {
+    margin: 0 auto !important;
+  }
 }

@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/news/carol-ngounoue-runner-up-wimbledon-event.html",
+  "path": "en/home/news/carol-ngounoue-runner-up-wimbledon-event",
+  "timestamp": "2026-09-07T19:02:34.848Z",
+  "title": "Carel Ngounoue finishes runner-up at inaugural 14-and-under Wimbledon event",
+  "template": "news",
+  "blocks": [
+    "cards-news",
+    "quote-tweet×2",
+    "social",
+    "reactions",
+    "tweet-split×1",
+    "columns-media×1"
+  ]
+}

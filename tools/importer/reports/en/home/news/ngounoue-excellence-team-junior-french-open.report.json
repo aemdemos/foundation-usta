@@ -1,0 +1,15 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/news/ngounoue-excellence-team-junior-french-open.html",
+  "path": "en/home/news/ngounoue-excellence-team-junior-french-open",
+  "timestamp": "2026-09-07T19:03:11.452Z",
+  "title": "Montgomery, Ngounoue represent Excellence Team at junior French Open",
+  "template": "news",
+  "blocks": [
+    "cards-news",
+    "quote-tweet×1",
+    "social",
+    "reactions",
+    "columns-media×1"
+  ]
+}

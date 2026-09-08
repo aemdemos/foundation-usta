@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/news/frances-tiafoe-holds-clinic-for-youth-from-houston-tennis-associ.html",
+  "path": "en/home/news/frances-tiafoe-holds-clinic-for-youth-from-houston-tennis-associ",
+  "timestamp": "2026-09-07T17:10:49.312Z",
+  "title": "Frances Tiafoe holds clinic for youth from Houston Tennis Association",
+  "template": "news",
+  "blocks": [
+    "cards-news",
+    "social",
+    "reactions",
+    "columns-media×2"
+  ]
+}

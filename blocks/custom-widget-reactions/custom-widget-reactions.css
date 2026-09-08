@@ -1,11 +1,12 @@
-/* Source: the TEXT (title + prompt) is LEFT-aligned; only the emoji controls row
-   is centered. Measured on the live source (essay-winners article) at 390 + 1200:
-   h3 + message compute text-align:start; `.v-reactions__controls` is centered. */
+/* Source: the whole widget is CENTERED — the title, the emoji controls row and
+   the empty-state prompt all sit on the content-column midline (measured on the
+   live source at 1280: title centre = 640 = container centre, on both the
+   essay-winners and laver-cup articles). Centre everything. */
 .custom-widget-reactions {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  text-align: left;
+  align-items: center;
+  text-align: center;
 }
 
 /* Title — matches source h3 (36px mobile → 56px ≥768, lh 1.1, #333). */

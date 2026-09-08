@@ -20,13 +20,57 @@ function buildCell(rowIndex) {
   return cell;
 }
 
+/**
+ * Grouped 2-column data table (source: the NJTL winners list — two `col-6` text
+ * columns, each with sub-groups separated by blank lines). Authored as a header
+ * row [colA, colB] followed by one body row PER GROUP [groupA, groupB]. We
+ * rebuild it COLUMN-MAJOR so it matches the source at every viewport:
+ *   • MOBILE: the whole first column stacks (header + its groups, gaps between),
+ *     THEN the whole second column — NOT row-by-row interleaved (which a real
+ *     <table> would do when its cells stack).
+ *   • DESKTOP: the two columns sit side by side.
+ * Each group is its own `.table-group` div so the CSS can space the brackets.
+ */
+function decorateGroupedColumns(block, rows) {
+  const colCount = rows[0].children.length;
+  const cols = [];
+  for (let c = 0; c < colCount; c += 1) {
+    const colEl = document.createElement('div');
+    colEl.className = 'table-col';
+    rows.forEach((row, ri) => {
+      const src = row.children[c];
+      if (!src) return;
+      const group = document.createElement('div');
+      group.className = ri === 0 ? 'table-col-head' : 'table-group';
+      group.innerHTML = src.innerHTML;
+      colEl.append(group);
+    });
+    cols.push(colEl);
+  }
+  block.innerHTML = '';
+  block.classList.add('table-grouped', `table-grouped-${colCount}-cols`);
+  cols.forEach((c) => block.append(c));
+}
+
 function decorateDefault(block) {
+  const rows = [...block.children];
+  // A grouped data table = 2 columns with MORE THAN ONE body row (each body row
+  // is a sub-group). Render it column-major (see decorateGroupedColumns) so it
+  // stacks like the source on mobile. A plain single-body-row table stays a
+  // semantic <table>.
+  const isGrouped = rows.length > 2
+    && rows.every((r) => r.children.length === 2);
+  if (isGrouped) {
+    decorateGroupedColumns(block, rows);
+    return;
+  }
+
   const table = document.createElement('table');
   const thead = document.createElement('thead');
   const tbody = document.createElement('tbody');
   table.append(thead, tbody);
 
-  [...block.children].forEach((child, i) => {
+  rows.forEach((child, i) => {
     const row = document.createElement('tr');
     if (i === 0) thead.append(row);
     else tbody.append(row);

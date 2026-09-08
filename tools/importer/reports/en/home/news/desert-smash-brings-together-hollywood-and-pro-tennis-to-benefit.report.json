@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/news/desert-smash-brings-together-hollywood-and-pro-tennis-to-benefit.html",
+  "path": "en/home/news/desert-smash-brings-together-hollywood-and-pro-tennis-to-benefit",
+  "timestamp": "2026-09-07T17:10:04.940Z",
+  "title": "Desert Smash brings together Hollywood and pro tennis to benefit USTA Foundation",
+  "template": "news",
+  "blocks": [
+    "cards-news",
+    "social",
+    "reactions",
+    "columns-media×2"
+  ]
+}

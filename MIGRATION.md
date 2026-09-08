@@ -2254,3 +2254,149 @@ inset-shadow technique from the expanded rule so the underline adds no row heigh
 (2) TYPOGRAPHY PARITY: measured source vs migrated top-level nav labels at desktop — IDENTICAL: Graphik Semibold,
 16px, weight 400, line-height 24px, letter-spacing normal, color #000, text-transform none. No change needed. (Nav
 collapses to hamburger below 992 on both, so only the desktop tier renders these labels.) Gate: lint 0 errors.
+
+### 2026-09-07 — News importer generalized for extra components (page-by-page bulk prep)
+Extended tools/importer/import-news-v1.js beyond the Aerie baseline to cover the components found across the 71
+remaining news pages. Key deterministic insight: the importer sees the LIVE (post-JS) DOM, and social/reactions
+labels are JS-injected — so match on the source's STATIC component classes instead:
+  • SOCIAL share bar = `div.socialmediasharing`; alignment is data-driven from its modifier class — `position-right`
+    → `Social (right)` (newer layout, e.g. Aerie); plain → `Social (left)` (older layout, beside reactions). This
+    replaces the old fragile aria-label matcher.
+  • REACTIONS = `div.reactions` (older articles only) → `Custom Widget Reactions` block (title + prompt rows).
+  • TWEETS = `blockquote.twitter-tweet` (Twitter's widget stays a blockquote) → `Quote (tweet)` (row1 body <p>s,
+    row2 the trailing "— Name (@handle) Date" footer run).
+  • INSTAGRAM = embed.js UPGRADES the blockquote to `iframe[src*="instagram.com/p/{id}/embed"]` BEFORE import, so we
+    match BOTH the blockquote AND the iframe, recover the /p/{id}/ permalink, and emit a single-cell `Embed
+    Instagram` block. wrapEmbeds() runs first so reading order (para→img→tweet→para→IG→para→IG) is preserved.
+Page 1 VERIFIED — ngounoue-excellence-team-junior-french-open (91.9%): columns media-right → quote(tweet) → 2×
+embed-instagram → social(left) → reactions → cards(news) → metadata; both IG permalinks recovered; assets localized
+(3 imgs, 0 hotlinks).
+PUBLICATION DATE — DECIDED: use the sitemap <lastmod>. The original publish dates were lost when the source was
+republished — every date the LIVE source exposes (sitemap, and the Related-Articles cards, which are driven by the
+SAME lastmod field) is the 2026 republish timestamp; the article head/body carry no real date. Verified: the same
+article shows one identical lastmod date across every feed that references it (e.g. 2023-njtl-essay = "May 06,
+2026" everywhere). So using sitemap <lastmod> reproduces EXACTLY what the live source shows its own users today —
+the truest lift-and-shift. Already wired (resolvedPublicationDate in onLoad); no code change. No better date source
+exists on the site.
+
+### 2026-09-07 — News importer: pages 2–5 components (table / video-split / multi-media / layout-table flatten)
+Continued generalizing import-news-v1.js one representative page at a time; all verified + assets localized:
+  • PAGE 2 (2023-njtl-essay, 93.9%): `wrapDataTables()` — source authors a data grid as TWO adjacent col-6 `.text`
+    columns each led by a bold header (Winners | NJTL Chapter), NOT an HTML <table>. Detect the adjacent bold-header
+    col-6 pair (a full-width intro col-12 may precede) → `Table` block (header row + two body cells). Replace only
+    the two data cols; intro stays default content.
+  • PAGE 3 (community-impact-hub, 95.8%): `wrapVideoSections()` — a text col-6 + video col-6 (`.cmp-embed`, YouTube
+    data-src) pair → `Video Embed` block inside a `split-right` SECTION (text default content + video-embed +
+    Section Metadata style=split-right, fenced by <hr>). No share bar on this page (correct).
+  • PAGE 4 (laver-cup, 95.4%): the "12 tables" are NESTED single-column LAYOUT tables wrapping body prose (email/CMS
+    artifact), not data. Added a leftover-layout-`<table>` FLATTENER (deepest-first unwrap into cell contents) so no
+    stray bordered tables ship. Result: clean prose + columns-media + social-left + reactions + cards.
+  • PAGE 5 (njtl-ace-jabeiro-brown, 97.4%): rewrote `wrapMediaColumns()` to wrap EVERY body image (was single,
+    hardcoded media-right). Each image pairs with its sibling col-6 text column; SIDE (media-left/right) read from
+    the image's rendered left vs viewport centre — reproduces the source's alternating right→left→right. Excludes
+    imgs inside `.socialmediasharing`/`.reactions` and empty-alt icons (fixes the reactions checkmark being wrapped
+    as a 4th media block that ate the social bar).
+BUGFIX (affects all pages): the page-metadata row injector matched the FIRST table whose first cell ~ /metadata/i,
+which also matched "Section Metadata" (the split-right video section) → page Description/Image/Template/PubDate
+landed in the wrong block. Tightened to exact /^metadata$/i.
+All 5 gated: lint 0 errors; each localized (0 hotlinks). Importer now covers the full component set found across the
+fleet (tweets, IG embeds, video split-right, data tables, layout-table flatten, multi/alternating media, social
+left/right auto, reactions). Ready to bulk-run the remaining ~66.
+
+### 2026-09-07 — News layout feedback: global block spacing, reactions centering, cards fill-width, Laver columns pairing
+Four fixes from director review of the laver-cup page:
+1. GLOBAL SPACING (styles.css): the inter-wrapper gap rule only spaced a wrapper FOLLOWING a block — so default
+   content sitting directly ABOVE a block (e.g. body text → social bar) had no gap and abutted it. Broadened the
+   rule to also space a BLOCK wrapper that follows a `.default-content-wrapper` (text → block), keeping the tight
+   heading-lead-in exception. 32px mobile / 40px ≥768, both directions now. (Reordered selectors low→high specificity
+   to satisfy stylelint no-descending-specificity.)
+2. REACTIONS CENTERED (custom-widget-reactions.css): re-measured the source — the whole widget (title + emoji row +
+   prompt) is CENTERED on the content midline (title centre = 640 = container centre at 1280, on both essay & laver
+   pages). Was left-aligned per a stale earlier note. Changed align-items/text-align → center.
+3. CARDS FILL WIDTH (cards.css): cards-news used fixed flex 25% (desktop) / 33.3% (tablet), so a 3-card feed left an
+   empty 4th slot. Switched to `flex: 1 1 0` with max-width 33.333% (both tiers) so the row always fills the full
+   content width — 3 cards → 3-up full-width, 4 → 4-up. No empty slot.
+4. LAVER COLUMNS PAIRING (import-news-v1.js): the media block grabbed the wrong (intro) paragraph because the
+   beside-text lived in a nested layout table that the flatten step unwrapped BEFORE wrapMediaColumns measured it.
+   Fixes: (a) split the layout-table flatten into flattenLayoutTables() and run it AFTER wrapMediaColumns; (b) added
+   GEOMETRIC pairing — pair the image with the paragraph(s) that render BESIDE it (vertical overlap + opposite side)
+   as the primary strategy, robust to layout-table wrapping; (c) guarded flattenLayoutTables so it never unwraps our
+   OWN block tables (was eating the columns-media table). Re-imported laver (95.4%, correct "Located in…/Mayor…"
+   beside-text) + jabeiro (97.4%, 3 alternating media preserved). Gates: lint 0 errors, breakpoints ✓.
+
+### 2026-09-07 — Ngounoue feedback: intro para in media cell, cards heading-span titles, IG centering
+Director review of ngounoue-excellence-team-junior-french-open:
+1. INTRO PARAGRAPH — the lead-in "The USTA Foundation Excellence Team once had representation…" sits in the LEFT
+   column above the two beside-image paragraphs (source: all three at left 55–625, intro top aligned with the image
+   top). wrapMediaColumns' geometric pairing missed it (its top was just ABOVE the image band). Made geometric
+   beside-pairing the PRIMARY strategy (was secondary to the DOM-sibling col lookup) and widened the vertical
+   window to include a paragraph starting up to ~110px above the image top (the col-12 lead-in) while still
+   excluding a full row above. Now all 3 left paragraphs land in the media block's text cell.
+2. TWEET — already a Quote (tweet) block; confirmed (body + "— Name (@handle) Date" footer). No change.
+3. RELATED CARD 3 MISSING TITLE — the source renders a card title as `<span role="heading" aria-level="3">` inside
+   `a.list-core-component__title` (NOT an <h3>), and that card had no thumbnail. buildRelatedBlock only matched
+   h2/h3/h4 → empty title. Extended the title selector to also match `[role="heading"]` and
+   `.list-core-component__title`. All 3 cards now titled (incl. "2023 NJTL Essay Contest Winners").
+4. INSTAGRAM CENTERING (embed-instagram.css) — a standalone embed (single cell, no text column) was sitting in the
+   left col-5 leaving the right half empty. Added a `:not(:has(.embed-instagram-text))` rule: from 768, a text-less
+   embed spans full width and centres (display:block + margin:auto). Renders on preview.
+Re-imported (92.5%), localized (0 hotlinks). Gates: lint 0 errors.
+
+### 2026-09-07 — Table block: multi-row grouping + 3rd-card title (2023-njtl-essay)
+1. TABLE ROWS: the winners table was one dense row. The source's blank `&nbsp;` group separators are STRIPPED from
+   the DOM before import (confirmed via a debug log: groupsOf saw 1 group at import time though the live page has 5),
+   so wrapDataTables now reconstructs sub-groups from CONTENT: split the LEFT column at each group-header paragraph
+   (short label matching "…and Under/over", "division", "boys/girls", "Ns"), then chunk the RIGHT column into the
+   same number of groups (it has no headers; source aligns items 1:1 per bracket) and emit ONE TABLE ROW per group
+   pair. Verified 5 rows, correctly paired (10U→Legacy/Innercity … 18U→MH/Tennis Success). NOTE: DA block tables DO
+   support multiple rows through html2md→md2da — an earlier "rows collapse" claim was a bad regex, not real.
+2. 3RD CARD TITLE: same heading-span fix as ngounoue/jabeiro — re-import picked it up. All 3 related cards titled.
+Gates: lint 0 errors; localized (0 hotlinks).
+
+### 2026-09-07 — Table block: row gaps between groups (both columns, mobile + desktop)
+The multi-row winners table had no gap between the age-bracket rows once stacked (mobile) — the CSS only spaced
+`td + td`, not rows. Added row spacing in blocks/table/table.css: mobile `.table tbody tr + tr { margin-top: 24px }`
+(stacked rows); desktop (≥768, real table rows where margin is ignored) `.table tbody tr + tr td { padding-top:
+24px }`. Now each bracket group is separated in BOTH the Winners and NJTL Chapter columns, matching the source's
+blank-line rhythm. CSS-only (renders on preview); applies to any multi-row table. Gates: lint 0 errors, breakpoints ✓.
+
+### 2026-09-07 — Table block: column-major mobile stacking (grouped data tables)
+Mobile view was WRONG — a multi-row <table> stacks its cells row-by-row, so the winners table interleaved
+bracket→chapters→bracket→chapters. The source stacks COLUMN-MAJOR: the whole Winners column (header + bracket
+groups, gaps between) then the whole NJTL Chapter column. Reworked blocks/table/table.js: a grouped data table
+(>1 body row, all 2-cell) is now rebuilt column-major into `.table-grouped > .table-col > (.table-col-head |
+.table-group)` instead of a <table>; a plain single-body-row table stays a semantic <table>. New CSS
+`.table-grouped`: mobile 1-col grid (stacks col1 fully then col2, 24px gaps between groups via flex gap), desktop
+(≥768) 2-col grid side by side on the shared grid gutter. Importer output unchanged (header + N group rows); the
+regrouping is client-side. JS+CSS only (renders on preview); applies to any grouped 2-col data table. Gates: lint 0.
+
+### 2026-09-07 — BULK IMPORT: remaining 66 news pages
+Ran the finalized import-news-v1 over all remaining news articles (72 total − 6 samples = 66). Result: 66/66
+success, 0 failures. All 72 news pages now in content/en/home/news. Completeness: 35 pages ≥95%, 30 at 90–95%, 1 at
+85–90%, none <85%. Assets localized for all 66 (0 image hotlinks across the whole set; 72 media-da/ folders).
+Block coverage across the fleet: social 66, reactions 62, columns-media 70, cards-news 72, table 1, quote-tweet 8,
+embed-instagram 3, video-embed 3, metadata 72/72 (Title/Description/Image/Template/Publication Date). Pages without
+social (6) / columns (2) verified legitimate (source has no share bar / no body image — essay-winners use the table
+instead), not failed imports. Gates: lint 0 errors.
+
+### 2026-09-07 — Tweet handling: dedupe hidden duplicates + split-left tweet section
+carol-ngounoue-runner-up-wimbledon-event showed the tweet TWICE and full-width instead of the source's
+tweet-left/text-right layout. Two fixes in import-news-v1.js:
+1. DEDUPE — the source ships the pre-hydration `blockquote.twitter-tweet` TWICE (one visible, one collapsed
+   width=0/height=0). Added isHiddenDup() (zero rendered size) and drop those in both wrapEmbeds and the new
+   wrapTweetSections, so only the visible tweet becomes a quote block.
+2. SPLIT-LEFT SECTION — when a tweet sits in a partial-width grid column (col-5/6/7) BESIDE a text column, wrap it
+   as a `split-left` SECTION (quote(tweet) left + article text as default content right + Section Metadata
+   style=split-left, <hr>-fenced), matching section-split-left-tweet sample. Broadened from col-6 to col-5/6/7 after
+   finding chris-evert-espn uses col-5/col-7. A full-width (col-12) tweet with no beside-text stays an inline
+   quote block (correct — verified 5 such pages).
+Re-imported all 8 tweet pages: each now 1 tweet; 3 got split-left (carol, chris-espn, clervie-first), 5 stay inline
+(source full-width). page metadata intact (5 keys, section-metadata not absorbed), 0 hotlinks. Gates: lint 0 errors.
+
+### 2026-09-08 — News H1: breadcrumb→H1 gap matched to source default (was 64px, too tall)
+The template forced `padding-top: 64px` on the first section, pushing every news H1 far below the breadcrumb. But
+the source gap is AUTHOR-controlled per article, not a template rule: the DEFAULT article (e.g.
+evert-speaks-on-rally-to-rebuild) has NO padding band → ~25px gap from the H1's own line-box leading; only a few
+(e.g. Aerie) author an extra padding-top band. Matched the common/default case: first-section padding-top 64→24px
+desktop (verified: 24px pad → 24px gap ≈ source 25px), 32→8px mobile. Gates: lint 0 · breakpoints ✓. Renders on
+preview once published.

@@ -94,16 +94,192 @@ function executeTransformers(hookName, element, payload) {
 }
 
 /*
- * Build a `social (right)` block table so the imported page carries our own
- * share bar (the source's is a dynamic widget). The block is authored empty —
+ * Build a `social` block table so the imported page carries our own share bar
+ * (the source's is a dynamic Vue widget). The block is authored empty —
  * blocks/social decorate() builds the five share buttons and shares the current
- * page; the `right` variant right-aligns it on desktop as on the source.
+ * page. Alignment is data-driven from the source: the source share container is
+ * `div.socialmediasharing`, and it carries a `position-right` modifier ONLY on
+ * the newer article layout (e.g. the Aerie page) — those get `social (right)`.
+ * Older articles have a plain `.socialmediasharing` (left-aligned, beside the
+ * reactions widget) → `social (left)`.
  */
-function buildSocialBlock(document) {
+function buildSocialBlock(document, align) {
+  const variant = align === 'right' ? 'Social (right)' : 'Social (left)';
   return WebImporter.DOMUtils.createTable([
-    ['Social (right)'],
+    [variant],
     [''],
   ], document);
+}
+
+/*
+ * Build a `custom-widget-reactions` block. The source reactions bar is a dynamic
+ * Vue component (`div.reactions`, with the "Be the first to add a reaction"
+ * empty-state prompt); our block recreates it from just two authored rows —
+ * the title and the prompt (the fixed emoji set lives in the block itself).
+ */
+function buildReactionsBlock(document) {
+  return WebImporter.DOMUtils.createTable([
+    ['Custom Widget Reactions'],
+    ['Reactions'],
+    ['Be the first to add a reaction'],
+  ], document);
+}
+
+/*
+ * Convert a source `blockquote.twitter-tweet` into our `quote (tweet)` block.
+ * The source blockquote is: one/more <p> (tweet body, inline links) followed by
+ * a trailing "— Name (@handle) Date" text+links run (NOT wrapped in <p>). Our
+ * quote-tweet contract is two single-cell rows: row 1 = body, row 2 = footer.
+ */
+function buildTweetBlock(document, blockquote) {
+  // The body is the <p> element(s); the footer is everything after the last <p>.
+  const paras = [...blockquote.querySelectorAll(':scope > p')];
+  const bodyCell = document.createElement('div');
+  paras.forEach((p) => bodyCell.append(p.cloneNode(true)));
+
+  // Footer = the blockquote's trailing nodes after the final <p> (the
+  // "— Name (@handle) Date" run). Collect them into a single <p>.
+  const footerP = document.createElement('p');
+  const lastP = paras[paras.length - 1] || null;
+  let started = !lastP;
+  blockquote.childNodes.forEach((node) => {
+    if (node === lastP) { started = true; return; }
+    if (!started) return;
+    footerP.append(node.cloneNode(true));
+  });
+  const footerCell = document.createElement('div');
+  if ((footerP.textContent || '').trim()) footerCell.append(footerP);
+
+  const rows = [['Quote (tweet)'], [bodyCell]];
+  if (footerCell.childNodes.length) rows.push([footerCell]);
+  return WebImporter.DOMUtils.createTable(rows, document);
+}
+
+/*
+ * Build our `embed-instagram` block from an Instagram permalink (single-cell:
+ * just the permalink <a>; the text column is optional and omitted here since
+ * these posts render full-width between paragraphs).
+ */
+function buildInstagramBlock(document, rawPermalink) {
+  let permalink = rawPermalink || '';
+  // strip the ?utm_source=ig_embed… query the source appends
+  try { const u = new URL(permalink); permalink = `${u.origin}${u.pathname}`; } catch { /* keep as-is */ }
+  if (!permalink) return null;
+  const cell = document.createElement('div');
+  const a = document.createElement('a');
+  a.setAttribute('href', permalink);
+  a.textContent = 'View this post on Instagram';
+  cell.append(a);
+  return WebImporter.DOMUtils.createTable([
+    ['Embed Instagram'],
+    [cell],
+  ], document);
+}
+
+// Normalize an Instagram post permalink to https://www.instagram.com/p/{id}/
+function instaPermalinkFrom(url) {
+  const m = /instagram\.com\/p\/([A-Za-z0-9_-]+)/.exec(url || '');
+  return m ? `https://www.instagram.com/p/${m[1]}/` : '';
+}
+
+/*
+ * Replace every social embed in the article body, IN PLACE (preserving reading
+ * order), with our block equivalents:
+ *   blockquote.twitter-tweet                    → quote (tweet)
+ *   blockquote.instagram-media  OR              → embed-instagram
+ *   iframe[src*="instagram.com/p/…/embed"]        (Instagram's embed.js upgrades
+ *                                                  the blockquote into an iframe
+ *                                                  before import time, so match
+ *                                                  BOTH forms)
+ * Runs before the share/reactions/related swaps so those regions are untouched.
+ */
+// A tweet blockquote is a HIDDEN DUPLICATE if it has zero rendered size (the
+// source ships the pre-hydration blockquote twice — one visible, one collapsed).
+// Skip those so we don't emit a duplicate quote block.
+function isHiddenDup(el) {
+  if (!el.getBoundingClientRect) return false;
+  const r = el.getBoundingClientRect();
+  return r.width === 0 && r.height === 0;
+}
+
+/*
+ * When a tweet sits in a half-width (col-6) grid column BESIDE a text column,
+ * the source lays it out as tweet-left / article-text-right. Reproduce that with
+ * a `split-left` SECTION (block-agnostic section style — see the
+ * section-split-left-tweet sample): the quote(tweet) block in the left column and
+ * the article text as default content in the right, fenced by <hr> with a Section
+ * Metadata (style: split-left). Returns the count built.
+ */
+function wrapTweetSections(document, root) {
+  let built = 0;
+  [...root.querySelectorAll('blockquote.twitter-tweet')].forEach((bq) => {
+    if (isHiddenDup(bq)) { bq.remove(); return; }
+    // The tweet sits in a partial-width grid column (source uses col-5, col-6 or
+    // col-7 for a beside-text layout). Find that column, then its adjacent text
+    // sibling (any grid column holding only text) as the right cell.
+    const tweetCol = bq.closest('[class*="GridColumn--default--5"], [class*="GridColumn--default--6"], [class*="GridColumn--default--7"]');
+    if (!tweetCol || !tweetCol.parentElement) return;
+    const sibs = [...tweetCol.parentElement.children]
+      .filter((c) => c.className && /GridColumn--default--\d+/.test(c.className));
+    const idx = sibs.indexOf(tweetCol);
+    // the paired text column: the adjacent grid column holding only text
+    const textCol = [sibs[idx + 1], sibs[idx - 1]]
+      .find((c) => c && !c.querySelector('blockquote, iframe, picture, img')
+        && (c.textContent || '').trim().length > 20
+        && !/GridColumn--default--12/.test(c.className)); // not a full-width para
+    if (!textCol) return; // no beside-text → leave for the inline tweet handler
+
+    const tweetBlock = buildTweetBlock(document, bq);
+    const frag = document.createElement('div');
+    frag.append(document.createElement('hr'));
+    frag.append(tweetBlock);
+    const t = textCol.cloneNode(true);
+    while (t.firstChild) frag.append(t.firstChild); // article text as default content
+    const meta = WebImporter.Blocks.createBlock(document, {
+      name: 'Section Metadata',
+      cells: { style: 'split-left' },
+    });
+    frag.append(meta);
+    frag.append(document.createElement('hr'));
+
+    tweetCol.replaceWith(...frag.childNodes);
+    textCol.remove();
+    built += 1;
+  });
+  return built;
+}
+
+function wrapEmbeds(document, root) {
+  root.querySelectorAll('blockquote.twitter-tweet').forEach((bq) => {
+    if (isHiddenDup(bq)) { bq.remove(); return; } // skip hidden duplicate tweets
+    bq.replaceWith(buildTweetBlock(document, bq));
+  });
+  // Instagram as a not-yet-upgraded blockquote.
+  root.querySelectorAll('blockquote.instagram-media').forEach((bq) => {
+    const permalink = bq.getAttribute('data-instgrm-permalink')
+      || (bq.querySelector('a[href*="instagram.com/p/"]') || {}).getAttribute?.('href') || '';
+    const block = buildInstagramBlock(document, instaPermalinkFrom(permalink) || permalink);
+    if (block) bq.replaceWith(block); else bq.remove();
+  });
+  // Instagram already upgraded to an iframe by embed.js — recover the permalink
+  // from the /p/{id}/embed src. Replace the iframe's outermost embed wrapper.
+  root.querySelectorAll('iframe[src*="instagram.com/p/"]').forEach((iframe) => {
+    const permalink = instaPermalinkFrom(iframe.getAttribute('src'));
+    const block = buildInstagramBlock(document, permalink);
+    if (!block) { return; }
+    // The iframe sits inside embed.js wrappers; replace the highest ancestor
+    // that contains ONLY this embed (an .instagram-media-rendered span/div) so
+    // we don't leave empty wrapper shells behind.
+    let target = iframe;
+    let parent = iframe.parentElement;
+    while (parent && parent !== root
+      && parent.querySelectorAll('iframe, img, p').length <= 1
+      && (parent.textContent || '').trim().length < 5) {
+      target = parent;
+      parent = parent.parentElement;
+    }
+    target.replaceWith(block);
+  });
 }
 
 /*
@@ -127,7 +303,10 @@ function buildRelatedBlock(document, ul) {
   const rows = [['Cards (news)']];
   ul.querySelectorAll(':scope > li').forEach((li) => {
     const card = li.querySelector('[role="group"]') || li;
-    const titleH = card.querySelector('h3, h2, h4');
+    // Title: an <h3>/<h2>/<h4>, OR the source's `<span role="heading">` (the
+    // core-component renders the title as a heading-role span, not an <hN>), OR
+    // the `.list-core-component__title` link text. Some cards have no image.
+    const titleH = card.querySelector('h3, h2, h4, [role="heading"], .list-core-component__title');
     let title = titleH ? titleH.textContent.trim() : '';
     // Hydration fallback: the image link's aria-label / the img alt read
     // "Visit the <title> page". Strip that wrapper to recover the title.
@@ -194,93 +373,354 @@ function buildRelatedBlock(document, ul) {
 }
 
 /*
- * Wrap the article's inline body image into a `columns` media block so it renders
- * text-left / image-right on desktop (and stacks on mobile) — matching the source,
- * where the merch image occupies the right half beside the preceding body copy.
+ * Build a `video-embed` block from a YouTube embed URL. Matches the block sample
+ * contract: row 1 = a single YouTube link; row 2 = the consent-gate placeholder
+ * text (the source shows "This video requires Social Media cookies…").
+ */
+function buildVideoEmbedBlock(document, ytUrl) {
+  const linkCell = document.createElement('div');
+  const a = document.createElement('a');
+  a.setAttribute('href', ytUrl);
+  a.textContent = 'YouTube video';
+  linkCell.append(a);
+
+  const consentCell = document.createElement('div');
+  const p = document.createElement('p');
+  p.textContent = 'This video requires Social Media cookies to be accepted. Please update your cookie preferences to watch.';
+  consentCell.append(p);
+
+  return WebImporter.DOMUtils.createTable([
+    ['Video Embed'],
+    [linkCell],
+    [consentCell],
+  ], document);
+}
+
+/*
+ * Convert the source's text+video col-6 pair into a `split-right` SECTION: the
+ * article text stays as default content and a `video-embed` block sits beside it
+ * on the right (block-agnostic section style — see the section-split-right-video
+ * sample). We isolate it in its own section with <hr> boundaries and a Section
+ * Metadata table (style: split-right).
  *
- * The source marks the image as a picture-only paragraph, optionally followed by a
- * caption paragraph. We take the run of body paragraphs immediately BEFORE the
- * image as the left (text) cell, and the image + caption as the right cell, then
- * replace that run with one `.columns` block (row of two cells). Returns true if a
- * media block was created.
+ * Detection (static DOM): a `.cmp-embed`/`.embed` grid column holding a YouTube
+ * iframe (data-src), with a sibling col-6 text column immediately before it.
+ * Returns the count built.
+ */
+function wrapVideoSections(document, root) {
+  let built = 0;
+  const ytIframes = [...root.querySelectorAll('iframe')].filter((f) => (
+    /youtube\.com|youtu\.be/.test(f.getAttribute('data-src') || f.getAttribute('src') || '')
+  ));
+  ytIframes.forEach((iframe) => {
+    const ytUrl = iframe.getAttribute('data-src') || iframe.getAttribute('src');
+    const vidCol = iframe.closest('[class*="GridColumn--default--6"]') || iframe.closest('[class*="GridColumn"]');
+    if (!vidCol || !vidCol.parentElement) return;
+    const grid = vidCol.parentElement;
+    const cols = [...grid.children];
+    const vi = cols.indexOf(vidCol);
+    // text column = the sibling immediately before the video column
+    const textCol = vi > 0 ? cols[vi - 1] : null;
+
+    const videoBlock = buildVideoEmbedBlock(document, ytUrl);
+
+    // Build the section wrapper: text (if any) then the video block, fenced by
+    // <hr> before and a Section Metadata (split-right) + <hr> after.
+    const frag = document.createElement('div');
+    const before = document.createElement('hr');
+    frag.append(before);
+    if (textCol) {
+      const t = textCol.cloneNode(true);
+      // unwrap the grid-column div so its paragraphs become plain default content
+      while (t.firstChild) frag.append(t.firstChild);
+    }
+    frag.append(videoBlock);
+    const meta = WebImporter.Blocks.createBlock(document, {
+      name: 'Section Metadata',
+      cells: { style: 'split-right' },
+    });
+    frag.append(meta);
+    frag.append(document.createElement('hr'));
+
+    // Replace the video column with the section fragment; drop the now-duplicated
+    // text column (its content was moved into the section).
+    vidCol.replaceWith(...frag.childNodes);
+    if (textCol) textCol.remove();
+    built += 1;
+  });
+  return built;
+}
+
+/*
+ * Convert a source two-column DATA layout into our `table` block.
+ *
+ * On the source, a tabular list (e.g. NJTL essay winners) is authored NOT as an
+ * HTML <table> but as two side-by-side `.text` grid columns (each `col-6`), the
+ * first line of each being a bold header ("Winners" / "NJTL Chapter"). We detect
+ * an `.aem-Grid` whose children are exactly two `.text` columns that each start
+ * with a short bold header, and emit a Table block: row 1 = the two headers,
+ * row 2 = the two column bodies (header line removed). Returns the count built.
+ */
+function wrapDataTables(document, root) {
+  let built = 0;
+  // each candidate column must lead with a short bold header
+  const headerOf = (col) => {
+    const b = col.querySelector('b, strong');
+    const t = b ? (b.textContent || '').trim() : '';
+    // header is the FIRST text line of the column (not a mid-body bold word)
+    const firstLine = (col.textContent || '').trim().split('\n')[0].trim();
+    return t && t.length <= 40 && firstLine.startsWith(t) ? t : '';
+  };
+  const grids = [...root.querySelectorAll('.aem-Grid')];
+  grids.forEach((grid) => {
+    // find the pair of ADJACENT half-width (.text) columns that each begin with a
+    // bold header — the data table. A full-width intro column may precede them.
+    const textCols = [...grid.children].filter((c) => c.classList && c.classList.contains('text'));
+    let cols = null;
+    for (let i = 0; i < textCols.length - 1; i += 1) {
+      if (headerOf(textCols[i]) && headerOf(textCols[i + 1])) {
+        cols = [textCols[i], textCols[i + 1]];
+        break;
+      }
+    }
+    if (!cols) return;
+    const h1 = headerOf(cols[0]);
+    const h2 = headerOf(cols[1]);
+    if (!h1 || !h2) return;
+
+    // The source's blank `&nbsp;` group separators are stripped from the DOM
+    // before import, so we reconstruct the sub-groups from content. Collect each
+    // column's non-empty body paragraphs (the bold header is dropped — it becomes
+    // the header row).
+    const bodyParas = (col, header) => {
+      const textHost = col.querySelector('.cmp-text') || col;
+      return [...textHost.querySelectorAll('p')].filter((p) => {
+        if (p.querySelector('picture, img')) return true;
+        const t = (p.textContent || '').replace(/[\s\u00a0]/g, '');
+        return t && (p.textContent || '').trim() !== header;
+      });
+    };
+    // A group-header paragraph = a short category/bracket label that STARTS a new
+    // sub-group (e.g. "Girls/Boys 10 and Under"). This is the grouping cue now
+    // that the blank separators are gone.
+    const isGroupHeader = (p) => {
+      const t = (p.textContent || '').trim();
+      return t.length <= 40 && /(\band under\b|\band over\b|\bdivision\b|\bcategory\b|\bboys\b|\bgirls\b|\b\d+s\b)/i.test(t);
+    };
+
+    const leftParas = bodyParas(cols[0], h1);
+    const rightParas = bodyParas(cols[1], h2);
+
+    // Split LEFT into groups at each group-header paragraph.
+    const leftGroups = [];
+    leftParas.forEach((p) => {
+      if (isGroupHeader(p) || !leftGroups.length) leftGroups.push([]);
+      leftGroups[leftGroups.length - 1].push(p);
+    });
+    // Chunk RIGHT into the SAME number of groups (it has no headers; the source
+    // aligns its items 1:1 within each left bracket), distributing evenly with
+    // any remainder on the last group.
+    const nGroups = leftGroups.length;
+    const rightGroups = [];
+    if (nGroups > 1 && rightParas.length >= nGroups) {
+      const per = Math.floor(rightParas.length / nGroups);
+      let k = 0;
+      for (let gi = 0; gi < nGroups; gi += 1) {
+        const take = gi === nGroups - 1 ? rightParas.length - k : per;
+        rightGroups.push(rightParas.slice(k, k + take));
+        k += take;
+      }
+    } else {
+      rightGroups.push(rightParas);
+    }
+
+    const toCell = (paras) => {
+      const cell = document.createElement('div');
+      paras.forEach((p) => cell.append(p.cloneNode(true)));
+      return cell;
+    };
+    const hc1 = document.createElement('div'); hc1.textContent = h1;
+    const hc2 = document.createElement('div'); hc2.textContent = h2;
+    const rowCount = Math.max(leftGroups.length, rightGroups.length, 1);
+    const bodyRows = [];
+    for (let r = 0; r < rowCount; r += 1) {
+      bodyRows.push([
+        leftGroups[r] ? toCell(leftGroups[r]) : document.createElement('div'),
+        rightGroups[r] ? toCell(rightGroups[r]) : document.createElement('div'),
+      ]);
+    }
+    const table = WebImporter.DOMUtils.createTable([
+      ['Table'],
+      [hc1, hc2],
+      ...bodyRows,
+    ], document);
+    // Replace ONLY the two data columns (a preceding full-width intro column, if
+    // any, stays as default content); insert the table where the first col was.
+    cols[0].replaceWith(table);
+    cols[1].remove();
+    built += 1;
+  });
+  return built;
+}
+
+/*
+ * Flatten LEFTOVER layout `<table>`s (some source articles wrap body prose in
+ * nested single-column layout tables — an email/CMS artifact). These aren't data
+ * and would render as stray bordered tables in EDS. Unwrap each into its cell
+ * contents (deepest-nested first, so nesting collapses cleanly). Runs AFTER
+ * wrapMediaColumns so the beside-text a layout table holds is still measurable
+ * when images are paired; our own block tables are created LATER by createTable.
+ */
+// Names of the block tables THIS importer creates via createTable — these must
+// never be flattened as if they were source layout tables.
+const OUR_BLOCK_NAMES = /^(columns|social|cards|table|video embed|embed instagram|quote|custom widget reactions|section metadata|metadata)\b/i;
+
+function flattenLayoutTables(document, root) {
+  const layout = [...root.querySelectorAll('table')].filter((t) => {
+    // Skip our own block tables (first header cell names a known block).
+    const firstCell = t.querySelector('th, td');
+    const label = (firstCell && firstCell.textContent || '').trim();
+    return !OUR_BLOCK_NAMES.test(label);
+  });
+  layout.sort((a, b) => b.querySelectorAll('table').length - a.querySelectorAll('table').length);
+  layout.forEach((t) => {
+    // don't unwrap a layout table that CONTAINS one of our block tables
+    if (t.querySelector('table') && [...t.querySelectorAll('table')]
+      .some((inner) => OUR_BLOCK_NAMES.test((inner.querySelector('th, td')?.textContent || '').trim()))) return;
+    const frag = document.createDocumentFragment();
+    t.querySelectorAll(':scope > tbody > tr > td, :scope > tr > td, :scope > tbody > tr > th, :scope > tr > th')
+      .forEach((cell) => { while (cell.firstChild) frag.append(cell.firstChild); });
+    if (frag.childNodes.length) t.replaceWith(frag); else t.remove();
+  });
+}
+
+/*
+ * Wrap EACH article body image into a `columns` media block (text beside image),
+ * matching the source, where every body image sits in a half-width (col-6) grid
+ * column paired with a sibling col-6 text column. The image's SIDE (media-left /
+ * media-right) is read from its rendered position (the importer runs in a real
+ * browser, so layout is available): image left-of-centre → media-left, else
+ * media-right. Older articles alternate right/left/right; the Aerie page has a
+ * single right image — both are handled uniformly here.
+ *
+ * A caption is the text inside the image's own column after the picture, else the
+ * following text-only paragraph. Returns the number of media blocks built.
  */
 function wrapMediaColumns(document, root) {
-  // Find the body image. At transform time it may sit in a <p> OR as a bare
-  // <img>/<picture> in a div (WebImporter wraps loose nodes in <p> only later).
-  // Pick the first content image that is NOT part of the related-cards feed.
-  const bodyImg = [...root.querySelectorAll('img, picture')].find((el) => {
-    if (el.closest('ul')) return false; // skip related-articles thumbnails
-    const alt = (el.getAttribute('alt') || el.querySelector?.('img')?.getAttribute('alt') || '');
-    return !/facebook|twitter|linkedin|copy|print|checkmark/i.test(alt);
+  const isDecorative = (alt) => /facebook|twitter|linkedin|copy|print|checkmark|smile|thumbs|love|clap|lightbulb/i.test(alt || '');
+  // Body images: real photos with alt text, NOT in the related-cards <ul>, NOT
+  // inside the share/reactions widgets (their icons, incl. an empty-alt
+  // checkmark, must never become a media block), NOT chrome icons.
+  const bodyImgs = [...root.querySelectorAll('img')].filter((img) => {
+    if (img.closest('ul')) return false;
+    if (img.closest('.socialmediasharing, .reactions')) return false;
+    const alt = (img.getAttribute('alt') || '').trim();
+    if (!alt) return false; // photos on these articles always carry alt text
+    return !isDecorative(alt);
   });
-  if (!bodyImg) return false;
-  // the element that directly wraps the image (a <p> or a container <div>)
-  const imgP = bodyImg.closest('p') || bodyImg.parentElement;
-  if (!imgP) return false;
+  if (!bodyImgs.length) return 0;
 
-  // caption text = the text inside the image's wrapper (minus the image), else
-  // the next text-only paragraph after it.
-  let captionText = '';
-  const wrapClone = imgP.cloneNode(true);
-  wrapClone.querySelectorAll('picture, img').forEach((n) => n.remove());
-  captionText = (wrapClone.textContent || '').trim();
-  if (!captionText) {
-    const nx = imgP.nextElementSibling;
-    if (nx && nx.tagName === 'P' && !nx.querySelector('picture, img')) {
-      captionText = (nx.textContent || '').trim();
-      if (captionText) nx.remove();
+  const viewportCentre = 640; // 1280 test viewport → column midline
+  let built = 0;
+
+  bodyImgs.forEach((img) => {
+    const pic = img.closest('picture') || img;
+    // The image's grid column (half-width) and its paired text column (the
+    // adjacent col-6 sibling in the same grid that carries text, no picture).
+    const imgCol = pic.closest('[class*="GridColumn--default--6"]')
+      || pic.closest('[class*="GridColumn"]');
+    let textCol = null;
+    if (imgCol && imgCol.parentElement) {
+      const sibs = [...imgCol.parentElement.children]
+        .filter((c) => c.className && /GridColumn--default--6/.test(c.className));
+      const idx = sibs.indexOf(imgCol);
+      // prefer the immediately-preceding col-6, else the following one
+      textCol = sibs[idx - 1] && !sibs[idx - 1].querySelector('picture, img') ? sibs[idx - 1]
+        : (sibs[idx + 1] && !sibs[idx + 1].querySelector('picture, img') ? sibs[idx + 1] : null);
     }
-  }
 
-  // Gather the body paragraphs that sit BESIDE the image (source: the merch image
-  // is level with the two paragraphs directly above it — "This grant…" and "To
-  // celebrate…", NOT the earlier "Central…" which is full-width above). The image
-  // is grouped in the source with its immediately-preceding paragraph block, so
-  // take the paragraphs from the image's PREVIOUS sibling group; fall back to the
-  // 2 nearest preceding paragraphs by document order.
-  const beforeImg = (el) => !!(bodyImg.compareDocumentPosition(el)
-    & Node.DOCUMENT_POSITION_PRECEDING);
-  let textEls = [];
-  // preferred: the paragraphs inside the image wrapper's previous sibling element
-  const prevGroup = imgP.previousElementSibling;
-  if (prevGroup) {
-    const groupParas = [...prevGroup.querySelectorAll('p')]
-      .filter((p) => (p.textContent || '').trim() && !p.querySelector('picture, img'));
-    if (prevGroup.tagName === 'P' && (prevGroup.textContent || '').trim()) textEls = [prevGroup];
-    else if (groupParas.length) textEls = groupParas;
-  }
-  if (!textEls.length) {
-    const allTextP = [...root.querySelectorAll('p')].filter((p) => (p.textContent || '').trim()
-      && !p.querySelector('picture, img')
-      && !p.closest('ul')
-      && beforeImg(p));
-    textEls = allTextP.slice(-2); // the 2 paragraphs nearest above the image
-  }
-  if (!textEls.length) return false;
+    // caption: text in the image's column after the picture, else next text para.
+    let captionText = '';
+    const capHost = imgCol || pic.closest('p') || pic.parentElement;
+    if (capHost) {
+      const clone = capHost.cloneNode(true);
+      clone.querySelectorAll('picture, img').forEach((n) => n.remove());
+      captionText = (clone.textContent || '').trim();
+    }
 
-  const textCell = document.createElement('div');
-  textEls.forEach((el) => textCell.append(el.cloneNode(true)));
-  const mediaCell = document.createElement('div');
-  const pic = bodyImg.tagName === 'PICTURE' ? bodyImg : (bodyImg.closest('picture') || bodyImg);
-  mediaCell.append(pic.cloneNode(true));
-  if (captionText) {
-    const cap = document.createElement('p');
-    const em = document.createElement('em');
-    em.textContent = captionText;
-    cap.append(em);
-    mediaCell.append(cap);
-  }
+    // Pair the image with the body text that renders BESIDE it, using rendered
+    // layout (available at transform time) as the PRIMARY signal: every body
+    // paragraph that sits on the OPPOSITE side of the column midline (text-left
+    // when the image is right) AND whose vertical range overlaps the image's
+    // band. This captures the FULL left-column run beside the image — including a
+    // lead-in paragraph whose top aligns with the image top (a col-12 intro that
+    // sits directly above the col-6 beside-text) — and is robust to the source
+    // wrapping beside-text in a layout table (e.g. Laver Cup) where a DOM-sibling
+    // lookup fails. Generous vertical tolerance so a paragraph starting level with
+    // the image top is included; strict enough that a NEXT image's row isn't.
+    const textCell = document.createElement('div');
+    const pairedParas = [];
+    const ir = pic.getBoundingClientRect ? pic.getBoundingClientRect() : null;
+    if (ir && ir.width) {
+      const imgIsLeft = ir.left < viewportCentre;
+      [...root.querySelectorAll('p')].forEach((p) => {
+        if (!(p.textContent || '').trim() || p.querySelector('picture, img') || p.closest('ul')) return;
+        if (p.closest('.socialmediasharing, .reactions')) return;
+        const pr = p.getBoundingClientRect();
+        if (!pr.width) return;
+        // overlap the image band, allowing a paragraph that begins up to ~100px
+        // above the image top (the lead-in intro) but not a full row above.
+        const vOverlap = pr.bottom > ir.top - 20 && pr.top < ir.bottom + 20 && pr.top > ir.top - 110;
+        const opposite = imgIsLeft ? (pr.left >= viewportCentre - 40) : (pr.right <= viewportCentre + 40);
+        if (vOverlap && opposite) pairedParas.push(p);
+      });
+    }
+    if (pairedParas.length) {
+      pairedParas.forEach((p) => textCell.append(p.cloneNode(true)));
+      pairedParas.forEach((p) => p.remove());
+    }
+    // Fallback 1: the DOM-sibling text column (clean col-6 pairs) if geometry
+    // found nothing (e.g. a headless run without layout).
+    if (!textCell.childNodes.length && textCol) {
+      [...textCol.querySelectorAll('p')]
+        .filter((p) => (p.textContent || '').trim() && !p.querySelector('picture, img'))
+        .forEach((p) => textCell.append(p.cloneNode(true)));
+    }
+    // Fallback 2: nearest preceding body paragraphs.
+    if (!textCell.childNodes.length) {
+      const beforeImg = (el) => !!(pic.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING);
+      const near = [...root.querySelectorAll('p')].filter((p) => (p.textContent || '').trim()
+        && !p.querySelector('picture, img') && !p.closest('ul') && beforeImg(p)).slice(-2);
+      near.forEach((p) => { textCell.append(p.cloneNode(true)); });
+      near.forEach((p) => p.remove());
+    }
+    if (!textCell.childNodes.length) return; // nothing to pair — skip
 
-  const table = WebImporter.DOMUtils.createTable([
-    ['Columns (media-right)'],
-    [textCell, mediaCell],
-  ], document);
+    const mediaCell = document.createElement('div');
+    mediaCell.append(pic.cloneNode(true));
+    if (captionText) {
+      const cap = document.createElement('p');
+      const em = document.createElement('em');
+      em.textContent = captionText;
+      cap.append(em);
+      mediaCell.append(cap);
+    }
 
-  // insert the block where the image was; remove the original text paragraphs
-  // (caption was already removed above if it was a separate paragraph).
-  imgP.replaceWith(table);
-  textEls.forEach((el) => el.remove());
-  return true;
+    // Side from rendered position (browser layout available at transform time).
+    const rect = (imgCol || pic).getBoundingClientRect ? (imgCol || pic).getBoundingClientRect() : { left: viewportCentre + 1 };
+    const isLeft = rect.left < viewportCentre;
+    const variant = isLeft ? 'Columns (media-left)' : 'Columns (media-right)';
+    const cells = isLeft ? [mediaCell, textCell] : [textCell, mediaCell];
+    const table = WebImporter.DOMUtils.createTable([[variant], cells], document);
+
+    // Replace the image column with the block, and drop the paired text column.
+    const anchor = imgCol || pic.closest('p') || pic;
+    anchor.replaceWith(table);
+    if (textCol && textCol.parentElement) textCol.remove();
+    built += 1;
+  });
+
+  return built;
 }
 
 export default {
@@ -307,6 +747,14 @@ export default {
 
   transform: ({ document, url, params }) => {
     const main = document.querySelector('#mainContent') || document.querySelector('main') || document.body;
+    // Track which blocks we emit, for the import report (per page).
+    const emittedBlocks = ['cards-news'];
+    const tweetCount = main.querySelectorAll('blockquote.twitter-tweet').length;
+    const igCount = main.querySelectorAll('blockquote.instagram-media').length;
+    if (tweetCount) emittedBlocks.push(`quote-tweet×${tweetCount}`);
+    if (igCount) emittedBlocks.push(`embed-instagram×${igCount}`);
+    if (main.querySelector('.socialmediasharing')) emittedBlocks.push('social');
+    if (main.querySelector('.reactions')) emittedBlocks.push('reactions');
 
     // 0. Capture Description + Image from the ORIGINAL article DOM, before any
     //    mutation. The source head has no og:description / og:image (JS-injected,
@@ -342,43 +790,57 @@ export default {
     executeTransformers('beforeTransform', main, { url, params });
     executeTransformers('afterTransform', main, { url, params });
 
-    // 1b. Wrap the inline body image into a columns media-right block (text left /
-    //     image right on desktop), matching the source article layout.
-    wrapMediaColumns(document, main);
+    // 1a. Convert a text+video col-6 pair into a split-right video section
+    //     (video-embed block beside the text). Runs before wrapEmbeds so the
+    //     YouTube iframe is consumed here, not mistaken for another embed.
+    const videoSections = wrapVideoSections(document, main);
+    if (videoSections) emittedBlocks.push(`video-embed×${videoSections}`);
 
-    // 2. Replace the dynamic SOCIAL widget with our social block.
-    //    The source share bar is a container whose descendant <a>/<img> carry the
-    //    labels "Share via Facebook/Twitter/LinkedIn", "Copy link", "Show print
-    //    version" (a Vue widget). Match on those labels (aria-label OR img alt) and
-    //    pick the TIGHTEST container holding all of them, so we swap just the bar.
-    const labelText = (el) => (
-      `${el.getAttribute && el.getAttribute('aria-label') || ''} ${el.getAttribute && el.getAttribute('alt') || ''}`
-    ).toLowerCase();
-    const hasShareLabels = (el) => {
-      const all = [el, ...el.querySelectorAll('a, img')].map(labelText).join(' ');
-      return all.includes('facebook') && all.includes('linkedin')
-        && (all.includes('copy link') || all.includes('print'));
-    };
-    // candidates = smallest elements that still contain all share labels
-    const shareCandidates = [...main.querySelectorAll('div, p, span, ul')].filter(hasShareLabels);
-    const shareEl = shareCandidates.sort((a, b) => (
-      a.querySelectorAll('*').length - b.querySelectorAll('*').length
-    ))[0];
+    // 1a-2. A tweet in a col-6 BESIDE a text column → split-left tweet section
+    //       (tweet left, article text right). Runs before wrapEmbeds so such
+    //       tweets become sections; standalone tweets fall through to inline.
+    const tweetSections = wrapTweetSections(document, main);
+    if (tweetSections) emittedBlocks.push(`tweet-split×${tweetSections}`);
+
+    // 1b. Convert social embeds in the body IN PLACE (reading order preserved),
+    //     before any other swap: tweets → quote(tweet), IG posts → embed-instagram.
+    wrapEmbeds(document, main);
+
+    // 1c. Convert two-column data layouts (e.g. Winners | NJTL Chapter) into
+    //     `table` blocks. Runs before columns-media so a data grid isn't mistaken
+    //     for a media column.
+    const tablesBuilt = wrapDataTables(document, main);
+    if (tablesBuilt) emittedBlocks.push(`table×${tablesBuilt}`);
+
+    // 1d. Wrap the inline body image(s) into columns media block(s) (text beside
+    //     image on desktop), matching the source article layout. Each image's
+    //     side (media-left/right) is read from its rendered position. Runs BEFORE
+    //     the layout-table flatten so beside-text held in a layout table is still
+    //     measurable for pairing.
+    const mediaBlocks = wrapMediaColumns(document, main);
+    if (mediaBlocks) emittedBlocks.push(`columns-media×${mediaBlocks}`);
+
+    // 1e. Flatten leftover layout tables (nested single-column prose wrappers)
+    //     into plain paragraphs so no stray bordered tables ship.
+    flattenLayoutTables(document, main);
+
+    // 2. Replace the SOCIAL share widget with our social block. In the STATIC DOM
+    //    the source bar is `div.socialmediasharing` (the "Share via …" labels are
+    //    JS-injected and absent). Alignment is data-driven from the source class:
+    //    a `position-right` modifier → social (right) (newer layout, e.g. Aerie);
+    //    plain `.socialmediasharing` → social (left) (older layout, beside the
+    //    reactions widget).
+    const shareEl = main.querySelector('.socialmediasharing');
     if (shareEl) {
-      // drop the copy-confirmation bits (Checkmark img alt="" + "Link Copied!")
-      const scope = shareEl.parentElement || main;
-      [...scope.querySelectorAll('p, span, div')].forEach((n) => {
-        const t = (n.textContent || '').trim().toLowerCase();
-        if (t === 'link copied!' && n !== shareEl) n.remove();
-      });
-      scope.querySelectorAll('img[alt=""]').forEach((img) => {
-        const src = (img.getAttribute('src') || '').toLowerCase();
-        if (src.includes('checkmark')) {
-          const wrap = img.closest('p, span, div');
-          if (wrap && wrap !== shareEl) wrap.remove();
-        }
-      });
-      shareEl.replaceWith(buildSocialBlock(document));
+      const align = shareEl.classList.contains('position-right') ? 'right' : 'left';
+      shareEl.replaceWith(buildSocialBlock(document, align));
+    }
+
+    // 2b. Replace the source REACTIONS widget (`div.reactions`, older articles
+    //     only) with our custom-widget-reactions block.
+    const reactionsEl = main.querySelector('.reactions');
+    if (reactionsEl) {
+      reactionsEl.replaceWith(buildReactionsBlock(document));
     }
 
     // 3. Replace the RELATED ARTICLES widget with our cards (news) block.
@@ -402,9 +864,12 @@ export default {
     // 5. Enrich the Metadata block. createMetadata builds a `.metadata` table at
     //    the end of `main` (only Title survives from this source's head); append
     //    our derived rows to it (or create one) rather than overwrite.
+    // Target the PAGE metadata table specifically — its first cell is exactly
+    // "Metadata". Must NOT match a "Section Metadata" table (e.g. the split-right
+    // video section), or our page rows would land in the wrong block.
     const metaTable = [...main.querySelectorAll('table')].find((t) => {
       const first = t.querySelector('th, td');
-      return first && /metadata/i.test(first.textContent);
+      return first && /^\s*metadata\s*$/i.test(first.textContent || '');
     });
     // value may be a string OR a DOM node (e.g. the Image <img>). Skip empties,
     // and don't duplicate a key createMetadata already emitted (e.g. Description
@@ -452,7 +917,7 @@ export default {
       report: {
         title: document.title,
         template: PAGE_TEMPLATE.name,
-        blocks: ['social', 'cards-news'],
+        blocks: emittedBlocks,
       },
     }];
   },

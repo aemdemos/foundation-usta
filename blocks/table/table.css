@@ -46,6 +46,15 @@
   margin-top: 24px;
 }
 
+/* On mobile the multi-row body stacks, so each data ROW (an age bracket / sub-
+   group) needs a gap before the next — otherwise the bracket groups run together
+   in one dense list. A 24px gap before every body row after the first reproduces
+   the source's blank-line separators between brackets in BOTH columns. Reset on
+   desktop below (real table rows). */
+.table tbody tr + tr {
+  margin-top: 24px;
+}
+
 /* the source zeroes paragraph rhythm inside the columns; blank authored
    paragraphs supply the 24px group separators */
 .table th p,
@@ -72,11 +81,62 @@
     vertical-align: top;
   }
 
+  /* real table rows from 768 — drop the mobile stacked row margin */
+  .table tbody tr + tr {
+    margin-top: 0;
+  }
+
   /* column gutter (shared grid gap) between the two columns */
   .table th + th,
   .table td + td {
     margin-top: 0;
     padding-left: var(--grid-gap);
+  }
+
+  /* open the between-bracket gap with cell padding (margins don't apply to table
+     rows), so each age bracket stays separated in both columns like the source */
+  .table tbody tr + tr td {
+    padding-top: 24px;
+  }
+}
+
+/* ==================================================================
+   Grouped 2-column data table (news winners list). Built column-major by
+   table.js: `.table-grouped > .table-col > (.table-col-head | .table-group)`.
+   MOBILE: columns stack — the WHOLE first column (header + its bracket groups)
+   then the whole second column, matching the source (NOT row-interleaved).
+   DESKTOP (≥768): the columns sit side by side on the shared grid.
+   ================================================================== */
+.table-grouped {
+  display: grid;
+  grid-template-columns: 1fr; /* mobile: stacked, column-major */
+  gap: 24px 0;
+  color: #000;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-m);
+  line-height: 24px;
+}
+
+.table-grouped .table-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* the blank-line gap between the header and each bracket group */
+}
+
+.table-grouped .table-col-head {
+  font-weight: 400;
+}
+
+.table-grouped .table-col p {
+  margin: 0;
+  line-height: 24px;
+}
+
+@media (width >= 768px) {
+  .table-grouped-2-cols {
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--grid-gap);
   }
 }
 

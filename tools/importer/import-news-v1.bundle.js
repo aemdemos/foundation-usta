@@ -188,17 +188,133 @@ var CustomImportScript = (() => {
       }
     });
   }
-  function buildSocialBlock(document) {
+  function buildSocialBlock(document, align) {
+    const variant = align === "right" ? "Social (right)" : "Social (left)";
     return WebImporter.DOMUtils.createTable([
-      ["Social (right)"],
+      [variant],
       [""]
     ], document);
+  }
+  function buildReactionsBlock(document) {
+    return WebImporter.DOMUtils.createTable([
+      ["Custom Widget Reactions"],
+      ["Reactions"],
+      ["Be the first to add a reaction"]
+    ], document);
+  }
+  function buildTweetBlock(document, blockquote) {
+    const paras = [...blockquote.querySelectorAll(":scope > p")];
+    const bodyCell = document.createElement("div");
+    paras.forEach((p) => bodyCell.append(p.cloneNode(true)));
+    const footerP = document.createElement("p");
+    const lastP = paras[paras.length - 1] || null;
+    let started = !lastP;
+    blockquote.childNodes.forEach((node) => {
+      if (node === lastP) {
+        started = true;
+        return;
+      }
+      if (!started) return;
+      footerP.append(node.cloneNode(true));
+    });
+    const footerCell = document.createElement("div");
+    if ((footerP.textContent || "").trim()) footerCell.append(footerP);
+    const rows = [["Quote (tweet)"], [bodyCell]];
+    if (footerCell.childNodes.length) rows.push([footerCell]);
+    return WebImporter.DOMUtils.createTable(rows, document);
+  }
+  function buildInstagramBlock(document, rawPermalink) {
+    let permalink = rawPermalink || "";
+    try {
+      const u = new URL(permalink);
+      permalink = `${u.origin}${u.pathname}`;
+    } catch {
+    }
+    if (!permalink) return null;
+    const cell = document.createElement("div");
+    const a = document.createElement("a");
+    a.setAttribute("href", permalink);
+    a.textContent = "View this post on Instagram";
+    cell.append(a);
+    return WebImporter.DOMUtils.createTable([
+      ["Embed Instagram"],
+      [cell]
+    ], document);
+  }
+  function instaPermalinkFrom(url) {
+    const m = /instagram\.com\/p\/([A-Za-z0-9_-]+)/.exec(url || "");
+    return m ? `https://www.instagram.com/p/${m[1]}/` : "";
+  }
+  function isHiddenDup(el) {
+    if (!el.getBoundingClientRect) return false;
+    const r = el.getBoundingClientRect();
+    return r.width === 0 && r.height === 0;
+  }
+  function wrapTweetSections(document, root) {
+    let built = 0;
+    [...root.querySelectorAll("blockquote.twitter-tweet")].forEach((bq) => {
+      if (isHiddenDup(bq)) {
+        bq.remove();
+        return;
+      }
+      const tweetCol = bq.closest('[class*="GridColumn--default--5"], [class*="GridColumn--default--6"], [class*="GridColumn--default--7"]');
+      if (!tweetCol || !tweetCol.parentElement) return;
+      const sibs = [...tweetCol.parentElement.children].filter((c) => c.className && /GridColumn--default--\d+/.test(c.className));
+      const idx = sibs.indexOf(tweetCol);
+      const textCol = [sibs[idx + 1], sibs[idx - 1]].find((c) => c && !c.querySelector("blockquote, iframe, picture, img") && (c.textContent || "").trim().length > 20 && !/GridColumn--default--12/.test(c.className));
+      if (!textCol) return;
+      const tweetBlock = buildTweetBlock(document, bq);
+      const frag = document.createElement("div");
+      frag.append(document.createElement("hr"));
+      frag.append(tweetBlock);
+      const t = textCol.cloneNode(true);
+      while (t.firstChild) frag.append(t.firstChild);
+      const meta = WebImporter.Blocks.createBlock(document, {
+        name: "Section Metadata",
+        cells: { style: "split-left" }
+      });
+      frag.append(meta);
+      frag.append(document.createElement("hr"));
+      tweetCol.replaceWith(...frag.childNodes);
+      textCol.remove();
+      built += 1;
+    });
+    return built;
+  }
+  function wrapEmbeds(document, root) {
+    root.querySelectorAll("blockquote.twitter-tweet").forEach((bq) => {
+      if (isHiddenDup(bq)) {
+        bq.remove();
+        return;
+      }
+      bq.replaceWith(buildTweetBlock(document, bq));
+    });
+    root.querySelectorAll("blockquote.instagram-media").forEach((bq) => {
+      const permalink = bq.getAttribute("data-instgrm-permalink") || (bq.querySelector('a[href*="instagram.com/p/"]') || {}).getAttribute?.("href") || "";
+      const block = buildInstagramBlock(document, instaPermalinkFrom(permalink) || permalink);
+      if (block) bq.replaceWith(block);
+      else bq.remove();
+    });
+    root.querySelectorAll('iframe[src*="instagram.com/p/"]').forEach((iframe) => {
+      const permalink = instaPermalinkFrom(iframe.getAttribute("src"));
+      const block = buildInstagramBlock(document, permalink);
+      if (!block) {
+        return;
+      }
+      let target = iframe;
+      let parent = iframe.parentElement;
+      while (parent && parent !== root && parent.querySelectorAll("iframe, img, p").length <= 1 && (parent.textContent || "").trim().length < 5) {
+        target = parent;
+        parent = parent.parentElement;
+      }
+      target.replaceWith(block);
+    });
   }
   function buildRelatedBlock(document, ul) {
     const rows = [["Cards (news)"]];
     ul.querySelectorAll(":scope > li").forEach((li) => {
       const card = li.querySelector('[role="group"]') || li;
-      const titleH = card.querySelector("h3, h2, h4");
+      const titleH = card.querySelector('h3, h2, h4, [role="heading"], .list-core-component__title');
       let title = titleH ? titleH.textContent.trim() : "";
       if (!title) {
         const labels = [
@@ -259,58 +375,233 @@ var CustomImportScript = (() => {
     });
     return WebImporter.DOMUtils.createTable(rows, document);
   }
-  function wrapMediaColumns(document, root) {
-    const bodyImg = [...root.querySelectorAll("img, picture")].find((el) => {
-      if (el.closest("ul")) return false;
-      const alt = el.getAttribute("alt") || el.querySelector?.("img")?.getAttribute("alt") || "";
-      return !/facebook|twitter|linkedin|copy|print|checkmark/i.test(alt);
-    });
-    if (!bodyImg) return false;
-    const imgP = bodyImg.closest("p") || bodyImg.parentElement;
-    if (!imgP) return false;
-    let captionText = "";
-    const wrapClone = imgP.cloneNode(true);
-    wrapClone.querySelectorAll("picture, img").forEach((n) => n.remove());
-    captionText = (wrapClone.textContent || "").trim();
-    if (!captionText) {
-      const nx = imgP.nextElementSibling;
-      if (nx && nx.tagName === "P" && !nx.querySelector("picture, img")) {
-        captionText = (nx.textContent || "").trim();
-        if (captionText) nx.remove();
-      }
-    }
-    const beforeImg = (el) => !!(bodyImg.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING);
-    let textEls = [];
-    const prevGroup = imgP.previousElementSibling;
-    if (prevGroup) {
-      const groupParas = [...prevGroup.querySelectorAll("p")].filter((p) => (p.textContent || "").trim() && !p.querySelector("picture, img"));
-      if (prevGroup.tagName === "P" && (prevGroup.textContent || "").trim()) textEls = [prevGroup];
-      else if (groupParas.length) textEls = groupParas;
-    }
-    if (!textEls.length) {
-      const allTextP = [...root.querySelectorAll("p")].filter((p) => (p.textContent || "").trim() && !p.querySelector("picture, img") && !p.closest("ul") && beforeImg(p));
-      textEls = allTextP.slice(-2);
-    }
-    if (!textEls.length) return false;
-    const textCell = document.createElement("div");
-    textEls.forEach((el) => textCell.append(el.cloneNode(true)));
-    const mediaCell = document.createElement("div");
-    const pic = bodyImg.tagName === "PICTURE" ? bodyImg : bodyImg.closest("picture") || bodyImg;
-    mediaCell.append(pic.cloneNode(true));
-    if (captionText) {
-      const cap = document.createElement("p");
-      const em = document.createElement("em");
-      em.textContent = captionText;
-      cap.append(em);
-      mediaCell.append(cap);
-    }
-    const table = WebImporter.DOMUtils.createTable([
-      ["Columns (media-right)"],
-      [textCell, mediaCell]
+  function buildVideoEmbedBlock(document, ytUrl) {
+    const linkCell = document.createElement("div");
+    const a = document.createElement("a");
+    a.setAttribute("href", ytUrl);
+    a.textContent = "YouTube video";
+    linkCell.append(a);
+    const consentCell = document.createElement("div");
+    const p = document.createElement("p");
+    p.textContent = "This video requires Social Media cookies to be accepted. Please update your cookie preferences to watch.";
+    consentCell.append(p);
+    return WebImporter.DOMUtils.createTable([
+      ["Video Embed"],
+      [linkCell],
+      [consentCell]
     ], document);
-    imgP.replaceWith(table);
-    textEls.forEach((el) => el.remove());
-    return true;
+  }
+  function wrapVideoSections(document, root) {
+    let built = 0;
+    const ytIframes = [...root.querySelectorAll("iframe")].filter((f) => /youtube\.com|youtu\.be/.test(f.getAttribute("data-src") || f.getAttribute("src") || ""));
+    ytIframes.forEach((iframe) => {
+      const ytUrl = iframe.getAttribute("data-src") || iframe.getAttribute("src");
+      const vidCol = iframe.closest('[class*="GridColumn--default--6"]') || iframe.closest('[class*="GridColumn"]');
+      if (!vidCol || !vidCol.parentElement) return;
+      const grid = vidCol.parentElement;
+      const cols = [...grid.children];
+      const vi = cols.indexOf(vidCol);
+      const textCol = vi > 0 ? cols[vi - 1] : null;
+      const videoBlock = buildVideoEmbedBlock(document, ytUrl);
+      const frag = document.createElement("div");
+      const before = document.createElement("hr");
+      frag.append(before);
+      if (textCol) {
+        const t = textCol.cloneNode(true);
+        while (t.firstChild) frag.append(t.firstChild);
+      }
+      frag.append(videoBlock);
+      const meta = WebImporter.Blocks.createBlock(document, {
+        name: "Section Metadata",
+        cells: { style: "split-right" }
+      });
+      frag.append(meta);
+      frag.append(document.createElement("hr"));
+      vidCol.replaceWith(...frag.childNodes);
+      if (textCol) textCol.remove();
+      built += 1;
+    });
+    return built;
+  }
+  function wrapDataTables(document, root) {
+    let built = 0;
+    const headerOf = (col) => {
+      const b = col.querySelector("b, strong");
+      const t = b ? (b.textContent || "").trim() : "";
+      const firstLine = (col.textContent || "").trim().split("\n")[0].trim();
+      return t && t.length <= 40 && firstLine.startsWith(t) ? t : "";
+    };
+    const grids = [...root.querySelectorAll(".aem-Grid")];
+    grids.forEach((grid) => {
+      const textCols = [...grid.children].filter((c) => c.classList && c.classList.contains("text"));
+      let cols = null;
+      for (let i = 0; i < textCols.length - 1; i += 1) {
+        if (headerOf(textCols[i]) && headerOf(textCols[i + 1])) {
+          cols = [textCols[i], textCols[i + 1]];
+          break;
+        }
+      }
+      if (!cols) return;
+      const h1 = headerOf(cols[0]);
+      const h2 = headerOf(cols[1]);
+      if (!h1 || !h2) return;
+      const bodyParas = (col, header) => {
+        const textHost = col.querySelector(".cmp-text") || col;
+        return [...textHost.querySelectorAll("p")].filter((p) => {
+          if (p.querySelector("picture, img")) return true;
+          const t = (p.textContent || "").replace(/[\s\u00a0]/g, "");
+          return t && (p.textContent || "").trim() !== header;
+        });
+      };
+      const isGroupHeader = (p) => {
+        const t = (p.textContent || "").trim();
+        return t.length <= 40 && /(\band under\b|\band over\b|\bdivision\b|\bcategory\b|\bboys\b|\bgirls\b|\b\d+s\b)/i.test(t);
+      };
+      const leftParas = bodyParas(cols[0], h1);
+      const rightParas = bodyParas(cols[1], h2);
+      const leftGroups = [];
+      leftParas.forEach((p) => {
+        if (isGroupHeader(p) || !leftGroups.length) leftGroups.push([]);
+        leftGroups[leftGroups.length - 1].push(p);
+      });
+      const nGroups = leftGroups.length;
+      const rightGroups = [];
+      if (nGroups > 1 && rightParas.length >= nGroups) {
+        const per = Math.floor(rightParas.length / nGroups);
+        let k = 0;
+        for (let gi = 0; gi < nGroups; gi += 1) {
+          const take = gi === nGroups - 1 ? rightParas.length - k : per;
+          rightGroups.push(rightParas.slice(k, k + take));
+          k += take;
+        }
+      } else {
+        rightGroups.push(rightParas);
+      }
+      const toCell = (paras) => {
+        const cell = document.createElement("div");
+        paras.forEach((p) => cell.append(p.cloneNode(true)));
+        return cell;
+      };
+      const hc1 = document.createElement("div");
+      hc1.textContent = h1;
+      const hc2 = document.createElement("div");
+      hc2.textContent = h2;
+      const rowCount = Math.max(leftGroups.length, rightGroups.length, 1);
+      const bodyRows = [];
+      for (let r = 0; r < rowCount; r += 1) {
+        bodyRows.push([
+          leftGroups[r] ? toCell(leftGroups[r]) : document.createElement("div"),
+          rightGroups[r] ? toCell(rightGroups[r]) : document.createElement("div")
+        ]);
+      }
+      const table = WebImporter.DOMUtils.createTable([
+        ["Table"],
+        [hc1, hc2],
+        ...bodyRows
+      ], document);
+      cols[0].replaceWith(table);
+      cols[1].remove();
+      built += 1;
+    });
+    return built;
+  }
+  var OUR_BLOCK_NAMES = /^(columns|social|cards|table|video embed|embed instagram|quote|custom widget reactions|section metadata|metadata)\b/i;
+  function flattenLayoutTables(document, root) {
+    const layout = [...root.querySelectorAll("table")].filter((t) => {
+      const firstCell = t.querySelector("th, td");
+      const label = (firstCell && firstCell.textContent || "").trim();
+      return !OUR_BLOCK_NAMES.test(label);
+    });
+    layout.sort((a, b) => b.querySelectorAll("table").length - a.querySelectorAll("table").length);
+    layout.forEach((t) => {
+      if (t.querySelector("table") && [...t.querySelectorAll("table")].some((inner) => OUR_BLOCK_NAMES.test((inner.querySelector("th, td")?.textContent || "").trim()))) return;
+      const frag = document.createDocumentFragment();
+      t.querySelectorAll(":scope > tbody > tr > td, :scope > tr > td, :scope > tbody > tr > th, :scope > tr > th").forEach((cell) => {
+        while (cell.firstChild) frag.append(cell.firstChild);
+      });
+      if (frag.childNodes.length) t.replaceWith(frag);
+      else t.remove();
+    });
+  }
+  function wrapMediaColumns(document, root) {
+    const isDecorative = (alt) => /facebook|twitter|linkedin|copy|print|checkmark|smile|thumbs|love|clap|lightbulb/i.test(alt || "");
+    const bodyImgs = [...root.querySelectorAll("img")].filter((img) => {
+      if (img.closest("ul")) return false;
+      if (img.closest(".socialmediasharing, .reactions")) return false;
+      const alt = (img.getAttribute("alt") || "").trim();
+      if (!alt) return false;
+      return !isDecorative(alt);
+    });
+    if (!bodyImgs.length) return 0;
+    const viewportCentre = 640;
+    let built = 0;
+    bodyImgs.forEach((img) => {
+      const pic = img.closest("picture") || img;
+      const imgCol = pic.closest('[class*="GridColumn--default--6"]') || pic.closest('[class*="GridColumn"]');
+      let textCol = null;
+      if (imgCol && imgCol.parentElement) {
+        const sibs = [...imgCol.parentElement.children].filter((c) => c.className && /GridColumn--default--6/.test(c.className));
+        const idx = sibs.indexOf(imgCol);
+        textCol = sibs[idx - 1] && !sibs[idx - 1].querySelector("picture, img") ? sibs[idx - 1] : sibs[idx + 1] && !sibs[idx + 1].querySelector("picture, img") ? sibs[idx + 1] : null;
+      }
+      let captionText = "";
+      const capHost = imgCol || pic.closest("p") || pic.parentElement;
+      if (capHost) {
+        const clone = capHost.cloneNode(true);
+        clone.querySelectorAll("picture, img").forEach((n) => n.remove());
+        captionText = (clone.textContent || "").trim();
+      }
+      const textCell = document.createElement("div");
+      const pairedParas = [];
+      const ir = pic.getBoundingClientRect ? pic.getBoundingClientRect() : null;
+      if (ir && ir.width) {
+        const imgIsLeft = ir.left < viewportCentre;
+        [...root.querySelectorAll("p")].forEach((p) => {
+          if (!(p.textContent || "").trim() || p.querySelector("picture, img") || p.closest("ul")) return;
+          if (p.closest(".socialmediasharing, .reactions")) return;
+          const pr = p.getBoundingClientRect();
+          if (!pr.width) return;
+          const vOverlap = pr.bottom > ir.top - 20 && pr.top < ir.bottom + 20 && pr.top > ir.top - 110;
+          const opposite = imgIsLeft ? pr.left >= viewportCentre - 40 : pr.right <= viewportCentre + 40;
+          if (vOverlap && opposite) pairedParas.push(p);
+        });
+      }
+      if (pairedParas.length) {
+        pairedParas.forEach((p) => textCell.append(p.cloneNode(true)));
+        pairedParas.forEach((p) => p.remove());
+      }
+      if (!textCell.childNodes.length && textCol) {
+        [...textCol.querySelectorAll("p")].filter((p) => (p.textContent || "").trim() && !p.querySelector("picture, img")).forEach((p) => textCell.append(p.cloneNode(true)));
+      }
+      if (!textCell.childNodes.length) {
+        const beforeImg = (el) => !!(pic.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING);
+        const near = [...root.querySelectorAll("p")].filter((p) => (p.textContent || "").trim() && !p.querySelector("picture, img") && !p.closest("ul") && beforeImg(p)).slice(-2);
+        near.forEach((p) => {
+          textCell.append(p.cloneNode(true));
+        });
+        near.forEach((p) => p.remove());
+      }
+      if (!textCell.childNodes.length) return;
+      const mediaCell = document.createElement("div");
+      mediaCell.append(pic.cloneNode(true));
+      if (captionText) {
+        const cap = document.createElement("p");
+        const em = document.createElement("em");
+        em.textContent = captionText;
+        cap.append(em);
+        mediaCell.append(cap);
+      }
+      const rect = (imgCol || pic).getBoundingClientRect ? (imgCol || pic).getBoundingClientRect() : { left: viewportCentre + 1 };
+      const isLeft = rect.left < viewportCentre;
+      const variant = isLeft ? "Columns (media-left)" : "Columns (media-right)";
+      const cells = isLeft ? [mediaCell, textCell] : [textCell, mediaCell];
+      const table = WebImporter.DOMUtils.createTable([[variant], cells], document);
+      const anchor = imgCol || pic.closest("p") || pic;
+      anchor.replaceWith(table);
+      if (textCol && textCol.parentElement) textCol.remove();
+      built += 1;
+    });
+    return built;
   }
   var import_news_v1_default = {
     // Runs in-page BEFORE transform. Resolve this article's publication date from
@@ -337,6 +628,13 @@ var CustomImportScript = (() => {
     },
     transform: ({ document, url, params }) => {
       const main = document.querySelector("#mainContent") || document.querySelector("main") || document.body;
+      const emittedBlocks = ["cards-news"];
+      const tweetCount = main.querySelectorAll("blockquote.twitter-tweet").length;
+      const igCount = main.querySelectorAll("blockquote.instagram-media").length;
+      if (tweetCount) emittedBlocks.push(`quote-tweet\xD7${tweetCount}`);
+      if (igCount) emittedBlocks.push(`embed-instagram\xD7${igCount}`);
+      if (main.querySelector(".socialmediasharing")) emittedBlocks.push("social");
+      if (main.querySelector(".reactions")) emittedBlocks.push("reactions");
       const descP = [...main.querySelectorAll("p")].find((p) => {
         if (p.querySelector("picture, img, a[href]") && (p.textContent || "").trim().length < 60) return false;
         if (p.closest("ul")) return false;
@@ -360,28 +658,24 @@ var CustomImportScript = (() => {
       }
       executeTransformers("beforeTransform", main, { url, params });
       executeTransformers("afterTransform", main, { url, params });
-      wrapMediaColumns(document, main);
-      const labelText = (el) => `${el.getAttribute && el.getAttribute("aria-label") || ""} ${el.getAttribute && el.getAttribute("alt") || ""}`.toLowerCase();
-      const hasShareLabels = (el) => {
-        const all = [el, ...el.querySelectorAll("a, img")].map(labelText).join(" ");
-        return all.includes("facebook") && all.includes("linkedin") && (all.includes("copy link") || all.includes("print"));
-      };
-      const shareCandidates = [...main.querySelectorAll("div, p, span, ul")].filter(hasShareLabels);
-      const shareEl = shareCandidates.sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length)[0];
+      const videoSections = wrapVideoSections(document, main);
+      if (videoSections) emittedBlocks.push(`video-embed\xD7${videoSections}`);
+      const tweetSections = wrapTweetSections(document, main);
+      if (tweetSections) emittedBlocks.push(`tweet-split\xD7${tweetSections}`);
+      wrapEmbeds(document, main);
+      const tablesBuilt = wrapDataTables(document, main);
+      if (tablesBuilt) emittedBlocks.push(`table\xD7${tablesBuilt}`);
+      const mediaBlocks = wrapMediaColumns(document, main);
+      if (mediaBlocks) emittedBlocks.push(`columns-media\xD7${mediaBlocks}`);
+      flattenLayoutTables(document, main);
+      const shareEl = main.querySelector(".socialmediasharing");
       if (shareEl) {
-        const scope = shareEl.parentElement || main;
-        [...scope.querySelectorAll("p, span, div")].forEach((n) => {
-          const t = (n.textContent || "").trim().toLowerCase();
-          if (t === "link copied!" && n !== shareEl) n.remove();
-        });
-        scope.querySelectorAll('img[alt=""]').forEach((img) => {
-          const src = (img.getAttribute("src") || "").toLowerCase();
-          if (src.includes("checkmark")) {
-            const wrap = img.closest("p, span, div");
-            if (wrap && wrap !== shareEl) wrap.remove();
-          }
-        });
-        shareEl.replaceWith(buildSocialBlock(document));
+        const align = shareEl.classList.contains("position-right") ? "right" : "left";
+        shareEl.replaceWith(buildSocialBlock(document, align));
+      }
+      const reactionsEl = main.querySelector(".reactions");
+      if (reactionsEl) {
+        reactionsEl.replaceWith(buildReactionsBlock(document));
       }
       const relatedHeading = [...main.querySelectorAll("h2")].find((h) => /related articles/i.test(h.textContent));
       const relatedUl = relatedHeading ? [...main.querySelectorAll("ul")].find((ul) => ul.querySelector('li a[href*="/news/"], li a[href]')) : null;
@@ -392,7 +686,7 @@ var CustomImportScript = (() => {
       WebImporter.rules.createMetadata(main, document);
       const metaTable = [...main.querySelectorAll("table")].find((t) => {
         const first = t.querySelector("th, td");
-        return first && /metadata/i.test(first.textContent);
+        return first && /^\s*metadata\s*$/i.test(first.textContent || "");
       });
       const hasRow = (key) => !!metaTable && [...metaTable.querySelectorAll("tr")].some((tr) => /^(td|th)$/i.test(tr.firstElementChild?.tagName || "") && (tr.firstElementChild.textContent || "").trim().toLowerCase() === key.toLowerCase());
       const addMetaRow = (key, value) => {
@@ -420,7 +714,7 @@ var CustomImportScript = (() => {
         report: {
           title: document.title,
           template: PAGE_TEMPLATE.name,
-          blocks: ["social", "cards-news"]
+          blocks: emittedBlocks
         }
       }];
     }

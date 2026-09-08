@@ -12,17 +12,20 @@
  */
 
 /* ---- Space above the headline (breadcrumb → H1 gap) -----------------------
-   Source puts 64px top padding on the first content section (32px mobile) — with
-   the H1's own line-box leading this yields the measured breadcrumb→H1 gap of
-   ~108px desktop / ~76px mobile. Apply it to the article's first section so our
-   gap matches. (main > .section:first-of-type already has margin-top:0.) */
+   The source's breadcrumb→H1 gap is AUTHOR-controlled per article, not a fixed
+   template rule: the DEFAULT article (e.g. evert-speaks-on-rally-to-rebuild) has
+   NO top-padding band — the H1's own line-box leading yields a small ~25px gap
+   from the breadcrumb — while a few articles (e.g. the Aerie page) author an
+   extra `padding-top` band. We match the DEFAULT (the common case) with a small
+   top pad; the earlier blanket 64px pushed every headline down too far vs the
+   source. (main > .section:first-of-type already has margin-top:0.) */
 body.news main > .section:first-of-type {
-  padding-top: 32px;
+  padding-top: 8px;
 }
 
 @media (width >= 768px) {
   body.news main > .section:first-of-type {
-    padding-top: 64px;
+    padding-top: 24px; /* → ~24px breadcrumb→H1 gap, matching the source default */
   }
 }
 

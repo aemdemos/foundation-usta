@@ -510,21 +510,27 @@
   text-decoration: underline;
 }
 
-/* Tablet (768–991): 3-up flex row (source: card ≈227 in the 708 column). */
+/* Tablet (768–991): cards GROW to fill the whole row, so the feed spans the full
+   content width no matter how many cards there are (3 cards → 3-up full width,
+   4 → 4-up) — never a fixed 25/33% that leaves an empty slot. `flex-basis:0` +
+   `flex-grow:1` distributes the row evenly; max-width caps a lone/2-card row so
+   cards don't blow up oversized. */
 @media (width >= 768px) {
   .cards.news > ul > li {
-    flex: 0 1 33.333%;
+    flex: 1 1 0;
     max-width: 33.333%;
     padding: 15px 5px;
   }
 }
 
-/* Desktop (≥992): 4-up flex row — source lays the Related Articles feed out as
-   FOUR cards across (card ≈293 in the 1170 content column). */
+/* Desktop (≥992): same fill-the-row behaviour. With flex:1 1 0 a 4-card feed
+   lands each card at 25% and a 3-card feed at 33.333% — both spanning the FULL
+   content width. Cap at 33.333% so 3 cards fill the row (no empty 4th slot) while
+   a lone card can't stretch past a third. */
 @media (width >= 992px) {
   .cards.news > ul > li {
-    flex: 0 1 25%;
-    max-width: 25%;
+    flex: 1 1 0;
+    max-width: 33.333%;
   }
 
   .cards.news .cards-news-card-title {

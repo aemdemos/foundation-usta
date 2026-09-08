@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/news/kathleen-wu-usta-foundation-president.html",
+  "path": "en/home/news/kathleen-wu-usta-foundation-president",
+  "timestamp": "2026-09-07T17:11:28.776Z",
+  "title": "Kathleen Wu announced as next USTA Foundation President",
+  "template": "news",
+  "blocks": [
+    "cards-news",
+    "social",
+    "reactions",
+    "columns-media×2"
+  ]
+}

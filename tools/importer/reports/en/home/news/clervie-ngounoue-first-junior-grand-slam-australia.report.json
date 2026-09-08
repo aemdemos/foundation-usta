@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/news/clervie-ngounoue-first-junior-grand-slam-australia.html",
+  "path": "en/home/news/clervie-ngounoue-first-junior-grand-slam-australia",
+  "timestamp": "2026-09-07T19:02:55.274Z",
+  "title": "Clervie Ngounoue reaches first junior Grand Slam final in Australia",
+  "template": "news",
+  "blocks": [
+    "cards-news",
+    "quote-tweet×2",
+    "social",
+    "reactions",
+    "tweet-split×1",
+    "columns-media×1"
+  ]
+}

@@ -474,18 +474,22 @@ main > .section:empty {
 }
 
 /* Vertical rhythm INSIDE a section between successive wrappers. EDS gives every
-   block/default-content wrapper `margin: 0`, so a block sits flush against the
-   content that follows it — on the source these are clearly separated. Add a
-   top gap to any wrapper that FOLLOWS a block wrapper (i.e. block → next block,
-   or block → default content), matching the source's ~40px block separation.
-   A default-content wrapper that comes FIRST (a heading introducing the block
-   right below it) keeps its tight heading-to-block gap — we only space AFTER
-   blocks, not after a lead-in heading. Mobile uses a slightly smaller gap. */
+   block/default-content wrapper `margin: 0`, so wrappers sit flush against each
+   other — on the source these are clearly separated. Add a top gap in BOTH
+   directions so no block ever abuts its neighbour:
+     1. any wrapper that FOLLOWS a block wrapper (block → block, block → text), and
+     2. any BLOCK wrapper that follows default content (text → block).
+   The one intentional exception (kept tight) is a default-content wrapper that is
+   only a lead-in HEADING immediately introducing the block below it — but a full
+   default-content paragraph run before a block still needs the gap, so we space
+   the block itself in case 2. Mobile uses a slightly smaller gap. */
+main .section > .default-content-wrapper + div[class$="-wrapper"]:not(.default-content-wrapper),
 main .section > div[class$="-wrapper"]:not(.default-content-wrapper) + div[class$="-wrapper"] {
   margin-top: 32px;
 }
 
 @media (width >= 768px) {
+  main .section > .default-content-wrapper + div[class$="-wrapper"]:not(.default-content-wrapper),
   main .section > div[class$="-wrapper"]:not(.default-content-wrapper) + div[class$="-wrapper"] {
     margin-top: 40px;
   }

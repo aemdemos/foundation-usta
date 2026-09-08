@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/news/chris-evert-honored-espn-sports-humanitarian-awards.html",
+  "path": "en/home/news/chris-evert-honored-espn-sports-humanitarian-awards",
+  "timestamp": "2026-09-07T19:02:41.839Z",
+  "title": "Chris Evert to be honored by ESPN at 2022 Sports Humanitarian Awards",
+  "template": "news",
+  "blocks": [
+    "cards-news",
+    "quote-tweet×1",
+    "social",
+    "reactions",
+    "tweet-split×1",
+    "columns-media×1"
+  ]
+}
