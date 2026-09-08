@@ -2497,3 +2497,12 @@ the "…following categories:" lead-in + group-header lines). table.js: added an
 cell, render `.table-list > .table-list-group` (no <table>, no header row) so each group is a spaced block. table.css:
 `.table-list-group` 24px bottom gap between groups, tight lines within. Verified: 4 rows (Freshmen…Seniors) each with
 header + 2 winner lines. Localized. Gates: lint 0 · breakpoints ✓.
+
+### 2026-09-08 — Known-good backup of the news importer
+Per the Content-Import Rule ("back up the known-good script/manifest"), froze the verified news importer at
+tools/importer/backups/news/: import-news-v1.js (SHA1 0190543f…) + import-news-v1.bundle.js + urls-news.txt +
+manifest.md. The manifest documents restore steps and the full source→block coverage map (metadata, cards-news,
+columns-media L/R, social L/R auto, reactions, quote-tweet inline/split-left, embed-instagram inline/split-left
+incl. /reel/+/tv/ + hidden-dup dedup, video-embed full/split-right, 2-col + single-col list tables, layout-table
+flatten) with per-block page counts across the 72-page fleet. Added `tools/importer/backups/**` +
+`tools/importer/**/*.bundle.js` to .eslintignore. Gate: lint 0.
