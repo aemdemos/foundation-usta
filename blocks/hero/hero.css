@@ -255,12 +255,18 @@ main > .section.hero-container:has(.hero.text-up) {
   background-size: cover;
   color: var(--background-color);
 
-  /* Mobile: measured on the source — the h1 sits 48px from the hero top and the
-     band runs ~250px BELOW the buttons (the tall lower portion showing the
-     photo). Total height then follows the content: 625px @390/430, 601 @500-600
-     — matching the source, because the narrow panel below makes the subhead wrap
-     to the same line count. Content inset ~32px each side. */
-  padding: 48px 32px 250px;
+  /* Mobile: measured on the source — the h1 sits 48px from the hero top. The band
+     below the buttons is 144px on the SINGLE-CTA heroes (get-involved 689/630/546,
+     what-we-do) but 250px on the TWO-CTA who-we-are hero (708/625/625/601). Use
+     144px as the base and add the extra only when a 2nd button-container is present
+     (below). Total height then follows the wrapping content. Content inset ~32px. */
+  padding: 48px 32px 144px;
+}
+
+/* who-we-are's two-CTA hero keeps the taller mobile lower band (source 250 vs
+   144) — add the 106px difference when a second button-container is present. */
+.hero.text-up.block:has(.button-container + .button-container) {
+  padding-bottom: 250px;
 }
 
 /* Text panel — top-left column. Mobile: the source constrains the text to a
@@ -339,12 +345,19 @@ main > .section.hero-container:has(.hero.text-up) {
    fluid formulas (width ≈ 50vw, left ≈ 8.33vw + gutter), capped on very wide
    screens so the h1 wraps as the source does. */
 @media (width >= 768px) {
-  /* Source vertical framing (measured live at 1200–1920): the hero top→h1 gap is
-     a constant 80px and the buttons→hero-bottom gap a constant 378px; the band
-     height then follows the wrapping text (782px @992–1280 → 672 @1440 → 648
-     @1920). Our earlier 32/224 padding made it ~200px too short. */
+  /* Source vertical framing (measured live at 1280): the hero top→h1 gap is a
+     constant 80px. The buttons→hero-bottom gap is 272px on the SINGLE-CTA heroes
+     (get-involved 676px, what-we-do 700px) but 378px on the TWO-CTA who-we-are
+     hero (782px) — so use 272px as the base and add the extra only when the hero
+     has two button-containers (see below). Height then follows the wrapping text. */
   .hero.text-up.block {
-    padding: 80px 0 378px;
+    padding: 80px 0 272px;
+  }
+
+  /* who-we-are's two-CTA hero has a taller lower band (source bottom pad 378 vs
+     272) — add the 106px difference when a second button-container is present. */
+  .hero.text-up.block:has(.button-container + .button-container) {
+    padding-bottom: 378px;
   }
 
   /* Source text-up panel is FLUID across the whole ≥768 range: width exactly

@@ -2812,6 +2812,25 @@ Columns image-LEFT: photo + H3 "Carrying on the legacy" + paras + LEARN MORE→o
 - **Render/gates pending DA upload:** dev serves `/en/**` from the DA bus → what-we-do 404s locally until uploaded;
   visual parity + overflow/typography/a11y to confirm on the deployed page (esp. map-wide widths + card layout).
 
+### 2026-09-08 — hero text-up: per-page height (get-involved/what-we-do were too tall)
+The text-up hero desktop bottom padding was hardcoded `378px` (tuned to who-we-are → 782px), making get-involved and
+what-we-do too tall. Measured the source bottom pad (buttons→hero-bottom) at 1280: who-we-are **378** (782px total),
+get-involved **272** (676px), what-we-do **272** (700px) — top pad a constant 80px on all three. The 378 is the
+TWO-CTA who-we-are outlier; the single-CTA pages use 272. Fix (blocks/hero/hero.css ≥768): base `padding-bottom: 272px`
++ `.hero.text-up.block:has(.button-container + .button-container) { padding-bottom: 378px }` (the extra 106px only when
+a 2nd button is present — who-we-are). Verified local: who-we-are **782**, get-involved **676**, what-we-do **700** —
+all exact source matches. Gates: lint 0 · breakpoint ✓ · overflow ✓. Deploy: hero.css → GitHub push.
+
+**MOBILE height (same issue below 768):** the mobile bottom pad was also hardcoded `250px` (who-we-are's value) → all
+pages ~652px flat. Source mobile bottom pad: who-we-are (2-CTA) **250** (708/625/625/601), get-involved/what-we-do
+(1-CTA) **144** (689/630/546…). Fixed: base mobile `padding-bottom: 144px` + a base-level
+`:has(.button-container + .button-container){ padding-bottom: 250px }` (the ≥768 `:has()` rule at 378px still overrides
+on desktop by source order). Verified: who-we-are 708/625/625/601, what-we-do 678/618/594/570, get-involved
+546/546/546/522 (desktop 676/700/782 all exact). NOTE: get-involved is ~1 subhead line shorter than source at 360/390
+(source panel is **48vw** → 6-line subhead; ours is **56vw** → 5 lines, tuned to who-we-are which genuinely uses 56vw).
+The panel width is a per-page author nuance not distinguishable in shared CSS by class/CTA-count; heights match at 430+
+and desktop, and the visual is very close — left as-is.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session
