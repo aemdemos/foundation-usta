@@ -2935,6 +2935,28 @@ leadership intro paragraph is full 1170 width centered (measured), so `center-in
 - Gates: lint 0 · breakpoint ✓. Renders on DA re-upload of each page.
 NOTE: `center` = centers the WHOLE section's default content; `center-intro` = centers only the leading intro wrapper.
 
+### 2026-09-08 — Homepage hero mobile height (was 80px too short)
+Home mobile hero-banner was 474px @390 vs the source's 554px. The base `.hero.banner.block` mobile padding was
+`72px 12px`, but the source frames the text with **112px above the h1 / 112px below the button** (measured: h1 top 112,
+button-bottom→hero-bottom 112). Fixed base mobile padding `72px 12px` → **`112px 12px`**. Verified: @390 hero 554
+(exact), @430 495 (exact), h1 top 112, button gap 112. Desktop unaffected (≥768/≥992 tiers own it — @1280 stays 874).
+This is the HOMEPAGE banner (body `appear`); the body.general banner override (our-impact) is separate. Gates: lint 0 ·
+breakpoint ✓. CSS-only (hero.css) → next GitHub push.
+
+### 2026-09-08 — Homepage hero LEARN MORE button too wide (fixed 238px → content-width)
+`.hero.banner a.button` had a fixed `width: 238px`, but the source LEARN MORE is CONTENT-width (measured 148px @390/768,
+163px @1280 — label + 14px padding, not a fixed pill). Removed the fixed width; button now `padding: 14px`, height 40px,
+content-sized → **158px** (within ~10px of source across all widths, vs the old 238). our-impact's body.general override
+(padding 14px 24px, ~178px matching that page's 183px source button) is separate and unaffected. Gates: lint 0 · breakpoint ✓.
+CSS-only (hero.css) → next GitHub push.
+
+### 2026-09-08 — Homepage black stats band mobile height (was 48px too tall)
+Home mobile black stats band (columns-stats) was 357px @430 vs the source's 309px. Cause: the mobile flex column
+inherited the base `.columns > div { gap: 24px }` stacked gap, adding 24px between each of the 3 stacked stats (48px
+total). The source stacks them with NO gap (each item 97px → 309px). Fixed: `.columns.stats > div { gap: 0 }`.
+Verified: @430 band now **309** (exact), items abut; desktop 3-across row unaffected (@1280 still 115). Gates: lint 0 ·
+breakpoint ✓ · overflow ✓. CSS-only (columns.css) → next GitHub push.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session

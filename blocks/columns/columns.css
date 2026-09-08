@@ -497,6 +497,11 @@ main > .section.hero-container:has(.hero.banner) + .section.columns-container:ha
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+
+  /* No inter-item gap: the source stacks the 3 stats with NO gap on mobile (items
+     abut; each is 97px → band 309px). The base `.columns > div` 24px stacked gap
+     would add 48px (2 gaps) → 357px, too tall. */
+  gap: 0;
 }
 
 .columns.stats > div > div {

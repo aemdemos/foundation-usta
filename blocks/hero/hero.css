@@ -83,8 +83,11 @@ main > .section.hero-container:has(.hero.banner) {
   background-size: cover;
   color: var(--background-color);
 
-  /* mobile: source hero content sits ~12px from each edge */
-  padding: 72px 12px;
+  /* mobile: source hero content sits ~12px from each side, and the text is
+     framed with 112px above the h1 / 112px below the button (measured on the
+     source: h1 top 112, button-bottom→hero-bottom 112 → hero 554px @390). The old
+     72px was ~80px too short. */
+  padding: 112px 12px;
 }
 
 /* inner row: constrain to content width, left-aligned text column */
@@ -120,14 +123,14 @@ main > .section.hero-container:has(.hero.banner) {
   margin-top: 16px;
 }
 
-/* CTA button (decorated in hero.js) — source is 238px × 40px, text
-   centered (the source button has a fixed ~238px width, not shrink-to-text). */
+/* CTA button (decorated in hero.js) — 40px tall, CONTENT-width with generous
+   horizontal padding (source "LEARN MORE" = 148px @390/768 → 163px @1280, i.e.
+   label + padding, NOT a fixed 238px pill). */
 .hero.banner a.button:any-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 238px;
   height: 40px;
   margin: 0;
   border: 1px solid transparent;
