@@ -2792,6 +2792,26 @@ get-involved is now on the DA bus, so measured LIVE vs source. Image position (5
 Gates: lint **0 errors** · breakpoint-check ✓ · overflow ✓ (360→1920) · typography ✓ · a11y ✓ (all on the deployed
 get-involved). Screenshot confirms the Impact band matches the source. Deploy: styles.css + columns.css → GitHub push.
 
+### 2026-09-08 — Migrate what-we-do (general template, dedicated per-page importer)
+Built `tools/importer/import-what-we-do-v1.js`. Section sequence (analyzed live): hero(text-up)+JOIN US →
+"Our Strategic Priorities" intro + Cards(content)×4 → YELLOW BAND "Transforming lives since 1969." (center-intro +
+Columns image-LEFT: photo + H3 "Carrying on the legacy" + paras + LEARN MORE→our-impact) → "The NJTL network serves…"
++ WIDE full-width map image → "Sustained support…" intro + Cards(content)×4 → black band. `Theme=general`.
+- **NEW `map-wide` section style** (styles.css): near-full-viewport image band (100vw − 16/24/60px gutter across
+  mobile/768/992+ = 374/744/932/1220/1380 — matches the source NJTL map, wider than the 1170 content grid). Used WITH
+  `center` so the heading above stays centered.
+- **Card images: hard-wired DAM paths.** The source card `<img>` is inside a `<noscript>` lazy-load wrapper that the
+  cleanup step strips, and the parser doesn't expose it via the h4→walk-up path (unlike the large eager transform/map
+  images, found normally). After several empty-cell attempts, wired each card's real `/content/dam/…` asset path
+  (verified 200) into the card defs; localize-assets downloads them. Result: **11 images, 0 hotlinks** (was 3).
+- **Two CTAs** were missed then added: JOIN US (hero) + LEARN MORE (yellow band → our-impact), both `<strong>`-wrapped
+  → blue `body.general` buttons.
+- Reused get-involved's helpers (as a copy base) + new `cardsContentBlock()` + `imgFromUrl()`. Imported 82.4%
+  (dedupe expected), localized 0 hotlinks. Backed up to `tools/importer/backups/what-we-do/` (SHA1 `3681e914…` +
+  manifest). Gates: lint **0 errors** · breakpoint-check ✓.
+- **Render/gates pending DA upload:** dev serves `/en/**` from the DA bus → what-we-do 404s locally until uploaded;
+  visual parity + overflow/typography/a11y to confirm on the deployed page (esp. map-wide widths + card layout).
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session

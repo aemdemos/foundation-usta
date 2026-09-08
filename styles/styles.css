@@ -723,6 +723,29 @@ main .section.wide > div {
   }
 }
 
+/* map-wide — a very wide, near-full-viewport content band (WIDER than the 1170
+   content grid), for the what-we-do NJTL map image. The source sizes the map to
+   the viewport minus a small responsive side gutter (measured: ~8px @390, ~12px
+   @768, ~30px @992+ → 374/744/932/1220/1380 across 390/768/992/1280/1440). Used
+   WITH `center` so the heading above it stays centered on the normal measure. */
+main .section.center.map-wide > div {
+  max-width: none;
+  width: calc(100vw - 16px);
+  margin-inline: auto;
+}
+
+@media (width >= 768px) {
+  main .section.center.map-wide > div {
+    width: calc(100vw - 24px);
+  }
+}
+
+@media (width >= 992px) {
+  main .section.center.map-wide > div {
+    width: calc(100vw - 60px);
+  }
+}
+
 /* split-left — a block-agnostic TWO-COLUMN section: a block sits ENTIRELY in the
    left column and the default-content text that FOLLOWS it sits ENTIRELY in the
    right column (two equal columns, 30px gutter) — exactly like the source article
