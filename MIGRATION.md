@@ -2831,6 +2831,54 @@ on desktop by source order). Verified: who-we-are 708/625/625/601, what-we-do 67
 The panel width is a per-page author nuance not distinguishable in shared CSS by class/CTA-count; heights match at 430+
 and desktop, and the visual is very close — left as-is.
 
+### 2026-09-08 — Migrate our-impact (general template, dedicated importer; hero BANNER variant)
+Built `tools/importer/import-our-impact-v1.js`. Section sequence (analyzed live): hero(**banner** — centered white text,
+40% overlay, NOT text-up) → "Young people aren't ready." intro + Columns (4 stat blocks LEFT, image RIGHT) → YELLOW
+"We reach communities…" intro + Columns (image LEFT, 3-item list RIGHT) → "Our impact is felt…" **banner-stats-grid**
+→ YELLOW "We make a difference…" intro + **Cards (stats)** ×4 (97/98/85/95) → black band. `Theme=general`.
+- **Hero banner now supports an AUTHORED bg image** (hero.js decorateBanner): pulls a lone row-1 img → inline
+  background + 40% overlay gradient at width=2000; homepage banner still uses its fixed CSS asset when no img authored.
+  our-impact authors its own our-impact-header.jpg.
+- **Stat/card content hard-wired** (same reason as what-we-do): the source packs stat H3+captions into single
+  cmp-text blocks and card images sit in `<noscript>` lazy wrappers the cleanup strips. So NOT_READY_STATS,
+  REACH_ITEMS, the banner-stats-grid pairs, and STAT_CARDS are authored explicitly (verified DAM paths); only the
+  section headings/intros pulled dynamically. banner-stats-grid + cards-stats match the existing block samples.
+- Reused get-involved helpers + new `statList()` + `imgFromUrl()`. Imported 84.4%, localized **7 images, 0 hotlinks**.
+  Backed up to `tools/importer/backups/our-impact/` (SHA1 `c7286b7c…` + manifest). Gates: lint **0 errors** ·
+  breakpoint-check ✓.
+- **Render/gates pending DA upload:** dev serves `/en/**` from the DA bus → our-impact 404s locally until uploaded;
+  visual parity + overflow/typography/a11y (esp. banner-vertical-centering, stat columns, cards-stats) on the deployed page.
+
+### 2026-09-08 — our-impact round 2: "We reach communities" labels were huge H3, should be small bold
+Director review: the reach-section labels (Nationwide / Community-led / Trusted access) rendered as huge Graphik
+XXCond Bold H3 display headings, but the SOURCE renders them as small **`<b>` — 18px bold, Graphik Regular, 24px lh,
+black** (measured). (The section-2 "Young people aren't ready" stats ARE big H3 display — 56px XXCond Bold — so those
+stay H3; only the reach section differs.) Added a `labelList()` builder emitting `<p><strong>label</strong></p>` +
+caption paragraph (vs `statList()`'s H3), and used it for REACH_ITEMS. Verified in output: reach items now
+`<p><strong>Nationwide</strong></p>` etc.; section-2 stats still `<h3>`. Re-imported (84.4%), localized (7 img, 0
+hotlinks). Backup refreshed (SHA1 `b05aea6c…`). Gates: lint 0 · breakpoint ✓. Renders on DA re-upload.
+
+### 2026-09-08 — our-impact round 3: hero → text-up (per direction, not banner)
+Per direction, switched the our-impact hero from `Hero (banner)` to `Hero (text-up)` (top-left text panel, no
+overlay — consistent with who-we-are/what-we-do/get-involved). Importer emits `Hero (text-up)` now; the text-up CSS
+already pulls the authored bg image at width=2000. (The banner-authored-image support added in round 1 stays in
+hero.js — harmless, available for future banner pages.) Re-imported (84.4%), localized (7 img, 0 hotlinks). Backup
+refreshed (SHA1 `d5a7c7ee…`). Gates: lint 0 · breakpoint ✓.
+
+### 2026-09-08 — our-impact round 4: back to banner + hero CTA + body.general banner positioning
+- Reverted hero to **banner** (per direction), and restored the dropped hero CTA **WHAT WE DO → what-we-do**
+  (`heroCta = ctaOf(heroContainer)`, `<strong>`-wrapped → blue).
+- **body.general banner positioning** (hero.css): the homepage banner CSS is tuned to the HOMEPAGE hero (h1 left 152,
+  height 874 @1280), which didn't match the our-impact source (h1 left 122). Added a `body.general .hero.banner`
+  override — same panel geometry as the text-up hero (panel `margin-left: 8.333vw`, `width: 50vw`, 15px inner gutter)
+  but with BANNER vertical framing (`padding: 136px 0 200px` desktop, `72px 12px 104px 8.333vw` mobile). Scoped to
+  body.general so the **homepage banner is untouched** (verified: home body class is `appear`, h1 left still 152 / 874).
+  Verified via DOM-injection on a body.general page: **exact source match at every breakpoint** — @1280 heroH 770,
+  h1 top 136, h1 left 122, h1 width 610, button-bottom→hero 200; @360/390/430 heroH 614/614/590, h1 top 72, h1 left
+  30/32/36, subhead 6/6/5 lines. Mobile panel set to **50vw** (source column; 56vw wrapped the subhead one line short
+  → 24px too short) — heights now match. Homepage banner untouched (body `appear`, not `general`).
+- Re-imported, localized (7 img, 0 hotlinks). Gates: lint 0 · breakpoint ✓. Renders on DA re-upload.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session

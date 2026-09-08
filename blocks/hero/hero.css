@@ -223,6 +223,61 @@ main > .section.hero-container:has(.hero.banner) {
   }
 }
 
+/* ------------------------------------------------------------------
+   Theme override: body.general banner (e.g. our-impact). The homepage banner
+   above is tuned to the HOMEPAGE hero; the general-template banner pages use the
+   SAME panel geometry as the text-up hero (panel at 8.333vw left, 50vw wide, a
+   15px inner gutter) but keep the BANNER vertical framing (text pushed down, not
+   top-anchored). Source-measured (our-impact): h1 left 9.4vw (34@360 → 122@1280 →
+   135@1440), h1 top 72px mobile / 136px desktop, button-bottom→hero-bottom 104px
+   mobile / 200px desktop; panel width 50vw (172@360 → 610@1280 → 690@1440).
+   Scoped to body.general so the homepage banner is untouched. */
+body.general .hero.banner.block {
+  /* mobile: text pushed down 72px from top, ~104px band below the button; the
+     panel is inset ~8.333vw from the left (source h1 left 34@360 → 40@430). */
+  padding: 72px 12px 104px 8.333vw;
+}
+
+body.general .hero.banner.block > div {
+  /* source mobile text panel is a narrow 50vw column (180@360 → 215@430) so the
+     subhead wraps to 6 lines exactly like the source (56vw wrapped to 5, too short). */
+  max-width: 50vw;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+body.general .hero.banner.block > div > div {
+  width: auto;
+  max-width: none;
+  margin-left: 0;
+  padding: 0;
+}
+
+@media (width >= 768px) {
+  body.general .hero.banner.block {
+    /* desktop: 136px above the h1, 200px below the button (banner framing). */
+    padding: 136px 0 200px;
+  }
+
+  body.general .hero.banner.block > div {
+    box-sizing: border-box;
+    width: 50vw;
+    max-width: none;
+    margin-left: 8.333vw;
+    padding: 0;
+  }
+
+  /* 15px inner gutter → h1 sits 15px in from the panel edge (matches source and
+     the text-up hero), so the h1 content width is panel − 30. */
+  body.general .hero.banner.block > div > div {
+    width: auto;
+    max-width: none;
+    margin-left: 0;
+    padding: 0 15px;
+  }
+}
+
 /* ==================================================================
    Variant: text-up
    ================================================================== */

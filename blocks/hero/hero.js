@@ -58,6 +58,24 @@ function decorateError(block) {
  * @param {Element} block the hero block element
  */
 function decorateBanner(block) {
+  // Optional AUTHORED background image (row 1 = a lone <img>/<picture>). The
+  // homepage banner bakes its photo into CSS, but reusable banner pages (e.g.
+  // our-impact) author their own image — pull it out and set it as the block's
+  // inline background WITH the same 40% black overlay gradient (so cover still
+  // applies), overriding the CSS default. Request a large rendition (the smallest
+  // EDS rendition looks washed-out stretched full-bleed — same fix as text-up).
+  const rows = [...block.children];
+  const imgRow = rows.find((r) => r.querySelector('img') && !r.querySelector('h1, h2, h3, p'));
+  const bgImg = imgRow ? imgRow.querySelector('img') : null;
+  if (bgImg && bgImg.src) {
+    let bgUrl = bgImg.src;
+    bgUrl = (/([?&])width=\d+/.test(bgUrl))
+      ? bgUrl.replace(/([?&])width=\d+/, '$1width=2000')
+      : `${bgUrl}${bgUrl.includes('?') ? '&' : '?'}width=2000&format=webply&optimize=medium`;
+    block.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("${bgUrl}")`;
+    imgRow.remove();
+  }
+
   // Standalone CTA link (last <p><a>) renders as a button.
   block.querySelectorAll('p > a').forEach((a) => {
     const p = a.parentElement;
