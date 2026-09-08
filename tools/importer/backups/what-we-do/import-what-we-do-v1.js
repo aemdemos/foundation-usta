@@ -331,7 +331,7 @@ export default {
       if (transformCta) colText.push(ctaParagraph(document, transformCta.href, transformCta.text));
       main.append(columnsBlock(document, { textNodes: colText.length ? colText : [''], img: transformImg, imageSide: 'left' }));
       main.append(WebImporter.Blocks.createBlock(document, {
-        name: 'Section Metadata', cells: { style: 'section-yellow, yellow-center-intro' },
+        name: 'Section Metadata', cells: { style: 'section-yellow, center-intro' },
       }));
       emittedBlocks.push('columns(transform,image-left,yellow,center-intro)');
     }

@@ -320,7 +320,7 @@ export default {
     // section so the intro's default-content wrapper and the columns block wrapper
     // are SIBLINGS — the global news spacing rule then puts the source's ~40px gap
     // between them (two separate sections butted with margin:0 and lost that gap).
-    // The `yellow-center-intro` style centers ONLY the leading default content
+    // The `center-intro` style centers ONLY the leading default content
     // (the intro), leaving the columns block full-width (see styles.css).
     main.append(document.createElement('hr'));
     leadText.forEach((n) => main.append(n));
@@ -346,7 +346,7 @@ export default {
       emittedBlocks.push('columns(evert,image-left)');
     }
     main.append(WebImporter.Blocks.createBlock(document, {
-      name: 'Section Metadata', cells: { style: 'section-yellow, yellow-center-intro' },
+      name: 'Section Metadata', cells: { style: 'section-yellow, center-intro' },
     }));
     emittedBlocks.push('section-metadata(yellow-band)');
 

@@ -2,21 +2,20 @@
 /* global WebImporter */
 
 /*
- * import-what-we-do-v1 — dedicated importer for the USTA Foundation
- * what-we-do.html interior page (general template, unique section sequence).
+ * import-special-funds-v1 — dedicated importer for the USTA Foundation
+ * get-involved/special-funds.html interior page (general template, unique
+ * section sequence).
  *
  * Section sequence (measured on the live rendered DOM at 1280):
- *   1. HERO (text-up) — bg photo what-we-do.jpg + H1
- *      "We get young people ready to succeed in life." + subhead + one CTA "JOIN US".
- *   2. "Our Strategic Priorities" — intro + Cards (content) ×4 (Local Program
- *      Support / Court Refurbishments / College & Career Pathways /
- *      High-Performance Pathways), each square image + h4 + description.
- *   3. YELLOW BAND — centered intro ("Transforming lives since 1969." + lead para)
- *      then Columns image-LEFT (photo + H3 "Carrying on the legacy…" + 3 paras).
- *   4. "The NJTL network serves more than 270 communities nationwide." heading +
- *      a WIDE full-width NJTL map image (≈100vw − gutter, wider than content).
- *   5. "Sustained support. Sustainable impact." — intro + Cards (content) ×4
- *      (Accreditation / Financial Support / Leadership & Vision / Extended Resources).
+ *   1. HERO (text-up) — bg photo special-funds.jpg + H1 "Give to what matters
+ *      most to you." + subhead (no CTA).
+ *   2. "Frances Tiafoe Fund" — Columns, image RIGHT + GIVE A GIFT (?form=TIAFOE).
+ *   3. YELLOW BAND — "Mackie McDonald College Fund" Columns, image LEFT + GIVE A GIFT.
+ *   4. "Jimmy Evert Merit Scholarship Fund" — Columns, image RIGHT + GIVE A GIFT.
+ *   5. Cards (expand) — the five special-funds cards (JLLI / Dinkins / Tisdel /
+ *      RSPA / Middle States): image + title + description + Donate (?form=…). The
+ *      source renders these as FundraiseUp iframes; content is reproduced from the
+ *      approved cards-expand block sample (drafts/block-samples/cards-expand).
  *   6. Trailing full-bleed black strip above the footer (Spacer, stats-band-bg).
  *
  * The yellow band is preceded by a leading yellow strip (Spacer section-yellow-bg).
@@ -27,7 +26,7 @@ import cleanupTransformer from './transformers/ustafoundation-cleanup.js';
 
 const PAGE_TEMPLATE = {
   name: 'general',
-  description: 'USTA Foundation what-we-do page: hero (text-up), two cards-content grids, a yellow band (center-intro + image-left columns), and a wide full-width map image.',
+  description: 'USTA Foundation special-funds page: hero (text-up), three fund columns (alternating image side, one yellow band), and a cards-expand grid.',
   blocks: [],
   sections: [],
 };
@@ -156,26 +155,6 @@ function yellowStrip(document) {
   });
 }
 
-// Emit a Cards (content) block from [{title, desc, img}] defs. Each card = square
-// image cell + a body cell (h4 title + description paragraph).
-function cardsContentBlock(document, cards) {
-  const rows = [['Cards (content)']];
-  cards.forEach((c) => {
-    const imgCell = c.img ? [cloneImg(document, c.img)] : [''];
-    const body = [];
-    const h4 = document.createElement('h4');
-    h4.textContent = c.title;
-    body.push(h4);
-    if (c.desc) {
-      const p = document.createElement('p');
-      p.textContent = c.desc;
-      body.push(p);
-    }
-    rows.push([imgCell, body]);
-  });
-  return WebImporter.DOMUtils.createTable(rows, document);
-}
-
 export default {
   transform: (payload) => {
     const { document, url, params } = payload;
@@ -204,16 +183,9 @@ export default {
     }
     const heroContainer = (h1 && h1.closest('.container.responsivegrid')) || null;
     const heroSubhead = heroContainer ? norm(heroContainer.querySelector('.cmp-text p')?.textContent || '') : '';
-    const heroCtas = heroContainer
-      ? [...heroContainer.querySelectorAll('.button a[href], a.cmp-button[href]')].map((a) => ({
-        href: a.getAttribute('href'), text: norm(a.textContent),
-      })).filter((c) => c.text)
-      : [];
 
-    // Synthesize an <img> from an absolute/relative source URL (the card images
-    // live inside <noscript> lazy-load wrappers that the cleanup step strips, and
-    // the parser doesn't reliably expose them — so each card def carries its real
-    // DAM asset path, verified 200 on the source, and localize-assets downloads it).
+    // Synthesize an <img> from a URL (cards-expand images are DAM assets; the
+    // source card widgets are cross-origin iframes with no accessible imagery).
     const imgFromUrl = (src, alt) => {
       if (!src) return null;
       const img = document.createElement('img');
@@ -222,57 +194,37 @@ export default {
       return img;
     };
 
-    // Build a Cards (content) grid from N {title, desc, img, alt} definitions.
-    const collectCards = (defs) => defs.map((def) => ({
-      title: def.title, desc: def.desc, img: imgFromUrl(def.img, def.alt),
-    }));
-
-    // A cards section's INTRO (heading + lead para). The cards themselves live in a
-    // separate container, so images are resolved per-card via cardImageByTitle.
-    const captureCardsIntro = (re, introHeadings = 'h2') => {
+    // helper to capture a fund Columns section by heading (text + image + CTA).
+    const captureColumns = (re) => {
       const sec = sectionOfHeading(main, re);
-      const intro = collectText(document, sec.container, { headings: introHeadings, maxParas: 1 });
-      return { sec, intro };
+      const text = collectText(document, sec.container);
+      const img = (sec.container && sec.container.querySelector('img'))
+        || (sec.heading ? nearbyImage(sec.heading) : null);
+      const cta = ctaOf(sec.container);
+      return { text, img, cta, sec };
     };
 
-    // 2. Our Strategic Priorities — intro + 4 cards.
-    const priorities = captureCardsIntro(/^Our Strategic Priorities/);
-    const PRIORITY_CARDS = [
-      { title: 'Local Program Support', desc: 'We support community organizations through strategic guidance, grants, and professional development opportunities.', img: '/content/dam/usta-foundation/what-we-do/capacity-building.jpg', alt: 'Two NJTL leaders talking' },
-      { title: 'Court Refurbishments', desc: 'We grow access to tennis by refurbishing courts in under-resourced communities so that young people and their families have places to play.', img: '/content/dam/usta-foundation/what-we-do/court-refurb.jpg', alt: 'New refurbished tennis court' },
-      { title: 'College & Career Pathways', desc: 'We offer scholarships to young people who dream of attending college or post-secondary education, and we offer career pathway programs.', img: '/content/dam/usta-foundation/what-we-do/college-scholarships.jpg', alt: 'Student writing in a notebook' },
-      { title: 'High-Performance Pathways', desc: 'We offer no- or low-cost high-performance training opportunities for youth who have potential to play collegiate or professional tennis.', img: '/content/dam/usta-foundation/what-we-do/high-performance.jpg', alt: 'Teenage tennis player hitting backhand' },
+    // Three fund sections (image side alternates R / L(yellow) / R).
+    const tiafoe = captureColumns(/^Frances Tiafoe Fund/);
+    const mackie = captureColumns(/^Mackie McDonald College Fund/);
+    const evert = captureColumns(/^Jimmy Evert Merit Scholarship Fund/);
+
+    // 5. Cards (expand) — the five special-funds cards. The source renders these as
+    // FundraiseUp iframes (cross-origin, no readable content), so reproduce them
+    // from the approved cards-expand block sample. Each: image + title + desc +
+    // Donate (?form=…, kept on-origin by scripts/donate.js).
+    // Card images reuse the ALREADY-LOCALIZED media-da assets committed with the
+    // cards-expand block sample (the source widgets are cross-origin iframes; these
+    // were captured for the sample). localize-assets leaves /media-da/ paths as-is.
+    const EX = '/media-da/drafts/block-samples/cards-expand';
+    const EXPAND_CARDS = [
+      { title: 'Judy Levering Leadership Initiative', desc: 'The Judy Levering Leadership Initiative (JLLI) funds the local grassroots leadership needed to help developing chapters become established youth development institutions in their community.', form: 'JLLI', img: `${EX}/media-9a03a0ad89fd58bd72bfeaf13d53fad596068a5b-9a03a0ad.jpeg`, alt: 'Speaker at a podium in front of a Serving Up Dreams backdrop' },
+      { title: 'Mayor David N. Dinkins Fund', desc: 'The David N. Dinkins Fund proudly carries forward his vision, fostering readiness on and off the court through tennis, education, life skills and mentoring. Mayor Dinkins believed in the power of opportunity for all, and this Fund embodies that.', form: 'DINKINS', img: `${EX}/media-be96fde0bb8dd0a81987a7ac1152cdff370cc84d-be96fde0.jpeg`, alt: 'Group of young people at a USTA program' },
+      { title: 'Donald Lawson Tisdel Scholarship Fund', desc: 'The USTA Foundation named its largest college scholarship fund the Donald Lawson Tisdel College Scholarship Fund. These scholarships will be awarded annually to 20-25 high school seniors.', form: 'TISDEL', img: `${EX}/media-a9480b8a3fdd39fe26b4d5bdbc833e7ebf0cb1f7-a9480b8a.jpeg`, alt: 'College students in USTA Foundation shirts' },
+      { title: 'Racquet Sports Professionals Fund', desc: 'The RSPA has selected the USTA Foundation as its charity of choice and is teaming up to raise money for grassroots tennis and education programs benefiting under-resourced young people.', form: 'RSPA', img: `${EX}/media-d31d1fbb7e09da665d8aec5fe20acca1d456c7f7-d31d1fbb.jpeg`, alt: 'Coach with young tennis players on a court' },
+      { title: 'USTA Middle States Fund', desc: 'The USTA Middle States fund benefits tennis and education programs for under-resourced young people throughout the USTA Middle States Section.', form: 'MIDDLESTATES', img: `${EX}/media-779d66f2b7e4fbc2590c8f87a77215fbebe7f0f3-779d66f2.jpeg`, alt: 'USTA Middle States volunteer with children' },
     ];
-
-    // 3. YELLOW BAND — centered intro "Transforming lives since 1969." + columns
-    // (image LEFT: photo + H3 "Carrying on the legacy…" + 3 paras).
-    const transformSec = sectionOfHeading(main, /^Transforming lives since 1969/);
-    const transformAll = collectText(document, transformSec.container);
-    // intro = the H2 + the first paragraph (the "National Junior Tennis…" lead);
-    // columns body = the H3 + remaining paragraphs.
-    const transformImg = transformSec.container
-      ? transformSec.container.querySelector('img')
-      : (transformSec.heading ? nearbyImage(transformSec.heading) : null);
-    // LEARN MORE CTA in the columns text cell (→ our-impact). Fall back to the
-    // known href if the parser doesn't expose the button inside this container.
-    const transformCta = ctaOf(transformSec.container)
-      || { href: '/en/home/our-impact.html', text: 'LEARN MORE' };
-
-    // 4. NJTL map — heading + the wide full-width map image.
-    const njtlSec = sectionOfHeading(main, /^The NJTL network serves/);
-    const njtlHeading = njtlSec.heading ? collectText(document, njtlSec.container, { headings: 'h2', maxParas: 0 })
-      .filter((n) => /NJTL network serves/i.test(n.textContent))[0] : null;
-    const mapImg = [...main.querySelectorAll('img')].find((im) => /NJTL Chapter Map/i.test(im.getAttribute('alt') || ''))
-      || (njtlSec.container ? njtlSec.container.querySelector('img') : null);
-
-    // 5. Sustained support — intro + 4 cards.
-    const sustained = captureCardsIntro(/^Sustained support/);
-    const SUSTAINED_CARDS = [
-      { title: 'Accreditation', desc: 'We accredit organizations to become NJTLs. We provide NJTLs unique resources for high-quality education and tennis programming.', img: '/content/dam/usta-foundation/who-we-are/affiliation-thumbnail.jpg', alt: 'Coach on the court with students' },
-      { title: 'Financial Support', desc: "We provide program grants to support NJTLs' direct programming efforts to help these organizations grow and make an impact.", img: '/content/dam/usta-foundation/who-we-are/capacity-building.jpg', alt: 'NJTL leadership at the Campus' },
-      { title: 'Leadership & Vision', desc: 'We advise NJTLs on effective organizational development by offering support, training, and best practices for leaders and coaches.', img: '/content/dam/usta-foundation/who-we-are/leadership-vision.jpg', alt: 'NJTL leader smiling' },
-      { title: 'Extended Resources', desc: 'We host a number of national resources and data tools available to all NJTLs to strengthen their organizational capacity.', img: '/content/dam/usta-foundation/who-we-are/court-refurb.jpg', alt: 'Refurbished tennis courts' },
-    ];
+    const SF_FORM_BASE = 'https://www.ustafoundation.com/en/home/get-involved/special-funds.html';
 
     // ---- Rebuild main into the target section structure ----
     main.textContent = '';
@@ -294,67 +246,77 @@ export default {
       p.textContent = heroSubhead;
       heroContentCell.push(p);
     }
-    heroCtas.forEach((c) => heroContentCell.push(ctaParagraph(document, c.href, c.text)));
     heroCells.push([heroContentCell]);
     main.append(WebImporter.Blocks.createBlock(document, { name: 'Hero (text-up)', cells: heroCells }));
     emittedBlocks.push('hero-text-up');
 
-    // SECTION 2 — Our Strategic Priorities: intro (center, medium) + 4 cards.
-    main.append(document.createElement('hr'));
-    priorities.intro.forEach((n) => main.append(n));
-    main.append(WebImporter.Blocks.createBlock(document, {
-      name: 'Section Metadata', cells: { style: 'center, medium' },
-    }));
-    emittedBlocks.push('default-content(priorities-intro)');
-    main.append(document.createElement('hr'));
-    main.append(cardsContentBlock(document, collectCards(PRIORITY_CARDS)));
-    emittedBlocks.push('cards-content(priorities)');
+    // Emit a fund section: the fund NAME (H2) as a CENTERED heading spanning the
+    // full width (source), then a Columns block (body paragraphs + image + GIVE A
+    // GIFT). `center-intro` (or `center-intro` in the band) centers only the
+    // leading heading; the columns keep their two-column layout. imageSide alternates.
+    const fundSection = (fund, imageSide, { yellow = false } = {}) => {
+      const heading = fund.text.find((n) => /^H2$/i.test(n.tagName));
+      const bodyParas = fund.text.filter((n) => /^P$/i.test(n.tagName));
+      if (heading) main.append(heading);
+      const colText = [...bodyParas];
+      if (fund.cta) colText.push(ctaParagraph(document, fund.cta.href, fund.cta.text));
+      main.append(columnsBlock(document, { textNodes: colText.length ? colText : [''], img: fund.img, imageSide }));
+      main.append(WebImporter.Blocks.createBlock(document, {
+        name: 'Section Metadata',
+        cells: { style: yellow ? 'section-yellow, center-intro' : 'center-intro' },
+      }));
+    };
 
-    // SECTION 3 — YELLOW BAND: centered intro ("Transforming lives since 1969." +
-    // lead para) + columns image-LEFT (photo + H3 "Carrying on the legacy…" + paras).
+    // SECTION 2 — Frances Tiafoe Fund (image RIGHT)
+    main.append(document.createElement('hr'));
+    fundSection(tiafoe, 'right');
+    emittedBlocks.push('fund(tiafoe,image-right,center-intro)');
+
+    // SECTION 3 — YELLOW BAND: Mackie McDonald College Fund (image LEFT)
     main.append(document.createElement('hr'));
     main.append(yellowStrip(document));
     emittedBlocks.push('spacer(yellow-strip)');
     main.append(document.createElement('hr'));
+    fundSection(mackie, 'left', { yellow: true });
+    emittedBlocks.push('fund(mackie,image-left,yellow)');
+
+    // SECTION 4 — Jimmy Evert Merit Scholarship Fund (image RIGHT)
+    main.append(document.createElement('hr'));
+    fundSection(evert, 'right');
+    emittedBlocks.push('fund(evert,image-right,center-intro)');
+
+    // SECTION 5 — Cards (expand): a centered intro line + the five special-funds
+    // cards. Preceded by a spacer for the source's whitespace above the grid.
+    main.append(document.createElement('hr'));
+    main.append(WebImporter.Blocks.createBlock(document, {
+      name: 'Spacer', cells: { desktop: '80px', mobile: '48px' },
+    }));
+    emittedBlocks.push('spacer(above-cards-expand)');
+    main.append(document.createElement('hr'));
     {
-      // intro = the H2 + the first paragraph; columns text = the H3 + the rest.
-      const h2 = transformAll.find((n) => /^H2$/i.test(n.tagName));
-      const paras = transformAll.filter((n) => /^P$/i.test(n.tagName));
-      const h3 = transformAll.find((n) => /^H3$/i.test(n.tagName));
-      const introPara = paras[0];
-      const bodyParas = paras.slice(1);
-      if (h2) main.append(h2);
-      if (introPara) main.append(introPara);
-      const colText = [];
-      if (h3) colText.push(h3);
-      bodyParas.forEach((p) => colText.push(p));
-      if (transformCta) colText.push(ctaParagraph(document, transformCta.href, transformCta.text));
-      main.append(columnsBlock(document, { textNodes: colText.length ? colText : [''], img: transformImg, imageSide: 'left' }));
+      const intro = document.createElement('p');
+      intro.textContent = "Explore more of the USTA Foundation's special philanthropic funds:";
+      main.append(intro);
+      const rows = [['Cards (expand)']];
+      EXPAND_CARDS.forEach((c) => {
+        const img = imgFromUrl(c.img, c.alt);
+        // media-da paths are already localized — don't re-absolutize them.
+        if (c.img.startsWith('/media-da/')) img.setAttribute('src', c.img);
+        const title = document.createElement('div'); title.textContent = c.title;
+        const desc = document.createElement('div'); desc.textContent = c.desc;
+        const donate = document.createElement('div');
+        const a = document.createElement('a'); a.href = `${SF_FORM_BASE}?form=${c.form}`; a.textContent = 'Donate';
+        donate.append(a);
+        rows.push([[img], [title], [desc], [donate]]);
+      });
+      main.append(WebImporter.DOMUtils.createTable(rows, document));
+      // center the intro line ("Explore more…"); the cards-expand block keeps its
+      // own grid layout.
       main.append(WebImporter.Blocks.createBlock(document, {
-        name: 'Section Metadata', cells: { style: 'section-yellow, center-intro' },
+        name: 'Section Metadata', cells: { style: 'center' },
       }));
-      emittedBlocks.push('columns(transform,image-left,yellow,center-intro)');
+      emittedBlocks.push('cards-expand');
     }
-
-    // SECTION 4 — NJTL map: heading + a WIDE full-width map image (`full-width`).
-    main.append(document.createElement('hr'));
-    if (njtlHeading) main.append(njtlHeading);
-    if (mapImg) main.append(cloneImg(document, mapImg));
-    main.append(WebImporter.Blocks.createBlock(document, {
-      name: 'Section Metadata', cells: { style: 'center, map-wide' },
-    }));
-    emittedBlocks.push('default-content(njtl-map)');
-
-    // SECTION 5 — Sustained support: intro (center, medium) + 4 cards.
-    main.append(document.createElement('hr'));
-    sustained.intro.forEach((n) => main.append(n));
-    main.append(WebImporter.Blocks.createBlock(document, {
-      name: 'Section Metadata', cells: { style: 'center, medium' },
-    }));
-    emittedBlocks.push('default-content(sustained-intro)');
-    main.append(document.createElement('hr'));
-    main.append(cardsContentBlock(document, collectCards(SUSTAINED_CARDS)));
-    emittedBlocks.push('cards-content(sustained)');
 
     // SECTION 6 — trailing black band
     main.append(document.createElement('hr'));
@@ -386,6 +348,17 @@ export default {
 
     WebImporter.rules.transformBackgroundImages(main, document);
     WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
+
+    // adjustImageUrls absolutizes ALL img srcs against the source origin. The
+    // cards-expand images are ALREADY-LOCALIZED /media-da/ assets (committed with
+    // the block sample), so restore their relative path — otherwise they become
+    // https://www.ustafoundation.com/media-da/… (404). localize-assets then leaves
+    // these relative /media-da/ paths untouched.
+    main.querySelectorAll('img[src*="/media-da/"]').forEach((img) => {
+      const src = img.getAttribute('src') || '';
+      const idx = src.indexOf('/media-da/');
+      if (idx > 0) img.setAttribute('src', src.slice(idx));
+    });
 
     const rawPath = new URL(params.originalURL).pathname
       .replace(/\/$/, '')

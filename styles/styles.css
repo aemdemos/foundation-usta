@@ -532,27 +532,27 @@ main .section.section-yellow {
    get-involved's Impact Societies / Planned Giving) sits in a much TALLER band on
    the source: the nested AEM containers stack padding so the band-top→content gap
    is ~137px top / ~140px bottom (not the 32px a bare section-yellow gives). The
-   `yellow-center-intro` bands (who-we-are leadership, corporate) lead with a
-   centered intro and keep the tighter 32px, so scope this to a section-yellow that
-   leads directly with a columns block and is NOT a center-intro band. */
+   `center-intro` bands (who-we-are leadership, corporate) lead with a centered
+   intro (default content first) and keep the tighter 32px, so scope this to a
+   section-yellow that leads DIRECTLY with a columns block and is NOT a center-intro band. */
 @media (width >= 992px) {
-  main .section.section-yellow:not(.yellow-center-intro):has(> .columns-wrapper:first-child) {
+  main .section.section-yellow:not(.center-intro):has(> .columns-wrapper:first-child) {
     padding: 68px 0 70px;
   }
 }
 
-/* yellow-center-intro — centers ONLY the leading default-content wrapper (the
-   "Our Leadership and Staff" intro: heading + paragraph + LEARN MORE) inside the
-   yellow band, so the columns block that follows keeps its normal left-aligned
-   two-column layout. The intro caps at a readable measure and its button centers
-   under the copy, matching the source. */
-main .section.yellow-center-intro > .default-content-wrapper:first-child {
-  max-width: 970px;
+/* center-intro — center ONLY the leading default-content wrapper (an intro heading
+   ± paragraph ± CTA) that sits ABOVE a columns block, so the columns keep their
+   normal left-aligned two-column layout. Distinct from `center` (which centers ALL
+   the section's default content). The intro spans the full content width, centered.
+   Composes with any background/width style (e.g. `section-yellow, center-intro` for
+   a yellow band whose leading heading is centered). */
+main .section.center-intro > .default-content-wrapper:first-child {
   margin-inline: auto;
   text-align: center;
 }
 
-main .section.yellow-center-intro > .default-content-wrapper:first-child .button-wrapper {
+main .section.center-intro > .default-content-wrapper:first-child .button-wrapper {
   text-align: center;
 }
 

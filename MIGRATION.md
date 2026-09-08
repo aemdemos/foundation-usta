@@ -2892,6 +2892,49 @@ rendered LEFT but the source is `text-align: center` across the full 1170 conten
 section's metadata (`section-yellow, center`) — centers the leading default content; the cards-stats block keeps its
 own centered grid. Re-imported (7 img, 0 hotlinks). Gates: lint 0 · breakpoint ✓. Content change → renders on DA re-upload.
 
+### 2026-09-08 — Migrate get-involved/special-funds (general template, dedicated importer)
+Built `tools/importer/import-special-funds-v1.js`. Sequence (analyzed live): hero(text-up) "Give to what matters most
+to you." → Frances Tiafoe Fund columns image-RIGHT + GIVE A GIFT(?form=TIAFOE) → YELLOW Mackie McDonald College Fund
+columns image-LEFT + GIVE A GIFT → Jimmy Evert Merit Scholarship Fund columns image-RIGHT + GIVE A GIFT → **Cards
+(expand)** ×5 (JLLI/Dinkins/Tisdel/RSPA/Middle States) → black band. `Theme=general`.
+- **Cards-expand from the block sample:** the source cards are cross-origin FundraiseUp iframes (no readable
+  content), so the 5 cards (title + desc + Donate ?form=…) + their images come from the approved
+  `drafts/block-samples/cards-expand` sample; images reference the already-localized
+  `/media-da/drafts/block-samples/cards-expand/…` assets.
+- **adjustImageUrls post-fix:** that rule absolutized the media-da card srcs → 404; added a post-pass restoring any
+  `/media-da/` src to its relative path. Result: 4 fund photos downloaded, 5 card images stay relative → **0 hotlinks**.
+- Fund CTAs + card Donate links are `?form=…` FundraiseUp deep-links (on-origin via scripts/donate.js).
+- Imported 83.7%. Backed up to `tools/importer/backups/special-funds/` (SHA1 `e6958464…` + manifest). Gates: lint 0 ·
+  breakpoint ✓. Render/gates pending DA upload.
+
+### 2026-09-08 — special-funds round 2: centered fund H2s, cards-expand intro, spacing
+Source review flagged three: (1) each fund NAME (H2) is CENTERED full-width ABOVE its columns (source align:center,
+spans 1170) — I'd put the H2 in the columns text cell; (2) the cards-expand grid has a centered intro line "Explore
+more of the USTA Foundation's special philanthropic funds:" — was missing; (3) whitespace above the cards-expand.
+Fixes:
+- Reworked fund emit: the H2 is now a standalone centered heading + a Columns block (body paras + image + GIVE A GIFT)
+  in one section; style `center-intro` (white funds) or `section-yellow, yellow-center-intro` (Mackie band).
+- **Generalized the CSS** `yellow-center-intro` → added a white `center-intro` variant (centers the leading
+  default-content wrapper full-width); `yellow-center-intro` keeps its 970 cap. styles.css.
+- Added the cards-expand intro `<p>` + a `center` section style on that section (intro centers; cards keep their grid),
+  and an 80px/48px **Spacer above** cards-expand for the source's whitespace.
+Re-imported, localized (4 img, **0 hotlinks**). Backup refreshed (SHA1 `3a053770…`). Gates: lint 0 · breakpoint ✓.
+Renders on DA re-upload.
+
+### 2026-09-08 — Consolidate section styles: drop `yellow-center-intro`, keep `center-intro`
+`yellow-center-intro` was redundant — the yellow BACKGROUND comes from `section-yellow`, so the `yellow-` prefix
+conflated a color with a layout. Removed it; `center-intro` is now the single style that centers ONLY the leading
+default-content wrapper (heading ± para ± CTA) above a columns block (vs `center`, which centers ALL default content).
+Yellow bands now express as `section-yellow, center-intro`. Also dropped the old 970px cap — the source who-we-are
+leadership intro paragraph is full 1170 width centered (measured), so `center-intro` (full-width) is MORE accurate.
+- styles.css: merged the two rules into one `center-intro`; updated the section-yellow tall-padding `:not()` guard to
+  `:not(.center-intro)`.
+- Updated ALL 5 importers (general/who-we-are, get-involved, our-impact, what-we-do, special-funds):
+  `section-yellow, yellow-center-intro` → `section-yellow, center-intro`. Re-bundled + re-imported all 5, re-localized
+  (**0 hotlinks** each: 7/9/7/11/4). All 5 backups refreshed.
+- Gates: lint 0 · breakpoint ✓. Renders on DA re-upload of each page.
+NOTE: `center` = centers the WHOLE section's default content; `center-intro` = centers only the leading intro wrapper.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session

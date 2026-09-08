@@ -341,7 +341,7 @@ export default {
     // intro (heading + the "Join a growing list…" lead paragraph, full width) ABOVE
     // an image-LEFT / text-RIGHT columns row (the four Advance/Amplify/Create/
     // Campaign paragraphs beside the Emirates photo). One `section-yellow` section
-    // with `yellow-center-intro` (centers only the leading default content).
+    // with `center-intro` (centers only the leading default content).
     main.append(document.createElement('hr'));
     main.append(yellowStrip(document));
     emittedBlocks.push('spacer(yellow-strip)');
@@ -357,7 +357,7 @@ export default {
       const colText = bodyParas.length ? bodyParas : [''];
       main.append(columnsBlock(document, { textNodes: colText, img: corporate.img, imageSide: 'left' }));
       main.append(WebImporter.Blocks.createBlock(document, {
-        name: 'Section Metadata', cells: { style: 'section-yellow, yellow-center-intro' },
+        name: 'Section Metadata', cells: { style: 'section-yellow, center-intro' },
       }));
       emittedBlocks.push('columns(corporate,image-left,yellow,center-intro)');
     }

@@ -328,7 +328,7 @@ var CustomImportScript = (() => {
         main.append(columnsBlock(document, { textNodes: colText, img: corporate.img, imageSide: "left" }));
         main.append(WebImporter.Blocks.createBlock(document, {
           name: "Section Metadata",
-          cells: { style: "section-yellow, yellow-center-intro" }
+          cells: { style: "section-yellow, center-intro" }
         }));
         emittedBlocks.push("columns(corporate,image-left,yellow,center-intro)");
       }

@@ -18,10 +18,10 @@ var CustomImportScript = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // tools/importer/import-what-we-do-v1.js
-  var import_what_we_do_v1_exports = {};
-  __export(import_what_we_do_v1_exports, {
-    default: () => import_what_we_do_v1_default
+  // tools/importer/import-special-funds-v1.js
+  var import_special_funds_v1_exports = {};
+  __export(import_special_funds_v1_exports, {
+    default: () => import_special_funds_v1_default
   });
 
   // tools/importer/transformers/ustafoundation-cleanup.js
@@ -64,10 +64,10 @@ var CustomImportScript = (() => {
     }
   }
 
-  // tools/importer/import-what-we-do-v1.js
+  // tools/importer/import-special-funds-v1.js
   var PAGE_TEMPLATE = {
     name: "general",
-    description: "USTA Foundation what-we-do page: hero (text-up), two cards-content grids, a yellow band (center-intro + image-left columns), and a wide full-width map image.",
+    description: "USTA Foundation special-funds page: hero (text-up), three fund columns (alternating image side, one yellow band), and a cards-expand grid.",
     blocks: [],
     sections: []
   };
@@ -170,24 +170,7 @@ var CustomImportScript = (() => {
       cells: { color: "section-yellow-bg", desktop: "30px" }
     });
   }
-  function cardsContentBlock(document, cards) {
-    const rows = [["Cards (content)"]];
-    cards.forEach((c) => {
-      const imgCell = c.img ? [cloneImg(document, c.img)] : [""];
-      const body = [];
-      const h4 = document.createElement("h4");
-      h4.textContent = c.title;
-      body.push(h4);
-      if (c.desc) {
-        const p = document.createElement("p");
-        p.textContent = c.desc;
-        body.push(p);
-      }
-      rows.push([imgCell, body]);
-    });
-    return WebImporter.DOMUtils.createTable(rows, document);
-  }
-  var import_what_we_do_v1_default = {
+  var import_special_funds_v1_default = {
     transform: (payload) => {
       const { document, url, params } = payload;
       const main = document.querySelector("#mainContent") || document.querySelector("main") || document.body;
@@ -212,10 +195,6 @@ var CustomImportScript = (() => {
       }
       const heroContainer = h1 && h1.closest(".container.responsivegrid") || null;
       const heroSubhead = heroContainer ? norm(heroContainer.querySelector(".cmp-text p")?.textContent || "") : "";
-      const heroCtas = heroContainer ? [...heroContainer.querySelectorAll(".button a[href], a.cmp-button[href]")].map((a) => ({
-        href: a.getAttribute("href"),
-        text: norm(a.textContent)
-      })).filter((c) => c.text) : [];
       const imgFromUrl = (src, alt) => {
         if (!src) return null;
         const img = document.createElement("img");
@@ -223,37 +202,25 @@ var CustomImportScript = (() => {
         img.setAttribute("alt", alt || "");
         return img;
       };
-      const collectCards = (defs) => defs.map((def) => ({
-        title: def.title,
-        desc: def.desc,
-        img: imgFromUrl(def.img, def.alt)
-      }));
-      const captureCardsIntro = (re, introHeadings = "h2") => {
+      const captureColumns = (re) => {
         const sec = sectionOfHeading(main, re);
-        const intro = collectText(document, sec.container, { headings: introHeadings, maxParas: 1 });
-        return { sec, intro };
+        const text = collectText(document, sec.container);
+        const img = sec.container && sec.container.querySelector("img") || (sec.heading ? nearbyImage(sec.heading) : null);
+        const cta = ctaOf(sec.container);
+        return { text, img, cta, sec };
       };
-      const priorities = captureCardsIntro(/^Our Strategic Priorities/);
-      const PRIORITY_CARDS = [
-        { title: "Local Program Support", desc: "We support community organizations through strategic guidance, grants, and professional development opportunities.", img: "/content/dam/usta-foundation/what-we-do/capacity-building.jpg", alt: "Two NJTL leaders talking" },
-        { title: "Court Refurbishments", desc: "We grow access to tennis by refurbishing courts in under-resourced communities so that young people and their families have places to play.", img: "/content/dam/usta-foundation/what-we-do/court-refurb.jpg", alt: "New refurbished tennis court" },
-        { title: "College & Career Pathways", desc: "We offer scholarships to young people who dream of attending college or post-secondary education, and we offer career pathway programs.", img: "/content/dam/usta-foundation/what-we-do/college-scholarships.jpg", alt: "Student writing in a notebook" },
-        { title: "High-Performance Pathways", desc: "We offer no- or low-cost high-performance training opportunities for youth who have potential to play collegiate or professional tennis.", img: "/content/dam/usta-foundation/what-we-do/high-performance.jpg", alt: "Teenage tennis player hitting backhand" }
+      const tiafoe = captureColumns(/^Frances Tiafoe Fund/);
+      const mackie = captureColumns(/^Mackie McDonald College Fund/);
+      const evert = captureColumns(/^Jimmy Evert Merit Scholarship Fund/);
+      const EX = "/media-da/drafts/block-samples/cards-expand";
+      const EXPAND_CARDS = [
+        { title: "Judy Levering Leadership Initiative", desc: "The Judy Levering Leadership Initiative (JLLI) funds the local grassroots leadership needed to help developing chapters become established youth development institutions in their community.", form: "JLLI", img: `${EX}/media-9a03a0ad89fd58bd72bfeaf13d53fad596068a5b-9a03a0ad.jpeg`, alt: "Speaker at a podium in front of a Serving Up Dreams backdrop" },
+        { title: "Mayor David N. Dinkins Fund", desc: "The David N. Dinkins Fund proudly carries forward his vision, fostering readiness on and off the court through tennis, education, life skills and mentoring. Mayor Dinkins believed in the power of opportunity for all, and this Fund embodies that.", form: "DINKINS", img: `${EX}/media-be96fde0bb8dd0a81987a7ac1152cdff370cc84d-be96fde0.jpeg`, alt: "Group of young people at a USTA program" },
+        { title: "Donald Lawson Tisdel Scholarship Fund", desc: "The USTA Foundation named its largest college scholarship fund the Donald Lawson Tisdel College Scholarship Fund. These scholarships will be awarded annually to 20-25 high school seniors.", form: "TISDEL", img: `${EX}/media-a9480b8a3fdd39fe26b4d5bdbc833e7ebf0cb1f7-a9480b8a.jpeg`, alt: "College students in USTA Foundation shirts" },
+        { title: "Racquet Sports Professionals Fund", desc: "The RSPA has selected the USTA Foundation as its charity of choice and is teaming up to raise money for grassroots tennis and education programs benefiting under-resourced young people.", form: "RSPA", img: `${EX}/media-d31d1fbb7e09da665d8aec5fe20acca1d456c7f7-d31d1fbb.jpeg`, alt: "Coach with young tennis players on a court" },
+        { title: "USTA Middle States Fund", desc: "The USTA Middle States fund benefits tennis and education programs for under-resourced young people throughout the USTA Middle States Section.", form: "MIDDLESTATES", img: `${EX}/media-779d66f2b7e4fbc2590c8f87a77215fbebe7f0f3-779d66f2.jpeg`, alt: "USTA Middle States volunteer with children" }
       ];
-      const transformSec = sectionOfHeading(main, /^Transforming lives since 1969/);
-      const transformAll = collectText(document, transformSec.container);
-      const transformImg = transformSec.container ? transformSec.container.querySelector("img") : transformSec.heading ? nearbyImage(transformSec.heading) : null;
-      const transformCta = ctaOf(transformSec.container) || { href: "/en/home/our-impact.html", text: "LEARN MORE" };
-      const njtlSec = sectionOfHeading(main, /^The NJTL network serves/);
-      const njtlHeading = njtlSec.heading ? collectText(document, njtlSec.container, { headings: "h2", maxParas: 0 }).filter((n) => /NJTL network serves/i.test(n.textContent))[0] : null;
-      const mapImg = [...main.querySelectorAll("img")].find((im) => /NJTL Chapter Map/i.test(im.getAttribute("alt") || "")) || (njtlSec.container ? njtlSec.container.querySelector("img") : null);
-      const sustained = captureCardsIntro(/^Sustained support/);
-      const SUSTAINED_CARDS = [
-        { title: "Accreditation", desc: "We accredit organizations to become NJTLs. We provide NJTLs unique resources for high-quality education and tennis programming.", img: "/content/dam/usta-foundation/who-we-are/affiliation-thumbnail.jpg", alt: "Coach on the court with students" },
-        { title: "Financial Support", desc: "We provide program grants to support NJTLs' direct programming efforts to help these organizations grow and make an impact.", img: "/content/dam/usta-foundation/who-we-are/capacity-building.jpg", alt: "NJTL leadership at the Campus" },
-        { title: "Leadership & Vision", desc: "We advise NJTLs on effective organizational development by offering support, training, and best practices for leaders and coaches.", img: "/content/dam/usta-foundation/who-we-are/leadership-vision.jpg", alt: "NJTL leader smiling" },
-        { title: "Extended Resources", desc: "We host a number of national resources and data tools available to all NJTLs to strengthen their organizational capacity.", img: "/content/dam/usta-foundation/who-we-are/court-refurb.jpg", alt: "Refurbished tennis courts" }
-      ];
+      const SF_FORM_BASE = "https://www.ustafoundation.com/en/home/get-involved/special-funds.html";
       main.textContent = "";
       const heroCells = [];
       if (heroBgUrl) {
@@ -271,61 +238,66 @@ var CustomImportScript = (() => {
         p.textContent = heroSubhead;
         heroContentCell.push(p);
       }
-      heroCtas.forEach((c) => heroContentCell.push(ctaParagraph(document, c.href, c.text)));
       heroCells.push([heroContentCell]);
       main.append(WebImporter.Blocks.createBlock(document, { name: "Hero (text-up)", cells: heroCells }));
       emittedBlocks.push("hero-text-up");
+      const fundSection = (fund, imageSide, { yellow = false } = {}) => {
+        const heading = fund.text.find((n) => /^H2$/i.test(n.tagName));
+        const bodyParas = fund.text.filter((n) => /^P$/i.test(n.tagName));
+        if (heading) main.append(heading);
+        const colText = [...bodyParas];
+        if (fund.cta) colText.push(ctaParagraph(document, fund.cta.href, fund.cta.text));
+        main.append(columnsBlock(document, { textNodes: colText.length ? colText : [""], img: fund.img, imageSide }));
+        main.append(WebImporter.Blocks.createBlock(document, {
+          name: "Section Metadata",
+          cells: { style: yellow ? "section-yellow, center-intro" : "center-intro" }
+        }));
+      };
       main.append(document.createElement("hr"));
-      priorities.intro.forEach((n) => main.append(n));
-      main.append(WebImporter.Blocks.createBlock(document, {
-        name: "Section Metadata",
-        cells: { style: "center, medium" }
-      }));
-      emittedBlocks.push("default-content(priorities-intro)");
-      main.append(document.createElement("hr"));
-      main.append(cardsContentBlock(document, collectCards(PRIORITY_CARDS)));
-      emittedBlocks.push("cards-content(priorities)");
+      fundSection(tiafoe, "right");
+      emittedBlocks.push("fund(tiafoe,image-right,center-intro)");
       main.append(document.createElement("hr"));
       main.append(yellowStrip(document));
       emittedBlocks.push("spacer(yellow-strip)");
       main.append(document.createElement("hr"));
+      fundSection(mackie, "left", { yellow: true });
+      emittedBlocks.push("fund(mackie,image-left,yellow)");
+      main.append(document.createElement("hr"));
+      fundSection(evert, "right");
+      emittedBlocks.push("fund(evert,image-right,center-intro)");
+      main.append(document.createElement("hr"));
+      main.append(WebImporter.Blocks.createBlock(document, {
+        name: "Spacer",
+        cells: { desktop: "80px", mobile: "48px" }
+      }));
+      emittedBlocks.push("spacer(above-cards-expand)");
+      main.append(document.createElement("hr"));
       {
-        const h2 = transformAll.find((n) => /^H2$/i.test(n.tagName));
-        const paras = transformAll.filter((n) => /^P$/i.test(n.tagName));
-        const h3 = transformAll.find((n) => /^H3$/i.test(n.tagName));
-        const introPara = paras[0];
-        const bodyParas = paras.slice(1);
-        if (h2) main.append(h2);
-        if (introPara) main.append(introPara);
-        const colText = [];
-        if (h3) colText.push(h3);
-        bodyParas.forEach((p) => colText.push(p));
-        if (transformCta) colText.push(ctaParagraph(document, transformCta.href, transformCta.text));
-        main.append(columnsBlock(document, { textNodes: colText.length ? colText : [""], img: transformImg, imageSide: "left" }));
+        const intro = document.createElement("p");
+        intro.textContent = "Explore more of the USTA Foundation's special philanthropic funds:";
+        main.append(intro);
+        const rows = [["Cards (expand)"]];
+        EXPAND_CARDS.forEach((c) => {
+          const img = imgFromUrl(c.img, c.alt);
+          if (c.img.startsWith("/media-da/")) img.setAttribute("src", c.img);
+          const title2 = document.createElement("div");
+          title2.textContent = c.title;
+          const desc = document.createElement("div");
+          desc.textContent = c.desc;
+          const donate = document.createElement("div");
+          const a = document.createElement("a");
+          a.href = `${SF_FORM_BASE}?form=${c.form}`;
+          a.textContent = "Donate";
+          donate.append(a);
+          rows.push([[img], [title2], [desc], [donate]]);
+        });
+        main.append(WebImporter.DOMUtils.createTable(rows, document));
         main.append(WebImporter.Blocks.createBlock(document, {
           name: "Section Metadata",
-          cells: { style: "section-yellow, center-intro" }
+          cells: { style: "center" }
         }));
-        emittedBlocks.push("columns(transform,image-left,yellow,center-intro)");
+        emittedBlocks.push("cards-expand");
       }
-      main.append(document.createElement("hr"));
-      if (njtlHeading) main.append(njtlHeading);
-      if (mapImg) main.append(cloneImg(document, mapImg));
-      main.append(WebImporter.Blocks.createBlock(document, {
-        name: "Section Metadata",
-        cells: { style: "center, map-wide" }
-      }));
-      emittedBlocks.push("default-content(njtl-map)");
-      main.append(document.createElement("hr"));
-      sustained.intro.forEach((n) => main.append(n));
-      main.append(WebImporter.Blocks.createBlock(document, {
-        name: "Section Metadata",
-        cells: { style: "center, medium" }
-      }));
-      emittedBlocks.push("default-content(sustained-intro)");
-      main.append(document.createElement("hr"));
-      main.append(cardsContentBlock(document, collectCards(SUSTAINED_CARDS)));
-      emittedBlocks.push("cards-content(sustained)");
       main.append(document.createElement("hr"));
       main.append(WebImporter.Blocks.createBlock(document, {
         name: "Spacer",
@@ -352,6 +324,11 @@ var CustomImportScript = (() => {
       addMetaRow("Theme", "general");
       WebImporter.rules.transformBackgroundImages(main, document);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
+      main.querySelectorAll('img[src*="/media-da/"]').forEach((img) => {
+        const src = img.getAttribute("src") || "";
+        const idx = src.indexOf("/media-da/");
+        if (idx > 0) img.setAttribute("src", src.slice(idx));
+      });
       const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
       const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
       return [{
@@ -361,5 +338,5 @@ var CustomImportScript = (() => {
       }];
     }
   };
-  return __toCommonJS(import_what_we_do_v1_exports);
+  return __toCommonJS(import_special_funds_v1_exports);
 })();

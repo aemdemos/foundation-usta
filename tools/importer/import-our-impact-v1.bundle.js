@@ -288,7 +288,7 @@ var CustomImportScript = (() => {
         main.append(columnsBlock(document, { textNodes: labelList(REACH_ITEMS), img: reachImg, imageSide: "left" }));
         main.append(WebImporter.Blocks.createBlock(document, {
           name: "Section Metadata",
-          cells: { style: "section-yellow, yellow-center-intro" }
+          cells: { style: "section-yellow, center-intro" }
         }));
         emittedBlocks.push("columns(reach,image-left,yellow,center-intro)");
       }
