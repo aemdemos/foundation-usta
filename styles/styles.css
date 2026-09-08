@@ -580,12 +580,21 @@ body.general main a.button:any-link,
 body.general main a.button.primary,
 body.general main a.button.secondary,
 body.general main a.button.accent {
+  /* source CTA box: border-box, 40px tall, 14px horizontal padding, 1px border.
+     The explicit height + flex centering (from the base .button rule) reproduces
+     the source's fixed 40px pill; horizontal padding + 1px letter-spacing brings
+     the width to the source's ~170px naturally (no fixed width). */
+  height: 40px;
   border: 1px solid transparent;
   border-radius: 3px;
-  padding: 10px 14px;
+  padding: 0 14px;
   background-color: var(--brand-blue);
   color: var(--background-color);
   font-size: 18px;
+
+  /* the source CTA renders "Graphik Semibold" at weight 400 — the semibold face
+     is baked into the font file, so weight 600 synthetically over-bolds it. */
+  font-weight: 400;
   line-height: 20px;
   letter-spacing: 1px;
 }
@@ -913,6 +922,19 @@ main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) + .section
   margin-top: 0;
 }
 
+/* Yellow strip before the yellow band (who-we-are leadership section): the source
+   stacks a ~17px full-bleed yellow strip, a ~17px white gap, then the main yellow
+   band — same colored-spacer pattern as the blue strip above. Whitespace above the
+   strip (float away from the preceding white History section), a thin white gap
+   below it, then the band's own top padding gives the heading its room. */
+main > .section.spacer-container:has(.spacer[style*='section-yellow-bg']) {
+  margin: 40px 0 17px;
+}
+
+main > .section.spacer-container:has(.spacer[style*='section-yellow-bg']) + .section.section-yellow {
+  margin-top: 0;
+}
+
 /* Black spacer before the footer is FLUSH: the support section butts it on top
    and the footer butts it below, with no white gap. */
 main > .section.spacer-container:has(.spacer[style*='stats-band-bg']) {
@@ -934,5 +956,9 @@ footer {
 @media (width >= 992px) {
   main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) {
     margin: 56px 0 76px;
+  }
+
+  main > .section.spacer-container:has(.spacer[style*='section-yellow-bg']) {
+    margin: 56px 0 17px;
   }
 }

@@ -260,6 +260,12 @@ var CustomImportScript = (() => {
         emittedBlocks.push("columns(history,image-right)");
       }
       main.append(document.createElement("hr"));
+      main.append(WebImporter.Blocks.createBlock(document, {
+        name: "Spacer",
+        cells: { color: "section-yellow-bg", desktop: "17px" }
+      }));
+      emittedBlocks.push("spacer(leading-yellow-strip)");
+      main.append(document.createElement("hr"));
       leadText.forEach((n) => main.append(n));
       if (leadCta) main.append(ctaParagraph(document, leadCta.href, leadCta.text));
       {
@@ -267,7 +273,9 @@ var CustomImportScript = (() => {
         if (evertAttrText) {
           const attr = document.createElement("p");
           const strong = document.createElement("strong");
-          strong.textContent = evertAttrText;
+          const em = document.createElement("em");
+          em.textContent = evertAttrText;
+          strong.append(em);
           attr.append(strong);
           evertTextCell.push(attr);
         }

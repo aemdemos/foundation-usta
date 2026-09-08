@@ -1,0 +1,8 @@
+{
+  "status": "failed",
+  "url": "https://www.ustafoundation.com/en/home/who-we-are.html",
+  "path": "en/home/who-we-are.html",
+  "timestamp": "2026-09-08T10:56:37.022Z",
+  "error": "page.goto: Target page, context or browser has been closed",
+  "errorStack": "page.goto: Target page, context or browser has been closed\n    at processUrl (/home/node/.excat-marketplaces/excat-marketplace/excat/skills/excat-content-import/scripts/run-bulk-import.js:597:20)\n    at async main (/home/node/.excat-marketplaces/excat-marketplace/excat/skills/excat-content-import/scripts/run-bulk-import.js:954:22)"
+}

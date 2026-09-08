@@ -315,10 +315,13 @@ export default {
     {
       const evertTextCell = [...evertParas];
       if (evertAttrText) {
-        // Attribution is BOLD (source + user request): wrap in <strong>.
+        // Attribution is BOLD ITALIC on the source (an <i> at font-weight 700):
+        // wrap in <strong><em> so EDS renders bold + italic.
         const attr = document.createElement('p');
         const strong = document.createElement('strong');
-        strong.textContent = evertAttrText;
+        const em = document.createElement('em');
+        em.textContent = evertAttrText;
+        strong.append(em);
         attr.append(strong);
         evertTextCell.push(attr);
       }

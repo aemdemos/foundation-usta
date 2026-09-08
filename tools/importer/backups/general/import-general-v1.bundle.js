@@ -267,7 +267,9 @@ var CustomImportScript = (() => {
         if (evertAttrText) {
           const attr = document.createElement("p");
           const strong = document.createElement("strong");
-          strong.textContent = evertAttrText;
+          const em = document.createElement("em");
+          em.textContent = evertAttrText;
+          strong.append(em);
           attr.append(strong);
           evertTextCell.push(attr);
         }

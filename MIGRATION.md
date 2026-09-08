@@ -2611,6 +2611,34 @@ Buttons stay 48vw stacked (187@390). Gate: lint 0 errors, breakpoint-check ✓.
 Re-imported (7 images, 0 hotlinks), backup refreshed. Gates: lint 0 errors, breakpoint-check ✓. Visual parity +
 remaining page-render gates (overflow/typography/a11y) to be confirmed on the deployed page.
 
+### 2026-09-08 — who-we-are round 4: verified deploy + exact button box + bold-ITALIC Evert attribution
+Resolved the handoff's "BLOCKER #1" (stale 34-line CSS) — it was a **measurement error**: the CDN serves
+`styles.css` gzip-compressed and the verification `curl` wasn't decompressing, so `wc -l` counted binary. With
+`curl --compressed`, live + preview both serve the full **938-line** CSS (`body.general` ×13, `medium`/`wide` ×9);
+GitHub `main`, the code-bus, and the CDN are all at `cb94155`. **The CSS was already deployed** — no push/opt-in
+needed. Confirmed the blue LEARN MORE button renders correctly on live (`body.general appear`, bg rgb(3,115,243)).
+The "black button" in the earlier DevTools screenshot was a transient eager-phase capture (before
+`decorateTemplateAndTheme()` adds the `general` body class) / stale cache — the fully-loaded page is blue on both
+live and local.
+
+Two **real** parity deltas found by measuring the live source (Graphik-loaded, DPR2) vs ours and fixed:
+1. **Button box** — source CTA is "Graphik Semibold" at **font-weight 400** (the semibold face is baked into the
+   font file; weight 600 synthetically over-bolds it), `box-sizing:border-box`, **height 40px**, **padding 14px**
+   (0 vertical since height is fixed + flex-centered), 1px border, 3px radius, ~170px wide. Ours was fw600 /
+   `padding:10px 14px` / no explicit height. Fixed the `body.general main a.button*` override in styles.css:
+   `font-weight:400` + `height:40px` + `padding:0 14px`. Verified local: fw400, Graphik Semibold, h40, radius 3px
+   (width 157 vs source 170 — 13px under; padding-driven, not hardcoded, acceptable for lift-and-shift).
+2. **"Chris Evert, Chairperson"** — source is bold **ITALIC** (an `<i>` at fw700 italic); ours was bold-only
+   (`<strong>`). Fixed in import-general-v1.js: attribution now `<strong><em>` → EDS renders bold+italic. Re-bundled
+   (esbuild + `/* eslint-disable */` prepend), re-imported who-we-are (85.8%, expected — dup desktop/mobile text
+   deduped), re-localized (7 images, **0 hotlinks**). Output verified: `<em><strong>Chris Evert, Chairperson</strong></em>`.
+Backup refreshed → `tools/importer/backups/general/` (new SHA1 `549c42a4…`, manifest round-4).
+**Gates (local URL):** lint **0 errors** (7 warns pre-existing in tests/a11y.test.js) · breakpoint-check ✓ ·
+check:overflow ✓ (360/768/992/1200/1920) · check:typography ✓ (390/768/992/1200) · test:a11y ✓.
+**Deploy note:** button fix is CSS → reaches live on next GitHub push; italic attribution is content → reaches live
+on next DA upload of who-we-are.plain.html (dev server serves `/en/**` from the DA bus, so the italic won't render
+on localhost until uploaded — the button fix DOES render locally since CSS is served from the working copy).
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session

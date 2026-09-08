@@ -301,6 +301,19 @@ export default {
       emittedBlocks.push('columns(history,image-right)');
     }
 
+    // SECTION 3b — leading YELLOW STRIP above the yellow band. The source stacks a
+    // full-bleed ~17px yellow strip, then a ~17px white gap, then the main yellow
+    // band (exactly the homepage colored-spacer pattern — cards-band-bg/stats-band-bg).
+    // Reproduced as a Spacer block (section-yellow-bg = #ffefbe) in its OWN section;
+    // the spacer section styles (styles.css) give the strip its height + the white
+    // gap below it before the band.
+    main.append(document.createElement('hr'));
+    main.append(WebImporter.Blocks.createBlock(document, {
+      name: 'Spacer',
+      cells: { color: 'section-yellow-bg', desktop: '17px' },
+    }));
+    emittedBlocks.push('spacer(leading-yellow-strip)');
+
     // SECTION 4 — YELLOW BAND (ONE section). A CENTERED intro (heading + para +
     // LEARN MORE button) followed by an image-left/text-right COLUMNS block
     // (Evert photo + quote + BOLD attribution). Kept in a SINGLE `section-yellow`
@@ -315,10 +328,13 @@ export default {
     {
       const evertTextCell = [...evertParas];
       if (evertAttrText) {
-        // Attribution is BOLD (source + user request): wrap in <strong>.
+        // Attribution is BOLD ITALIC on the source (an <i> at font-weight 700):
+        // wrap in <strong><em> so EDS renders bold + italic.
         const attr = document.createElement('p');
         const strong = document.createElement('strong');
-        strong.textContent = evertAttrText;
+        const em = document.createElement('em');
+        em.textContent = evertAttrText;
+        strong.append(em);
         attr.append(strong);
         evertTextCell.push(attr);
       }
