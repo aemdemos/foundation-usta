@@ -54,7 +54,9 @@
     align-items: start;
     flex-direction: unset;
 
-    /* gap (24px) is inherited from the base rule — sits between columns here */
+    /* Desktop column gutter = the shared 30px grid gap (source measures the image
+       right edge → text left edge at 30px), overriding the 24px stacked gap. */
+    gap: var(--grid-gap, 30px);
   }
 
   .columns > div > div {

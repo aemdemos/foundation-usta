@@ -1,0 +1,22 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/get-involved.html",
+  "path": "en/home/get-involved",
+  "timestamp": "2026-09-08T13:54:39.144Z",
+  "title": "Get Involved",
+  "template": "general",
+  "blocks": [
+    "hero-text-up",
+    "default-content(gift-intro)",
+    "columns(individual,image-right)",
+    "spacer(yellow-strip)",
+    "columns(impact,image-left,yellow)",
+    "columns(ypi,image-right)",
+    "spacer(yellow-strip)",
+    "columns(planned,image-left,yellow)",
+    "cards-content(signature-events)",
+    "spacer(yellow-strip)",
+    "columns(corporate,image-left,yellow,center-intro)",
+    "spacer(trailing-black-band)"
+  ]
+}

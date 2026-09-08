@@ -2732,6 +2732,51 @@ Verified: @768/900 content-width same-row 30px gap; @992–1920 fluid 144/186/20
 mobile stacked 48vw (187/206/240) unchanged. Gates: lint 0 · breakpoint ✓ · overflow ✓ · typography ✓ · a11y ✓.
 Deploy: hero.css → next GitHub push.
 
+### 2026-09-08 — Migrate get-involved (general template, dedicated per-page importer)
+get-involved.html is a general-template landing page but with a UNIQUE section sequence, so — per direction — it gets
+its OWN dedicated importer (`tools/importer/import-get-involved-v1.js`) built block-by-block, NOT the who-we-are
+importer (the generic importer is only worth it across pages sharing a layout, like news). Analyzed the source live
+(media side by image centre-X vs midline; yellow bands by inline #FFEFBE). Section sequence:
+hero(text-up) → "Your gift powers our mission" intro (center,medium) → Individual Supporters columns (image-RIGHT) →
+YELLOW BAND Impact Societies columns (image-LEFT)+LEARN MORE(pdf) → YPI columns (image-RIGHT)+LEARN MORE →
+YELLOW BAND Planned Giving columns (image-LEFT)+LEARN MORE(pdf) → Signature Events intro + **Cards (content)** ×3
+(Gala/Pro-Am/Fantasy Camps) → YELLOW BAND Corporate Partnership columns (image-LEFT) → trailing black band. Each
+yellow band preceded by a Spacer yellow-strip (the who-we-are pattern). `Theme=general`.
+- Reused the general importer's helpers (sectionOfHeading/collectText/nearbyImage/ctaParagraph/cloneImg) + a new
+  `columnsBlock({imageSide})` (image cell first = left, text first = right — columns.js keys layout on cell order).
+- Fix during build: Individual Supporters lives in its OWN .container (not the gift-intro one) → captured via its own
+  sectionOfHeading (first pass filtered the wrong container → empty text cell). Signature Events card copy
+  canonicalized in the script (source ships mobile-fragment dupes of the Fantasy Camp text).
+- Imported 78.5% (dedupe of desktop/mobile copies — expected), localized 9 images (**0 hotlinks**). All headings +
+  columns text + 3 card descriptions present; 3 yellow strips + 3 bands + trailing black band in order. Backed up to
+  `tools/importer/backups/get-involved/` (SHA1 `7d9ee583…` + manifest). Gate: lint **0 errors**.
+- **Follow-up:** the LEARN MORE **PDF links** still point at the source domain — no doc-localizer exists yet (images
+  only). Localize to `content/assets/docs/…` when a doc-finalize step is added (also needed for financials).
+- **Render/gates pending DA upload:** the dev server serves `/en/**` from the DA preview bus, so get-involved 404s
+  locally until uploaded to DA; overflow/typography/a11y + visual parity to be confirmed on the deployed page.
+
+### 2026-09-08 — get-involved round 2: 4 director-review fixes
+Source screenshots flagged four misses; measured each on the live source and fixed:
+1. **Missing MAKE A GIFT CTA** (gift intro) — the "Your gift powers our mission" intro has a donate button
+   (`https://ustaf.donorsupport.co/-/XVHMWELH`) the importer dropped. Added `giftCta = ctaOf(giftSec.container)` +
+   emit it in section 2.
+2. **Yellow strips too narrow** — measured the source seam (white → yellow strip → white gap → band): the strip is
+   **~30px** (not who-we-are's 17px), then ~16px white. Bumped `yellowStrip()` 17px → **30px**. (`section-yellow`
+   band padding was already 32px = source.)
+3. **cards-content: 3 cards left-aligned with an empty 4th slot** — `.cards.content > ul` was a fixed
+   `repeat(4, 1fr)`. Added `:has(> li:nth-child(3):last-child)` → 3-up and `:nth-child(2):last-child` → 2-up so the
+   row always fills width; 4 cards stay 4-up (verified on the cards-content sample — still 4-up one row, no
+   regression). Signature Events (3 cards) now spreads 3-up.
+4. **Corporate Partnership — missing body + wrong alignment** — the source is a CENTERED heading + "Join a growing
+   list…" intro (full width) ABOVE an image-LEFT columns row (the 4 Advance/Amplify/Create/Campaign paras beside the
+   Emirates photo). Was one columns block with an empty text cell. ROOT CAUSE: `collectText` read only the FIRST
+   `.cmp-text`, but this section has 3 (intro + 2 body dupes). Fixed `collectText` to read **ALL** `.cmp-text` blocks
+   in a container (the tag+text de-dupe drops the breakpoint copies) — more robust for every section. Then split
+   corporate into centered heading+intro + `columns(image-left)` under `section-yellow, yellow-center-intro`.
+Re-imported (83.2%, up from 78.5%), localized (9 images, **0 hotlinks**). Verified in output: MAKE A GIFT present,
+30px strips, corporate has all 4 body paras + center-intro, cards-content adapts. Backup refreshed (SHA1 `5b5f4d34…`).
+Gates: lint **0 errors** · breakpoint-check ✓. (Page render/overflow/typography/a11y still pending DA upload.)
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session
