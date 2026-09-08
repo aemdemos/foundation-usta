@@ -1,0 +1,19 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/get-involved/young-professional-initiative.html",
+  "path": "en/home/get-involved/young-professional-initiative",
+  "timestamp": "2026-09-08T22:25:12.883Z",
+  "title": "Young Professional Initiative",
+  "template": "general",
+  "blocks": [
+    "hero-text-up",
+    "center-intro(future-of-giving)",
+    "columns(what-is-ypi,image-right)",
+    "spacer(yellow-strip)",
+    "columns(impact,image-left,yellow)",
+    "quote-image(labanowski)",
+    "spacer(yellow-strip)",
+    "columns(ways,image-left,yellow)",
+    "spacer(trailing-black-band)"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/what-we-do/college-scholarship-opportunities.html",
+  "path": "en/home/what-we-do/college-scholarship-opportunities",
+  "timestamp": "2026-09-08T21:20:27.053Z",
+  "title": "College Scholarship Opportunities",
+  "template": "general",
+  "blocks": [
+    "hero-text-up",
+    "default-content(opening-intro)",
+    "cards-content(scholarships)",
+    "spacer(yellow-strip)",
+    "detail(College Laun,yellow)",
+    "detail(College Succ,white)",
+    "spacer(yellow-strip)",
+    "detail(Novo Nordisk,yellow)",
+    "spacer(trailing-black-band)"
+  ]
+}

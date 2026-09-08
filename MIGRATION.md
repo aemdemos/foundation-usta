@@ -2980,6 +2980,72 @@ chrome, not content). 20 PDF links (13+4+3), 3 lists, 0 images (0 hotlinks). Bac
 FOLLOW-UP: PDF hrefs point at the source `/content/dam/…` (absolutized) — no doc-localizer yet (images only); localize
 to `content/assets/docs/…` when a doc-finalize step is added. Render/gates pending DA upload.
 
+### 2026-09-08 — Migrate news.html listing (blank — matches empty source)
+The source `news.html` is genuinely BLANK (empty content grid, no H1, no article feed — the 72 articles are individual
+`/news/*` pages; there's no authored index). Per direction, imported a faithful minimal page: metadata only (Title
+"News", Theme general), no body. `tools/importer/import-news-listing-v1.js`. Output is `en/home/news.plain.html` (a
+FILE, distinct from the `en/home/news/` 72-article directory — verified the dir stays intact at 72). 0 images, 0
+hotlinks. Backed up to `tools/importer/backups/news-listing/`. Gate: lint 0. Renders on DA upload.
+
+### 2026-09-08 — Migrate what-we-do/college-scholarship-opportunities (general template)
+Built `tools/importer/import-college-scholarships-v1.js`. Sequence: hero(text-up) "We give young people the keys to
+their future." + LEARN MORE(pdf) → "Opening doors of opportunity." intro (center,medium) + Cards(content)×3 (with
+images: Launch/Success/Novo Nordisk) → 3 scholarship DETAIL sections, each a centered heading + lead + a 4-up
+image-LESS Q&A grid (Cards(content): h4 question + answer): College Launch (yellow), College Success (white), Novo
+Nordisk Donnelly (yellow) → black band. `Theme=general`.
+- **Generalized cardsContentBlock:** card with image → [imageCell, bodyCell]; card WITHOUT image → body-only
+  [bodyCell] (the Q&A detail grids are image-less). All content hard-wired (deterministic); 3 card images are verified
+  DAM assets, Q&A text fixed.
+- Imported 83.2%, localized **4 images, 0 hotlinks**. Backed up to `tools/importer/backups/college-scholarships/`
+  (SHA1 `603d3d91…` + manifest). Gates: lint 0 · breakpoint ✓. Render/gates pending DA upload.
+- FOLLOW-UP: hero LEARN MORE → scholarship FAQ pdf on the source domain (no doc-localizer yet).
+
+### 2026-09-08 — college-scholarships round 2: detail Q&A cards DO have images (were missing)
+Correction: I'd wrongly treated the 3 scholarship DETAIL sections as image-LESS Q&A grids. Re-measured the source —
+each detail section has a 4-across row of images (cx 190/490/790/1090) below the heading, so each Q&A card is
+image + h4 question + answer. Added the 4 images per section to the DETAILS `qa` defs (verified DAM assets; source
+filenames include a "scholarship-thumnbnail-*" typo — kept as-is). Re-imported: now **16 images** (was 4: 3 opening
+cards + 4×3 detail + hero), 0 hotlinks. Each detail card renders image + h4 + answer. Backup refreshed (SHA1
+`f8175185…`). Gates: lint 0 · breakpoint ✓.
+
+### 2026-09-08 — Migrate get-involved/special-funds/chris-evert-50th-anniversary (campaign page)
+Built `tools/importer/import-chris-evert-v1.js`. Sequence: centered H1 "Celebrating a champion, on and off the court."
+(`center`) → Columns (campaign copy LEFT + Chris Evert photo 20250820-chrissie50.jpg RIGHT) → SPLIT-EVEN: Quote (Selah
+Stibbins testimonial) LEFT + Custom Form Donate (FundraiseUp CHRIS50) RIGHT → black band. `Theme=general`.
+- The donation embed is a cross-origin FundraiseUp iframe, so the split-even quote + custom-form-donate content comes
+  from the approved `sections-samples/section-split-even-donate` sample (the sample was built for THIS page).
+- Content hard-wired (deterministic). Imported OK, localized **1 image, 0 hotlinks**. Backed up to
+  `tools/importer/backups/chris-evert/` (SHA1 `4a733f42…` + manifest). Gates: lint 0 · breakpoint ✓. Renders on DA upload.
+
+### 2026-09-08 — Migrate get-involved/young-professional-initiative (YPI)
+Built `tools/importer/import-ypi-v1.js`. Sequence: hero(text-up) "Young Professional Initiative" + JOIN US(tfaforms) →
+"The future of giving starts here." Columns image-RIGHT (ypi-alternate.jpg) + MAKE A GIFT(YPI donate) → YELLOW "How YPI
+Makes an Impact" Columns image-LEFT (ypi-insert.jpg) → **Quote (image)** Greg Labanowski pull-quote + portrait
+(ypi-3.png, image right) → YELLOW "Ways to Get Involved" Columns image-LEFT (ypi-4.png) → black band. `Theme=general`.
+- Content hard-wired (deterministic); 5 images verified DAM assets. Sections 2/3 carry a sub-heading + bullet-style
+  paragraph list in the columns text cell (kept as paras). Quote-image authored per its contract (one row: [h2 quote +
+  `<p>- <em>Name</em></p>` | img]).
+- Imported OK, localized **5 images, 0 hotlinks**. Backed up to `tools/importer/backups/ypi/` (SHA1 `fe63d13a…` +
+  manifest). Gates: lint 0 · breakpoint ✓. Renders on DA upload.
+
+### 2026-09-08 — YPI corrections: centered intro split + bold sub-headings + real bullet lists
+Two fixes to `import-ypi-v1.js` after comparing to source screenshots:
+1. **Missing/mis-structured "What is YPI?" content.** The original importer merged "The future of giving starts here."
+   and "What is YPI?" into ONE columns block. Source is actually TWO pieces: (2a) a **centered** intro band
+   ("The future…" H2 + one intro para + MAKE A GIFT, all centered → `center` section style) and (2b) a **Columns**
+   block (image right) whose text cell is "What is YPI?" + copy. Measured on live: future H2 cx=640 (centered),
+   whatis H2 cx=340 (left column). Split them.
+2. **Bold / different lettering on the left.** The columns text cell now emits a **bold** lead-in
+   ("As a part of…" → `<p><strong>`) and a real `<ul>` **bullet list** (4 items) instead of flat paragraphs.
+   Same treatment applied to "How YPI Makes an Impact" (5-item `<ul>`). Verified on live that these items are `<li>`;
+   "Ways to Get Involved" is plain paras (no bullets) — left as-is.
+- Added an importer mini-format for column bodies: `{p}` para, `{b}` bold sub-heading, `{ul:[…]}` bullet list.
+- Re-imported (completeness 79%, expected — verify by eye), localized **5 images, 0 hotlinks**. Backup + manifest
+  refreshed. Gates: lint 0 errors · breakpoint ✓ (no CSS change). Renders on DA upload.
+
+**MIGRATION STATUS:** all general-template + specialized pages now imported. Only **404.html** (T7, hero-error)
+remains from the full scope.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session

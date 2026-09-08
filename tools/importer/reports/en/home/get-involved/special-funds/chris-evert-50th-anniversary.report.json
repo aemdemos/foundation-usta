@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/get-involved/special-funds/chris-evert-50th-anniversary.html",
+  "path": "en/home/get-involved/special-funds/chris-evert-50th-anniversary",
+  "timestamp": "2026-09-08T21:50:11.450Z",
+  "title": "Chris Evert 50th anniversary",
+  "template": "general",
+  "blocks": [
+    "default-content(heading,center)",
+    "columns(campaign,image-right)",
+    "split-even(quote+donate)",
+    "spacer(trailing-black-band)"
+  ]
+}
