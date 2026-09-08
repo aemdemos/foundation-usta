@@ -2506,3 +2506,16 @@ columns-media L/R, social L/R auto, reactions, quote-tweet inline/split-left, em
 incl. /reel/+/tv/ + hidden-dup dedup, video-embed full/split-right, 2-col + single-col list tables, layout-table
 flatten) with per-block page counts across the 72-page fleet. Added `tools/importer/backups/**` +
 `tools/importer/**/*.bundle.js` to .eslintignore. Gate: lint 0.
+
+### 2026-09-08 — Migrate who-we-are/leadership-and-staff (new template: leadership)
+Built tools/importer/import-leadership-v1.js — the second page template after news. Target shape = the approved
+content/drafts/block-samples/toc-profile.plain.html. Structure: H1 + `toc-profile` tabs (Staff / Board of Directors)
+→ Staff section (Our Staff h3 + `cards (profile)`×8 + 18-line staff `<p>` list + Section Metadata profile-anchor:
+staff) → Board section (h3 + `cards (profile)`×2 + `table (directory)` 3 cols + profile-anchor: board-of-directors)
+→ metadata (Template=leadership). Source detail: cards are `.cmp-teaser` in `role=tabpanel[data-title]` panels; name
+from `.cmp-teaser__title_scalable` (visible, not the hidden link copy); board dir dedupes the `--default--hide`
+responsive twin column. Imported 84.9% (heavy teaser/duplicate markup stripped; all content captured — verified: 8
+staff cards, 18 list lines, 2 board cards, 3 dir columns), 10 images localized (0 hotlinks). Backed up to
+tools/importer/backups/leadership/ (script + bundle + urls + manifest). Gate: lint 0 errors.
+NOTE: the `leadership` template has no templates/leadership/ CSS/JS yet — the page relies on the toc-profile/cards/
+table block styles. If per-template tweaks are needed (e.g. section spacing/H1 color), add templates/leadership/.
