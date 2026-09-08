@@ -1,3 +1,5 @@
 helix-importer-ui
 *.min.js
 tools/importer/*.bundle.js
+tools/importer/**/*.bundle.js
+tools/importer/backups/**

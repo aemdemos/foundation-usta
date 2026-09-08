@@ -255,14 +255,21 @@ main > .section.hero-container:has(.hero.text-up) {
   background-size: cover;
   color: var(--background-color);
 
-  /* Mobile: source inner container is 16px top / 112px bottom, content inset
-     ~32px each side. */
-  padding: 16px 32px 112px;
+  /* Mobile: measured on the source — the h1 sits 48px from the hero top and the
+     band runs ~250px BELOW the buttons (the tall lower portion showing the
+     photo). Total height then follows the content: 625px @390/430, 601 @500-600
+     — matching the source, because the narrow panel below makes the subhead wrap
+     to the same line count. Content inset ~32px each side. */
+  padding: 48px 32px 250px;
 }
 
-/* Text panel — top-left column. Mobile: full width of the inset. */
+/* Text panel — top-left column. Mobile: the source constrains the text to a
+   NARROW column ≈ 56vw (202px @360, 220 @390, 241 @430, 284 @500), so the h1
+   wraps to "About the USTA / Foundation" and the subhead wraps to 4–5 lines
+   exactly like the source (a wide 325px panel wrapped the subhead to only 3
+   lines and left the band too short). */
 .hero.text-up.block > div {
-  max-width: 325px;
+  max-width: 56vw;
 }
 
 .hero.text-up.block > div > div {

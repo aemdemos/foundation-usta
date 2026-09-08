@@ -2584,3 +2584,104 @@ rule must outspecify the global mobile 328 cap at the larger tiers).
   row height (source tiles keep their own image height; the two 300×300 images are a touch taller than the 295×282).
 Gates: lint 0 errors; breakpoint-check ✓. (overflow/typography/a11y pending page render — who-we-are serves from the
 DA preview bus and needs its corrected copy uploaded before those page-loading gates can run.)
+
+### 2026-09-08 — hero text-up MOBILE parity fix (height + panel width)
+The migrated mobile hero was 431px vs the source's 625px (@390) — too short, text panel too wide. Root cause: my
+mobile CSS used a 325px panel (subhead wrapped to only 3 lines) and 16/112 padding. Measured the source across
+360/390/430/500/600/767: the source constrains the mobile text to a NARROW ≈56vw column (202@360 → 284@500), so the
+h1 wraps "About the USTA / Foundation" and the subhead wraps to 4–5 lines; the h1 starts 48px from the hero top and
+the band runs ~250px below the buttons. Fix (blocks/hero/hero.css `.hero.text-up`): mobile `padding: 48px 32px 250px`
++ panel `max-width: 56vw`. Verified by injecting the CSS onto the live page: hero height now 708/625/625/601 at
+360/390/430/500 — EXACT match to the source at every mobile width (h1 top 48, subhead line counts 5/4/4/3 all match).
+Buttons stay 48vw stacked (187@390). Gate: lint 0 errors, breakpoint-check ✓.
+
+### 2026-09-08 — who-we-are round 2 fixes (quote block, split-right, button, black band)
+- **LEARN MORE button unstyled** — decorateButtons() (scripts.js) only buttonizes a `<p><a>` wrapped in `<strong>`/
+  `<em>`; the importer emitted a bare `<p><a>`. Fix: ctaParagraph() now wraps the link in `<strong>`. `<strong>`
+  applies `.primary` (black), but the source CTA is brand-blue — added a `body.general .default-content-wrapper
+  a.button` override in styles.css that restores the source blue pill (brand-blue, 3px radius, 18px semibold, white).
+- **Evert testimonial → Quote block in split-right** — reworked from a columns block to the source-faithful structure:
+  the Evert PHOTO as default content (LEFT) + a **Quote block** (RIGHT), laid out by `section-yellow, split-right`
+  (default content left / block right). Quote block reused as-is per user decision (32px bold-italic pull-quote).
+- **Missing black band above footer** — the source stacks a full-bleed 17px BLACK strip between the last section and
+  the footer (same as the homepage `TRAILING_BANDS`). Added a trailing Spacer block (`stats-band-bg` = #000, 17px) as
+  its own section before the metadata. (The yellow band was already present via `section-yellow`.)
+- **columns leading-heading gap** — zeroed `.columns > div > div > :is(h1..h6):first-child { margin-top }` so
+  "Our History" top-aligns with the photo (global h2 0.8em was pushing it down).
+Re-imported (7 images, 0 hotlinks), backup refreshed. Gates: lint 0 errors, breakpoint-check ✓. Visual parity +
+remaining page-render gates (overflow/typography/a11y) to be confirmed on the deployed page.
+
+---
+
+## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session
+
+**Status:** All code fixes are COMMITTED LOCALLY (HEAD `7c1395f`, 3 unpushed commits:
+`3a1375f`, `a6caa93`, `7c1395f`) but **NOT DEPLOYED**. Working tree clean.
+
+### ⛔ BLOCKER #1 (do this FIRST) — deploy the code
+The **deployed `styles.css` is 34 lines; local is 938** — NONE of the CSS work
+(button override, yellow band, medium/wide widths, hero text-up, columns spacing)
+has reached aem.live. Content/HTML deploys via Document Authoring (so the live
+page shows correct BLOCKS) but ALL CSS comes from GitHub → aem.live code-sync,
+and `git push` fails with `could not read Username for 'https://github.com'`
+(GitHub push opt-in is OFF). The GitHub remote `main` is still at `030eb3c`.
+
+**Action:** ask the user to enable **Settings → LLM Permissions → GitHub push**
+(token added THERE, never in chat). Then:
+```
+git push origin main
+```
+Wait ~1–2 min for code-sync, then VERIFY the deploy actually landed:
+```
+curl -s https://main--foundation-usta--aemdemos.aem.live/styles/styles.css | wc -l   # expect ~938, not 34
+curl -s https://main--foundation-usta--aemdemos.aem.live/styles/styles.css | grep -c "body.general main a.button"  # expect >0
+```
+DO NOT try to diagnose "button still black / not centered" until this shows the
+new CSS is live — the reported bugs are almost certainly just the stale 34-line CSS.
+
+### After deploy — verify these fixes actually render (measure vs source, all viewports)
+Source: https://www.ustafoundation.com/en/home/who-we-are.html
+Live:   https://main--foundation-usta--aemdemos.aem.live/en/home/who-we-are
+1. **LEARN MORE buttons** must be SOLID BLUE (#0373f3 / rgb(3,115,243)), white,
+   3px radius, 18px — NOT black. (Override `body.general main a.button*` at
+   specificity 0,3,3 beats `.primary` 0,3,1; verified computes to source blue when
+   the CSS is present.) Both LEARN MOREs (leadership + supporters).
+2. **Yellow band** — "Our Leadership and Staff" intro CENTERED (heading + para +
+   button), Evert photo-left + quote + BOLD "Chris Evert, Chairperson" to the
+   right; whole band full-bleed #FFEFBE; ~40px gap between intro and Evert columns.
+3. **Hero (text-up)** mobile — panel 56vw, band height 708/625/625/601 @360/390/430/500.
+4. **Section widths** — intro `medium` (970 @1200), supporters `wide` (1170 @1200), centered.
+5. **Trailing black band** above the footer present.
+Then run gates on the LIVE url: `npm run check:overflow <url>`,
+`npm run check:typography <url>`, `npm run test:a11y <url>`. Paste output.
+
+### Then — migrate the remaining "general"-template pages (SAME importer)
+The importer is built ONCE per template; these share who-we-are's block vocabulary.
+For each: add to `tools/importer/urls-general.txt`, re-bundle if the script changed
+(esbuild + re-prepend `/* eslint-disable */`), run the bulk-import runner, then
+`node tools/assets/localize-assets.mjs <page>.plain.html`, verify, log here.
+- what-we-do.html        (hero text-up + columns/cards — measure)
+- get-involved.html      (hero text-up)
+- our-impact.html        (hero BANNER/center, not text-up — confirm which)
+- who-we-are/financials.html
+- what-we-do/college-scholarship-opportunities.html
+- get-involved/special-funds.html
+- get-involved/special-funds/chris-evert-50th-anniversary.html  (quote block 32px lives here)
+- get-involved/young-professional-initiative.html
+- news.html (listing) ; 404.html
+NOTE: `our-impact` + `home` use hero CENTER (banner); who-we-are/what-we-do/
+get-involved use hero TOP (text-up). Pick the variant per page.
+
+### Key files (this template)
+- Importer: `tools/importer/import-general-v1.js` (+ `.bundle.js`); backup +
+  manifest in `tools/importer/backups/general/` (SHA `2d90c83…`).
+- Hero variant: `blocks/hero/hero.{js,css}` (`text-up`); `banner`/`error` untouched.
+- Section styles: `styles/styles.css` — `medium`/`wide` widths, `section-yellow`
+  + `yellow-center-intro`, `body.general` button override, `body.leadership`.
+- Cards tiles / columns tweaks: `blocks/cards/cards.css`, `blocks/columns/columns.css`.
+
+### Gotchas learned
+- Dev server serves `/en/**` from the DA preview bus, NOT local files → new pages
+  404 locally until pushed to DA; CSS only updates via GitHub push. Verify on aem.live.
+- `decorateButtons` (scripts.js) only buttonizes `<p><a>` wrapped in `<strong>`/`<em>`.
+- SVG-wrapped raster headshots must be rasterized before DA (409). (leadership page.)

@@ -528,6 +528,21 @@ main .section.section-yellow {
   }
 }
 
+/* yellow-center-intro — centers ONLY the leading default-content wrapper (the
+   "Our Leadership and Staff" intro: heading + paragraph + LEARN MORE) inside the
+   yellow band, so the columns block that follows keeps its normal left-aligned
+   two-column layout. The intro caps at a readable measure and its button centers
+   under the copy, matching the source. */
+main .section.yellow-center-intro > .default-content-wrapper:first-child {
+  max-width: 970px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+main .section.yellow-center-intro > .default-content-wrapper:first-child .button-wrapper {
+  text-align: center;
+}
+
 /* dark band variant (e.g. stats) */
 main .section.dark {
   background-color: var(--stats-band-bg);
@@ -552,6 +567,40 @@ body.leadership main > .section:first-of-type {
 
 body.leadership main h1 {
   margin-top: 0;
+}
+
+/* general — the interior marketing pages (who-we-are, what-we-do, get-involved,
+   our-impact). Their standalone CTAs (LEARN MORE) are the source's SOLID BLUE
+   pill: brand-blue bg, white, 3px radius, 18px Graphik Semibold uppercase, 40px
+   tall. decorateButtons() wraps these in <strong> → the `.primary` (black)
+   treatment, so override EVERY button variant in this theme back to source blue.
+   Scoped to `body.general main` and listing .primary/.secondary/.accent so it
+   outspecifies those variant rules regardless of which one decorateButtons set. */
+body.general main a.button:any-link,
+body.general main a.button.primary,
+body.general main a.button.secondary,
+body.general main a.button.accent {
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 10px 14px;
+  background-color: var(--brand-blue);
+  color: var(--background-color);
+  font-size: 18px;
+  line-height: 20px;
+  letter-spacing: 1px;
+}
+
+body.general main a.button:hover,
+body.general main a.button:focus-visible,
+body.general main a.button.primary:hover,
+body.general main a.button.primary:focus-visible,
+body.general main a.button.secondary:hover,
+body.general main a.button.secondary:focus-visible,
+body.general main a.button.accent:hover,
+body.general main a.button.accent:focus-visible {
+  border-color: transparent;
+  background-color: var(--link-hover-color);
+  color: var(--background-color);
 }
 
 /* ------------------------------------------------------------------

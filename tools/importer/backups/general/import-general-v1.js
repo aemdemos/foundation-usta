@@ -69,13 +69,18 @@ function absUrl(u) {
   try { return new URL(u, ORIGIN).href; } catch { return u; }
 }
 
-// Build a <p><a> CTA (EDS auto-decorates a standalone <p><a> into a button).
+// Build a CTA paragraph. The project's decorateButtons() (scripts.js) only turns
+// a standalone <p><a> into a button when the link is wrapped in <strong> (→ a
+// solid `.primary`-less blue button, matching the source's blue CTA) or <em>.
+// A bare <p><a> stays an unstyled text link, so wrap the link in <strong>.
 function ctaParagraph(document, href, text) {
   const p = document.createElement('p');
+  const strong = document.createElement('strong');
   const a = document.createElement('a');
   a.href = href;
   a.textContent = text;
-  p.append(a);
+  strong.append(a);
+  p.append(strong);
   return p;
 }
 
@@ -296,33 +301,25 @@ export default {
       emittedBlocks.push('columns(history,image-right)');
     }
 
-    // SECTION 4 — YELLOW BAND. The source band contains TWO distinct layouts: a
-    // CENTERED intro (heading + para + LEARN MORE button) followed by an
-    // image-left/text-right columns block. A section-level `center` style would
-    // wrongly center the columns block too, so we emit TWO ADJACENT sections both
-    // tagged `section-yellow` (each has margin:0, so they butt into ONE
-    // continuous full-bleed yellow band — same mechanism as the homepage band):
-    //   4a — intro, `section-yellow, center` (centered copy + button)
-    //   4b — Evert columns, `section-yellow` (normal 2-col layout)
-
-    // 4a — centered leadership intro
+    // SECTION 4 — YELLOW BAND (ONE section). A CENTERED intro (heading + para +
+    // LEARN MORE button) followed by an image-left/text-right COLUMNS block
+    // (Evert photo + quote + BOLD attribution). Kept in a SINGLE `section-yellow`
+    // section so the intro's default-content wrapper and the columns block wrapper
+    // are SIBLINGS — the global news spacing rule then puts the source's ~40px gap
+    // between them (two separate sections butted with margin:0 and lost that gap).
+    // The `yellow-center-intro` style centers ONLY the leading default content
+    // (the intro), leaving the columns block full-width (see styles.css).
     main.append(document.createElement('hr'));
     leadText.forEach((n) => main.append(n));
     if (leadCta) main.append(ctaParagraph(document, leadCta.href, leadCta.text));
-    main.append(WebImporter.Blocks.createBlock(document, {
-      name: 'Section Metadata', cells: { style: 'section-yellow, center' },
-    }));
-    emittedBlocks.push('section-metadata(yellow-intro)');
-
-    // 4b — Evert columns: image cell FIRST (image-left), text cell second.
-    main.append(document.createElement('hr'));
     {
       const evertTextCell = [...evertParas];
       if (evertAttrText) {
+        // Attribution is BOLD (source + user request): wrap in <strong>.
         const attr = document.createElement('p');
-        const em = document.createElement('em');
-        em.textContent = evertAttrText;
-        attr.append(em);
+        const strong = document.createElement('strong');
+        strong.textContent = evertAttrText;
+        attr.append(strong);
         evertTextCell.push(attr);
       }
       const evertImgCell = evertImg ? [cloneImg(document, evertImg)] : [''];
@@ -333,9 +330,9 @@ export default {
       emittedBlocks.push('columns(evert,image-left)');
     }
     main.append(WebImporter.Blocks.createBlock(document, {
-      name: 'Section Metadata', cells: { style: 'section-yellow' },
+      name: 'Section Metadata', cells: { style: 'section-yellow, yellow-center-intro' },
     }));
-    emittedBlocks.push('section-metadata(yellow-columns)');
+    emittedBlocks.push('section-metadata(yellow-band)');
 
     // SECTION 5 — Supporters intro (default content). Source band is CENTERED and
     // caps at the FULL content width (1170) → `center, wide` (708/902/1170).
@@ -360,6 +357,17 @@ export default {
       main.append(WebImporter.DOMUtils.createTable(rows, document));
       emittedBlocks.push('cards-tiles');
     }
+
+    // SECTION 7 — trailing BLACK band above the footer. The source stacks a
+    // full-bleed 17px black strip between the last content section and the footer
+    // (same as the homepage). Reproduced as a Spacer block (stats-band-bg = #000)
+    // in its own section — the spacer section styles butt it flush to the footer.
+    main.append(document.createElement('hr'));
+    main.append(WebImporter.Blocks.createBlock(document, {
+      name: 'Spacer',
+      cells: { color: 'stats-band-bg', desktop: '17px' },
+    }));
+    emittedBlocks.push('spacer(trailing-black-band)');
 
     // METADATA block in its own section.
     main.appendChild(document.createElement('hr'));

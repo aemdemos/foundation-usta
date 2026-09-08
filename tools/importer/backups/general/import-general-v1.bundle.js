@@ -90,10 +90,12 @@ var CustomImportScript = (() => {
   }
   function ctaParagraph(document, href, text) {
     const p = document.createElement("p");
+    const strong = document.createElement("strong");
     const a = document.createElement("a");
     a.href = href;
     a.textContent = text;
-    p.append(a);
+    strong.append(a);
+    p.append(strong);
     return p;
   }
   function cloneImg(document, srcImg) {
@@ -260,19 +262,13 @@ var CustomImportScript = (() => {
       main.append(document.createElement("hr"));
       leadText.forEach((n) => main.append(n));
       if (leadCta) main.append(ctaParagraph(document, leadCta.href, leadCta.text));
-      main.append(WebImporter.Blocks.createBlock(document, {
-        name: "Section Metadata",
-        cells: { style: "section-yellow, center" }
-      }));
-      emittedBlocks.push("section-metadata(yellow-intro)");
-      main.append(document.createElement("hr"));
       {
         const evertTextCell = [...evertParas];
         if (evertAttrText) {
           const attr = document.createElement("p");
-          const em = document.createElement("em");
-          em.textContent = evertAttrText;
-          attr.append(em);
+          const strong = document.createElement("strong");
+          strong.textContent = evertAttrText;
+          attr.append(strong);
           evertTextCell.push(attr);
         }
         const evertImgCell = evertImg ? [cloneImg(document, evertImg)] : [""];
@@ -284,9 +280,9 @@ var CustomImportScript = (() => {
       }
       main.append(WebImporter.Blocks.createBlock(document, {
         name: "Section Metadata",
-        cells: { style: "section-yellow" }
+        cells: { style: "section-yellow, yellow-center-intro" }
       }));
-      emittedBlocks.push("section-metadata(yellow-columns)");
+      emittedBlocks.push("section-metadata(yellow-band)");
       main.append(document.createElement("hr"));
       supText.forEach((n) => main.append(n));
       if (supCta) main.append(ctaParagraph(document, supCta.href, supCta.text));
@@ -307,6 +303,12 @@ var CustomImportScript = (() => {
         main.append(WebImporter.DOMUtils.createTable(rows, document));
         emittedBlocks.push("cards-tiles");
       }
+      main.append(document.createElement("hr"));
+      main.append(WebImporter.Blocks.createBlock(document, {
+        name: "Spacer",
+        cells: { color: "stats-band-bg", desktop: "17px" }
+      }));
+      emittedBlocks.push("spacer(trailing-black-band)");
       main.appendChild(document.createElement("hr"));
       WebImporter.rules.createMetadata(main, document);
       const metaTable = [...main.querySelectorAll("table")].find((t) => {
