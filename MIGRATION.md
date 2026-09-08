@@ -2777,6 +2777,21 @@ Re-imported (83.2%, up from 78.5%), localized (9 images, **0 hotlinks**). Verifi
 30px strips, corporate has all 4 body paras + center-intro, cards-content adapts. Backup refreshed (SHA1 `5b5f4d34…`).
 Gates: lint **0 errors** · breakpoint-check ✓. (Page render/overflow/typography/a11y still pending DA upload.)
 
+### 2026-09-08 — get-involved round 3: yellow-band vertical padding + columns gutter (measured on the deployed page)
+get-involved is now on the DA bus, so measured LIVE vs source. Image position (55–625, w570), heading (655–1225),
+30px img→text gap, and blue 40px/3px button ALL matched. Two real diffs:
+1. **Yellow band too SHORT** — Impact Societies band: source **764px**, ours **551px** (213px short). Both had
+   `section-yellow` 32px padding, but the SOURCE nests AEM containers whose padding stacks to a band-top→content gap
+   of **~137px top / ~140px bottom** (measured), not 32px. Reproduced: a `section-yellow` band that leads directly
+   with a columns block (Impact/Planned — NOT the `yellow-center-intro` bands) gets extra vertical padding at ≥992
+   (scoped via `:not(.yellow-center-intro):has(> .columns-wrapper:first-child)`). NOTE: the full source 137/140
+   looked too tall in review — per direction, HALVED to **`68px 0 70px`** (Impact band → 625px, comfortable). Corporate
+   stays center-intro at 32px; who-we-are's leadership band is `yellow-center-intro` so unaffected.
+2. **Columns gutter** 24px → **30px** (`.columns > div` gap at ≥992 = `var(--grid-gap)`) — source img→text gap is 30px
+   (the stacked-mobile 24px stays on the base rule). Affects all columns blocks; matches the source grid.
+Gates: lint **0 errors** · breakpoint-check ✓ · overflow ✓ (360→1920) · typography ✓ · a11y ✓ (all on the deployed
+get-involved). Screenshot confirms the Impact band matches the source. Deploy: styles.css + columns.css → GitHub push.
+
 ---
 
 ## 🔴 HANDOFF — who-we-are (general template): OPEN TASKS for next session

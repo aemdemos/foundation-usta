@@ -528,6 +528,19 @@ main .section.section-yellow {
   }
 }
 
+/* A yellow band whose content is a COLUMNS block (image+text row — e.g.
+   get-involved's Impact Societies / Planned Giving) sits in a much TALLER band on
+   the source: the nested AEM containers stack padding so the band-top→content gap
+   is ~137px top / ~140px bottom (not the 32px a bare section-yellow gives). The
+   `yellow-center-intro` bands (who-we-are leadership, corporate) lead with a
+   centered intro and keep the tighter 32px, so scope this to a section-yellow that
+   leads directly with a columns block and is NOT a center-intro band. */
+@media (width >= 992px) {
+  main .section.section-yellow:not(.yellow-center-intro):has(> .columns-wrapper:first-child) {
+    padding: 68px 0 70px;
+  }
+}
+
 /* yellow-center-intro — centers ONLY the leading default-content wrapper (the
    "Our Leadership and Staff" intro: heading + paragraph + LEARN MORE) inside the
    yellow band, so the columns block that follows keeps its normal left-aligned
