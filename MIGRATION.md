@@ -2554,3 +2554,33 @@ Re-bundled + re-imported (SHA1 c2148877…); re-localized assets (0 hotlinks) an
 (re-import reverts both — documented in the leadership backup manifest as required post-import steps).
 Gates (all pass): lint 0 errors; breakpoint-check ✓; overflow 360/768/992/1200/1920 ✓; typography 390/768/992/1200 ✓;
 a11y ✓. Verified crumb→H1 = 41px and card border/radius/crop against the source live DOM.
+
+### 2026-09-08 — Migrate who-we-are (new template: general) + hero text-up variant + width system
+Built tools/importer/import-general-v1.js — third page template (marketing/landing interior pages). Section map:
+hero (text-up) → centered intro (center, medium) → History columns (image-right) → FULL-BLEED YELLOW BAND
+[leadership intro (section-yellow, center) + Evert columns image-left (section-yellow) — two adjacent same-colour
+sections butt into one continuous band] → Supporters intro (center, wide) → cards (tiles). `Theme = general`. 7 images
+localized (0 hotlinks). Backed up to tools/importer/backups/general/.
+
+**NEW hero variant `text-up`** (blocks/hero/hero.{js,css}): the interior-page hero. Unlike `banner` (homepage/our-
+impact — text vertically CENTERED, photo a FIXED CSS asset dimmed by a 40% overlay), `text-up` takes the AUTHORED
+image as the background (hero.js pulls the row-1 <img> src onto the block's background-image), places the text panel
+TOP-left, and has NO overlay. Source-measured: inner padding 16/112 (mobile) → 32/224 (desktop); h1 white 54→100px;
+subhead white 16→18px; two blue (#0373f3) buttons 40px tall, 3px radius, STACKED on mobile → side-by-side from 768.
+Hero height is content + those fixed pads (no min-height/aspect) — since our type scale matches the source, the text
+wraps to the same line counts → the band height matches the source at every breakpoint automatically.
+
+**NEW generic width section-styles `medium` / `wide`** (styles.css): the source lays centered copy bands on the
+12-col grid at spans narrower than full content, and DIFFERENT per band — `narrow` (810) fit neither. Measured:
+medium = 708@768 / 772@992 / 970@1200 (the "mission intro"); wide = 708@768 / 902@992 / 1170@1200 (the "supporters"
+band, = full content width). Both centered via `center`. Each breakpoint set explicitly (the `.section.medium/.wide`
+rule must outspecify the global mobile 328 cap at the larger tiers).
+
+**Parity fixes to shared blocks:**
+- columns.css — a text cell that LEADS with a heading (e.g. "Our History") now zeroes that heading's top margin
+  (`.columns > div > div > :is(h1..h6):first-child { margin-top: 0 }`) so it top-aligns with the image beside it;
+  the global `h2 { margin-top: 0.8em }` was pushing it down and unbalancing the row.
+- cards.css (tiles) — `align-self: start` on each tile so the grid doesn't stretch a shorter tile to the tallest
+  row height (source tiles keep their own image height; the two 300×300 images are a touch taller than the 295×282).
+Gates: lint 0 errors; breakpoint-check ✓. (overflow/typography/a11y pending page render — who-we-are serves from the
+DA preview bus and needs its corrected copy uploaded before those page-loading gates can run.)

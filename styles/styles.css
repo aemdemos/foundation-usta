@@ -596,6 +596,47 @@ main .section.narrow > div {
   }
 }
 
+/* Generic centered-text width modifiers (used WITH `center`). The source lays its
+   centered copy bands on the 12-col grid at column spans NARROWER than the full
+   content width — measured on who-we-are:
+     • medium — the "mission intro" band: 708 @768 → 772 @992 → 970 @1200
+     • wide   — the "supporters" band:    708 @768 → 902 @992 → 1170 @1200
+   Each breakpoint is set explicitly because `.section.medium` outspecifies the
+   global `main > .section > div` width rule (which would otherwise leave the
+   mobile 328 cap in place at the larger tiers). Mobile stays the 328 column. */
+main .section.medium > div,
+main .section.wide > div {
+  max-width: 328px;
+  margin-inline: auto;
+}
+
+@media (width >= 768px) {
+  main .section.medium > div,
+  main .section.wide > div {
+    max-width: 708px;
+  }
+}
+
+@media (width >= 992px) {
+  main .section.medium > div {
+    max-width: 772px;
+  }
+
+  main .section.wide > div {
+    max-width: 902px;
+  }
+}
+
+@media (width >= 1200px) {
+  main .section.medium > div {
+    max-width: 970px;
+  }
+
+  main .section.wide > div {
+    max-width: 1170px;
+  }
+}
+
 /* split-left — a block-agnostic TWO-COLUMN section: a block sits ENTIRELY in the
    left column and the default-content text that FOLLOWS it sits ENTIRELY in the
    right column (two equal columns, 30px gutter) — exactly like the source article

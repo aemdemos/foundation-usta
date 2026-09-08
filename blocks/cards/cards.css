@@ -1095,6 +1095,11 @@ main .section:has(.cards.profile) .default-content-wrapper p {
 
 .cards.tiles > ul > li {
   margin: 0;
+
+  /* Don't let the grid stretch a tile to the tallest row height — the source
+     tiles keep their own image height (the two square 300×300 images are a touch
+     taller than the 295×282 ones), so align each to the top of its cell. */
+  align-self: start;
 }
 
 /* Square-ish photo — plain width-constrained image at the source's natural

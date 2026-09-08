@@ -224,6 +224,152 @@ main > .section.hero-container:has(.hero.banner) {
 }
 
 /* ==================================================================
+   Variant: text-up
+   ================================================================== */
+
+/* hero text-up — interior-page hero (text at TOP) (e.g. who-we-are). A full-bleed background
+   photo from the AUTHORED image (set as an inline background-image on the block
+   in hero.js), a TOP-LEFT text panel (white heading + subhead + two blue CTA
+   buttons), and NO dark overlay. Distinct from `banner`: banner's photo is a
+   fixed homepage asset in CSS and it dims the whole image with a 40% overlay.
+   Values from the source computed styles at 390/768/992/1280/1440. */
+
+/* Full-bleed: override the EDS section wrapper max-width/padding. */
+.hero-container:has(.hero.text-up) .hero-wrapper {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* No gap to the section below — the source butts the next section under the
+   hero (same as banner). The hero owns the seam. */
+main > .section.hero-container:has(.hero.text-up) {
+  margin: 0;
+}
+
+.hero.text-up.block {
+  position: relative;
+  box-sizing: border-box;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  background-size: cover;
+  color: var(--background-color);
+
+  /* Mobile: source inner container is 16px top / 112px bottom, content inset
+     ~32px each side. */
+  padding: 16px 32px 112px;
+}
+
+/* Text panel — top-left column. Mobile: full width of the inset. */
+.hero.text-up.block > div {
+  max-width: 325px;
+}
+
+.hero.text-up.block > div > div {
+  padding: 0;
+}
+
+/* Heading — white, size/line-height/weight from the global h1 token scale
+   (54px→100px at 768), matching the source at every breakpoint. */
+.hero.text-up h1 {
+  margin: 0;
+  color: var(--background-color);
+}
+
+/* Subhead — white body copy; source h1→subhead gap is 0. */
+.hero.text-up p {
+  margin: 0;
+  color: var(--background-color);
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-m); /* 16→18 at 768 */
+  line-height: var(--body-line-height);
+}
+
+/* subhead → first button gap is 16px (source). */
+.hero.text-up .button-container {
+  margin-top: 16px;
+}
+
+/* Buttons: solid blue, 40px tall, 3px radius, 18px semibold uppercase. Mobile:
+   STACKED (each on its own row), LEFT-aligned, and each 48vw wide (measured on
+   the source: 187px @390, 207px @430 — i.e. 0.48 × viewport — NOT full width),
+   with the label centered inside. */
+.hero.text-up .button-container + .button-container {
+  margin-top: 16px;
+}
+
+.hero.text-up a.button:any-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 48vw;
+  height: 40px;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 14px;
+  background-color: var(--brand-blue);
+  color: var(--background-color);
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: 1px;
+  line-height: 20px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.hero.text-up a.button:hover,
+.hero.text-up a.button:focus-visible {
+  border-color: transparent;
+  background-color: var(--link-hover-color);
+  color: var(--background-color);
+}
+
+/* From 768: bigger top-left panel, symmetric-ish tall padding (32/224), and the
+   two buttons sit SIDE BY SIDE. Panel width/left offset follow the source's
+   fluid formulas (width ≈ 50vw, left ≈ 8.33vw + gutter), capped on very wide
+   screens so the h1 wraps as the source does. */
+@media (width >= 768px) {
+  .hero.text-up.block {
+    padding: 32px 0 224px;
+  }
+
+  /* centered container at the tier width, with the panel indented from the left
+     edge to track the source's left offset. */
+  .hero.text-up.block > div {
+    box-sizing: border-box;
+    width: min(calc(50vw - 40px), 720px);
+    max-width: none;
+    margin-left: max(calc(8.333vw + 6px), 64px);
+  }
+
+  /* buttons side by side */
+  .hero.text-up .button-container {
+    display: inline-block;
+    margin-right: 16px;
+  }
+
+  .hero.text-up .button-container + .button-container {
+    margin-top: 0;
+  }
+
+  .hero.text-up a.button:any-link {
+    width: auto;
+    min-width: 143px;
+    padding: 14px 24px;
+  }
+}
+
+@media (width >= 992px) {
+  .hero.text-up.block > div {
+    width: min(calc(50vw - 90px), 870px);
+    margin-left: min(calc(8.333vw + 45px), 205px);
+  }
+}
+
+/* ==================================================================
    Variant: error
    ================================================================== */
 

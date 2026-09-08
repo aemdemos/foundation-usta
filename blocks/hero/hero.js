@@ -90,12 +90,51 @@ function decorateBanner(block) {
 }
 
 /**
+ * Hero Text-Up variant — a full-bleed background photo (from the AUTHORED image,
+ * NOT baked into CSS) with a TOP-left text panel (white heading + subhead + two
+ * CTA buttons) and NO dark overlay. This is the interior-page hero where the
+ * text sits at the TOP (who-we-are, what-we-do, get-involved) — as opposed to
+ * `banner`, the homepage/our-impact hero whose text is vertically centered and
+ * whose photo is a fixed CSS asset dimmed by a 40% overlay.
+ *
+ * Authoring model (rows):
+ *   row 1 → cell: the background <img> (a picture/img alone)
+ *   row 2 → cell: <h1> + subhead <p> + one or more CTA <p><a>
+ *
+ * @param {Element} block the hero block element
+ */
+function decorateTextUp(block) {
+  const rows = [...block.children];
+
+  // Row 1 holds the background image — pull it out and apply it as the block's
+  // own background so the text panel can overlay it (source uses cover / 50%
+  // center, no overlay). Keep the src on the element for CSS to consume.
+  const imgRow = rows.find((r) => r.querySelector('img'));
+  const bgImg = imgRow ? imgRow.querySelector('img') : null;
+  if (bgImg && bgImg.src) {
+    block.style.backgroundImage = `url("${bgImg.src}")`;
+    imgRow.remove();
+  }
+
+  // Standalone CTA links become buttons (source: two solid blue buttons).
+  block.querySelectorAll('p > a').forEach((a) => {
+    const p = a.parentElement;
+    if (p.childElementCount === 1 && p.textContent.trim() === a.textContent.trim()) {
+      a.classList.add('button');
+      p.classList.add('button-container');
+    }
+  });
+}
+
+/**
  * loads and decorates the block
  * @param {Element} block The block element
  */
 export default function decorate(block) {
   if (block.classList.contains('error')) {
     decorateError(block);
+  } else if (block.classList.contains('text-up')) {
+    decorateTextUp(block);
   } else {
     decorateBanner(block);
   }

@@ -12,6 +12,14 @@
   width: 100%;
 }
 
+/* A text cell that LEADS with a heading (e.g. "Our History") — the source aligns
+   that heading's top with the top of the image beside it (h2 margin-top: 0). The
+   global `h2 { margin-top: 0.8em }` would otherwise push it down and unbalance
+   the row, so zero the leading heading's top margin inside the block. */
+.columns > div > div > :is(h1, h2, h3, h4, h5, h6):first-child {
+  margin-top: 0;
+}
+
 /* Image column: a <figure> wraps the image (+ optional caption) — see columns.js.
    The image side follows the AUTHORED cell order (image cell first = left,
    second = right); no per-side class, no order overrides, so it just works. */
