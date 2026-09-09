@@ -213,7 +213,15 @@ function isHiddenDup(el) {
  * our replacement block. Returns true if a section was built.
  */
 function buildSplitLeftSection(document, embedEl, embedBlock) {
-  const embedCol = embedEl.closest('[class*="GridColumn--default--5"], [class*="GridColumn--default--6"], [class*="GridColumn--default--7"]');
+  // The embed sits in a PARTIAL-width grid column (anything < 12) beside a text
+  // column. Source widths vary: tweets use col-5/6/7, but Instagram can be a
+  // narrow col-4 beside a col-8 text column (e.g. robin-montgomery-wimbledon-debut).
+  // Match any col-4..8 so all of these are detected as split-left, not full-width.
+  const embedCol = embedEl.closest(
+    '[class*="GridColumn--default--4"], [class*="GridColumn--default--5"], '
+    + '[class*="GridColumn--default--6"], [class*="GridColumn--default--7"], '
+    + '[class*="GridColumn--default--8"]',
+  );
   if (!embedCol || !embedCol.parentElement) return false;
   const sibs = [...embedCol.parentElement.children]
     .filter((c) => c.className && /GridColumn--default--\d+/.test(c.className));
@@ -261,6 +269,7 @@ function wrapTweetSections(document, root) {
  */
 function wrapInstagramSections(document, root) {
   let built = 0;
+  const seen = new Set(); // permalinks already placed — the source ships each post twice
   const nodes = [
     ...root.querySelectorAll('iframe[src*="instagram.com/"]'),
     ...root.querySelectorAll('blockquote.instagram-media'),
@@ -273,6 +282,10 @@ function wrapInstagramSections(document, root) {
       || '';
     const permalink = instaPermalinkFrom(raw);
     if (!permalink) return;
+    // De-dup by permalink: the source ships each Instagram post twice (visible +
+    // a collapsed copy that isn't always 0×0). Keep the first; drop later repeats.
+    if (seen.has(permalink)) { el.remove(); return; }
+    seen.add(permalink);
     const block = buildInstagramBlock(document, permalink);
     if (block && buildSplitLeftSection(document, el, block)) built += 1;
   });

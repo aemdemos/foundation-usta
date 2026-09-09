@@ -251,7 +251,9 @@ var CustomImportScript = (() => {
     return r.width === 0 && r.height === 0;
   }
   function buildSplitLeftSection(document, embedEl, embedBlock) {
-    const embedCol = embedEl.closest('[class*="GridColumn--default--5"], [class*="GridColumn--default--6"], [class*="GridColumn--default--7"]');
+    const embedCol = embedEl.closest(
+      '[class*="GridColumn--default--4"], [class*="GridColumn--default--5"], [class*="GridColumn--default--6"], [class*="GridColumn--default--7"], [class*="GridColumn--default--8"]'
+    );
     if (!embedCol || !embedCol.parentElement) return false;
     const sibs = [...embedCol.parentElement.children].filter((c) => c.className && /GridColumn--default--\d+/.test(c.className));
     const idx = sibs.indexOf(embedCol);
@@ -284,6 +286,7 @@ var CustomImportScript = (() => {
   }
   function wrapInstagramSections(document, root) {
     let built = 0;
+    const seen = /* @__PURE__ */ new Set();
     const nodes = [
       ...root.querySelectorAll('iframe[src*="instagram.com/"]'),
       ...root.querySelectorAll("blockquote.instagram-media")
@@ -296,6 +299,11 @@ var CustomImportScript = (() => {
       const raw = el.getAttribute("src") || el.getAttribute("data-instgrm-permalink") || (el.querySelector && el.querySelector('a[href*="instagram.com/"]') || {}).getAttribute?.("href") || "";
       const permalink = instaPermalinkFrom(raw);
       if (!permalink) return;
+      if (seen.has(permalink)) {
+        el.remove();
+        return;
+      }
+      seen.add(permalink);
       const block = buildInstagramBlock(document, permalink);
       if (block && buildSplitLeftSection(document, el, block)) built += 1;
     });

@@ -7,7 +7,7 @@ known-good state.
 - **Script:** `import-news-v1.js` (+ `import-news-v1.bundle.js`)
 - **URLs manifest:** `urls-news.txt`
 - **Template:** `news` (drives `templates/news/news.{css,js}` via the `Template` metadata row)
-- **Source SHA1 (import-news-v1.js):** `0190543f8da05b1ae2168a568d4cf8117511f772`
+- **Source SHA1 (import-news-v1.js):** `8d6faeb01e2c39c68cf40eb2517575a599802ae4`
 - **Backed up:** 2026-09-08
 - **Fleet:** 72 news articles (all imported), completeness ≥85% every page
   (35 pages ≥95%, ~30 at 90–95%, 1 at 85–90%). Verify by eye; <~90% is expected.

@@ -3180,6 +3180,18 @@ source photo to describe accurately — group shots, Tiafoe with players, etc.) 
 - Gates: lint 0 errors · breakpoint ✓ · check:svg ✓ · a11y ✓ (who-we-are, our-impact). **Deploy:** hero.js + hero.css
   = GitHub push (pending); alt text + shadow images = DA (done, live). Live labels appear once the JS deploys.
 
+### 2026-09-09 — News importer fix: Instagram in a col-4 → split-left (was full-width + duplicated)
+`robin-montgomery-wimbledon-debut` rendered its Instagram embed FULL-WIDTH **and twice** (same post `p/C9GDWxKPCgG`).
+Root cause: `buildSplitLeftSection` only matched embeds in `GridColumn--default--5/6/7`, but this page's IG sits in a
+**col-4** beside a **col-8** text column → split detection missed it, so BOTH copies fell through to the full-width
+inline handler. Source layout is IG-LEFT / text-RIGHT (a split-left section), one embed.
+- Fix (in `import-news-v1.js`): (a) widened the partial-col matcher to **col-4..8**; (b) added **permalink de-dup**
+  in `wrapInstagramSections` (the source ships each post twice; the collapsed copy isn't always 0×0, so size-based
+  `isHiddenDup` wasn't enough). Only this one page had the dup (audited all 72).
+- Re-imported (92.4%), localized (3 imgs, 0 hotlinks), uploaded 3 shadow images + page to DA, published. Verified live
+  @1280: IG left (x55→625, 570px) / article text right (x655, 570px), **sideBySide:true**, single embed, real IG card
+  hydrates. Backup + manifest SHA refreshed (`8d6faeb0…`). Gates: syntax ✓ · lint 0 errors.
+
 **MIGRATION STATUS:** all general-template + specialized pages imported; financials PDFs **live on DA**. Full-site
 link + breadcrumb validation PASSED (see `VALIDATION.md`). Outstanding: **2 PDFs** localized locally, pending DA
 upload (blocked on the credential opt-in). Only **404.html** (T7, hero-error) remains unmigrated from the full scope.
