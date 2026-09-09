@@ -1,0 +1,2413 @@
+{
+  "generated": "run-time",
+  "edsHost": "https://main--foundation-usta--aemdemos.aem.live",
+  "pagesAudited": 84,
+  "linkSummary": {
+    "uniqueLinks": 367,
+    "broken": 91,
+    "sourceDomainDocs": 0
+  },
+  "broken": [
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/en/home/stay-current/national/usta-foundation-launches-rally-to-rebuild-fundraising-campaign",
+      "status": 404,
+      "ext": "/en/home/stay-current/national/usta-foundation-launches-rally-to-rebuild-fundraising-campaign",
+      "pages": [
+        "/en/home/news/usta-foundation-launches-williams-family-excellence-program-at-2",
+        "/en/home/news/laver-cup-community-legacy-project-celebrates-court-unveiling-at"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/en/home/stay-current/national/usta-foundation-continues-to-serve-youth-during-unprecedented-20",
+      "status": 404,
+      "ext": "/en/home/stay-current/national/usta-foundation-continues-to-serve-youth-during-unprecedented-20",
+      "pages": [
+        "/en/home/news/usta-foundation-launches-williams-family-excellence-program-at-2",
+        "/en/home/news/laver-cup-community-legacy-project-celebrates-court-unveiling-at"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/en/home/stay-current/national/kathleen-wu-announced-as-next-usta-foundation-president",
+      "status": 404,
+      "ext": "/en/home/stay-current/national/kathleen-wu-announced-as-next-usta-foundation-president",
+      "pages": [
+        "/en/home/news/usta-foundation-launches-williams-family-excellence-program-at-2",
+        "/en/home/news/laver-cup-community-legacy-project-celebrates-court-unveiling-at"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/en/home/stay-current/national/usta-foundation-to-celebrate-30th-anniversary-by-kicking-off",
+      "status": 404,
+      "ext": "/en/home/stay-current/national/usta-foundation-to-celebrate-30th-anniversary-by-kicking-off",
+      "pages": [
+        "/en/home/news/usta-foundation-launches-community-impact-hub-initiative",
+        "/en/home/news/frances-tiafoe-awards-njtl-alumnus-with-college-scholarship",
+        "/en/home/news/chris-evert-usta-foundation-much-more"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/en/home/stay-current/national/frances-tiafoe-joins-dallas-youth-for-on-court-clinic-to-support",
+      "status": 404,
+      "ext": "/en/home/stay-current/national/frances-tiafoe-joins-dallas-youth-for-on-court-clinic-to-support",
+      "pages": [
+        "/en/home/news/usta-foundation-launches-community-impact-hub-initiative",
+        "/en/home/news/frances-tiafoe-awards-njtl-alumnus-with-college-scholarship"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/en/home/stay-current/national/usta-foundation-joins-forces-with-frances-tiafoe-to-launch-franc",
+      "status": 404,
+      "ext": "/en/home/stay-current/national/usta-foundation-joins-forces-with-frances-tiafoe-to-launch-franc",
+      "pages": [
+        "/en/home/news/usta-foundation-launches-community-impact-hub-initiative",
+        "/en/home/news/frances-tiafoe-awards-njtl-alumnus-with-college-scholarship"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/en/home/stay-current/national/usta-foundation-launches-rally-for-the-future-fundraising-campai",
+      "status": 404,
+      "ext": "/en/home/stay-current/national/usta-foundation-launches-rally-for-the-future-fundraising-campai",
+      "pages": [
+        "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/en/home/stay-current/national/usta-foundation-commits-to-kimmelman-complex-in-los-angeles",
+      "status": 404,
+      "ext": "/en/home/stay-current/national/usta-foundation-commits-to-kimmelman-complex-in-los-angeles",
+      "pages": [
+        "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/en/home/stay-current/national/tauheed-browning-of-legacy-njtl-makes-professional-debut-on-us",
+      "status": 404,
+      "ext": "/en/home/stay-current/national/tauheed-browning-of-legacy-njtl-makes-professional-debut-on-us",
+      "pages": [
+        "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/content/dam/usta-foundation/pdfs/impact-societies-one-pager-pdf",
+      "status": 404,
+      "ext": "/content/dam/usta-foundation/pdfs/impact-societies-one-pager-pdf",
+      "pages": [
+        "/en/home/get-involved"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "https://main--foundation-usta--aemdemos.aem.live/content/dam/usta-foundation/pdfs/2026-scholarship-program-faq-pdf",
+      "status": 404,
+      "ext": "/content/dam/usta-foundation/pdfs/2026-scholarship-program-faq-pdf",
+      "pages": [
+        "/en/home/what-we-do/college-scholarship-opportunities"
+      ],
+      "internal": true,
+      "onSource": false
+    },
+    {
+      "url": "http://kimmelmancampus.org/",
+      "status": 0,
+      "error": "fetch failed",
+      "ext": "/",
+      "pages": [
+        "/en/home/news/kimmelman-sport-education-complex-los-angeles"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://www.ustafoundation.com/mcdonaldfund/",
+      "status": 0,
+      "error": "fetch failed",
+      "ext": "/mcdonaldfund/",
+      "pages": [
+        "/en/home/news/mackenzie-mcdonald-celebrates-the-launch-of-the-usta-foundation",
+        "/en/home/news/mackenzie-mcdonald-i-m-making-it-my-mission-to-help-open-the-s"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-offline-by-aerie-and-the-aerie-real-foundatio",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-offline-by-aerie-and-the-aerie-real-foundatio"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/USTAFoundation/",
+      "status": 400,
+      "ext": "/ustafoundation/",
+      "pages": [
+        "/en/home/news/usta-foundation-offline-by-aerie-and-the-aerie-real-foundatio",
+        "/en/home/news/leylah-fernandez-partners-with-usta-socal-and-bgcmla-for-youth-c",
+        "/en/home/news/six-student-athletes-awarded-first-grants-frances-tiafoe-fund",
+        "/en/home",
+        "/en/home/news/frances-tiafoe-holds-clinic-for-youth-from-houston-tennis-associ",
+        "/en/home/news/jinjie-ling-dwight-f-davis-memorial-scholarship",
+        "/en/home/news/kings-county-tennis-league-nominated-for-laureus-sport-for-good",
+        "/en/home/news/excellence-program-alumna-robin-montgomery-reaches-first-wta-sem",
+        "/en/home/news/inaugural-usta-foundation-impact-conference",
+        "/en/home/news/robin-montgomery-investing-in-game",
+        "/en/home/news/james-blake-30th-anniversary-usta-foundation",
+        "/en/home/news/njtl-student-athletes-white-house-visit",
+        "/en/home/news/frances-tiafoe-presents-check-to-jtcc",
+        "/en/home/news/novo-nordisk-donnelly-scholarship-winners-meet-billie-jean-king",
+        "/en/home/news/newport-njtl-honor-chris-evert",
+        "/en/home/news/kyrgios-sock-njtl-clinic-laver-cup-boston",
+        "/en/home/news/usta-foundation-celebrates-2026-njtl-essay-contest-winners-at-us",
+        "/en/home/news/tennis-has-been-my-vehicle-to-serve-sloane-stephens-shares-he",
+        "/en/home/news/usta-foundation-launches-williams-family-excellence-program-at-2",
+        "/en/home/news/usta-foundation-chairperson-chris-evert-announces-cancer-free",
+        "/en/home/news/njtl-essay-grant-recipients-2020",
+        "/en/home/news/ngounoue-excellence-team-junior-french-open",
+        "/en/home/news/usta-foundation-pledges-800-000-service-hours-in-support-of-mart",
+        "/en/home/news/usta-foundation-chris-evert-honored-itf-commitment-award",
+        "/en/home/news/sloane-stephens-honored-by-sports-business-journal",
+        "/en/home/news/usta-foundation-partners-with-chase-to-award-over-250-000-to-he",
+        "/en/home/news/usta-foundation-launches-community-impact-hub-initiative",
+        "/en/home/news/njtl-student-athlete-ata-national-championships",
+        "/en/home/news/usta-foundation-rally-to-rebuild-campaign",
+        "/en/home/news/fashion-icon-anna-wintour-honored-with-usta-foundation-paver-on",
+        "/en/home/news/kathleen-wu-usta-foundation-president",
+        "/en/home/news/laver-cup-launches-2025-san-francisco-community-legacy-project-w",
+        "/en/home/news/njtl-essay-contest-winners-2024-open",
+        "/en/home/news/mississippi-njtl-family-biz-builder",
+        "/en/home/news/usta-foundation-announces-sloane-stephens-as-recipient-of-servin",
+        "/en/home/news/usta-foundation-and-reginald-f-lewis-foundation-partner-to-empo",
+        "/en/home/news/usta-foundation-announces-chris-evert-chair",
+        "/en/home/news/tiafoe-houston-youth-clinic",
+        "/en/home/news/kimmelman-sport-education-complex-los-angeles",
+        "/en/home/news/frances-tiafoe-awards-njtl-alumnus-with-college-scholarship",
+        "/en/home/news/mackenzie-mcdonald-celebrates-the-launch-of-the-usta-foundation",
+        "/en/home/news/laver-cup-community-legacy-project-celebrates-court-unveiling-at",
+        "/en/home/news/usta-foundation-announces-new-advisory-board-members",
+        "/en/home/news/usta-foundation-and-yonex-team-up-to-transform-communities-and-e",
+        "/en/home/news/usta-foundation-exceeds-goal-rally-to-rebuild-campaign",
+        "/en/home/news/njtl-ace-jabeiro-brown",
+        "/en/home/news/mackenzie-mcdonald-i-m-making-it-my-mission-to-help-open-the-s",
+        "/en/home/news/robin-montgomery-wimbledon-debut",
+        "/en/home/news/evert-speaks-on-rally-to-rebuild",
+        "/en/home/news/how-the-usta-foundation-and-realize-the-dream-are-set-to-inspire",
+        "/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised",
+        "/en/home/news/usta-foundation-to-honor-andre-agassi-with-serving-up-dreams-awa",
+        "/en/home/news/usta-foundation-receives-transformative-2-7-million-gift-from-t",
+        "/en/home/news/usta-foundation-teams-up-with-la-roche-posay-for-events-at-selec",
+        "/en/home/news/what-s-the-why-former-atp-wta-pros-open-up-on-their-support-of",
+        "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at-0",
+        "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at",
+        "/en/home/news/2023-njtl-essay-contest-winners",
+        "/en/home/news/women-s-history-month-2026-how-two-community-impact-hub-leaders",
+        "/en/home/news/usta-foundation-reginald-f-lewis-foundation-announce-inaugural",
+        "/en/home/news/usta-foundation-to-celebrate-winners-of-2025-national-junior-ten",
+        "/en/home/news/espn-chris-mckendry-supports-usta-foundation",
+        "/en/home/news/daymond-john-and-matt-ebert-share-wisdom-with-usta-foundation-s",
+        "/en/home/news/chris-evert-honored-espys-usta-foundation-work",
+        "/en/home/news/chris-evert-honored-espn-sports-humanitarian-awards",
+        "/en/home/news/clervie-ngounoue-first-junior-grand-slam-australia",
+        "/en/home/news/2026-usta-foundation-opening-night-gala-provides-young-people-wi",
+        "/en/home/news/clervie-ngounoue-wins-first-junior-grand-slam-australian-open",
+        "/en/home/news/carol-ngounoue-runner-up-wimbledon-event",
+        "/en/home/news/black-history-month-2026-community-impact-hub-leader-john-borde",
+        "/en/home/news/delray-beach-youth-tennis-foundation-athletes-hit-the-court-with",
+        "/en/home/news/chris-evert-usta-foundation-much-more",
+        "/en/home/news/desert-smash-brings-together-hollywood-and-pro-tennis-to-benefit",
+        "/en/home/who-we-are/leadership-and-staff",
+        "/en/home/who-we-are",
+        "/en/home/get-involved",
+        "/en/home/what-we-do",
+        "/en/home/our-impact",
+        "/en/home/get-involved/special-funds",
+        "/en/home/who-we-are/financials",
+        "/en/home/what-we-do/college-scholarship-opportunities",
+        "/en/home/news",
+        "/en/home/get-involved/special-funds/chris-evert-50th-anniversary",
+        "/en/home/get-involved/young-professional-initiative"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fleylah-fernandez-partners-with-usta-socal-and-bgcmla-for-youth-c",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/leylah-fernandez-partners-with-usta-socal-and-bgcmla-for-youth-c"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fsix-student-athletes-awarded-first-grants-frances-tiafoe-fund",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/six-student-athletes-awarded-first-grants-frances-tiafoe-fund"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Ffrances-tiafoe-holds-clinic-for-youth-from-houston-tennis-associ",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/frances-tiafoe-holds-clinic-for-youth-from-houston-tennis-associ"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fjinjie-ling-dwight-f-davis-memorial-scholarship",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/jinjie-ling-dwight-f-davis-memorial-scholarship"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fkings-county-tennis-league-nominated-for-laureus-sport-for-good",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/kings-county-tennis-league-nominated-for-laureus-sport-for-good"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fexcellence-program-alumna-robin-montgomery-reaches-first-wta-sem",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/excellence-program-alumna-robin-montgomery-reaches-first-wta-sem"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Finaugural-usta-foundation-impact-conference",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/inaugural-usta-foundation-impact-conference"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Frobin-montgomery-investing-in-game",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/robin-montgomery-investing-in-game"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fjames-blake-30th-anniversary-usta-foundation",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/james-blake-30th-anniversary-usta-foundation"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fnjtl-student-athletes-white-house-visit",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/njtl-student-athletes-white-house-visit"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Ffrances-tiafoe-presents-check-to-jtcc",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/frances-tiafoe-presents-check-to-jtcc"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fnovo-nordisk-donnelly-scholarship-winners-meet-billie-jean-king",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/novo-nordisk-donnelly-scholarship-winners-meet-billie-jean-king"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fnewport-njtl-honor-chris-evert",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/newport-njtl-honor-chris-evert"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fkyrgios-sock-njtl-clinic-laver-cup-boston",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/kyrgios-sock-njtl-clinic-laver-cup-boston"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-celebrates-2026-njtl-essay-contest-winners-at-us",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-celebrates-2026-njtl-essay-contest-winners-at-us"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Ftennis-has-been-my-vehicle-to-serve-sloane-stephens-shares-he",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/tennis-has-been-my-vehicle-to-serve-sloane-stephens-shares-he"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-chairperson-chris-evert-announces-cancer-free",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-chairperson-chris-evert-announces-cancer-free"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fnjtl-essay-grant-recipients-2020",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/njtl-essay-grant-recipients-2020"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fngounoue-excellence-team-junior-french-open",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/ngounoue-excellence-team-junior-french-open"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-pledges-800-000-service-hours-in-support-of-mart",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-pledges-800-000-service-hours-in-support-of-mart"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-chris-evert-honored-itf-commitment-award",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-chris-evert-honored-itf-commitment-award"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fsloane-stephens-honored-by-sports-business-journal",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/sloane-stephens-honored-by-sports-business-journal"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-partners-with-chase-to-award-over-250-000-to-he",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-partners-with-chase-to-award-over-250-000-to-he"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fnjtl-student-athlete-ata-national-championships",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/njtl-student-athlete-ata-national-championships"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-rally-to-rebuild-campaign",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-rally-to-rebuild-campaign"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Ffashion-icon-anna-wintour-honored-with-usta-foundation-paver-on",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/fashion-icon-anna-wintour-honored-with-usta-foundation-paver-on"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fkathleen-wu-usta-foundation-president",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/kathleen-wu-usta-foundation-president"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fnjtl-essay-contest-winners-2024-open",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/njtl-essay-contest-winners-2024-open"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fmississippi-njtl-family-biz-builder",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/mississippi-njtl-family-biz-builder"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-announces-sloane-stephens-as-recipient-of-servin",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-announces-sloane-stephens-as-recipient-of-servin"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-and-reginald-f-lewis-foundation-partner-to-empo",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-and-reginald-f-lewis-foundation-partner-to-empo"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-announces-chris-evert-chair",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-announces-chris-evert-chair"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Ftiafoe-houston-youth-clinic",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/tiafoe-houston-youth-clinic"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fkimmelman-sport-education-complex-los-angeles",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/kimmelman-sport-education-complex-los-angeles"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Ffrances-tiafoe-awards-njtl-alumnus-with-college-scholarship",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/frances-tiafoe-awards-njtl-alumnus-with-college-scholarship"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fmackenzie-mcdonald-celebrates-the-launch-of-the-usta-foundation",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/mackenzie-mcdonald-celebrates-the-launch-of-the-usta-foundation"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Flaver-cup-community-legacy-project-celebrates-court-unveiling-at",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/laver-cup-community-legacy-project-celebrates-court-unveiling-at"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-announces-new-advisory-board-members",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-announces-new-advisory-board-members"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-and-yonex-team-up-to-transform-communities-and-e",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-and-yonex-team-up-to-transform-communities-and-e"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-exceeds-goal-rally-to-rebuild-campaign",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-exceeds-goal-rally-to-rebuild-campaign"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fnjtl-ace-jabeiro-brown",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/njtl-ace-jabeiro-brown"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fmackenzie-mcdonald-i-m-making-it-my-mission-to-help-open-the-s",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/mackenzie-mcdonald-i-m-making-it-my-mission-to-help-open-the-s"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Frobin-montgomery-wimbledon-debut",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/robin-montgomery-wimbledon-debut"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fevert-speaks-on-rally-to-rebuild",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/evert-speaks-on-rally-to-rebuild"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fhow-the-usta-foundation-and-realize-the-dream-are-set-to-inspire",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/how-the-usta-foundation-and-realize-the-dream-are-set-to-inspire"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Ffrances-tiafoe-fund-surpasses-1-million-raised",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-receives-transformative-2-7-million-gift-from-t",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-receives-transformative-2-7-million-gift-from-t"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-teams-up-with-la-roche-posay-for-events-at-selec",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-teams-up-with-la-roche-posay-for-events-at-selec"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fwhat-s-the-why-former-atp-wta-pros-open-up-on-their-support-of",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/what-s-the-why-former-atp-wta-pros-open-up-on-their-support-of"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-scholarship-recipients-meet-billie-jean-king-at-0",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at-0"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2F2023-njtl-essay-contest-winners",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/2023-njtl-essay-contest-winners"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fwomen-s-history-month-2026-how-two-community-impact-hub-leaders",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/women-s-history-month-2026-how-two-community-impact-hub-leaders"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fusta-foundation-reginald-f-lewis-foundation-announce-inaugural",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/usta-foundation-reginald-f-lewis-foundation-announce-inaugural"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fespn-chris-mckendry-supports-usta-foundation",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/espn-chris-mckendry-supports-usta-foundation"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fdaymond-john-and-matt-ebert-share-wisdom-with-usta-foundation-s",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/daymond-john-and-matt-ebert-share-wisdom-with-usta-foundation-s"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fchris-evert-honored-espys-usta-foundation-work",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/chris-evert-honored-espys-usta-foundation-work"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fchris-evert-honored-espn-sports-humanitarian-awards",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/chris-evert-honored-espn-sports-humanitarian-awards"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fclervie-ngounoue-first-junior-grand-slam-australia",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/clervie-ngounoue-first-junior-grand-slam-australia"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2F2026-usta-foundation-opening-night-gala-provides-young-people-wi",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/2026-usta-foundation-opening-night-gala-provides-young-people-wi"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fclervie-ngounoue-wins-first-junior-grand-slam-australian-open",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/clervie-ngounoue-wins-first-junior-grand-slam-australian-open"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fcarol-ngounoue-runner-up-wimbledon-event",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/carol-ngounoue-runner-up-wimbledon-event"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fblack-history-month-2026-community-impact-hub-leader-john-borde",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/black-history-month-2026-community-impact-hub-leader-john-borde"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/USTAFoundation",
+      "status": 400,
+      "ext": "/ustafoundation",
+      "pages": [
+        "/en/home/news/delray-beach-youth-tennis-foundation-athletes-hit-the-court-with"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fdelray-beach-youth-tennis-foundation-athletes-hit-the-court-with",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/delray-beach-youth-tennis-foundation-athletes-hit-the-court-with"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fchris-evert-usta-foundation-much-more",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/chris-evert-usta-foundation-much-more"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fmain--foundation-usta--aemdemos.aem.live%2Fen%2Fhome%2Fnews%2Fdesert-smash-brings-together-hollywood-and-pro-tennis-to-benefit",
+      "status": 400,
+      "ext": "php",
+      "pages": [
+        "/en/home/news/desert-smash-brings-together-hollywood-and-pro-tennis-to-benefit"
+      ],
+      "internal": false,
+      "onSource": false
+    },
+    {
+      "url": "https://www.census.gov/quickfacts/tunicacountymississippi",
+      "status": 403,
+      "ext": "/quickfacts/tunicacountymississippi",
+      "pages": [
+        "/en/home/news/mississippi-njtl-family-biz-builder"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://www.atptour.com/en/news/tiafoe-lokko-cincinnati-2025-saturday",
+      "status": 403,
+      "ext": "/en/news/tiafoe-lokko-cincinnati-2025-saturday",
+      "pages": [
+        "/en/home/news/frances-tiafoe-awards-njtl-alumnus-with-college-scholarship"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://www.ustaflorida.com/jacksonville-teen-jabeiro-brown-wins-20th-annual-njtl-essay-contest/",
+      "status": 403,
+      "ext": "/jacksonville-teen-jabeiro-brown-wins-20th-annual-njtl-essay-contest/",
+      "pages": [
+        "/en/home/news/njtl-ace-jabeiro-brown"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://www.usta.com/en/home/stay-current/national/njtl-50-for-50--james-blake.html",
+      "status": 404,
+      "ext": "html",
+      "pages": [
+        "/en/home/news/james-blake-30th-anniversary-usta-foundation"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://twitter.com/ITFTennis?ref_src=twsrc%5Etfw",
+      "status": 404,
+      "ext": "/itftennis",
+      "pages": [
+        "/en/home/news/usta-foundation-chris-evert-honored-itf-commitment-award"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://www.usta.com/en/home/stay-current/national/usta-foundation-continues-to-serve-youth-during-unprecedented-20.html",
+      "status": 404,
+      "ext": "html",
+      "pages": [
+        "/en/home/news/mississippi-njtl-family-biz-builder"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://www.hbo.com/real-sports-with-bryant-gumbel/season-28/6-real-sports-with-bryant-gumbel-june-2022",
+      "status": 404,
+      "ext": "/real-sports-with-bryant-gumbel/season-28/6-real-sports-with-bryant-gumbel-june-2022",
+      "pages": [
+        "/en/home/news/chris-evert-honored-espn-sports-humanitarian-awards"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://www.ustafoundation.com/excellence_program/",
+      "status": 404,
+      "ext": "/excellence_program/",
+      "pages": [
+        "/en/home/news/carol-ngounoue-runner-up-wimbledon-event"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://t.email.usta.com/lp/ustaCTAP",
+      "status": 500,
+      "ext": "/lp/ustactap",
+      "pages": [
+        "/en/home/news/usta-foundation-offline-by-aerie-and-the-aerie-real-foundatio",
+        "/en/home/news/leylah-fernandez-partners-with-usta-socal-and-bgcmla-for-youth-c",
+        "/en/home/news/six-student-athletes-awarded-first-grants-frances-tiafoe-fund",
+        "/en/home",
+        "/en/home/news/frances-tiafoe-holds-clinic-for-youth-from-houston-tennis-associ",
+        "/en/home/news/jinjie-ling-dwight-f-davis-memorial-scholarship",
+        "/en/home/news/kings-county-tennis-league-nominated-for-laureus-sport-for-good",
+        "/en/home/news/excellence-program-alumna-robin-montgomery-reaches-first-wta-sem",
+        "/en/home/news/inaugural-usta-foundation-impact-conference",
+        "/en/home/news/robin-montgomery-investing-in-game",
+        "/en/home/news/james-blake-30th-anniversary-usta-foundation",
+        "/en/home/news/njtl-student-athletes-white-house-visit",
+        "/en/home/news/frances-tiafoe-presents-check-to-jtcc",
+        "/en/home/news/novo-nordisk-donnelly-scholarship-winners-meet-billie-jean-king",
+        "/en/home/news/newport-njtl-honor-chris-evert",
+        "/en/home/news/kyrgios-sock-njtl-clinic-laver-cup-boston",
+        "/en/home/news/usta-foundation-celebrates-2026-njtl-essay-contest-winners-at-us",
+        "/en/home/news/tennis-has-been-my-vehicle-to-serve-sloane-stephens-shares-he",
+        "/en/home/news/usta-foundation-launches-williams-family-excellence-program-at-2",
+        "/en/home/news/usta-foundation-chairperson-chris-evert-announces-cancer-free",
+        "/en/home/news/njtl-essay-grant-recipients-2020",
+        "/en/home/news/ngounoue-excellence-team-junior-french-open",
+        "/en/home/news/usta-foundation-pledges-800-000-service-hours-in-support-of-mart",
+        "/en/home/news/usta-foundation-chris-evert-honored-itf-commitment-award",
+        "/en/home/news/sloane-stephens-honored-by-sports-business-journal",
+        "/en/home/news/usta-foundation-partners-with-chase-to-award-over-250-000-to-he",
+        "/en/home/news/usta-foundation-launches-community-impact-hub-initiative",
+        "/en/home/news/njtl-student-athlete-ata-national-championships",
+        "/en/home/news/usta-foundation-rally-to-rebuild-campaign",
+        "/en/home/news/fashion-icon-anna-wintour-honored-with-usta-foundation-paver-on",
+        "/en/home/news/kathleen-wu-usta-foundation-president",
+        "/en/home/news/laver-cup-launches-2025-san-francisco-community-legacy-project-w",
+        "/en/home/news/njtl-essay-contest-winners-2024-open",
+        "/en/home/news/mississippi-njtl-family-biz-builder",
+        "/en/home/news/usta-foundation-announces-sloane-stephens-as-recipient-of-servin",
+        "/en/home/news/usta-foundation-and-reginald-f-lewis-foundation-partner-to-empo",
+        "/en/home/news/usta-foundation-announces-chris-evert-chair",
+        "/en/home/news/tiafoe-houston-youth-clinic",
+        "/en/home/news/kimmelman-sport-education-complex-los-angeles",
+        "/en/home/news/frances-tiafoe-awards-njtl-alumnus-with-college-scholarship",
+        "/en/home/news/mackenzie-mcdonald-celebrates-the-launch-of-the-usta-foundation",
+        "/en/home/news/laver-cup-community-legacy-project-celebrates-court-unveiling-at",
+        "/en/home/news/usta-foundation-announces-new-advisory-board-members",
+        "/en/home/news/usta-foundation-and-yonex-team-up-to-transform-communities-and-e",
+        "/en/home/news/usta-foundation-exceeds-goal-rally-to-rebuild-campaign",
+        "/en/home/news/njtl-ace-jabeiro-brown",
+        "/en/home/news/mackenzie-mcdonald-i-m-making-it-my-mission-to-help-open-the-s",
+        "/en/home/news/robin-montgomery-wimbledon-debut",
+        "/en/home/news/evert-speaks-on-rally-to-rebuild",
+        "/en/home/news/how-the-usta-foundation-and-realize-the-dream-are-set-to-inspire",
+        "/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised",
+        "/en/home/news/usta-foundation-to-honor-andre-agassi-with-serving-up-dreams-awa",
+        "/en/home/news/usta-foundation-receives-transformative-2-7-million-gift-from-t",
+        "/en/home/news/usta-foundation-teams-up-with-la-roche-posay-for-events-at-selec",
+        "/en/home/news/what-s-the-why-former-atp-wta-pros-open-up-on-their-support-of",
+        "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at-0",
+        "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at",
+        "/en/home/news/2023-njtl-essay-contest-winners",
+        "/en/home/news/women-s-history-month-2026-how-two-community-impact-hub-leaders",
+        "/en/home/news/usta-foundation-reginald-f-lewis-foundation-announce-inaugural",
+        "/en/home/news/usta-foundation-to-celebrate-winners-of-2025-national-junior-ten",
+        "/en/home/news/espn-chris-mckendry-supports-usta-foundation",
+        "/en/home/news/daymond-john-and-matt-ebert-share-wisdom-with-usta-foundation-s",
+        "/en/home/news/chris-evert-honored-espys-usta-foundation-work",
+        "/en/home/news/chris-evert-honored-espn-sports-humanitarian-awards",
+        "/en/home/news/clervie-ngounoue-first-junior-grand-slam-australia",
+        "/en/home/news/2026-usta-foundation-opening-night-gala-provides-young-people-wi",
+        "/en/home/news/clervie-ngounoue-wins-first-junior-grand-slam-australian-open",
+        "/en/home/news/carol-ngounoue-runner-up-wimbledon-event",
+        "/en/home/news/black-history-month-2026-community-impact-hub-leader-john-borde",
+        "/en/home/news/delray-beach-youth-tennis-foundation-athletes-hit-the-court-with",
+        "/en/home/news/chris-evert-usta-foundation-much-more",
+        "/en/home/news/desert-smash-brings-together-hollywood-and-pro-tennis-to-benefit",
+        "/en/home/who-we-are/leadership-and-staff",
+        "/en/home/who-we-are",
+        "/en/home/get-involved",
+        "/en/home/what-we-do",
+        "/en/home/our-impact",
+        "/en/home/get-involved/special-funds",
+        "/en/home/who-we-are/financials",
+        "/en/home/what-we-do/college-scholarship-opportunities",
+        "/en/home/news",
+        "/en/home/get-involved/special-funds/chris-evert-50th-anniversary",
+        "/en/home/get-involved/young-professional-initiative"
+      ],
+      "internal": false,
+      "onSource": true
+    },
+    {
+      "url": "https://am.ticketmaster.com/lavercup2025/",
+      "status": 903,
+      "ext": "/lavercup2025/",
+      "pages": [
+        "/en/home/news/laver-cup-launches-2025-san-francisco-community-legacy-project-w"
+      ],
+      "internal": false,
+      "onSource": true
+    }
+  ],
+  "sourceDocs": [],
+  "breadcrumbs": [
+    {
+      "page": "/en/home/news/usta-foundation-offline-by-aerie-and-the-aerie-real-foundatio",
+      "eds": [
+        "Home",
+        "USTA Foundation, OFFLINE by Aerie® and the Aerie Real Foundation™ partner to empower next generation of women in tennis"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/leylah-fernandez-partners-with-usta-socal-and-bgcmla-for-youth-c",
+      "eds": [
+        "Home",
+        "Leylah Fernandez partners with USTA SoCal and BGCMLA for youth clinic"
+      ],
+      "src": [
+        "Home",
+        "Leylah Fernandez partners with USTA SoCal and BGCMLA for youth clinic"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/six-student-athletes-awarded-first-grants-frances-tiafoe-fund",
+      "eds": [
+        "Home",
+        "Six student-athletes awarded first-ever grants from the Frances Tiafoe Fund"
+      ],
+      "src": [
+        "Home",
+        "Six student-athletes awarded first-ever grants from the Frances Tiafoe Fund"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home",
+      "eds": [
+        "Home"
+      ],
+      "src": [
+        "Home"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/frances-tiafoe-holds-clinic-for-youth-from-houston-tennis-associ",
+      "eds": [
+        "Home",
+        "Frances Tiafoe holds clinic for youth from Houston Tennis Association"
+      ],
+      "src": [
+        "Home",
+        "Frances Tiafoe holds clinic for youth from Houston Tennis Association"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/jinjie-ling-dwight-f-davis-memorial-scholarship",
+      "eds": [
+        "Home",
+        "From the tennis courts of Houston to Duke University: Catching up with Jinjie Ling"
+      ],
+      "src": [
+        "Home",
+        "From the tennis courts of Houston to Duke University: Catching up with Jinjie Ling"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/kings-county-tennis-league-nominated-for-laureus-sport-for-good",
+      "eds": [
+        "Home",
+        "Kings County Tennis League nominated for Laureus Sport for Good Award"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/excellence-program-alumna-robin-montgomery-reaches-first-wta-sem",
+      "eds": [
+        "Home",
+        "Excellence Program alumna Robin Montgomery reaches first WTA semifinal"
+      ],
+      "src": [
+        "Home",
+        "Excellence Program alumna Robin Montgomery reaches first WTA semifinal"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/inaugural-usta-foundation-impact-conference",
+      "eds": [
+        "Home",
+        "Inaugural USTA Foundation Impact Conference invigorates and inspires NJTL leadership"
+      ],
+      "src": [
+        "Home",
+        "Inaugural USTA Foundation Impact Conference invigorates and inspires NJTL leadership"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/robin-montgomery-investing-in-game",
+      "eds": [
+        "Home",
+        "Rising stock: Robin Montgomery investing in her game"
+      ],
+      "src": [
+        "Home",
+        "Rising stock: Robin Montgomery investing in her game"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/james-blake-30th-anniversary-usta-foundation",
+      "eds": [
+        "Home",
+        "'Close to my heart': James Blake celebrates 30th anniversary of USTA Foundation"
+      ],
+      "src": [
+        "Home",
+        "'Close to my heart': James Blake celebrates 30th anniversary of USTA Foundation"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/njtl-student-athletes-white-house-visit",
+      "eds": [
+        "Home",
+        "NJTL student-athletes enjoy once-in-a-lifetime White House visit"
+      ],
+      "src": [
+        "Home",
+        "NJTL student-athletes enjoy once-in-a-lifetime White House visit"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/frances-tiafoe-presents-check-to-jtcc",
+      "eds": [
+        "Home",
+        "Frances Tiafoe presents $50,000 check to JTCC from Frances Tiafoe Fund"
+      ],
+      "src": [
+        "Home",
+        "Frances Tiafoe presents $50,000 check to JTCC from Frances Tiafoe Fund"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/novo-nordisk-donnelly-scholarship-winners-meet-billie-jean-king",
+      "eds": [
+        "Home",
+        "USTA Foundation Novo Nordisk Donnelly Scholarship winners meet Billie Jean King"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation Novo Nordisk Donnelly Scholarship winners meet Billie Jean King"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/newport-njtl-honor-chris-evert",
+      "eds": [
+        "Home",
+        "Home of Newport NJTL named in honor of Chris Evert"
+      ],
+      "src": [
+        "Home",
+        "Home of Newport NJTL named in honor of Chris Evert"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/kyrgios-sock-njtl-clinic-laver-cup-boston",
+      "eds": [
+        "Home",
+        "Nick Kyrgios and Jack Sock participate in NJTL clinic at Laver Cup in Boston"
+      ],
+      "src": [
+        "Home",
+        "Nick Kyrgios and Jack Sock participate in NJTL clinic at Laver Cup in Boston"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-celebrates-2026-njtl-essay-contest-winners-at-us",
+      "eds": [
+        "Home",
+        "USTA Foundation celebrates 2026 NJTL essay contest winners at US Open Fan Week experience presented by Deloitte"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation celebrates 2026 NJTL essay contest winners at US Open Fan Week experience presented by Deloitte"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/tennis-has-been-my-vehicle-to-serve-sloane-stephens-shares-he",
+      "eds": [
+        "Home",
+        "'Tennis has been my vehicle to serve': Sloane Stephens shares her love for community and philanthropy"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-launches-williams-family-excellence-program-at-2",
+      "eds": [
+        "Home",
+        "USTA Foundation launches Williams Family Excellence Program at 2025 US Open"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation launches Williams Family Excellence Program at 2025 US Open"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-chairperson-chris-evert-announces-cancer-free",
+      "eds": [
+        "Home",
+        "USTA Foundation chairperson Chris Evert announces she's cancer free"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation chairperson Chris Evert announces she's cancer free"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/njtl-essay-grant-recipients-2020",
+      "eds": [
+        "Home",
+        "Evert speaks on 'Rally to Rebuild' in NY, LA: 'We want to get these kids back playing'"
+      ],
+      "src": [
+        "Home",
+        "Evert speaks on 'Rally to Rebuild' in NY, LA: 'We want to get these kids back playing'"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/ngounoue-excellence-team-junior-french-open",
+      "eds": [
+        "Home",
+        "Montgomery, Ngounoue represent Excellence Team at junior French Open"
+      ],
+      "src": [
+        "Home",
+        "Montgomery, Ngounoue represent Excellence Team at junior French Open"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-pledges-800-000-service-hours-in-support-of-mart",
+      "eds": [
+        "Home",
+        "USTA Foundation pledges 800,000 service hours in support of Martin Luther King Jr.-inspired “Realize the Dream” movement"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation pledges 800,000 service hours in support of Martin Luther King Jr.-inspired “Realize the Dream” movement"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-chris-evert-honored-itf-commitment-award",
+      "eds": [
+        "Home",
+        "USTA Foundation chairperson Chris Evert honored with ITF Commitment Award at Billie Jean King Cup"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation chairperson Chris Evert honored with ITF Commitment Award at Billie Jean King Cup"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/sloane-stephens-honored-by-sports-business-journal",
+      "eds": [
+        "Home",
+        "Sloane Stephens-founded NJTL honored by Sports Business Journal"
+      ],
+      "src": [
+        "Home",
+        "Sloane Stephens-founded NJTL honored by Sports Business Journal"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-partners-with-chase-to-award-over-250-000-to-he",
+      "eds": [
+        "Home",
+        "USTA Foundation partners with Chase to award over $250,000 to help support young people on and off the court"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-launches-community-impact-hub-initiative",
+      "eds": [
+        "Home",
+        "USTA Foundation launches Community Impact Hub initiative"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation launches Community Impact Hub initiative"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/njtl-student-athlete-ata-national-championships",
+      "eds": [
+        "Home",
+        "NJTL student-athletes shine at ATA National Championships"
+      ],
+      "src": [
+        "Home",
+        "NJTL student-athletes shine at ATA National Championships"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-rally-to-rebuild-campaign",
+      "eds": [
+        "Home",
+        "USTA Foundation launches 'Rally to Rebuild' campaign"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation launches 'Rally to Rebuild' campaign"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/fashion-icon-anna-wintour-honored-with-usta-foundation-paver-on",
+      "eds": [
+        "Home",
+        "Fashion icon Anna Wintour honored with USTA Foundation paver on US Open's Avenue of Aces"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/kathleen-wu-usta-foundation-president",
+      "eds": [
+        "Home",
+        "Kathleen Wu announced as next USTA Foundation President"
+      ],
+      "src": [
+        "Home",
+        "Kathleen Wu announced as next USTA Foundation President"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/laver-cup-launches-2025-san-francisco-community-legacy-project-w",
+      "eds": [
+        "Home",
+        "Laver Cup launches 2025 San Francisco Community Legacy Project with USTA Foundation"
+      ],
+      "src": [
+        "Home",
+        "Laver Cup launches 2025 San Francisco Community Legacy Project with USTA Foundation"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/njtl-essay-contest-winners-2024-open",
+      "eds": [
+        "Home",
+        "NJTL Essay Contest winners celebrated during 2024 US Open"
+      ],
+      "src": [
+        "Home",
+        "NJTL Essay Contest winners celebrated during 2024 US Open"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/mississippi-njtl-family-biz-builder",
+      "eds": [
+        "Home",
+        "Mississippi NJTL Family Biz Builder featured in Tennis magazine"
+      ],
+      "src": [
+        "Home",
+        "Mississippi NJTL Family Biz Builder featured in Tennis magazine"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-announces-sloane-stephens-as-recipient-of-servin",
+      "eds": [
+        "Home",
+        "USTA Foundation announces Sloane Stephens as recipient of Serving Up Dreams Award"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation announces Sloane Stephens as recipient of Serving Up Dreams Award"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-and-reginald-f-lewis-foundation-partner-to-empo",
+      "eds": [
+        "Home",
+        "USTA Foundation and The Reginald F. Lewis Foundation partner to empower future leaders and honor outstanding mentors"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-announces-chris-evert-chair",
+      "eds": [
+        "Home",
+        "USTA Foundation announces Chris Evert as Chair of the Board of Directors"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation announces Chris Evert as Chair of the Board of Directors"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/tiafoe-houston-youth-clinic",
+      "eds": [
+        "Home",
+        "Frances Tiafoe joins Houston youth for clinic in support of Frances Tiafoe Fund"
+      ],
+      "src": [
+        "Home",
+        "Frances Tiafoe joins Houston youth for clinic in support of Frances Tiafoe Fund"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/kimmelman-sport-education-complex-los-angeles",
+      "eds": [
+        "Home",
+        "USTA Foundation and other partners commit to Kimmelman sport and education complex in Los Angeles"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation and other partners commit to Kimmelman sport and education complex in Los Angeles"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/frances-tiafoe-awards-njtl-alumnus-with-college-scholarship",
+      "eds": [
+        "Home",
+        "Frances Tiafoe awards NJTL alumnus with $30,000 college scholarship"
+      ],
+      "src": [
+        "Home",
+        "Frances Tiafoe awards NJTL alumnus with $30,000 college scholarship"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/mackenzie-mcdonald-celebrates-the-launch-of-the-usta-foundation",
+      "eds": [
+        "Home",
+        "Mackenzie McDonald celebrates the launch of the USTA Foundation's Mackie McDonald College Fund"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/laver-cup-community-legacy-project-celebrates-court-unveiling-at",
+      "eds": [
+        "Home",
+        "Laver Cup Community Legacy Project celebrates court unveiling at John McLaren Park"
+      ],
+      "src": [
+        "Home",
+        "Laver Cup Community Legacy Project celebrates court unveiling at John McLaren Park"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-announces-new-advisory-board-members",
+      "eds": [
+        "Home",
+        "USTA Foundation announces new Advisory Board members"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation announces new Advisory Board members"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-and-yonex-team-up-to-transform-communities-and-e",
+      "eds": [
+        "Home",
+        "USTA Foundation and Yonex team up to transform communities and empower the next generation of leaders"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation and Yonex team up to transform communities and empower the next generation of leaders"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-exceeds-goal-rally-to-rebuild-campaign",
+      "eds": [
+        "Home",
+        "USTA Foundation exceeds goal of 'Rally to Rebuild' campaign"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation exceeds goal of 'Rally to Rebuild' campaign"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/njtl-ace-jabeiro-brown",
+      "eds": [
+        "Home",
+        "From New York to UCF: Catching up with NJTL ace Jabeiro Brown"
+      ],
+      "src": [
+        "Home",
+        "From New York to UCF: Catching up with NJTL ace Jabeiro Brown"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/mackenzie-mcdonald-i-m-making-it-my-mission-to-help-open-the-s",
+      "eds": [
+        "Home",
+        "Mackenzie McDonald: 'I'm making it my mission to help open the same doors for the next generation.'"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/robin-montgomery-wimbledon-debut",
+      "eds": [
+        "Home",
+        "Excellence Team alumna Robin Montgomery makes Wimbledon debut, earns first Grand Slam main-draw win"
+      ],
+      "src": [
+        "Home",
+        "Excellence Team alumna Robin Montgomery makes Wimbledon debut, earns first Grand Slam main-draw win"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/evert-speaks-on-rally-to-rebuild",
+      "eds": [
+        "Home",
+        "Evert speaks on 'Rally to Rebuild' in NY, LA: 'We want to get these kids back playing'"
+      ],
+      "src": [
+        "Home",
+        "Evert speaks on 'Rally to Rebuild' in NY, LA: 'We want to get these kids back playing'"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/how-the-usta-foundation-and-realize-the-dream-are-set-to-inspire",
+      "eds": [
+        "Home",
+        "How the USTA Foundation and Realize the Dream are set to inspire a new generation in service and leadership"
+      ],
+      "src": [
+        "Home",
+        "How the USTA Foundation and Realize the Dream are set to inspire a new generation in service and leadership"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised",
+      "eds": [
+        "Home",
+        "Frances Tiafoe Fund surpasses $1 million raised"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-to-honor-andre-agassi-with-serving-up-dreams-awa",
+      "eds": [
+        "Home",
+        "USTA Foundation to honor Andre Agassi with Serving Up Dreams Award at the 2025 US Open"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation to honor Andre Agassi with Serving Up Dreams Award at the 2025 US Open"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-receives-transformative-2-7-million-gift-from-t",
+      "eds": [
+        "Home",
+        "USTA Foundation receives transformative $2.7 million gift from the Chess Foundation"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-teams-up-with-la-roche-posay-for-events-at-selec",
+      "eds": [
+        "Home",
+        "USTA Foundation teams up with La Roche-Posay for events at select NJTL chapters"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation teams up with La Roche-Posay for events at select NJTL chapters"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/what-s-the-why-former-atp-wta-pros-open-up-on-their-support-of",
+      "eds": [
+        "Home",
+        "What’s the why? Former ATP, WTA pros open up on their support of the USTA Foundation"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at-0",
+      "eds": [
+        "Home",
+        "USTA Foundation scholarship recipients meet Billie Jean King at the 2026 US Open"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation scholarship recipients meet Billie Jean King at the 2026 US Open"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at",
+      "eds": [
+        "Home",
+        "USTA Foundation scholarship recipients meet Billie Jean King at the 2025 US Open"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/2023-njtl-essay-contest-winners",
+      "eds": [
+        "Home",
+        "2023 NJTL Essay Contest Winners"
+      ],
+      "src": [
+        "Home",
+        "2023 NJTL Essay Contest Winners"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/women-s-history-month-2026-how-two-community-impact-hub-leaders",
+      "eds": [
+        "Home",
+        "Women’s History Month 2026: How two Community Impact Hub leaders are using the power of tennis to inspire youth in Atlanta"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-reginald-f-lewis-foundation-announce-inaugural",
+      "eds": [
+        "Home",
+        "USTA Foundation, Reginald F. Lewis Foundation announce inaugural recipients of Reginald F. Lewis Game Changer Award"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-to-celebrate-winners-of-2025-national-junior-ten",
+      "eds": [
+        "Home",
+        "USTA Foundation to celebrate winners of 2025 NJTL Essay Contest during US Open Fan Week"
+      ],
+      "src": [
+        "Home",
+        "USTA Foundation to celebrate winners of 2025 NJTL Essay Contest during US Open Fan Week"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/espn-chris-mckendry-supports-usta-foundation",
+      "eds": [
+        "Home",
+        "ESPN's Chris McKendry explains why she supports the USTA Foundation"
+      ],
+      "src": [
+        "Home",
+        "ESPN's Chris McKendry explains why she supports the USTA Foundation"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/daymond-john-and-matt-ebert-share-wisdom-with-usta-foundation-s",
+      "eds": [
+        "Home",
+        "Daymond John and Matt Ebert share wisdom with USTA Foundation students during 2025 US Open"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/chris-evert-honored-espys-usta-foundation-work",
+      "eds": [
+        "Home",
+        "Watch: Chris Evert honored at ESPYs for USTA Foundation work"
+      ],
+      "src": [
+        "Home",
+        "Watch: Chris Evert honored at ESPYs for USTA Foundation work"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/chris-evert-honored-espn-sports-humanitarian-awards",
+      "eds": [
+        "Home",
+        "Chris Evert to be honored by ESPN at 2022 Sports Humanitarian Awards"
+      ],
+      "src": [
+        "Home",
+        "Chris Evert to be honored by ESPN at 2022 Sports Humanitarian Awards"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/clervie-ngounoue-first-junior-grand-slam-australia",
+      "eds": [
+        "Home",
+        "Clervie Ngounoue reaches first junior Grand Slam final in Australia"
+      ],
+      "src": [
+        "Home",
+        "Clervie Ngounoue reaches first junior Grand Slam final in Australia"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/2026-usta-foundation-opening-night-gala-provides-young-people-wi",
+      "eds": [
+        "Home",
+        "2026 USTA Foundation Opening Night Gala provides young people with opportunities to unlock their excellence"
+      ],
+      "src": [
+        "Home",
+        "2026 USTA Foundation Opening Night Gala provides young people with opportunities to unlock their excellence"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/clervie-ngounoue-wins-first-junior-grand-slam-australian-open",
+      "eds": [
+        "Home",
+        "Clervie Ngounoue wins first junior Grand Slam at Australian Open"
+      ],
+      "src": [
+        "Home",
+        "Clervie Ngounoue wins first junior Grand Slam at Australian Open"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/carol-ngounoue-runner-up-wimbledon-event",
+      "eds": [
+        "Home",
+        "Carel Ngounoue finishes runner-up at inaugural 14-and-under Wimbledon event"
+      ],
+      "src": [
+        "Home",
+        "Carel Ngounoue finishes runner-up at inaugural 14-and-under Wimbledon event"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/black-history-month-2026-community-impact-hub-leader-john-borde",
+      "eds": [
+        "Home",
+        "Black History Month 2026: Community Impact Hub leader John Borden reflects on tennis as an ‘unexpected anchor’"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/delray-beach-youth-tennis-foundation-athletes-hit-the-court-with",
+      "eds": [
+        "Home",
+        "Delray Beach Youth Tennis Foundation athletes hit the court with Frances Tiafoe"
+      ],
+      "src": [
+        "Home",
+        "Delray Beach Youth Tennis Foundation athletes hit the court with Frances Tiafoe"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/chris-evert-usta-foundation-much-more",
+      "eds": [
+        "Home",
+        "Chris Evert: 'The USTA Foundation is about so much more than hitting a ball'"
+      ],
+      "src": [
+        "Home",
+        "Chris Evert: 'The USTA Foundation is about so much more than hitting a ball'"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news/desert-smash-brings-together-hollywood-and-pro-tennis-to-benefit",
+      "eds": [
+        "Home",
+        "Desert Smash brings together Hollywood and pro tennis to benefit USTA Foundation"
+      ],
+      "src": [
+        "Home",
+        "Desert Smash brings together Hollywood and pro tennis to benefit USTA Foundation"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/who-we-are/leadership-and-staff",
+      "eds": [
+        "Home",
+        "Who We Are",
+        "Leadership & Staff"
+      ],
+      "src": [
+        "Home",
+        "Who We Are",
+        "Leadership & Staff"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/who-we-are",
+      "eds": [
+        "Home",
+        "Who We Are"
+      ],
+      "src": [
+        "Home",
+        "Who We Are"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/get-involved",
+      "eds": [
+        "Home",
+        "Get Involved"
+      ],
+      "src": [
+        "Home",
+        "Get Involved"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/what-we-do",
+      "eds": [
+        "Home",
+        "What We Do"
+      ],
+      "src": [
+        "Home",
+        "What We Do"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/our-impact",
+      "eds": [
+        "Home",
+        "Our Impact"
+      ],
+      "src": [
+        "Home",
+        "Our Impact"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/get-involved/special-funds",
+      "eds": [
+        "Home",
+        "Get Involved",
+        "Special Funds"
+      ],
+      "src": [
+        "Home",
+        "Get Involved",
+        "Special Funds"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/who-we-are/financials",
+      "eds": [
+        "Home",
+        "Who We Are",
+        "Annual Reports and Financial Information"
+      ],
+      "src": [
+        "Home",
+        "Who We Are",
+        "Annual Reports and Financial Information"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/what-we-do/college-scholarship-opportunities",
+      "eds": [
+        "Home",
+        "What We Do",
+        "College Scholarship Opportunities"
+      ],
+      "src": [
+        "Home",
+        "What We Do",
+        "College Scholarship Opportunities"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/news",
+      "eds": [
+        "Home"
+      ],
+      "src": [
+        "Home"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/get-involved/special-funds/chris-evert-50th-anniversary",
+      "eds": [
+        "Home",
+        "Get Involved",
+        "Special Funds",
+        "Chris Evert 50th anniversary"
+      ],
+      "src": [
+        "Home",
+        "Get Involved",
+        "Special Funds",
+        "Chris Evert 50th anniversary"
+      ],
+      "srcHadBc": true,
+      "match": true
+    },
+    {
+      "page": "/en/home/get-involved/young-professional-initiative",
+      "eds": [
+        "Home",
+        "Get Involved",
+        "Young Professional Initiative"
+      ],
+      "src": [
+        "Home",
+        "Get Involved",
+        "Young Professional Initiative"
+      ],
+      "srcHadBc": true,
+      "match": true
+    }
+  ],
+  "breadcrumbMismatches": [
+    {
+      "page": "/en/home/news/usta-foundation-offline-by-aerie-and-the-aerie-real-foundatio",
+      "eds": [
+        "Home",
+        "USTA Foundation, OFFLINE by Aerie® and the Aerie Real Foundation™ partner to empower next generation of women in tennis"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/kings-county-tennis-league-nominated-for-laureus-sport-for-good",
+      "eds": [
+        "Home",
+        "Kings County Tennis League nominated for Laureus Sport for Good Award"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/tennis-has-been-my-vehicle-to-serve-sloane-stephens-shares-he",
+      "eds": [
+        "Home",
+        "'Tennis has been my vehicle to serve': Sloane Stephens shares her love for community and philanthropy"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-partners-with-chase-to-award-over-250-000-to-he",
+      "eds": [
+        "Home",
+        "USTA Foundation partners with Chase to award over $250,000 to help support young people on and off the court"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/fashion-icon-anna-wintour-honored-with-usta-foundation-paver-on",
+      "eds": [
+        "Home",
+        "Fashion icon Anna Wintour honored with USTA Foundation paver on US Open's Avenue of Aces"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-and-reginald-f-lewis-foundation-partner-to-empo",
+      "eds": [
+        "Home",
+        "USTA Foundation and The Reginald F. Lewis Foundation partner to empower future leaders and honor outstanding mentors"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/mackenzie-mcdonald-celebrates-the-launch-of-the-usta-foundation",
+      "eds": [
+        "Home",
+        "Mackenzie McDonald celebrates the launch of the USTA Foundation's Mackie McDonald College Fund"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/mackenzie-mcdonald-i-m-making-it-my-mission-to-help-open-the-s",
+      "eds": [
+        "Home",
+        "Mackenzie McDonald: 'I'm making it my mission to help open the same doors for the next generation.'"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised",
+      "eds": [
+        "Home",
+        "Frances Tiafoe Fund surpasses $1 million raised"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-receives-transformative-2-7-million-gift-from-t",
+      "eds": [
+        "Home",
+        "USTA Foundation receives transformative $2.7 million gift from the Chess Foundation"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/what-s-the-why-former-atp-wta-pros-open-up-on-their-support-of",
+      "eds": [
+        "Home",
+        "What’s the why? Former ATP, WTA pros open up on their support of the USTA Foundation"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-scholarship-recipients-meet-billie-jean-king-at",
+      "eds": [
+        "Home",
+        "USTA Foundation scholarship recipients meet Billie Jean King at the 2025 US Open"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/women-s-history-month-2026-how-two-community-impact-hub-leaders",
+      "eds": [
+        "Home",
+        "Women’s History Month 2026: How two Community Impact Hub leaders are using the power of tennis to inspire youth in Atlanta"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/usta-foundation-reginald-f-lewis-foundation-announce-inaugural",
+      "eds": [
+        "Home",
+        "USTA Foundation, Reginald F. Lewis Foundation announce inaugural recipients of Reginald F. Lewis Game Changer Award"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/daymond-john-and-matt-ebert-share-wisdom-with-usta-foundation-s",
+      "eds": [
+        "Home",
+        "Daymond John and Matt Ebert share wisdom with USTA Foundation students during 2025 US Open"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    },
+    {
+      "page": "/en/home/news/black-history-month-2026-community-impact-hub-leader-john-borde",
+      "eds": [
+        "Home",
+        "Black History Month 2026: Community Impact Hub leader John Borden reflects on tennis as an ‘unexpected anchor’"
+      ],
+      "src": [
+        "Home",
+        "404"
+      ],
+      "srcHadBc": true,
+      "match": false
+    }
+  ]
+}
