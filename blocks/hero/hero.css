@@ -142,9 +142,11 @@ main > .section.hero-container:has(.hero.banner) {
   margin-top: 16px;
 }
 
-/* CTA button (decorated in hero.js) — 40px tall, CONTENT-width with generous
-   horizontal padding (source "LEARN MORE" = 148px @390/768 → 163px @1280, i.e.
-   label + padding, NOT a fixed 238px pill). */
+/* CTA button (decorated in hero.js) — 40px tall, CONTENT-width. The source
+   "LEARN MORE" box GROWS with the viewport (148px @390/768 → 163px @1280 →
+   190px @1440+), NOT a fixed pill. Our label is a constant ~128px, so the
+   horizontal padding scales to hit those boxes: 10px (mobile→992), 17px (@1200),
+   31px (@1440). Vertical padding stays 14px (40px tall via box-sizing). */
 .hero.banner a.button:any-link {
   display: inline-flex;
   align-items: center;
@@ -154,7 +156,7 @@ main > .section.hero-container:has(.hero.banner) {
   margin: 0;
   border: 1px solid transparent;
   border-radius: 3px;
-  padding: 14px;
+  padding: 14px 10px;
   background-color: var(--brand-blue);
   color: var(--background-color);
   font-family: var(--heading-semibold-font-family);
@@ -242,6 +244,18 @@ main > .section.hero-container:has(.hero.banner) {
     width: min(calc(50vw - 90px), 870px);
     max-width: none;
     margin-left: min(calc(8.333vw + 45px), 205px);
+  }
+}
+
+/* Homepage LEARN MORE box grows with the viewport like the source (148 @≤992 →
+   163 @1200 → 190 @1440+). Our ~128px label stays constant, so scale the
+   horizontal padding. From 1200 up it grows FLUIDLY (17px @1280 → 31px @1440,
+   ~0.0875 × the px past 1280, capped at 31px) — a clamp() rather than a new
+   breakpoint, so only the approved 768/992/1200 media queries are used. Scoped
+   to :not(body.general) so only the homepage banner is affected. */
+@media (width >= 1200px) {
+  body:not(.general) .hero.banner a.button:any-link {
+    padding: 14px clamp(17px, calc(17px + (100vw - 1280px) * 0.0875), 31px);
   }
 }
 
