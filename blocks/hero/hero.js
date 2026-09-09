@@ -58,12 +58,13 @@ function decorateError(block) {
  * @param {Element} block the hero block element
  */
 function decorateBanner(block) {
-  // Optional AUTHORED background image (row 1 = a lone <img>/<picture>). The
-  // homepage banner bakes its photo into CSS, but reusable banner pages (e.g.
-  // our-impact) author their own image — pull it out and set it as the block's
-  // inline background WITH the same 40% black overlay gradient (so cover still
-  // applies), overriding the CSS default. Request a large rendition (the smallest
-  // EDS rendition looks washed-out stretched full-bleed — same fix as text-up).
+  // AUTHORED background image (row 1 = a lone <img>/<picture>). EVERY banner photo
+  // is author-managed via content — nothing is baked into CSS. Pull the image out
+  // and set it as the block's inline background UNDER a 40% black overlay gradient
+  // (so background-size:cover still applies), which overrides the CSS overlay-only
+  // default. Request a large rendition (the smallest EDS rendition looks washed-out
+  // stretched full-bleed — same fix as text-up). If no image is authored, the CSS
+  // fallback keeps the overlay tint on a neutral brand background (legible text).
   const rows = [...block.children];
   const imgRow = rows.find((r) => r.querySelector('img') && !r.querySelector('h1, h2, h3, p'));
   const bgImg = imgRow ? imgRow.querySelector('img') : null;

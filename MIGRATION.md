@@ -2977,8 +2977,9 @@ leaves them plain underlined links, not buttons). Content is a FIXED list hard-w
 `Theme=general`. Imported 73.1% (source footer social/copyright/donor-privacy chrome intentionally excluded — page
 chrome, not content). 20 PDF links (13+4+3), 3 lists, 0 images (0 hotlinks). Backed up to
 `tools/importer/backups/financials/` (SHA1 `08bc66ed…` + manifest). Gates: lint 0 · breakpoint ✓.
-FOLLOW-UP: PDF hrefs point at the source `/content/dam/…` (absolutized) — no doc-localizer yet (images only); localize
-to `content/assets/docs/…` when a doc-finalize step is added. Render/gates pending DA upload.
+RESOLVED (doc-localizer built — see 2026-09-08 entry below): PDF hrefs now localized to
+`content/assets/docs/…` + absolute `…aem.live/assets/docs/…` via `tools/assets/localize-docs.mjs`. Render/gates
+pending DA upload.
 
 ### 2026-09-08 — Migrate news.html listing (blank — matches empty source)
 The source `news.html` is genuinely BLANK (empty content grid, no H1, no article feed — the 72 articles are individual
@@ -3053,8 +3054,94 @@ content still wins (768 → 810). Importer now emits `Hero (text-up, tall)`. Ver
 the served page: heights → 390:601, 768:810, 992:790, 1280:790 (exact source parity). The plain `text-up` heroes
 (who-we-are/get-involved/what-we-do) are untouched. Gates: lint 0 errors · breakpoint ✓. Renders on DA upload.
 
-**MIGRATION STATUS:** all general-template + specialized pages now imported. Only **404.html** (T7, hero-error)
-remains from the full scope.
+### 2026-09-08 — Doc-localizer built: financials 20 PDFs → content/assets/docs + absolute aem.live href
+The finalize-assets **doc** pipeline (long-standing follow-up) now exists as `tools/assets/localize-docs.mjs`, a
+sibling to `localize-assets.mjs`. Model is the OPPOSITE of images: docs are real downloadable assets served from the
+site, so they download to `content/assets/docs/{preserved DAM sub-path}` (NO hash names — readable paths kept, so
+`annual-reports/2023.pdf` vs `irs-990/2023.pdf` vs `audited-financial-statements/2023.pdf` don't collide) and every
+`<a href>` is rewritten to the ABSOLUTE `https://main--foundation-usta--aemdemos.aem.live/assets/docs/…` (base derived
+from the git remote). Only doc-extension `<a href>` links are touched; images/pages/mailto untouched. Idempotent.
+Docs GO to DA with the `.plain.html` (images' media-da does NOT).
+- Ran on financials: **20 PDFs downloaded, 0 leftover hotlinks**; all serve 200 `application/pdf` from the dev server;
+  hrefs rewritten to `…aem.live/assets/docs/…`. `content/` is git-ignored (staging), so the PDFs aren't committed —
+  they upload to DA. NOTE: the 2024 annual report PDF is **~61 MB** (total assets/docs ≈125 MB).
+- Documented in `docs/asset-localization-playbook.md` (new "Document Localization" section) + financials manifest
+  (finalize step 2). Gates: lint 0 errors · breakpoint ✓ (`.mjs` tools aren't in `eslint .` scope, same as the
+  image sibling). Standing follow-ups elsewhere (get-involved, college-scholarships, chris-evert hero LEARN MORE PDFs)
+  can now be finalized the same way: `node tools/assets/localize-docs.mjs <page>`.
+
+### 2026-09-08 — Financials PDFs pushed to DA + published (20 docs live, links normalized)
+Uploaded all 20 financials PDFs to the DA source (`assets/docs/…` paths preserved) + previewed/published them, then
+re-uploaded the page. Live result: **20 `assets/docs` links, 0 source-domain links**; every PDF resolves 200
+`application/pdf`. EDS relativizes the absolute `…aem.live/assets/docs/…` hrefs to same-origin `/assets/docs/…` on
+the rendered page (expected). Two gotchas hit + fixed (now in the playbook):
+- **DA needs `<body><main>` wrapping.** First page upload POSTed the bare `<div>…` fragment → DA produced an EMPTY
+  page (`.md` 0 bytes, links gone). Fix: wrap the upload copy in `<body><main>…</main></body>` (as aem-import-helper's
+  `wrapHtmlContent` does). Keep the local `content/…plain.html` a bare fragment; wrap only the uploaded copy.
+- **20 MB PDF cap.** The 2024 annual report (61 MB) hit `AEM_BACKEND_PDF_TOO_BIG` (409/404). No gs/qpdf installed →
+  compressed with WASM ghostscript (`@jspawn/ghostscript-wasm`, loaded via `instantiateWasm` since Node 24's global
+  `fetch` breaks its file-path loader) at `-dPDFSETTINGS=/printer` (300 dpi): **61 MB → 3.0 MB**, 32 pages + image
+  quality intact (spot-checked a rendered page). Uploaded + published the compressed version.
+
+### 2026-09-08 — Full-site validation (84 pages): links + breadcrumbs → see VALIDATION.md
+Built `tools/quality/audit-site.mjs` (JS-render crawl → extract every `<a href>` → HTTP-check with HEAD→ranged-GET,
+dedup, concurrency; capture + compare EDS vs source breadcrumbs) and `tools/quality/audit-breadcrumbs-news.mjs`
+(news breadcrumbs re-checked against the CORRECT source URL via source-sitemap prefix match). Results:
+- **367 unique links checked, 0 migration-introduced breaks.** The 91 "broken" are all (a) bot-blocked external
+  hosts (68 facebook `sharer.php`/social, census/atptour/ticketmaster 403s — fine in a browser), or (b) links dead
+  on the SOURCE too (`on-src:true`), incl. 9 `…/stay-current/national/…` related-article links that 404 on source
+  itself — a lift-and-shift keeps them verbatim.
+- **2 real internal PDFs fixed:** `impact-societies-one-pager.pdf` (get-involved) + `2026-scholarship-program-faq.pdf`
+  (college-scholarship-opportunities) were authored as root-relative `/content/dam/…​.pdf` (404 on EDS) and missed by
+  the first localize pass (absolute-only). Enhanced `localize-docs.mjs` to resolve root-relative `/content/dam/*.pdf`
+  against `--src-host` (default www.ustafoundation.com); both localized to `/assets/docs/pdfs/…`, serve 200 locally.
+  **DA upload/publish BLOCKED** — admin.da.live now 401s (credential opt-in turned off); recipe in VALIDATION.md §3.
+- **Breadcrumbs: all 84 pages match source EXACTLY** (labels, depth, crumb hrefs; news = `Home > {title}` with the
+  `news` segment hidden, matching source). Zero corrections needed. Re-verified the recent pages (YPI, chris-evert,
+  college-scholarships, financials) crumb-by-crumb incl. hrefs.
+
+### 2026-09-09 — Root `index` page: replica of en/home served at `/`
+Created `content/index.plain.html` as a replica of `en/home.plain.html` (byte-copy of the block/section structure),
+uploaded (wrapped in `<body><main>`) to the DA root `index.html`, previewed + published. Served at **`/`** (the EDS
+convention: an `index` doc renders at its directory root; a literal `/index` correctly 404s, matching the source home
+living at `/`). Verified at `/`: same H1, hero banner, 3 stats cols, 2 feature cols, 4 support cards, all **6 images
+loaded (0 about:error)**. Only diff vs `/en/home`: no breadcrumb (root has no path segments — correct) and `<img>`
+width/height attrs absent (cosmetic).
+- **Media gotcha (non-obvious):** EDS resolves images via DA-localized copies in each doc's SHADOW folder
+  (`en/.home/…`), so home's `/media-da/en/home/…` staging paths (local-only, never uploaded) rendered `about:error`
+  when copied verbatim to the `index` doc. Fix: rewrote the 6 image refs to the home doc's PUBLIC published renditions
+  `https://main--foundation-usta--aemdemos.aem.live/en/home/media_<hash>.<ext>` (mapped 1:1 by alt-text order). On
+  preview, EDS recognized these as its own managed assets and re-localized them into the `index` doc as proper
+  `./media_<hash>` renditions — 24 refs, 0 errors. When cloning a page across DA paths, DO NOT reuse another doc's
+  `/media-da/` staging paths; point at published `…aem.live/<srcdoc>/media_<hash>` renditions and let EDS re-localize.
+
+### 2026-09-09 — All images author-managed: removed code-baked hero + collage images
+Audit for hardcoded images found TWO baked into code (rest of the site was already content-driven): the homepage
+hero banner photo (`blocks/hero/hero.css` `url('./ustaf-banner-2.jpg')`) and the "For decades…" collage's 3rd
+portrait (`blocks/columns/columns.css` `url('./college-bootcamp-hp.jpg')` on `.columns-feature-collage-portrait`).
+Per the lift-and-shift rule, ALL images must be author-managed via content. Fixes:
+- **Hero:** dropped the CSS `url()`; the block now shows ONLY the 40% overlay by default (on `--brand-blue` as a
+  legible no-image fallback), and `hero.js` sets the photo as an inline background from the AUTHORED row-1 `<img>`
+  (this authored path already existed — the CSS default was the only baked bit). Added the banner image to the
+  hero block content on `/` (index) and `en/home`.
+- **Collage:** `columns.js` now builds the tall portrait from the **3rd authored `<img>`** in the cell (first two →
+  thumbnail stack, last → portrait) instead of a CSS background; `columns.css` portrait styles the contained `<img>`
+  via object-fit and the thumbnail-sizing rules were re-scoped to `.columns-feature-collage-stack img` so they don't
+  hit the portrait. Added the 3rd image to content. **Authoring contract:** collage cell = 3 images.
+- Deleted the 2 now-unreferenced raster files from `blocks/`. Only `icons/*.svg` + `blocks/hero/icons/*.svg`
+  (UI glyphs) remain in code — no content raster images anywhere.
+- **DA content-image mechanism (learned):** to add an author-managed image, upload the bytes to the doc's DA SHADOW
+  folder (`.{page}/media-<sha1>-<h8>.<ext>`), reference it in the page HTML via
+  `https://content.da.live/{org}/{repo}/{shadow}/…`, then publish — EDS localizes it into a `./media_<hash>` rendition
+  (verified: hero bg + portrait render from content, 0 CSS images). Staged images also live in `content/media-da/`.
+- Verified locally (dev server = local CSS/JS + DA content): hero photo → background under overlay (img row consumed);
+  collage portrait = real authored `<img>` (loaded, correct alt, object-fit box 272×401), stack = 2 thumbnails, NO CSS
+  background. Screenshots matched the prior look exactly. Gates: lint 0 errors · breakpoint ✓.
+- **Deploy:** CSS/JS changes go live on GitHub push (content already updated on DA for `/` + `en/home`).
+
+**MIGRATION STATUS:** all general-template + specialized pages imported; financials PDFs **live on DA**. Full-site
+link + breadcrumb validation PASSED (see `VALIDATION.md`). Outstanding: **2 PDFs** localized locally, pending DA
+upload (blocked on the credential opt-in). Only **404.html** (T7, hero-error) remains unmigrated from the full scope.
 
 ---
 
