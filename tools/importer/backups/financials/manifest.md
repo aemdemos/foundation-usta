@@ -11,6 +11,9 @@ Dedicated per-page importer for `who-we-are/financials.html` — the simplest pa
 
 ## Post-import finalize (re-run after any re-import)
 1. `node tools/assets/localize-assets.mjs en/home/who-we-are/financials.plain.html` (0 images — no-op; 0 hotlinks)
+2. `node tools/assets/localize-docs.mjs en/home/who-we-are/financials` — downloads the **20 PDFs** to
+   `content/assets/docs/…` (readable DAM sub-paths preserved) and rewrites every `<a href>` to the absolute
+   `https://main--foundation-usta--aemdemos.aem.live/assets/docs/…`. Upload these to DA with the `.plain.html`.
 
 ## Content (source → target) — all DEFAULT CONTENT
 | Source | Target |
@@ -26,8 +29,9 @@ Dedicated per-page importer for `who-we-are/financials.html` — the simplest pa
 - The content is a FIXED list, hard-wired in the script (deterministic — no DOM scraping of the messy source).
 - PDF links authored as `<ul><li><a>` so EDS `decorateButtons()` leaves them as plain underlined text links
   (a standalone `<p><a>` would become a button).
-- Doc hrefs point at the SOURCE `/content/dam/…` paths (absolutized) — no doc-localizer exists yet (images only).
-  Localize to `content/assets/docs/…` when a doc-finalize step is added.
+- Doc hrefs are localized by `tools/assets/localize-docs.mjs` (finalize step 2): 20 PDFs → `content/assets/docs/…`,
+  hrefs rewritten to absolute `…aem.live/assets/docs/…`. Docs GO to DA (unlike images). NOTE: the 2024 annual report
+  PDF is ~61 MB.
 - Source footer chrome (social/copyright/donor-privacy) excluded — page chrome, not content.
 
 ## Restore
