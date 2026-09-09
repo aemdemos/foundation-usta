@@ -3139,6 +3139,31 @@ Per the lift-and-shift rule, ALL images must be author-managed via content. Fixe
   background. Screenshots matched the prior look exactly. Gates: lint 0 errors · breakpoint ✓.
 - **Deploy:** CSS/JS changes go live on GitHub push (content already updated on DA for `/` + `en/home`).
 
+### 2026-09-09 — Consolidate icons to one root folder + best-practices review
+- **Single icons/ folder:** moved `blocks/hero/icons/tennis-ball-bouncing.svg` and the 6
+  `blocks/custom-widget-reactions/icons/*.svg` into the repo-root `icons/` (now 8 files, no collisions). Both blocks
+  now resolve icons via `window.hlx.codeBasePath + '/icons/'` (the aem.js pattern) instead of block-relative
+  `import.meta.url`. One icon folder for the whole repo.
+- **CSS review:** breakpoint-check ✓ — ALL media queries are `min-width` only (768/992/1200, the approved set),
+  ZERO `max-width` media queries, no min/max mixing. `!important` only in `embed-instagram.css` (overriding Instagram's
+  injected inline iframe styles — legitimate). No unscoped block selectors (only `header`/`footer` element roots,
+  boilerplate convention). `nth-child` used only for grid-count `:has()` logic (2-up/3-up cards), not per-item.
+- **Accessibility review:** axe-core (WCAG A+AA) passes on home/who-we-are/get-involved/college-scholarships/our-impact.
+  Alt-text: 0 content images missing an `alt` attribute; JS-generated imgs correct (hero error-ball `alt=""`+aria-hidden
+  decorative; reaction icons `alt=label`). Two `outline:none` in custom-form-donate are compensated by `:focus-within`
+  outlines on the wrapper (visible focus preserved).
+  - **Fixed:** who-we-are "SIGNATURE EVENTS" card tile (`roddick-couric-gala.jpeg`) had `alt=""` — a CONTENT image the
+    SOURCE also left empty. Gave it descriptive alt "Andy Roddick and Katie Couric at a USTA Foundation gala"
+    (a11y improvement over source). Re-uploaded + published; verified live.
+  - **KNOWN (source-fidelity vs best-practice, left as source):** (a) `our-impact` has 2 `<h1>` ("We make a
+    transformative…" + the "233,000+ young people served" stat headline) — matches source exactly; axe passes
+    (multiple-h1 is best-practice, not A/AA). (b) Heading skips h2→h4 on the cards sections (home, get-involved,
+    what-we-do, college-scholarships, who-we-are) and h1→h3 on leadership — the card titles are `<h4>` exactly as the
+    source authored them, and their type scale is tuned to h4; axe passes. Flagged for a fidelity-vs-hierarchy decision
+    rather than silently re-leveling.
+- Gates: lint 0 errors · breakpoint ✓ · check:svg ✓ · a11y ✓. **Deploy:** icon move + JS = GitHub push (branch merged
+  via PR #5 earlier; icon commit `19b0db4` on local main pending push); alt fix = DA (done, live).
+
 **MIGRATION STATUS:** all general-template + specialized pages imported; financials PDFs **live on DA**. Full-site
 link + breadcrumb validation PASSED (see `VALIDATION.md`). Outstanding: **2 PDFs** localized locally, pending DA
 upload (blocked on the credential opt-in). Only **404.html** (T7, hero-error) remains unmigrated from the full scope.
