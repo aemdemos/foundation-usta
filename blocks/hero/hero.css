@@ -72,12 +72,14 @@ main > .section.hero-container:has(.hero.banner) {
   position: relative;
   box-sizing: border-box;
 
-  /* source composites a 40% black overlay over the banner photo (a full-size
-     rgba(0,0,0,0.4) layer) — replicate it as a gradient so background-size:cover
-     still applies to the photo. */
-  background-image:
-    linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)),
-    url('./ustaf-banner-2.jpg');
+  /* The banner PHOTO is AUTHORED (row 1 of the block) and applied by hero.js as
+     an inline background layer UNDER a 40% black overlay — the source composites
+     that same rgba(0,0,0,0.4) layer over the photo. No image is baked into CSS;
+     every image is author-managed via content. As a graceful fallback (no
+     authored image, or before JS runs) we keep the overlay tint on a neutral
+     brand background so text stays legible. */
+  background-image: linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%));
+  background-color: var(--brand-blue, #12284c);
   background-repeat: no-repeat;
   background-position: 50% 50%;
   background-size: cover;

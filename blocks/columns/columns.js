@@ -70,9 +70,11 @@ function decorateFeature(block) {
     }
 
     // Image-collage variant: cell holds two or more stacked images.
-    // Source renders these as two small stacked thumbnails PLUS a tall
-    // portrait beside them (a decorative background image on the source). We
-    // group the thumbnails into a narrow stack and add the portrait next to it.
+    // Source renders these as two small stacked thumbnails PLUS a tall portrait
+    // beside them. ALL images are AUTHORED (no image baked into CSS): the first
+    // two pictures become the thumbnail stack; the LAST picture becomes the tall
+    // portrait beside it. (Authoring contract: 3 images in the cell → stack of
+    // the first two + portrait from the third.)
     if (pictures.length > 1) {
       cell.classList.add('columns-feature-collage');
 
@@ -80,24 +82,27 @@ function decorateFeature(block) {
       // default content ABOVE the block (not inside a cell), so the platform
       // centers it full-width like the source — no lifting needed here.
 
-      // Wrap the two thumbnails in their own column. EDS may wrap the pictures
-      // in a single shared <p> (when the cell has no other content) or in
-      // separate <p>s — grab them by descendant selector so nesting doesn't
-      // matter, move each into the stack, then drop the now-empty <p> wrappers.
-      const stack = document.createElement('div');
-      stack.className = 'columns-feature-collage-stack';
+      // Grab the pictures by descendant selector (EDS may wrap them in one shared
+      // <p> or in separate <p>s), then drop the now-empty <p> wrappers.
       const cellPictures = [...cell.querySelectorAll('picture')];
-      cellPictures.forEach((pic) => stack.append(pic));
       cell.querySelectorAll('p').forEach((p) => { if (!p.textContent.trim() && !p.querySelector('picture, img')) p.remove(); });
 
-      // Tall portrait beside the stack (matches the source collage).
-      const portrait = document.createElement('div');
-      portrait.className = 'columns-feature-collage-portrait';
-      portrait.setAttribute('role', 'img');
-      portrait.setAttribute('aria-label', 'USTA Foundation athlete celebrating');
+      // Last authored image = the tall portrait; the rest = the thumbnail stack.
+      const portraitPic = cellPictures.length > 2 ? cellPictures.pop() : null;
 
+      const stack = document.createElement('div');
+      stack.className = 'columns-feature-collage-stack';
+      cellPictures.forEach((pic) => stack.append(pic));
       cell.append(stack);
-      cell.append(portrait);
+
+      // Tall portrait beside the stack — from the authored image (matches the
+      // source collage). Its alt text comes from the authored <img>.
+      if (portraitPic) {
+        const portrait = document.createElement('div');
+        portrait.className = 'columns-feature-collage-portrait';
+        portrait.append(portraitPic);
+        cell.append(portrait);
+      }
     }
 
     // Single dedicated image column

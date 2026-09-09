@@ -80,3 +80,86 @@ Steps the tool performs, matching the playbook:
 - Large source SVGs/PNGs stay in `media-da` as-is (local-only staging, not
   committed `icons/`), so `check:svg` does not apply — but note anything heavy in
   `MIGRATION.md` so it can be optimized before any production use.
+
+---
+
+# Document Localization (PDFs / Office docs → content/assets/docs + absolute aem.live href)
+
+DOCUMENTS are handled by the sibling tool `tools/assets/localize-docs.mjs`, and
+their model is the **opposite** of images. Images are local-only staging
+referenced by a *relative* `/media-da/…` path and are **never** uploaded to DA.
+Documents (PDF, doc(x), xls(x), ppt(x), csv, txt, rtf) are real downloadable
+assets that must be **served from the site**, so they:
+
+1. Download to `content/assets/docs/{preserved-path}` — the source DAM path with
+   the leading `/content/dam/{tenant}/` stripped, so readable folders are kept
+   and colliding basenames stay distinct (`annual-reports/2023.pdf` vs
+   `irs-990/2023.pdf` vs `audited-financial-statements/2023.pdf`). No hash names —
+   unlike images, docs keep their human-readable path.
+2. Have every `<a href>` pointing at that doc rewritten to the **ABSOLUTE**
+   production URL `https://main--{repo}--{owner}.aem.live/assets/docs/…` (the base
+   is derived from the git remote; override with `--base`). Only `<a href>` links
+   to document extensions are touched — page links, anchors, and `mailto:` are
+   left alone.
+3. Are **uploaded to DA** alongside the `.plain.html` (outward-facing → on
+   request). `content/assets/docs/` is git-ignored like the rest of `content/`.
+
+```bash
+# localize the doc links on a page (base auto-derived from git remote):
+node tools/assets/localize-docs.mjs en/home/who-we-are/financials
+
+# verify each local ref serves 200 from the dev server:
+node tools/assets/localize-docs.mjs en/home/who-we-are/financials --verify
+```
+
+Idempotent: an href already pointing at `…aem.live/assets/docs/…` (or an
+already-downloaded file) is skipped; re-running never re-downloads or corrupts.
+
+## Uploading docs + the page to DA (outward-facing → on request)
+
+Two-step publish, both via the DA source API + the aem.hlx.page admin API
+(credentials auto-injected — never pass a token):
+
+```bash
+ORG=aemdemos/foundation-usta
+
+# 1. Upload each doc to the DA SOURCE, preserving its assets/docs/… path:
+find content/assets/docs -name '*.pdf' | while read f; do
+  curl -s -X POST -F "data=@$f;type=application/pdf" \
+    "https://admin.da.live/source/$ORG/${f#content/}" -o /dev/null -w "%{http_code} ${f#content/}\n"
+done   # expect 200/201
+
+# 2. Preview + publish each doc so it resolves on the live host:
+find content/assets/docs -name '*.pdf' | while read f; do p="${f#content/}"
+  curl -s -X POST "https://admin.hlx.page/preview/aemdemos/foundation-usta/main/$p" -o /dev/null -w "prev %{http_code} $p\n"
+  curl -s -X POST "https://admin.hlx.page/live/aemdemos/foundation-usta/main/$p"    -o /dev/null -w "live %{http_code} $p\n"
+done
+
+# 3. Upload the PAGE — but WRAP it in <body><main> first (see gotcha), then preview+publish it too.
+```
+
+## Docs gotchas
+
+- **DA needs `<body><main>` wrapping.** The local `.plain.html` files are bare
+  `<div>…` fragments. DA's HTML→markdown conversion produces an EMPTY page (`.md`
+  is 0 bytes, `.plain.html` ~13 bytes, links vanish) if you POST the raw fragment.
+  ALWAYS wrap before uploading a page to the DA source:
+  `printf '<body><main>' > t.html; cat page.plain.html >> t.html; printf '</main></body>' >> t.html`
+  then POST `t.html`. (aem-import-helper's `wrapHtmlContent` does exactly this.)
+  Do NOT rewrite the local `content/…plain.html` to add the wrapper — keep it a
+  fragment; wrap only the copy you upload.
+- **20 MB PDF cap on DA.** The content bus rejects PDFs >20 MB with
+  `AEM_BACKEND_PDF_TOO_BIG` (409 on preview / 404 on live). Compress oversized
+  PDFs first. With no ghostscript/qpdf installed, use the WASM ghostscript
+  (`npm i @jspawn/ghostscript-wasm`, load via `instantiateWasm` — Node 24's global
+  `fetch` breaks its default file-path loader) with `-dPDFSETTINGS=/printer`
+  (300 dpi) — the USTAF 2024 annual report went **61 MB → 3.0 MB** with page
+  count and image quality intact. `/ebook` (150 dpi) is smaller (2.1 MB) but
+  softer; prefer `/printer` since 20 MB is generous.
+- **EDS relativizes same-origin hrefs.** The absolute `…aem.live/assets/docs/…`
+  href renders on the live page as a same-origin `/assets/docs/…` link — expected.
+- **www host.** Source doc URLs may be `www.ustafoundation.com`; the tool
+  downloads with a browser-like UA/Referer just like the image tool.
+- **Serving path.** Local `content/assets/docs/…` files serve directly from the
+  dev server (200, `application/pdf`) — that's how you preview them. In
+  production they resolve from `/assets/docs/…` once uploaded + published to DA.
