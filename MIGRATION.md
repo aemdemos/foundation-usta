@@ -3164,6 +3164,22 @@ Per the lift-and-shift rule, ALL images must be author-managed via content. Fixe
 - Gates: lint 0 errors · breakpoint ✓ · check:svg ✓ · a11y ✓. **Deploy:** icon move + JS = GitHub push (branch merged
   via PR #5 earlier; icon commit `19b0db4` on local main pending push); alt fix = DA (done, live).
 
+### 2026-09-09 — Hero background photos get an accessible label (role=img + aria-label from authored alt)
+Source hero photos are decorative CSS backgrounds with NO `<img>`/alt/label. Per request, exposed them to assistive
+tech using AUTHORED content: `hero.js` now injects a dedicated empty `<span class="hero-a11y-img" role="img"
+aria-label="…">` (label = the authored image's `alt`) into banner + text-up heroes; empty alt → no label (stays
+decorative). The label is a SEPARATE element, NOT the block — putting `role="img"` on the block (which holds the H1 +
+CTA links) tripped axe's `nested-interactive` rule (caught by `test:a11y`; fixed). `.hero-a11y-img` is visually hidden
+(1×1 clip, not display:none so it stays in the a11y tree). Wrote descriptive alt for all 9 hero images (viewed each
+source photo to describe accurately — group shots, Tiafoe with players, etc.) into content; uploaded + published.
+- **Gotcha (self-inflicted, fixed):** re-uploading the 7 interior heroes with the `/media-da/…` → `content.da.live/
+  .{page}/…` shadow-ref swap pointed at shadow folders that didn't yet hold the image bytes → `about:error` on 7 pages.
+  Fixed by POSTing each hero's local `content/media-da/…` bytes to its DA shadow folder, then re-publishing; all 9
+  heroes now resolve (verified live). Lesson: the shadow-ref swap only works if the image is ALSO uploaded to that
+  shadow folder.
+- Gates: lint 0 errors · breakpoint ✓ · check:svg ✓ · a11y ✓ (who-we-are, our-impact). **Deploy:** hero.js + hero.css
+  = GitHub push (pending); alt text + shadow images = DA (done, live). Live labels appear once the JS deploys.
+
 **MIGRATION STATUS:** all general-template + specialized pages imported; financials PDFs **live on DA**. Full-site
 link + breadcrumb validation PASSED (see `VALIDATION.md`). Outstanding: **2 PDFs** localized locally, pending DA
 upload (blocked on the credential opt-in). Only **404.html** (T7, hero-error) remains unmigrated from the full scope.

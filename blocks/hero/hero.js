@@ -27,6 +27,28 @@
 // loads on any deploy path.
 const ERROR_BALL_SRC = `${window.hlx?.codeBasePath || ''}/icons/tennis-ball-bouncing.svg`;
 
+/**
+ * The hero photo is applied as a CSS background (a background image can carry no
+ * `alt`), so expose the AUTHORED image's alt to assistive tech via a dedicated,
+ * empty child element with `role="img"` + `aria-label`. It must be a SEPARATE
+ * element (not the block itself): the block also contains the heading and CTA
+ * links, and putting `role="img"` on a container that holds interactive controls
+ * trips axe's `nested-interactive` rule. The label element carries no interactive
+ * content and is hidden visually (see .hero-a11y-img in hero.css). If the author
+ * left the alt empty, the photo stays decorative (no label) — the correct default.
+ * @param {Element} block the hero block
+ * @param {HTMLImageElement} img the authored image whose alt supplies the label
+ */
+function labelBackground(block, img) {
+  const label = (img.getAttribute('alt') || '').trim();
+  if (!label || block.querySelector(':scope > .hero-a11y-img')) return;
+  const span = document.createElement('span');
+  span.className = 'hero-a11y-img';
+  span.setAttribute('role', 'img');
+  span.setAttribute('aria-label', label);
+  block.prepend(span);
+}
+
 function decorateError(block) {
   // Standalone CTA link renders as a filled (pill) button — matches the source.
   block.querySelectorAll('p > a').forEach((a) => {
@@ -75,6 +97,7 @@ function decorateBanner(block) {
       ? bgUrl.replace(/([?&])width=\d+/, '$1width=2000')
       : `${bgUrl}${bgUrl.includes('?') ? '&' : '?'}width=2000&format=webply&optimize=medium`;
     block.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("${bgUrl}")`;
+    labelBackground(block, bgImg);
     imgRow.remove();
   }
 
@@ -144,6 +167,7 @@ function decorateTextUp(block) {
       ? bgUrl.replace(/([?&])width=\d+/, '$1width=2000')
       : `${bgUrl}${bgUrl.includes('?') ? '&' : '?'}width=2000&format=webply&optimize=medium`;
     block.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("${bgUrl}")`;
+    labelBackground(block, bgImg);
     imgRow.remove();
   }
 

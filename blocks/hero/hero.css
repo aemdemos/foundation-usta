@@ -11,6 +11,23 @@
   min-height: 300px;
 }
 
+/* Accessible label for the hero's CSS background photo. hero.js injects an empty
+   <span role="img" aria-label="…"> (from the authored image's alt) so screen
+   readers announce the photo; it carries no interactive content (keeping the
+   block clear of axe's nested-interactive rule) and is removed from the visual
+   layout. Not display:none — that would hide it from assistive tech too. */
+.hero .hero-a11y-img {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .hero h1 {
   max-width: 1200px;
   margin-left: auto;
