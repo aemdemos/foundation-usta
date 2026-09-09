@@ -22,9 +22,10 @@
  */
 
 // The source renders the illustration as an SVG (tennis-ball-bouncing.svg) — the
-// blue line-art of a bouncing ball, NOT a solid green ball. Self-hosted in this
-// block's icons/ folder; resolved relative to this module so it loads on any path.
-const ERROR_BALL_SRC = new URL('./icons/tennis-ball-bouncing.svg', import.meta.url).href;
+// blue line-art of a bouncing ball, NOT a solid green ball. Self-hosted in the
+// single repo-wide icons/ folder at the root; resolved via codeBasePath so it
+// loads on any deploy path.
+const ERROR_BALL_SRC = `${window.hlx?.codeBasePath || ''}/icons/tennis-ball-bouncing.svg`;
 
 function decorateError(block) {
   // Standalone CTA link renders as a filled (pill) button — matches the source.

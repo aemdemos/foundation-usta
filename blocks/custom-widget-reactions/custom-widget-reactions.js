@@ -37,8 +37,9 @@ const REACTIONS = [
   { type: 'lightBulb', icon: 'Light_Bulb', label: 'Lightbulb' },
 ];
 
-// Resolve icon URLs relative to this module so they load regardless of the page path.
-const ICON_BASE = new URL('./icons/', import.meta.url).href;
+// Icons live in the single repo-wide icons/ folder at the root; resolve via
+// codeBasePath so they load regardless of the page/deploy path.
+const ICON_BASE = `${window.hlx?.codeBasePath || ''}/icons/`;
 
 export default function decorate(block) {
   const rows = [...block.children];
