@@ -69,6 +69,12 @@ indices:
       publicationdate:
         select: head > meta[name="publication-date"]
         value: attribute(el, "content")
+      # Tag(s) for the Related Articles feed (Metadata: "news-tags"). Only the
+      # articles the source surfaces as related-cards carry `usta-foundation`, so
+      # the feed can query `newstags contains usta-foundation, minus current`.
+      newstags:
+        select: head > meta[name="news-tags"]
+        value: attribute(el, "content")
       lastModified:
         select: none
         value: parseTimestamp(headers("last-modified"), "ddd, DD MMM YYYY hh:mm:ss GMT")

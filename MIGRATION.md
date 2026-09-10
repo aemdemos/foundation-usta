@@ -3213,6 +3213,26 @@ padding-clamp with a fluid **`width: calc(16.65vw - 50px)`** (label centered by 
 in a 56px `<div>` with 8px top/bottom pad, but the rendered button box + 16px gap are identical, so no change needed
 there.) Gates: lint 0 · breakpoint ✓ · overflow ✓ (360/768/992/1200/1920). Deploys on GitHub push.
 
+### 2026-09-10 — Related Articles: real dates + news-tags on the 12 related-card articles + helix query
+Investigated the source's Related Articles (list-core-component). Findings: (a) it's an AEM tag-list on the single
+blanket tag **`usta-foundation`** — no per-topic category exists; (b) the source exposes a real per-article date ONLY
+inside related-cards, and it differs from the sitemap `<lastmod>` we imported (a bulk republish stamp); (c) only **12
+of 72** articles ever appear as related-cards, so only those 12 have a discoverable real date + carry the tag.
+- **Dates:** compared our 12 vs source real dates — 10 already matched, **2 were wrong** (both were the 05-06
+  republish stamp): WHM-2026 (Stewart&Robles) May 06→**March 25, 2026**; RFLF-**partner**-to-empo May 06→**April 15,
+  2026**. Fixed via a surgical single-row edit of the metadata `Publication Date` (word-diff confirmed only `May 06`→
+  the real date changed; related-card dates + body untouched). The RFLF **announce-inaugural** article (Sept 04) is a
+  DIFFERENT page and was already correct. The other 60 articles have NO source-verified date anywhere — left as the
+  sitemap stamp (the truest value the source offers).
+- **Tags:** added a `news-tags` metadata row = `usta-foundation` to exactly those **12** related-card articles (per
+  direction — keeps the query pool = the set the source actually surfaces). Verified 12/12.
+- **helix-query.yaml:** added `newstags` property to the `news` index (`select: head > meta[name="news-tags"]`) so the
+  tag flows into `news-index.json`; the Related Articles feed can then query `newstags contains usta-foundation, minus
+  current, limit 3`.
+- **Deploy:** helix-query change → GitHub push; the 12 content pages → DA preview/publish (then news-index.json
+  regenerates with newstags + corrected dates). Validation draft kept at
+  `content/drafts/date-fix-validation/women-s-history-month-2026.plain.html`.
+
 **MIGRATION STATUS:** all general-template + specialized pages imported; financials PDFs **live on DA**. Full-site
 link + breadcrumb validation PASSED (see `VALIDATION.md`). Outstanding: **2 PDFs** localized locally, pending DA
 upload (blocked on the credential opt-in). Only **404.html** (T7, hero-error) remains unmigrated from the full scope.
