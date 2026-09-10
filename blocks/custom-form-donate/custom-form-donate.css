@@ -186,10 +186,104 @@
   color: var(--cfd-ink);
 }
 
+/* ---- Dedicate checkbox — 20px box, 14px label ---------------------------- */
+.custom-form-donate .cfd-dedicate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.custom-form-donate .cfd-checkbox {
+  position: relative;
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+}
+
+.custom-form-donate .cfd-checkbox input {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  background-color: #fff;
+  border: 2px solid var(--cfd-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.custom-form-donate .cfd-checkbox input:checked {
+  background-color: var(--cfd-blue);
+  border-color: var(--cfd-blue);
+}
+
+.custom-form-donate .cfd-checkbox svg {
+  position: absolute;
+  inset: 0;
+  width: 20px;
+  height: 20px;
+  padding: 3px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.custom-form-donate .cfd-checkbox input:checked + svg {
+  opacity: 1;
+}
+
+.custom-form-donate .cfd-dedicate label {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--cfd-ink);
+  cursor: pointer;
+}
+
+/* ---- Honoree field — floating-label box, 52px tall ----------------------- */
+.custom-form-donate .cfd-field {
+  position: relative;
+  margin-top: 8px;
+  padding: 6px 11px 4px;
+  border: 2px solid var(--cfd-blue);
+  border-radius: 6px;
+}
+
+.custom-form-donate .cfd-field label {
+  display: block;
+
+  /* Source renders this floating label at 16px then scale(0.75) when floated →
+     effective 12px. We reproduce the RENDERED size directly at 12/16, muted. */
+  font-size: 12px;
+  line-height: 16px;
+  color: rgb(33 40 48 / 80%);
+}
+
+.custom-form-donate .cfd-honoree {
+  width: 100%;
+  padding: 0;
+  font-family: var(--body-font-family);
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--cfd-ink);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.custom-form-donate .cfd-honoree::placeholder {
+  color: var(--cfd-muted);
+  opacity: 1;
+}
+
 /* ---- Tooltip — 14px/20, 11/16 padding ------------------------------------ */
 .custom-form-donate .cfd-tooltip {
   position: relative;
-  margin: 20px 0 0;
+  margin: 10px 0 0;
   padding: 11px 16px;
   font-size: 13px; /* source: 13/18 */
   line-height: 18px;
@@ -272,6 +366,7 @@
 /* ---- Focus-visible (accessibility) --------------------------------------- */
 .custom-form-donate .cfd-freq:focus-visible,
 .custom-form-donate .cfd-amount:focus-visible,
+.custom-form-donate .cfd-checkbox input:focus-visible,
 .custom-form-donate .cfd-comment a:focus-visible,
 .custom-form-donate .cfd-submit:focus-visible,
 .custom-form-donate .cfd-designation select:focus-visible {
@@ -279,7 +374,8 @@
   outline-offset: 2px;
 }
 
-.custom-form-donate .cfd-custom:focus-within {
+.custom-form-donate .cfd-custom:focus-within,
+.custom-form-donate .cfd-field:focus-within {
   outline: 2px solid var(--cfd-blue);
   outline-offset: 1px;
 }

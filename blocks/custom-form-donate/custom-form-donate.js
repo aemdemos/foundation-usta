@@ -22,8 +22,9 @@
  *   - recurring=once|monthly → sets the frequency toggle  (CONFIRMED)
  * In the fallback the honoree NAME cannot be forwarded: FundraiseUp does NOT
  * read it from the URL (it lives only in the widget's in-memory state). The
- * native fallback therefore omits the honoree field so it doesn't imply the
- * value carries over — the donor adds the dedication on the hosted checkout.
+ * native fallback still shows the "Dedicate this donation" + honoree field for
+ * visual parity with the source, but a note tells the donor the dedication is
+ * FINALIZED on the secure donation page — we never rely on forwarding the name.
  *
  * Authoring contract — one cell per row (order matters):
  *   row 1: title text                (e.g. "Celebrating a Champion!")
@@ -51,6 +52,7 @@ const DEFAULT_ELEMENT_ID = 'XJYDXZPC';
 const FRU_MOUNT_TIMEOUT_MS = 6000;
 
 const HEART = '<svg class="cfd-heart" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10.05-9.2C.2 8.6 1.4 4.9 4.8 4.2 7 3.7 9.1 4.7 10.2 6.4c.4.6.7 1.2.9 1.7.2-.5.5-1.1.9-1.7C14 4.7 16.1 3.7 18.3 4.2c3.4.7 4.6 4.4 2.85 7.6C19.5 16.1 12 21 12 21z"/></svg>';
+const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 6L9 17l-5-5"/></svg>';
 
 const text = (row) => (row?.textContent || '').trim();
 
@@ -92,7 +94,20 @@ function buildNativeForm({
       <span class="cfd-unit">USD</span>
     </div>
 
-    <p class="cfd-tooltip">You&rsquo;ll be able to add a dedication and a personal message on the secure donation page.</p>
+    <div class="cfd-dedicate">
+      <span class="cfd-checkbox">
+        <input type="checkbox" id="cfd-dedicate" checked>
+        ${CHECK}
+      </span>
+      <label for="cfd-dedicate">Dedicate this donation</label>
+    </div>
+
+    <div class="cfd-field">
+      <label for="cfd-honoree">Honoree full name</label>
+      <input class="cfd-honoree" id="cfd-honoree" name="honoree" type="text" placeholder="First and last name" autocomplete="off">
+    </div>
+
+    <p class="cfd-tooltip">You&rsquo;ll finalize the dedication and add a personal message on the secure donation page.</p>
 
     <div class="cfd-designation">
       <label class="cfd-sr-only" for="cfd-designation">Designation</label>
@@ -123,6 +138,20 @@ function buildNativeForm({
     amtBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
     amtInput.value = btn.textContent.replace(/[^0-9.]/g, '');
   });
+
+  // Dedicate checkbox reveals the honoree field + note (matches the source look).
+  // The name can't round-trip via URL — the note tells the donor it's finalized
+  // on the secure page — so we keep it for parity but never rely on forwarding it.
+  const dedicate = form.querySelector('#cfd-dedicate');
+  const field = form.querySelector('.cfd-field');
+  const tooltip = form.querySelector('.cfd-tooltip');
+  const syncDedicate = () => {
+    const on = dedicate.checked;
+    field.hidden = !on;
+    tooltip.hidden = !on;
+  };
+  dedicate.addEventListener('change', syncDedicate);
+  syncDedicate();
 
   // Submit → hand the payload off to the FundraiseUp hosted donation page (same
   // page the source embed opens). Build the URL from the authored base + the
