@@ -3252,6 +3252,18 @@ fetchpriority, 521 KiB unused JS). Root causes were all in-our-control except th
   not code.
 - Gates: lint 0 · breakpoint ✓ · overflow ✓ · a11y ✓. Deploys on GitHub push (hero.js, columns.js/css, scripts.js).
 
+### 2026-09-10 — Mobile perf: responsive hero rendition (LCP 3.2s → fix; desktop already 100)
+Desktop hit 100; mobile 93 (only orange metric: LCP 3.2s; top insight "improve image delivery 157 KiB"). Cause: the
+hero LCP background still requested a flat `width=2000` even on a 360px phone (~124 KiB of the 157). Fix in `hero.js`:
+`heroRenditionWidth()` sizes the full-bleed rendition to `viewport × DPR`, snapped to CDN-friendly buckets
+[750,1000,1600,2000]; `heroBgUrlAt()` applies it to BOTH the background AND the preload. Verified: mobile 360/DPR2 →
+**width=750** (was 2000, need ~720), desktop 1400 → 1600, wide 1920 → 2000 — sharp at every size (mobile screenshot
+confirmed no blur), still author-managed. Applied to banner + text-up heroes.
+- Remaining mobile flags (render-blocking 140ms, minify CSS 27 KiB / JS 9 KiB, unused CSS 10 KiB, cache 13 KiB) are
+  EDS PLATFORM/CDN-controlled: head.html is the standard boilerplate (untouchable), one critical styles.css, aem.js +
+  scripts.js as modules; production CDN minifies + sets cache headers (the aem.page preview does not). Not code-fixable.
+- Gates: lint 0 · breakpoint ✓ · overflow ✓. Deploys on GitHub push (hero.js).
+
 **MIGRATION STATUS:** all general-template + specialized pages imported; financials PDFs **live on DA**. Full-site
 link + breadcrumb validation PASSED (see `VALIDATION.md`). Outstanding: **2 PDFs** localized locally, pending DA
 upload (blocked on the credential opt-in). Only **404.html** (T7, hero-error) remains unmigrated from the full scope.

@@ -28,6 +28,25 @@
 const ERROR_BALL_SRC = `${window.hlx?.codeBasePath || ''}/icons/tennis-ball-bouncing.svg`;
 
 /**
+ * Pick a full-bleed hero rendition width sized to the actual viewport, not a flat
+ * 2000px. The hero photo spans the viewport width, so we need ≈ viewportWidth ×
+ * DPR — a 2000px image on a 360px phone (LCP element) is the main mobile penalty.
+ * Snap to a few sensible buckets so the CDN caches them; cap at 2000 (desktop).
+ */
+function heroRenditionWidth() {
+  const needed = Math.round(window.innerWidth * (window.devicePixelRatio || 1));
+  const buckets = [750, 1000, 1600, 2000];
+  return buckets.find((w) => w >= needed) || 2000;
+}
+
+/** Set/replace the width= param on an EDS rendition URL (adds webp+optimize if absent). */
+function heroBgUrlAt(src, width) {
+  return (/([?&])width=\d+/.test(src))
+    ? src.replace(/([?&])width=\d+/, `$1width=${width}`)
+    : `${src}${src.includes('?') ? '&' : '?'}width=${width}&format=webply&optimize=medium`;
+}
+
+/**
  * The hero photo is the page's LCP element but it's applied as a CSS background
  * (set by this JS), so the browser can't discover it from the initial HTML and
  * fetches it late — hurting LCP. Add a high-priority <link rel="preload"> so the
@@ -112,10 +131,10 @@ function decorateBanner(block) {
   const imgRow = rows.find((r) => r.querySelector('img') && !r.querySelector('h1, h2, h3, p'));
   const bgImg = imgRow ? imgRow.querySelector('img') : null;
   if (bgImg && bgImg.src) {
-    let bgUrl = bgImg.src;
-    bgUrl = (/([?&])width=\d+/.test(bgUrl))
-      ? bgUrl.replace(/([?&])width=\d+/, '$1width=2000')
-      : `${bgUrl}${bgUrl.includes('?') ? '&' : '?'}width=2000&format=webply&optimize=medium`;
+    // Size the full-bleed rendition to the viewport (mobile gets a small one, not
+    // a flat 2000px) — this is the LCP element, and the oversized image was the
+    // main mobile LCP penalty.
+    const bgUrl = heroBgUrlAt(bgImg.src, heroRenditionWidth());
     block.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("${bgUrl}")`;
     preloadHeroImage(bgUrl); // LCP: discover the background photo early
     labelBackground(block, bgImg);
@@ -178,15 +197,11 @@ function decorateTextUp(block) {
   const imgRow = rows.find((r) => r.querySelector('img'));
   const bgImg = imgRow ? imgRow.querySelector('img') : null;
   if (bgImg && bgImg.src) {
-    // The hero photo is a FULL-BLEED background (up to ~1920px wide). The EDS
-    // <img> src is the smallest rendition (?width=750), which — stretched to
-    // cover the hero — looks soft and washed-out (lighter) vs the source's
-    // full-res image. Request a large optimized rendition instead so the photo
-    // is sharp and matches the source's tone. Rewrite width= to 2000 (or add it).
-    let bgUrl = bgImg.src;
-    bgUrl = (/([?&])width=\d+/.test(bgUrl))
-      ? bgUrl.replace(/([?&])width=\d+/, '$1width=2000')
-      : `${bgUrl}${bgUrl.includes('?') ? '&' : '?'}width=2000&format=webply&optimize=medium`;
+    // The hero photo is a FULL-BLEED background. Size the rendition to the
+    // viewport (mobile gets a small one, not a flat 2000px) — it's the LCP
+    // element; the smallest EDS default (?width=750) alone looks washed-out
+    // stretched full-bleed on desktop, so heroRenditionWidth() scales up there.
+    const bgUrl = heroBgUrlAt(bgImg.src, heroRenditionWidth());
     block.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("${bgUrl}")`;
     preloadHeroImage(bgUrl); // LCP: discover the background photo early
     labelBackground(block, bgImg);
