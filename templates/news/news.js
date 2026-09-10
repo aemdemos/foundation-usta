@@ -41,21 +41,28 @@ async function getLatestNews(limit, excludePath) {
    Cells passed as `{ elems }` (no wrapper div) so cards.js `decorateNews`
    sees the <p>s as direct children — its `:scope > p` lookup needs that. */
 function newsRow(entry) {
-  // Image cell.
-  let picture = null;
+  // Image cell — wrapped in a link to the article (like the source).
+  let imageLink = null;
   if (entry.image) {
-    picture = document.createElement('picture');
+    const picture = document.createElement('picture');
     const img = document.createElement('img');
     img.src = entry.image;
     img.alt = entry.title || '';
     img.loading = 'lazy';
     picture.append(img);
+    imageLink = document.createElement('a');
+    imageLink.href = entry.path;
+    imageLink.setAttribute('aria-label', entry.title || '');
+    imageLink.append(picture);
   }
 
-  // Body cell contents.
+  // Body cell contents. Title text links to the article (like the source).
   const bodyElems = [];
   const title = document.createElement('h3');
-  title.textContent = entry.title || '';
+  const titleLink = document.createElement('a');
+  titleLink.href = entry.path;
+  titleLink.textContent = entry.title || '';
+  title.append(titleLink);
   bodyElems.push(title);
   if (entry.publicationdate) {
     const date = document.createElement('p');
@@ -74,7 +81,7 @@ function newsRow(entry) {
   linkP.append(link);
   bodyElems.push(linkP);
 
-  return [{ elems: picture ? [picture] : [] }, { elems: bodyElems }];
+  return [{ elems: imageLink ? [imageLink] : [] }, { elems: bodyElems }];
 }
 
 /**
@@ -112,10 +119,14 @@ export default async function decorate(main) {
     section.classList.add('section', 'related-articles');
     main.append(section);
   }
+  // Section carries the standard cards container class so its selectors are
+  // as specific as an authored section (`.related-articles.section.cards-container`).
+  section.classList.add('cards-container');
   const headingWrapper = document.createElement('div');
   headingWrapper.className = 'default-content-wrapper';
   headingWrapper.append(heading);
   const blockWrapper = document.createElement('div');
+  blockWrapper.className = 'cards-wrapper';
   blockWrapper.append(block);
   section.append(headingWrapper, blockWrapper);
 
