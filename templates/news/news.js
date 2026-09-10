@@ -1,7 +1,6 @@
 import {
   buildBlock, decorateBlock, loadBlock,
 } from '../../scripts/aem.js';
-import getLatestNews from '../../scripts/related-news.js';
 
 /*
  * news template: builds the "Related Articles" feed in code (never authored).
@@ -9,6 +8,34 @@ import getLatestNews from '../../scripts/related-news.js';
  * articles, and attaches it — reusing the site's existing card style.
  */
 const RELATED_LIMIT = 3;
+const NEWS_INDEX_PATH = '/news-index.json';
+
+/* Publication date (e.g. "May 06, 2026") → sortable number; 0 if unparseable. */
+function dateValue(dateStr) {
+  if (!dateStr) return 0;
+  const t = Date.parse(dateStr);
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/* Fetch the latest news from the query-index (newest first), excluding the
+   current page. Returns [] if the index can't be read. */
+async function getLatestNews(limit, excludePath) {
+  let entries = [];
+  try {
+    const resp = await fetch(NEWS_INDEX_PATH);
+    if (!resp.ok) throw new Error(`news index ${resp.status}`);
+    const json = await resp.json();
+    entries = Array.isArray(json.data) ? json.data : [];
+  } catch (e) {
+    return [];
+  }
+
+  const current = excludePath.replace(/\.html$/, '');
+  return entries
+    .filter((entry) => entry.path && entry.path.replace(/\.html$/, '') !== current)
+    .sort((a, b) => dateValue(b.publicationdate) - dateValue(a.publicationdate))
+    .slice(0, limit);
+}
 
 /* One cards-news row: [ image | h3 title, date, desc, Read More ].
    Cells passed as `{ elems }` (no wrapper div) so cards.js `decorateNews`
@@ -68,10 +95,7 @@ export default async function decorate(main) {
     }
   });
 
-  const articles = await getLatestNews({
-    limit: RELATED_LIMIT,
-    excludePath: window.location.pathname,
-  });
+  const articles = await getLatestNews(RELATED_LIMIT, window.location.pathname);
   if (!articles.length) return; // no index / nothing to show
 
   const heading = document.createElement('h2');
