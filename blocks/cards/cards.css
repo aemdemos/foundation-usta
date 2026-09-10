@@ -394,7 +394,7 @@
 
 /* Row of cards. Source: flex-wrap row; each card is flex-basis 33% with a 5px
    inline padding (the inter-card gutter is 2×5px = 10px). Mobile stacks. */
-.cards.news > ul {
+.news .related-articles.section.cards-container .cards > ul {
   list-style: none;
   margin: 0 auto;
 
@@ -411,26 +411,26 @@
 /* Mobile: full-width stacked cards. Source card padding is 15px block; the
    image + text carry a further 5px inline inset (source image sits at x36 =
    31 feed inset + 5), so match with 5px inline padding on the card. */
-.cards.news > ul > li {
+.news .related-articles.section.cards-container .cards > ul > li {
   box-sizing: border-box;
   width: 100%;
   padding: 15px 5px;
 }
 
 @media (width >= 768px) {
-  .cards.news > ul {
+  .news .related-articles.section.cards-container .cards > ul {
     max-width: none; /* release the mobile cap for the 3-up row */
     padding: 0; /* 3-up row: gutters come from the li's 5px inline padding */
   }
 }
 
 /* Landscape image — source is a 400×200 (2:1) image, full card width, no radius. */
-.cards.news .cards-news-card-image {
+.news .related-articles.section.cards-container .cards .cards-news-card-image {
   line-height: 0;
 }
 
-.cards.news .cards-news-card-image img,
-.cards.news .cards-news-card-image picture {
+.news .related-articles.section.cards-container .cards .cards-news-card-image img,
+.news .related-articles.section.cards-container .cards .cards-news-card-image picture {
   display: block;
   width: 100%;
   height: auto;
@@ -442,7 +442,7 @@
 /* Title — Graphik Semibold, uppercase, black. Source uses 28px/36px here (its
    own scale, smaller than the global h3 token) with -0.7px tracking; drop to
    22px/32px from 992. Not the h3 token, so set explicitly and comment why. */
-.cards.news .cards-news-card-title {
+.news .related-articles.section.cards-container .cards .cards-news-card-title {
   margin: 15px 0 0; /* gap below the image */
   font-family: var(--heading-semibold-font-family);
   font-weight: 400; /* weight is baked into the Semibold face */
@@ -453,8 +453,25 @@
   color: #000;
 }
 
+/* Image + title are links to the article (like the source). Keep them looking
+   like the plain image/heading — no link colour/underline; underline the title
+   on hover for affordance. */
+.news .related-articles.section.cards-container .cards .cards-news-card-image a {
+  display: block;
+  line-height: 0;
+}
+
+.news .related-articles.section.cards-container .cards .cards-news-card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.news .related-articles.section.cards-container .cards .cards-news-card-title a:hover {
+  text-decoration: underline;
+}
+
 /* Date — regular body, black, small. */
-.cards.news .cards-news-card-date {
+.news .related-articles.section.cards-container .cards .cards-news-card-date {
   margin: 4px 0 0;
   font-family: var(--body-font-family);
   font-weight: 400;
@@ -466,7 +483,7 @@
 }
 
 /* Description — body, black, clamped to 4 lines (source caps at 96px). */
-.cards.news .cards-news-card-desc {
+.news .related-articles.section.cards-container .cards .cards-news-card-desc {
   margin: 15px 0 0;
   font-family: var(--body-font-family);
   font-weight: 400;
@@ -482,19 +499,19 @@
 /* Read More — Graphik Semibold, uppercase, underlined blue link. Source is
    14px/24px on mobile+tablet, 16px/24px from 992. Reset EDS button decoration
    (a lone <p><a> is auto-turned into a .button). */
-.cards.news .cards-news-card-link {
+.news .related-articles.section.cards-container .cards .cards-news-card-link {
   margin: 10px 0 0;
 }
 
 /* When there is no description, the link follows the date directly; source
    inserts the 15px content-top gap on top of the link's own 10px (→ ~25px). */
-.cards.news .cards-news-card-date + .cards-news-card-link {
+.news .related-articles.section.cards-container .cards .cards-news-card-date + .cards-news-card-link {
   margin-top: 25px;
 }
 
-.cards.news .cards-news-card-link a,
-.cards.news .cards-news-card-link a.button,
-.cards.news .cards-news-card-link a.button.primary {
+.news .related-articles.section.cards-container .cards .cards-news-card-link a,
+.news .related-articles.section.cards-container .cards .cards-news-card-link a.button,
+.news .related-articles.section.cards-container .cards .cards-news-card-link a.button.primary {
   display: inline;
   margin: 0;
   padding: 0;
@@ -513,8 +530,8 @@
   white-space: normal;
 }
 
-.cards.news .cards-news-card-link a.button:hover,
-.cards.news .cards-news-card-link a.button.primary:hover {
+.news .related-articles.section.cards-container .cards .cards-news-card-link a.button:hover,
+.news .related-articles.section.cards-container .cards .cards-news-card-link a.button.primary:hover {
   background: transparent;
   border: 0;
   color: var(--link-hover-color);
@@ -527,7 +544,7 @@
    `flex-grow:1` distributes the row evenly; max-width caps a lone/2-card row so
    cards don't blow up oversized. */
 @media (width >= 768px) {
-  .cards.news > ul > li {
+  .news .related-articles.section.cards-container .cards > ul > li {
     flex: 1 1 0;
     max-width: 33.333%;
     padding: 15px 5px;
@@ -539,20 +556,20 @@
    content width. Cap at 33.333% so 3 cards fill the row (no empty 4th slot) while
    a lone card can't stretch past a third. */
 @media (width >= 992px) {
-  .cards.news > ul > li {
+  .news .related-articles.section.cards-container .cards > ul > li {
     flex: 1 1 0;
     max-width: 33.333%;
   }
 
-  .cards.news .cards-news-card-title {
+  .news .related-articles.section.cards-container .cards .cards-news-card-title {
     font-size: 22px;
     line-height: 32px;
     letter-spacing: normal;
   }
 
-  .cards.news .cards-news-card-link a,
-  .cards.news .cards-news-card-link a.button,
-  .cards.news .cards-news-card-link a.button.primary {
+  .news .related-articles.section.cards-container .cards .cards-news-card-link a,
+  .news .related-articles.section.cards-container .cards .cards-news-card-link a.button,
+  .news .related-articles.section.cards-container .cards .cards-news-card-link a.button.primary {
     font-size: 16px;
   }
 }
