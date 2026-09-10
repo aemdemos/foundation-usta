@@ -1,4 +1,25 @@
 /**
+ * Cap the rendition width requested by a <picture>'s <source>/<img> URLs.
+ * EDS's createOptimizedPicture emits width=2000 (+750) for EVERY content image,
+ * but the collage thumbnails/portrait display at only ~266–296px — so the 2000px
+ * renditions are ~10× oversized (the Lighthouse "improve image delivery" flag).
+ * Rewrite any `width=<n>` above `maxWidth` down to `maxWidth` (a 2× cap over the
+ * largest display size); smaller renditions are left alone.
+ * @param {Element} picture the <picture> element
+ * @param {number} maxWidth largest rendition width to allow (≈ 2× display px)
+ */
+function capPictureWidth(picture, maxWidth) {
+  if (!picture) return;
+  const cap = (url) => url.replace(/([?&]width=)(\d+)/g, (m, p, n) => (Number(n) > maxWidth ? `${p}${maxWidth}` : m));
+  picture.querySelectorAll('source').forEach((s) => {
+    const ss = s.getAttribute('srcset');
+    if (ss) s.setAttribute('srcset', cap(ss));
+  });
+  const img = picture.querySelector('img');
+  if (img && img.getAttribute('src')) img.setAttribute('src', cap(img.getAttribute('src')));
+}
+
+/**
  * Build a YouTube embed URL from any youtube/youtu.be href.
  * @param {string} href source link
  * @returns {string} embeddable /embed/<id> url (preserving query where possible)
@@ -21,26 +42,77 @@ function toYouTubeEmbed(href) {
   }
 }
 
+/** Extract the YouTube video id from any youtube/youtu.be/embed URL. */
+function youTubeId(href) {
+  try {
+    const url = new URL(href);
+    if (url.pathname.startsWith('/embed/')) return url.pathname.split('/embed/')[1].split('/')[0];
+    if (url.hostname.includes('youtu.be')) return url.pathname.slice(1).split('/')[0];
+    return url.searchParams.get('v') || '';
+  } catch {
+    return '';
+  }
+}
+
 /**
- * Replace a bare YouTube link with a responsive 16:9 iframe embed.
- * @param {HTMLAnchorElement} link the authored YouTube link
- * @param {string} [title] accessible title for the iframe (falls back to a default)
+ * Build the real YouTube iframe (used only after the user clicks the facade).
  */
-function embedVideo(link, title) {
-  const src = toYouTubeEmbed(link.href);
-  const holder = document.createElement('div');
-  holder.className = 'columns-feature-video';
+function buildVideoIframe(src, title) {
   const iframe = document.createElement('iframe');
-  iframe.src = src;
-  // Author links carry the raw URL as their text, which is a poor accessible
-  // name. Prefer a caption/heading-derived title; never expose the bare URL.
-  const linkText = link.textContent.trim();
-  const isUrlText = /^https?:\/\//i.test(linkText);
-  iframe.title = title || (isUrlText ? '' : linkText) || 'Video';
+  iframe.src = /[?&]autoplay=/.test(src) ? src : `${src}${src.includes('?') ? '&' : '?'}autoplay=1`;
+  iframe.title = title || 'Video';
   iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
   iframe.setAttribute('allowfullscreen', '');
   iframe.setAttribute('loading', 'lazy');
-  holder.append(iframe);
+  return iframe;
+}
+
+/**
+ * Replace a bare YouTube link with a lightweight click-to-load FACADE instead of
+ * an eager iframe: a poster image (YouTube thumbnail) + a play button. The heavy
+ * YouTube player scripts (~hundreds of KiB, the bulk of the page's "unused JS")
+ * load ONLY when the user actually clicks play. This is the EDS-recommended
+ * pattern for third-party video embeds and keeps the initial page lean.
+ * @param {HTMLAnchorElement} link the authored YouTube link
+ * @param {string} [title] accessible title (from caption/heading, never the URL)
+ */
+function embedVideo(link, title) {
+  const src = toYouTubeEmbed(link.href);
+  const id = youTubeId(link.href);
+  const linkText = link.textContent.trim();
+  const isUrlText = /^https?:\/\//i.test(linkText);
+  const label = title || (isUrlText ? '' : linkText) || 'Video';
+
+  const holder = document.createElement('div');
+  holder.className = 'columns-feature-video';
+
+  // Facade = a button (keyboard-accessible) with the poster as its background +
+  // a play glyph. YouTube's hqdefault thumbnail is a small, cacheable image.
+  const facade = document.createElement('button');
+  facade.type = 'button';
+  facade.className = 'columns-feature-video-facade';
+  facade.setAttribute('aria-label', `Play video: ${label}`);
+  if (id) {
+    const poster = document.createElement('img');
+    poster.className = 'columns-feature-video-poster';
+    poster.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+    poster.alt = '';
+    poster.loading = 'lazy';
+    facade.append(poster);
+  }
+  const play = document.createElement('span');
+  play.className = 'columns-feature-video-play';
+  play.setAttribute('aria-hidden', 'true');
+  facade.append(play);
+
+  const activate = () => {
+    const iframe = buildVideoIframe(src, label);
+    holder.replaceChildren(iframe);
+    iframe.focus?.();
+  };
+  facade.addEventListener('click', activate);
+
+  holder.append(facade);
   const container = link.closest('p') || link;
   container.replaceWith(holder);
 }
@@ -91,12 +163,16 @@ function decorateFeature(block) {
 
       const stack = document.createElement('div');
       stack.className = 'columns-feature-collage-stack';
-      cellPictures.forEach((pic) => stack.append(pic));
+      // Thumbnails display at most ~266px (tablet 164, desktop 266) → cap the
+      // rendition at 600px (2× for retina) instead of the default 2000px.
+      cellPictures.forEach((pic) => { capPictureWidth(pic, 600); stack.append(pic); });
       cell.append(stack);
 
       // Tall portrait beside the stack — from the authored image (matches the
-      // source collage). Its alt text comes from the authored <img>.
+      // source collage). Its alt text comes from the authored <img>. Displays at
+      // most ~296px wide (tablet 353) → cap the rendition at 750px (2×).
       if (portraitPic) {
+        capPictureWidth(portraitPic, 750);
         const portrait = document.createElement('div');
         portrait.className = 'columns-feature-collage-portrait';
         portrait.append(portraitPic);

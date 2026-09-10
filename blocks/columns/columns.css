@@ -197,6 +197,64 @@
   border: 0;
 }
 
+/* Click-to-load facade: fills the 16:9 box; the poster covers it and a centered
+   play glyph sits on top. Loads the real YouTube iframe only on click. */
+.columns.feature .columns-feature-video-facade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #000;
+  cursor: pointer;
+  display: block;
+}
+
+.columns.feature .columns-feature-video-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Red rounded-rectangle YouTube-style play button, centered. */
+.columns.feature .columns-feature-video-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgb(0 0 0 / 65%);
+  transition: background-color 0.2s ease;
+}
+
+.columns.feature .columns-feature-video-play::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-40%, -50%);
+  border-style: solid;
+  border-width: 11px 0 11px 19px;
+  border-color: transparent transparent transparent #fff;
+}
+
+.columns.feature .columns-feature-video-facade:hover .columns-feature-video-play,
+.columns.feature .columns-feature-video-facade:focus-visible .columns-feature-video-play {
+  background: #f00;
+}
+
+.columns.feature .columns-feature-video-facade:focus-visible {
+  outline: 3px solid var(--brand-blue, #12284c);
+  outline-offset: 2px;
+}
+
 /* --- image-collage variant (instance B) --- */
 
 /* The collage's "For decades…" heading is authored as SEPARATE default content

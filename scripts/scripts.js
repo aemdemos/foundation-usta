@@ -341,7 +341,10 @@ function loadDelayed() {
 async function loadPage() {
   await loadEager(document);
   await loadLazy(document);
-  loadDelayed();
+  // Defer the delayed phase ~3s (EDS convention) so non-critical third parties
+  // (the FundraiseUp donate tab, the consent gate) load well after the page is
+  // interactive — keeps them out of the initial critical path / "unused JS".
+  window.setTimeout(() => loadDelayed(), 3000);
 }
 
 loadPage();

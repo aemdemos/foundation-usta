@@ -3233,6 +3233,25 @@ of 72** articles ever appear as related-cards, so only those 12 have a discovera
   regenerates with newstags + corrected dates). Validation draft kept at
   `content/drafts/date-fix-validation/women-s-history-month-2026.plain.html`.
 
+### 2026-09-10 — Performance: PageSpeed 86→ higher via EDS best practices (images, LCP preload, video facade, delayed 3rd-party)
+PageSpeed desktop was 86 (LCP 1.6s orange, Speed Index 2.6s red; flags: 206 KiB oversized images, no LCP
+fetchpriority, 521 KiB unused JS). Root causes were all in-our-control except the CDN cache/minify flags. Fixes
+(all verified locally, no visual regressions, gates green):
+- **Oversized collage images (206 KiB):** `columns.js` `capPictureWidth()` caps the collage thumbnails/portrait
+  renditions at 600px / 750px (they display ≤266/296px) instead of EDS's default `width=2000`. Renditions verified
+  600/750; images stay sharp (native 512/613px).
+- **Hero LCP (fetchpriority flag):** `hero.js` `preloadHeroImage()` injects `<link rel=preload as=image
+  fetchpriority=high>` for the hero's background rendition (derived from the AUTHORED image — still fully content
+  -managed; swap the image and the preload follows). Applied to banner + text-up. Verified preload href === hero bg URL.
+- **YouTube unused JS (biggest lever):** replaced the eager iframe with a **click-to-load facade** (poster thumbnail
+  + play button; real iframe injected on click with autoplay). Verified: **0 YouTube player scripts before click**
+  (was ~8), 8 load only on click. Facade is a keyboard-accessible `<button aria-label>`; a11y ✓.
+- **Delayed 3rd-party:** wrapped `loadDelayed()` in a 3s `setTimeout` (EDS convention) so the FundraiseUp donate tab
+  (15 scripts) + consent gate load AFTER interactive. Verified 0 FundraiseUp requests in first 1.5s, loads after 3s
+  (tab still appears). Remaining PageSpeed flags (minify CSS 27 KiB, cache lifetimes 60 KiB) are platform/CDN-managed,
+  not code.
+- Gates: lint 0 · breakpoint ✓ · overflow ✓ · a11y ✓. Deploys on GitHub push (hero.js, columns.js/css, scripts.js).
+
 **MIGRATION STATUS:** all general-template + specialized pages imported; financials PDFs **live on DA**. Full-site
 link + breadcrumb validation PASSED (see `VALIDATION.md`). Outstanding: **2 PDFs** localized locally, pending DA
 upload (blocked on the credential opt-in). Only **404.html** (T7, hero-error) remains unmigrated from the full scope.

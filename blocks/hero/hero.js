@@ -28,6 +28,26 @@
 const ERROR_BALL_SRC = `${window.hlx?.codeBasePath || ''}/icons/tennis-ball-bouncing.svg`;
 
 /**
+ * The hero photo is the page's LCP element but it's applied as a CSS background
+ * (set by this JS), so the browser can't discover it from the initial HTML and
+ * fetches it late — hurting LCP. Add a high-priority <link rel="preload"> so the
+ * browser starts the download immediately, in parallel with the eager CSS/JS.
+ * The URL is derived from the AUTHORED image (still fully content-managed — swap
+ * the authored image and this points at the new one). Only preloaded once, and
+ * only for a top-of-page hero (skip if the block isn't in the first viewport).
+ * @param {string} href the (large) rendition URL used for the background
+ */
+function preloadHeroImage(href) {
+  if (!href || document.querySelector(`link[rel="preload"][href="${href}"]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'image';
+  link.href = href;
+  link.setAttribute('fetchpriority', 'high');
+  document.head.appendChild(link);
+}
+
+/**
  * The hero photo is applied as a CSS background (a background image can carry no
  * `alt`), so expose the AUTHORED image's alt to assistive tech via a dedicated,
  * empty child element with `role="img"` + `aria-label`. It must be a SEPARATE
@@ -97,6 +117,7 @@ function decorateBanner(block) {
       ? bgUrl.replace(/([?&])width=\d+/, '$1width=2000')
       : `${bgUrl}${bgUrl.includes('?') ? '&' : '?'}width=2000&format=webply&optimize=medium`;
     block.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("${bgUrl}")`;
+    preloadHeroImage(bgUrl); // LCP: discover the background photo early
     labelBackground(block, bgImg);
     imgRow.remove();
   }
@@ -167,6 +188,7 @@ function decorateTextUp(block) {
       ? bgUrl.replace(/([?&])width=\d+/, '$1width=2000')
       : `${bgUrl}${bgUrl.includes('?') ? '&' : '?'}width=2000&format=webply&optimize=medium`;
     block.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("${bgUrl}")`;
+    preloadHeroImage(bgUrl); // LCP: discover the background photo early
     labelBackground(block, bgImg);
     imgRow.remove();
   }
