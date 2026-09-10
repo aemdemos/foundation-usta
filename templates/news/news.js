@@ -41,18 +41,23 @@ async function getLatestNews(limit, excludePath) {
    Cells passed as `{ elems }` (no wrapper div) so cards.js `decorateNews`
    sees the <p>s as direct children — its `:scope > p` lookup needs that. */
 function newsRow(entry) {
-  // Image cell — wrapped in a link to the article (like the source).
+  // Image cell — links to the article (like the source), but is DECORATIVE for
+  // assistive tech: the title link below already names the destination, so the
+  // image link is removed from the tab order and hidden from screen readers to
+  // avoid a redundant third stop/announcement per card. (empty alt + aria-hidden
+  // + tabindex=-1).
   let imageLink = null;
   if (entry.image) {
     const picture = document.createElement('picture');
     const img = document.createElement('img');
     img.src = entry.image;
-    img.alt = entry.title || '';
+    img.alt = '';
     img.loading = 'lazy';
     picture.append(img);
     imageLink = document.createElement('a');
     imageLink.href = entry.path;
-    imageLink.setAttribute('aria-label', entry.title || '');
+    imageLink.setAttribute('tabindex', '-1');
+    imageLink.setAttribute('aria-hidden', 'true');
     imageLink.append(picture);
   }
 
@@ -102,7 +107,9 @@ export default async function decorate(main) {
     }
   });
 
-  const articles = await getLatestNews(RELATED_LIMIT, window.location.pathname);
+  // getLatestNews returns newest-first; reverse so cards read oldest → newest
+  // left-to-right and the LATEST article lands on the right (matches the source).
+  const articles = (await getLatestNews(RELATED_LIMIT, window.location.pathname)).reverse();
   if (!articles.length) return; // no index / nothing to show
 
   const heading = document.createElement('h2');
@@ -119,8 +126,9 @@ export default async function decorate(main) {
     section.classList.add('section', 'related-articles');
     main.append(section);
   }
-  // Section carries the standard cards container class so its selectors are
-  // as specific as an authored section (`.related-articles.section.cards-container`).
+  // Section carries the standard cards container class so the feed's CSS hooks
+  // match an authored section (styled via
+  // `body.news .related-articles.section.cards-container .cards`).
   section.classList.add('cards-container');
   const headingWrapper = document.createElement('div');
   headingWrapper.className = 'default-content-wrapper';
