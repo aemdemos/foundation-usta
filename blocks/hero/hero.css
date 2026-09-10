@@ -247,15 +247,17 @@ main > .section.hero-container:has(.hero.banner) {
   }
 }
 
-/* Homepage LEARN MORE box grows with the viewport like the source (148 @≤992 →
-   163 @1200 → 190 @1440+). Our ~128px label stays constant, so scale the
-   horizontal padding. From 1200 up it grows FLUIDLY (17px @1280 → 31px @1440,
-   ~0.0875 × the px past 1280, capped at 31px) — a clamp() rather than a new
-   breakpoint, so only the approved 768/992/1200 media queries are used. Scoped
-   to :not(body.general) so only the homepage banner is affected. */
+/* Homepage LEARN MORE button width GROWS LINEARLY with the viewport like the
+   source (it's ~30% of the 50vw text panel, NOT a fixed pill): measured source
+   150@1200 → 190@1440 → 238@1728 → 270@1920, i.e. width ≈ 0.1665·vw − 50px.
+   Reproduce with a fixed WIDTH (label centered by the base flex rule) so the box
+   tracks the source at every wide-desktop width. Fluid via calc() — no new
+   breakpoint, only the approved 768/992/1200 queries. Scoped to :not(body.general)
+   so only the homepage banner is affected. */
 @media (width >= 1200px) {
   body:not(.general) .hero.banner a.button:any-link {
-    padding: 14px clamp(17px, calc(17px + (100vw - 1280px) * 0.0875), 31px);
+    width: calc(16.65vw - 50px);
+    padding: 14px; /* label centers via flex; width drives the box */
   }
 }
 

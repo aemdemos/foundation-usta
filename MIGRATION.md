@@ -3192,6 +3192,27 @@ inline handler. Source layout is IG-LEFT / text-RIGHT (a split-left section), on
   @1280: IG left (x55→625, 570px) / article text right (x655, 570px), **sideBySide:true**, single embed, real IG card
   hydrates. Backup + manifest SHA refreshed (`8d6faeb0…`). Gates: syntax ✓ · lint 0 errors.
 
+### 2026-09-10 — columns-feature-collage: stray empty <p>s stole flex width (thumbnails 245 not 266)
+Homepage "For decades…" collage left-images were too small vs source (thumbnails 245×182 / portrait 272 wide, vs
+source 266×199 / 296). Root cause in `columns.js` `decorateFeature`: it removed empty `<p>` wrappers BEFORE moving the
+`<picture>`s into the stack/portrait — but the source wraps each `<picture>` in its own `<p>`, so at cleanup time
+those `<p>`s still held a picture and were kept; after the pictures were relocated the `<p>`s were left behind as 3
+EMPTY flex children in the collage row, stealing ~45px so the stack+portrait couldn't reach their 266/296 flex-grow
+targets (grew to 245/272). Fix: run the empty-`<p>` cleanup AFTER relocating the pictures (scoped `:scope > p`).
+Verified local vs source: thumb 266×199 (was 245×182), portrait 296×401 (was 272), stack→portrait gap 15, thumbs
+touching (gap 0) — exact match at 1600; tablet 768 (thumbs row + portrait below) + 992 intact; no overflow. Gates:
+lint 0 · breakpoint ✓ · overflow ✓ (360/768/992/1200/1920). Pure decoration fix (no re-import) — deploys on GitHub push.
+
+### 2026-09-10 — Homepage hero LEARN MORE: width must GROW past 1440 (was capped ~192px)
+User DevTools showed source button 238px @1728 vs ours 192px. Earlier fix scaled padding but CAPPED at 31px (~192px
+max), so past 1440 ours stopped growing while the source keeps widening. Measured source: it's ~30% of the 50vw text
+panel — width grows LINEARLY 150@1200 → 190@1440 → 238@1728 → 270@1920 (≈ 0.1665·vw − 50px). Replaced the ≥1200
+padding-clamp with a fluid **`width: calc(16.65vw - 50px)`** (label centered by the base flex rule); base rule
+(`padding:14px 10px`, ~150px) covers ≤1200. Verified local vs source exact at every width: 1200:150, 1440:190,
+1600:216, 1728:238, 1920:270; vertical gap subhead→button 16px and left edge 189 both match. (Source wraps the `<a>`
+in a 56px `<div>` with 8px top/bottom pad, but the rendered button box + 16px gap are identical, so no change needed
+there.) Gates: lint 0 · breakpoint ✓ · overflow ✓ (360/768/992/1200/1920). Deploys on GitHub push.
+
 **MIGRATION STATUS:** all general-template + specialized pages imported; financials PDFs **live on DA**. Full-site
 link + breadcrumb validation PASSED (see `VALIDATION.md`). Outstanding: **2 PDFs** localized locally, pending DA
 upload (blocked on the credential opt-in). Only **404.html** (T7, hero-error) remains unmigrated from the full scope.

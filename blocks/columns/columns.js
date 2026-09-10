@@ -83,9 +83,8 @@ function decorateFeature(block) {
       // centers it full-width like the source — no lifting needed here.
 
       // Grab the pictures by descendant selector (EDS may wrap them in one shared
-      // <p> or in separate <p>s), then drop the now-empty <p> wrappers.
+      // <p> or in separate <p>s).
       const cellPictures = [...cell.querySelectorAll('picture')];
-      cell.querySelectorAll('p').forEach((p) => { if (!p.textContent.trim() && !p.querySelector('picture, img')) p.remove(); });
 
       // Last authored image = the tall portrait; the rest = the thumbnail stack.
       const portraitPic = cellPictures.length > 2 ? cellPictures.pop() : null;
@@ -103,6 +102,15 @@ function decorateFeature(block) {
         portrait.append(portraitPic);
         cell.append(portrait);
       }
+
+      // Drop stray empty <p> wrappers AFTER moving the pictures out. Must run last:
+      // the source wraps each <picture> in its own <p>, so removing empties before
+      // the move would skip them (they still held a <picture>); left in, they sit
+      // as extra flex children in the collage row and steal ~45px of width from the
+      // stack+portrait (thumbnails render 245 not 266). Now they're truly empty.
+      cell.querySelectorAll(':scope > p').forEach((p) => {
+        if (!p.textContent.trim() && !p.querySelector('picture, img')) p.remove();
+      });
     }
 
     // Single dedicated image column
