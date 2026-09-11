@@ -1,12 +1,9 @@
 import {
-  buildBlock, decorateBlock, loadBlock,
+  buildBlock, createOptimizedPicture, decorateBlock, loadBlock,
 } from '../../scripts/aem.js';
 
-/*
- * news template: builds the "Related Articles" feed in code (never authored).
- * Reads the news query-index, builds a `cards (news)` block from the latest
- * articles, and attaches it — reusing the site's existing card style.
- */
+/* news template: builds the "Related Articles" feed in code — reads the news
+   query-index, builds a `cards (news)` block from the latest articles, attaches it. */
 const RELATED_LIMIT = 3;
 const NEWS_INDEX_PATH = '/news-index.json';
 
@@ -17,8 +14,7 @@ function dateValue(dateStr) {
   return Number.isNaN(t) ? 0 : t;
 }
 
-/* Fetch the latest news from the query-index (newest first), excluding the
-   current page. Returns [] if the index can't be read. */
+/* Latest news from the query-index (newest first), excluding the current page; [] if unreadable. */
 async function getLatestNews(limit, excludePath) {
   let entries = [];
   try {
@@ -32,28 +28,21 @@ async function getLatestNews(limit, excludePath) {
 
   const current = excludePath.replace(/\.html$/, '');
   return entries
-    .filter((entry) => entry.path && entry.path.replace(/\.html$/, '') !== current)
+    .filter((e) => e.path && e.path.replace(/\.html$/, '') !== current)
     .sort((a, b) => dateValue(b.publicationdate) - dateValue(a.publicationdate))
     .slice(0, limit);
 }
 
-/* One cards-news row: [ image | h3 title, date, desc, Read More ].
-   Cells passed as `{ elems }` (no wrapper div) so cards.js `decorateNews`
-   sees the <p>s as direct children — its `:scope > p` lookup needs that. */
+/* One cards-news row: [ image | h3 title, date, desc, Read More ]. Cells passed
+   as `{ elems }` so cards.js `decorateNews` sees the <p>s as direct children. */
 function newsRow(entry) {
-  // Image cell — links to the article (like the source), but is DECORATIVE for
-  // assistive tech: the title link below already names the destination, so the
-  // image link is removed from the tab order and hidden from screen readers to
-  // avoid a redundant third stop/announcement per card. (empty alt + aria-hidden
-  // + tabindex=-1).
+  // Image links to the article but is DECORATIVE for AT (the title link already
+  // names it): empty alt + aria-hidden + tabindex=-1 avoids a redundant stop.
   let imageLink = null;
   if (entry.image) {
-    const picture = document.createElement('picture');
-    const img = document.createElement('img');
-    img.src = entry.image;
-    img.alt = '';
-    img.loading = 'lazy';
-    picture.append(img);
+    // Cards render ~230px but the index image is 1200px; serve a right-sized
+    // responsive <picture> (500 ≈ the slot at 2×).
+    const picture = createOptimizedPicture(entry.image, '', false, [{ width: '500' }]);
     imageLink = document.createElement('a');
     imageLink.href = entry.path;
     imageLink.setAttribute('tabindex', '-1');
@@ -94,8 +83,7 @@ function newsRow(entry) {
  * @param {Element} main the page's <main> element
  */
 export default async function decorate(main) {
-  // getLatestNews returns newest-first; reverse so cards read oldest → newest
-  // left-to-right and the LATEST article lands on the right (matches the source).
+  // Reverse the newest-first list so the LATEST card lands on the right (matches the source).
   const articles = (await getLatestNews(RELATED_LIMIT, window.location.pathname)).reverse();
   if (!articles.length) return; // no index / nothing to show
 
@@ -113,9 +101,7 @@ export default async function decorate(main) {
     section.classList.add('section', 'related-articles');
     main.append(section);
   }
-  // Section carries the standard cards container class so the feed's CSS hooks
-  // match an authored section (styled via
-  // `body.news .related-articles.section.cards-container .cards`).
+  // Standard cards container class so the section matches an authored one.
   section.classList.add('cards-container');
   const headingWrapper = document.createElement('div');
   headingWrapper.className = 'default-content-wrapper';
