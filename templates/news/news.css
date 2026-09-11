@@ -182,7 +182,7 @@ body.news .related-articles.section.cards-container .cards .cards-news-card-desc
   overflow: hidden;
 }
 
-/* Read More — Graphik Semibold, uppercase, underlined blue link; 14px/24px (16px from 992). Resets EDS button decoration (lone <p><a> auto-buttonizes). */
+/* Read More — Graphik Semibold, uppercase, underlined blue link; 14px/24px (16px from 992). */
 body.news .related-articles.section.cards-container .cards .cards-news-card-link {
   margin: 10px 0 0;
 }
@@ -192,33 +192,18 @@ body.news .related-articles.section.cards-container .cards .cards-news-card-date
   margin-top: 25px;
 }
 
-body.news .related-articles.section.cards-container .cards .cards-news-card-link a,
-body.news .related-articles.section.cards-container .cards .cards-news-card-link a.button,
-body.news .related-articles.section.cards-container .cards .cards-news-card-link a.button.primary {
-  display: inline;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+body.news .related-articles.section.cards-container .cards .cards-news-card-link a {
   color: var(--link-color);
   font-family: var(--heading-semibold-font-family);
   font-weight: 400;
   font-size: 14px;
   line-height: 24px;
-  letter-spacing: normal;
   text-transform: uppercase;
   text-decoration: underline;
-  text-overflow: clip;
-  white-space: normal;
 }
 
-body.news .related-articles.section.cards-container .cards .cards-news-card-link a.button:hover,
-body.news .related-articles.section.cards-container .cards .cards-news-card-link a.button.primary:hover {
-  background: transparent;
-  border: 0;
+body.news .related-articles.section.cards-container .cards .cards-news-card-link a:hover {
   color: var(--link-hover-color);
-  text-decoration: underline;
 }
 
 /* Tablet (768–991): cards flex:1 1 0 to fill the row evenly (3→3-up, 4→4-up, no empty slot); max-width caps a lone/2-card row. */
@@ -243,9 +228,7 @@ body.news .related-articles.section.cards-container .cards .cards-news-card-link
     letter-spacing: normal;
   }
 
-  body.news .related-articles.section.cards-container .cards .cards-news-card-link a,
-  body.news .related-articles.section.cards-container .cards .cards-news-card-link a.button,
-  body.news .related-articles.section.cards-container .cards .cards-news-card-link a.button.primary {
+  body.news .related-articles.section.cards-container .cards .cards-news-card-link a {
     font-size: 16px;
   }
 }

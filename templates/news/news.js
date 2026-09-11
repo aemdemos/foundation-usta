@@ -94,19 +94,6 @@ function newsRow(entry) {
  * @param {Element} main the page's <main> element
  */
 export default async function decorate(main) {
-  // Strip any authored feed (legacy imports) so the code-built one isn't a dupe.
-  main.querySelectorAll('.cards.news, .custom-content-related-articles').forEach((el) => {
-    el.closest('[class$="-wrapper"]')?.remove();
-    el.remove();
-  });
-  // ...and its now-orphaned "Related Articles" heading.
-  main.querySelectorAll('h2').forEach((h) => {
-    if (/^related articles$/i.test(h.textContent.trim()) && !h.closest('.section.related-articles')) {
-      h.closest('.default-content-wrapper')?.remove();
-      h.remove();
-    }
-  });
-
   // getLatestNews returns newest-first; reverse so cards read oldest → newest
   // left-to-right and the LATEST article lands on the right (matches the source).
   const articles = (await getLatestNews(RELATED_LIMIT, window.location.pathname)).reverse();
