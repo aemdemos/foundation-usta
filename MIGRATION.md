@@ -3342,3 +3342,19 @@ get-involved use hero TOP (text-up). Pick the variant per page.
   404 locally until pushed to DA; CSS only updates via GitHub push. Verify on aem.live.
 - `decorateButtons` (scripts.js) only buttonizes `<p><a>` wrapped in `<strong>`/`<em>`.
 - SVG-wrapped raster headshots must be rasterized before DA (409). (leadership page.)
+
+### 2026-09-14 — News: `six-student-athletes…tiafoe-fund` video was WRONGLY split-right → re-imported full-width
+The YouTube video on `/en/home/news/six-student-athletes-awarded-first-grants-frances-tiafoe-fund` rendered as a
+`split-right` section (video beside the paragraph). Source truth: the embed sits in a **full-width `aem-GridColumn--default--12`**
+column BELOW the text, so it must be a plain full-width `video-embed` block — NO split. The page was originally imported
+by an older importer; the CURRENT `import-news-v1.js` `wrapVideoSections()` already routes col-12 videos to the `else`
+(full-width) branch, so **no code change was needed** — a clean single-page re-import fixed it (per Content-Import Rule:
+re-import, don't hand-edit block structure).
+- Steps: re-bundled `import-news-v1.js` → single-URL `run-bulk-import.js --force` (94.7% completeness) →
+  `localize-assets` (3 imgs downloaded, 0 hotlinks). Verified local `.plain.html`: 0 `split-right`, single `video-embed`,
+  all other blocks intact (columns media-right, social, reactions, cards news / related-articles).
+- **Re-import gotcha:** a fresh import does NOT re-emit the manually-added `news-tags: usta-foundation` metadata row
+  (that's a documented post-import manual edit for the Related-Articles query pool — see the 2026-09-10 dates/tags entry).
+  Re-added it by hand after import. Corrected related-card dates (Mar 25 / Apr 15) survived the re-import.
+- **NOT YET LIVE:** localhost `/en/**` + aem.live serve from the DA preview bus, so the fix only appears once the page is
+  uploaded/published to DA (outward-facing — on user request). Local file is corrected and verified.
