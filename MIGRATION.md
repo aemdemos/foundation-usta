@@ -3358,3 +3358,38 @@ re-import, don't hand-edit block structure).
   Re-added it by hand after import. Corrected related-card dates (Mar 25 / Apr 15) survived the re-import.
 - **NOT YET LIVE:** localhost `/en/**` + aem.live serve from the DA preview bus, so the fix only appears once the page is
   uploaded/published to DA (outward-facing — on user request). Local file is corrected and verified.
+
+### 2026-09-14 — Home "Ready on the court" mission band: left-aligned + wider (center,narrow → medium)
+Per request + source measurement, the homepage "Ready on the court. Ready for life." mission band was `center, narrow`
+(text-centered, capped 810px). Source is actually LEFT-aligned copy on a wider measure — the p grows to ~1090px @1920
+(vs our 810 cap). Changed the section style to **`medium`** (708 @768 → 772 @992 → 970 @1200): dropping `center` makes the
+text left-aligned (only `.center` sets `text-align:center`; `.medium` just centers the column via `margin-inline:auto`),
+and `medium` is the "just wider than narrow" step. No CSS change — reused the existing `medium` width tokens (same band
+used for who-we-are mission intro). Content-only edit in `content/en/home.plain.html`.
+- **NOT YET LIVE:** homepage content serves from the DA preview bus (localhost + aem.live), so this appears only after the
+  page is re-uploaded/published to DA (outward-facing — on user request).
+
+### 2026-09-14 (rev) — Home: correct the two mission/collage sections (supersedes same-day entry above)
+Clarified the two asks after user feedback:
+1. **"Ready on the court" band** stays **CENTERED**, just needs to be **wider** than `narrow` (source p grows to ~1090
+   @1920 vs our 810 cap). Final style = **`center, medium`** (was `center, narrow`). Content edit in
+   `content/index.plain.html` (the `index` DA doc = the live homepage; `content/en/home.plain.html` is NOT what `/`
+   serves — earlier I edited the wrong file). **NOT live until the index page is published to DA.**
+2. **"For decades" collage body text** was **centered** but the SOURCE **left-aligns** it at desktop. Root cause: the
+   base `.columns.feature p { text-align:center }` (correct for the mobile stacked layout) was not overridden when the
+   collage goes two-column at ≥768. Added a scoped override:
+   `.columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p { text-align:left }`.
+   Verified: mobile 390 = center (source), tablet 768 + desktop 1920 = left (source). This is a **CSS** fix → shows in
+   local preview immediately; deploys via GitHub push.
+- **Preview gotcha reconfirmed:** the dev server serves the homepage HTML from the DA content bus, so CONTENT edits
+  (the `center, medium` style) don't appear locally until DA publish; CSS edits DO appear locally.
+- Gates: stylelint ✓ (columns.css) · breakpoint-check ✓ (768/992/1200 min-width only).
+
+### 2026-09-14 — cards-support: left-align card body at desktop (was centered at all widths)
+The homepage "Your support makes a difference." cards-support block centered the card title, description AND LEARN MORE
+at every width. Re-measured the SOURCE: mobile (390) IS centered (single-column stack), but desktop (≥768, 4-up) is
+**LEFT-aligned** — title/desc/CTA all share the image's left edge (135 @1440). The old CSS + comment ("centered at ALL
+widths") was wrong. Fix in `blocks/cards/cards.css` @768 block: set `text-align:left` on `.cards.support > ul > li` and
+its `.cards-support-card-body h4` (the base mobile rules keep center < 768). Verified local: mobile 390 = center; desktop
+1440 = left, title/desc/CTA + image all at left 135 (exact source match). CSS fix → visible in local preview; deploys via
+GitHub push. Gates: stylelint ✓ · breakpoint-check ✓.

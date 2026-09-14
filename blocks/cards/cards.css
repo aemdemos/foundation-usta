@@ -1055,7 +1055,14 @@ main .section:has(.cards.profile) .default-content-wrapper p {
     min-width: 0;
     width: auto;
 
-    /* text stays centered (source); only the h4 title is left-aligned */
+    /* From 768 the source LEFT-aligns the whole card body — title, description
+       AND the LEARN MORE link all share the image's left edge (the mobile stacked
+       layout centers them; the 4-up desktop layout does not). */
+    text-align: left;
+  }
+
+  .cards.support .cards-support-card-body h4 {
+    text-align: left;
   }
 
   .cards.support .cards-support-card-image img {
