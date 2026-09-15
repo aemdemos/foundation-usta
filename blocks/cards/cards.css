@@ -424,7 +424,11 @@
   }
 }
 
-/* Landscape image — source is a 400×200 (2:1) image, full card width, no radius. */
+/* Landscape image — full card width, no radius. The SOURCE renders each teaser
+   image at its OWN natural aspect ratio (height:auto, no crop): most are 400×200
+   (2:1) but some are taller, e.g. 400×267 (~1.5:1). Do NOT force a fixed
+   aspect-ratio + object-fit:cover — that crops the taller images (the "flattened
+   / cut picture" bug). Let the intrinsic ratio drive the height, like the source. */
 .cards.news .cards-news-card-image {
   line-height: 0;
 }
@@ -434,8 +438,6 @@
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 2 / 1;
-  object-fit: cover;
   border-radius: 0;
 }
 

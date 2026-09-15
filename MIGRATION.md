@@ -3393,3 +3393,18 @@ widths") was wrong. Fix in `blocks/cards/cards.css` @768 block: set `text-align:
 its `.cards-support-card-body h4` (the base mobile rules keep center < 768). Verified local: mobile 390 = center; desktop
 1440 = left, title/desc/CTA + image all at left 135 (exact source match). CSS fix → visible in local preview; deploys via
 GitHub push. Gates: stylelint ✓ · breakpoint-check ✓.
+
+### 2026-09-14 — sync `en/home` doc to match index (center, medium)
+Applied the same "Ready on the court" fix to `content/en/home.plain.html` (the `en/home` DA doc) as to `index`:
+style `medium` → **`center, medium`** (centered + wider than narrow). Both homepage docs now identical for this section.
+Content change → needs DA publish to appear in preview/live.
+
+### 2026-09-15 — cards-news: images cropped to 2:1 → let them use natural aspect ratio (source parity)
+Related-Articles teaser images looked "flattened/cut" vs source (reported on the Agassi news page). Root cause in
+`blocks/cards/cards.css`: `.cards.news .cards-news-card-image img` forced `aspect-ratio: 2 / 1` + `object-fit: cover`,
+which CROPS any image that isn't 2:1. The SOURCE renders each teaser at its OWN natural ratio (height:auto, object-fit
+default): most are 400×200 (2:1) but some are taller, e.g. the "2026 Game Changer Award" image is 400×267 (~1.5:1).
+Fix: removed the forced `aspect-ratio` + `object-fit:cover` so intrinsic ratio drives height (matches source). Verified
+local @1440 vs source: Donnelly 2.000 (190h), Game Changer 1.498 (254h, uncropped now), Opening Night 2.000 (190h) —
+exact ratio match; titles stagger like the source. No other tier forces a ratio (768/992 only touch flex/width). CSS fix
+→ visible in local preview; deploys via GitHub push. Gates: stylelint ✓ · breakpoint-check ✓.
