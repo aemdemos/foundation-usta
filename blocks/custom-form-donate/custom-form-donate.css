@@ -1,9 +1,11 @@
-/* custom-form-donate — STATIC reproduction of the inline FundraiseUp donation
-   widget on the source page. The source is a fixed-width (~360px) card that
-   renders identically at every viewport (a third-party iframe, min 286 / max
-   376px). Geometry/typography below are measured from the live widget at the
-   element level (card, pills, tiers, honoree, tooltip, CTA) so positions,
-   dimensions and paddings match 1:1 across all breakpoints. Pixel-first units. */
+/* custom-form-donate — the real FundraiseUp inline Element with a native
+   fallback (see the JS header). PRIMARY: the widget renders its own fixed-width
+   (~360px) card into `.cfd-fru-host`. FALLBACK (`.cfd-form`): a STATIC
+   reproduction of that card for origins where the widget can't mount. The
+   source card is a fixed-width (~360px) third-party iframe (min 286 / max 376px)
+   that renders identically at every viewport; geometry/typography below are
+   measured from the live widget at the element level (card, pills, tiers,
+   tooltip, CTA) so positions match 1:1 across breakpoints. Pixel-first units. */
 
 .custom-form-donate {
   --cfd-blue: var(--brand-blue); /* #0373f3 */
@@ -16,6 +18,20 @@
 
   font-family: var(--body-font-family);
   color: var(--cfd-ink);
+}
+
+/* Real FundraiseUp inline Element host — the widget renders itself here (its own
+   fixed-width card). Center it to match the native fallback's placement. */
+.custom-form-donate .cfd-fru-host {
+  display: flex;
+  justify-content: center;
+}
+
+.custom-form-donate .cfd-fru-element {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  margin-inline: auto;
 }
 
 /* The card — source: fixed ~360px wide, centered, 20px padding, 14px radius,
