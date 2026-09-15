@@ -20,6 +20,8 @@
  * the trailing identifier either way.)
  */
 
+import { loadFundraiseUp } from '../../scripts/donate.js';
+
 /** Pull the FundraiseUp element ID out of whatever the author entered. */
 function extractElementId(block) {
   // Prefer an authored anchor's href fragment if the pipeline left one intact…
@@ -54,13 +56,10 @@ export default function decorate(block) {
   anchor.textContent = 'Donate';
   block.append(anchor);
 
-  // If the FRU loader already initialised (e.g. re-decoration), nudge a rescan.
-  try {
-    if (window.FundraiseUp && typeof window.FundraiseUp.track === 'function') {
-      window.FundraiseUp.track('reinit');
-    }
-  } catch (e) {
-    // FundraiseUp not ready yet — it will pick up the anchor when it loads
-    // (the anchor exists well before the delayed-phase loader runs).
-  }
+  // Load the FundraiseUp widget EAGERLY. The donation form is this page's
+  // primary content, so we don't wait for the delayed phase (scripts.js loads
+  // donate.js ~3s in for perf on OTHER pages) — here the block itself kicks the
+  // loader now so the form hydrates as soon as possible. loadFundraiseUp() is
+  // idempotent, so the delayed-phase call later is a harmless no-op.
+  loadFundraiseUp();
 }

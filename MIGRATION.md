@@ -3505,3 +3505,21 @@ authored anchor `<a href="#XJYDXZPC">` does NOT work post-publish — the pipeli
 - **PENDING pipeline proof:** block CODE deploys via git push to the branch; the DRAFT CONTENT (now using the block) is
   git-ignored and lives on DA — the branch preview still serves the OLD anchor content until the updated draft is
   published to DA. Must re-verify hydration on the branch preview AFTER the content is on DA.
+
+### 2026-09-15 — donate-embed: eager load + firm height (fast form, zero CLS)
+Two perf/UX refinements to the donate-embed block:
+1. **Eager load** — the donation form is the page's PRIMARY content, so the block now triggers the FundraiseUp loader
+   itself at decorate time (eager phase) instead of waiting for the site-wide delayed phase (~3s). Exported
+   `loadFundraiseUp()` from `scripts/donate.js` (idempotent — guards on `window.FundraiseUp`, and now installs the
+   Trusted-Types frame hardening itself so an eager caller gets a working widget); `donate-embed.js` imports + calls it.
+   The delayed-phase call in scripts.js stays as a harmless no-op for other pages. Verified: FRU script requested at
+   **~384ms** (was ~3160ms) — form hydrates ~8× sooner. (Other pages keep the delayed behaviour — this is scoped to
+   pages that actually have the block.)
+2. **Firm height / no CLS** — reserved the form's rendered height on the block so nothing shifts when the iframe
+   hydrates, at every viewport. Measured on the live widget: **716px mobile (<768)** (328-wide form; honoree tooltip
+   wraps) and **698px from 768 up**. Set as `min-height` in `blocks/donate-embed/donate-embed.css` (min, not fixed, so
+   the form can grow if FRU ever gets taller). Verified: reservedBefore==formHeight at 390 (716) and 1440 (698) → zero
+   layout movement.
+- Gates: lint 0 errors (7 pre-existing no-console warnings in tests/a11y, unrelated) · stylelint ✓ · breakpoint ✓.
+- eslint: donate.js now has one named export → added a scoped `import/prefer-default-export` disable (the module is
+  side-effecting/self-running, so a named export is correct — not a default).

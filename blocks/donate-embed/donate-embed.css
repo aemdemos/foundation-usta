@@ -8,6 +8,19 @@
  */
 .donate-embed {
   text-align: center;
+
+  /* Reserve the FundraiseUp form's rendered height so nothing shifts when the
+     iframe hydrates (no CLS), at every viewport. Measured on the live widget:
+     716px on mobile (<768, 328px-wide form — the honoree tooltip wraps to more
+     lines) and 698px from 768 up. min-height (not height) lets the form grow if
+     the widget ever gets taller. */
+  min-height: 716px;
+}
+
+@media (width >= 768px) {
+  .donate-embed {
+    min-height: 698px;
+  }
 }
 
 /* Placeholder anchor: hidden but present so the FundraiseUp loader can find and
