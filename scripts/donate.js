@@ -96,9 +96,21 @@ function hardenFrameAccessors() {
   });
 }
 
-/** Loads the official Fundraise Up loader script (once). */
-function loadFundraiseUp() {
+/**
+ * Loads the official Fundraise Up loader script (once). Exported so a donation
+ * page's block (e.g. `donate-embed`) can trigger it EAGERLY — the inline form is
+ * that page's primary content, so it should hydrate ASAP rather than wait for the
+ * delayed phase. Idempotent (guards on `window.FundraiseUp`), so the delayed-phase
+ * call site and an eager block call are safe together. Also installs the Trusted
+ * Types frame hardening the widget needs (mirrors the module's bottom-of-file
+ * bootstrap) so an eager caller gets a working widget without duplicating logic.
+ */
+// donate.js is a side-effecting module (self-runs on import); a NAMED export
+// reads correctly here, so opt out of prefer-default-export for this file.
+/* eslint-disable-next-line import/prefer-default-export */
+export function loadFundraiseUp() {
   if (window.FundraiseUp) return;
+  if (window.trustedTypes) hardenFrameAccessors();
   /* eslint-disable */
   (function (w, d, s, n, a) {
     if (!w[n]) {
@@ -147,5 +159,6 @@ function wireDonateTriggers() {
 }
 
 wireDonateTriggers();
-if (window.trustedTypes) hardenFrameAccessors();
+// loadFundraiseUp() installs the Trusted Types frame hardening itself before it
+// injects the loader, so no separate hardenFrameAccessors() call is needed here.
 loadFundraiseUp();

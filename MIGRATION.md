@@ -3408,3 +3408,138 @@ Fix: removed the forced `aspect-ratio` + `object-fit:cover` so intrinsic ratio d
 local @1440 vs source: Donnelly 2.000 (190h), Game Changer 1.498 (254h, uncropped now), Opening Night 2.000 (190h) —
 exact ratio match; titles stagger like the source. No other tier forces a ratio (768/992 only touch flex/width). CSS fix
 → visible in local preview; deploys via GitHub push. Gates: stylelint ✓ · breakpoint-check ✓.
+
+### 2026-09-15 — Donate form: native FundraiseUp INLINE EMBED auto-activates (custom-form-donate block NOT needed)
+User observation confirmed: the Chris-Evert-50th donation form is a FundraiseUp **inline embed** that hydrates
+AUTOMATICALLY — no custom block required. Source markup is just a hidden anchor inside an embed container:
+`<div class="cmp-embed"><center><a href="#XJYDXZPC" style="display:none"></a></center></div>`. The FundraiseUp loader
+(already loaded site-wide by `scripts/donate.js`) scans the document for an `<a href="#<ElementID>">` and REPLACES it
+in place with the live donation iframe. `XJYDXZPC` is this form's FundraiseUp element ID (maps to the CHRIS50 campaign
+in the FRU dashboard).
+- **Test page:** `content/drafts/donate-widget-test/chris-evert-native-embed.plain.html` — content is just
+  `<p><a href="#XJYDXZPC">…</a></p>` (plus copy). Local URL (new draft folders serve under the `/content/` prefix):
+  `http://localhost:3000/content/drafts/donate-widget-test/chris-evert-native-embed`.
+- **Result:** after the delayed phase loads FRU (~3s), the anchor is consumed and replaced by the REAL FRU iframe
+  (`iframe#XJYDXZPC`, title "Donation Form", 698px): freq toggle, "Celebrating a Champion!", six $50 tiers, custom
+  amount, dedicate + honoree, "Designate to the Jimmy Evert Merit Scholarship Fund", "Donate and Support" — exact source
+  match, fully interactive. It hydrated even on **localhost** (the old `custom-form-donate.js` comment claimed the FRU
+  account is domain-restricted to prod; that did NOT block the inline embed here).
+- **Implication / next step (not yet applied to the live page):** the real Chris-Evert page
+  (`content/en/home/get-involved/special-funds/chris-evert-50th-anniversary.plain.html`) can DROP the hand-built
+  `custom-form-donate` block and instead author the FRU inline-embed anchor `<a href="#XJYDXZPC">`, letting the widget
+  activate itself (source-faithful, less code to maintain). The `split-even` section (quote left / form right) still
+  applies — the anchor/iframe just replaces the block in the right column. Leave `custom-form-donate` block in the repo
+  until the page is re-authored + published to DA (outward-facing, on request).
+- **Dev-server gotcha:** `aem up` caches its content-file listing at startup — brand-new draft files 404 until restart;
+  and locally-authored drafts serve under `/content/…` (bare `/drafts/…` proxies to aem.page). A stray probe file
+  `content/drafts/block-samples/_donate-native-probe.plain.html` was created during testing; deletion is hook-blocked,
+  so it remains (noindex, harmless) pending the content pipeline.
+
+### 2026-09-15 — Chris Evert page: exact copy under drafts/meet with custom-form-donate → native FRU embed (VERIFIED)
+On a feature branch, copied the LIVE Chris-Evert page
+(`content/en/home/get-involved/special-funds/chris-evert-50th-anniversary.plain.html`) verbatim to
+`content/drafts/meet/chris-evert-50th-anniversary.plain.html`, changing ONLY the donation piece: removed the
+`custom-form-donate` block and dropped in the native FundraiseUp inline-embed anchor `<p><a href="#XJYDXZPC"></a></p>`
+in the same `split-even` section (quote left / form right). Everything else identical (h1 center intro, columns text+photo,
+quote block, spacer band, metadata).
+- **Verified @1440 on localhost** (`/content/drafts/meet/chris-evert-50th-anniversary`): after the delayed phase loads FRU,
+  the anchor is consumed and replaced by the REAL FRU iframe (`iframe#XJYDXZPC`, "Donation Form", 698px) — full form
+  (freq toggle, "Celebrating a Champion!", six $50 tiers, custom amount, dedicate+honoree, "Designate to the Jimmy Evert
+  Merit Scholarship Fund", "Donate and Support"). `custom-form-donate` block absent; `split-even` still holds quote left
+  (x135) + form right (x735), side-by-side. So the real page can drop the block and use the native embed anchor 1:1.
+- **Dev-server note:** `aem up` must be started with `nohup … &` (NOT setsid/disown, which the harness reaps); it caches
+  the content listing at startup so new drafts need a restart, and locally-authored drafts serve under `/content/…`.
+
+### 2026-09-15 — split-even: center the native FRU embed in its column + top-align (source-parity positioning)
+On the drafts/meet Chris-Evert test, the native FRU donation iframe was flush-LEFT in its split-even column and sat +14px
+low vs the quote. Source truth (measured @1440): the form is CENTERED within its 570px column (the source wraps it in a
+`<center>` → iframe at left 832 / right 1208) and its TOP aligns exactly with the quote (delta 0). Fixed in `styles.css`
+split-even rules (CSS only — no content change):
+  • `main .section.split-even > .default-content-wrapper:last-child { text-align:center }` — centers the inline-embed
+    iframe in its column at every viewport (and in the single content column on mobile). `:last-child` also lifts
+    specificity above the earlier `.center-intro` rule (avoids stylelint no-descending-specificity — see css-pitfalls-eds).
+  • inside the @768 block: `…split-even > .default-content-wrapper > p:first-child { margin-top:0 }` — zeroes the leading
+    paragraph's block margin so the embed top-aligns with the quote (kills the +14px offset).
+- Verified vs source: @1440 form left 832/right 1208, topDelta 0 (exact match); @992 centered (left 558) topDelta 0;
+  @390 form fills the 328 column, stacked below quote (source stacks on mobile too). Gates: stylelint ✓ · breakpoint ✓.
+- Scoped to `.default-content-wrapper` so a block-based split-even column (e.g. quote+quote) is unaffected.
+
+### 2026-09-15 — split-even donate: theme-scope decision + form-load-speed analysis
+Two follow-up questions on the native FRU embed:
+1. **"Theme: general → should the CSS live in general.css?"** No general.css exists — and shouldn't. In `aem.js`
+   `decorateTemplateAndTheme()`, **Theme** metadata only ADDS a body class (`body.general`); it does NOT load a
+   stylesheet. Only **Template** loads `templates/<name>/<name>.css` (e.g. news). Convention here: theme-scoped rules
+   live in `styles.css` under `body.general …` (already ~30 lines of button-COLOR rules). Tried scoping the split-even
+   layout rules to `body.general`, but **reverted**: (a) the layout follows from the section style + content shape, not
+   the theme; (b) `Theme`→body-class only happens on the aem.live pipeline — the LOCAL dev server does NOT emit
+   `<meta name=theme>` for drafts, so `body.general` is absent locally and a body.general scope silently no-ops in
+   preview (confirmed: draft body class = "appear" only; live page body = "general appear"). Kept the rules scoped to
+   `.section.split-even > .default-content-wrapper` (structure-based, verifiable locally, robust to theme changes).
+2. **"Form takes time to load — do we need an EDS Embed block to make it fast?"** Measured: the FRU widget script is
+   requested at **~3.16s** (the delayed phase = `loadDelayed()` behind a 3s setTimeout in scripts.js), downloads in
+   ~29ms, and the inline form hydrates immediately after. So the ~3s delay is INTENTIONAL and CORRECT for perf — FRU is
+   a heavy 3rd-party (loads its own script + nested iframes + Stripe); loading it eagerly would tank LCP/TBT (the home
+   PageSpeed work in the 2026-09-10 entry specifically pushed FRU into the delayed phase for this reason). An EDS Embed
+   BLOCK would NOT make it faster — it'd still load the same FRU script; a block that loaded FRU eagerly would be
+   SLOWER. The right perf pattern is what we have (delayed 3rd-party) — optionally we could reserve the ~698px height
+   with a min-height placeholder to avoid layout shift when it hydrates (CLS), but that's a polish, not a speed win.
+   Conclusion: keep the native inline embed on the delayed FRU loader; no Embed block needed.
+
+### 2026-09-15 — donate-embed BLOCK (plain FRU anchor doesn't survive publishing → carry the ID as text)
+CONFIRMED on the deployed branch preview (issue7-widget…aem.live/drafts/meet/chris-evert-50th-anniversary): the plain
+authored anchor `<a href="#XJYDXZPC">` does NOT work post-publish — the pipeline strips the FRAGMENT-only href down to
+`/` (same failure mode donate.js documents for query-only `?form=` hrefs), so FundraiseUp never sees element ID
+`XJYDXZPC` and the form never hydrates. It only worked on the LOCAL dev server (which preserves the raw href).
+- **Fix — new `donate-embed` block** (`blocks/donate-embed/{js,css}`): authoring contract is ONE cell holding the FRU
+  element ID as PLAIN TEXT (`| Donate Embed | / | XJYDXZPC |`) — text survives publishing where an href fragment does
+  not. `decorate()` extracts the ID (from text, or a surviving `#…` href, or a pasted source snippet) and re-creates the
+  `<a href="#<ID>">` placeholder at decorate time (well before the delayed-phase FRU loader runs), so the widget
+  hydrates it exactly as on the source. Anchor is visually-hidden (clip-path inset, NOT display:none — the widget needs
+  it in the tree). Block CSS centers the ~376px iframe in its column (source `<center>`); split-even top-alignment comes
+  from the existing `div[class$='-wrapper'] + div[class$='-wrapper'] { margin-top:0 }` rule (both columns are now blocks:
+  quote + donate-embed). Removed the earlier `.default-content-wrapper` split-even rules (obsolete — embed is a block now).
+- Verified LOCAL @1440: block extracts XJYDXZPC → anchor → FRU hydrates → form left 832/right 1208, topDelta 0 (source
+  match). Gates: lint 0 errors (7 pre-existing no-console WARNINGS in tests/a11y, unrelated) · stylelint ✓ · breakpoint ✓.
+- **Authoring contract for the real page:** replace the `custom-form-donate` block with a `donate-embed` block whose one
+  cell is the FRU element ID (`XJYDXZPC` for CHRIS50). Keep the `split-even` section (quote + donate-embed).
+- **PENDING pipeline proof:** block CODE deploys via git push to the branch; the DRAFT CONTENT (now using the block) is
+  git-ignored and lives on DA — the branch preview still serves the OLD anchor content until the updated draft is
+  published to DA. Must re-verify hydration on the branch preview AFTER the content is on DA.
+
+### 2026-09-15 — donate-embed: eager load + firm height (fast form, zero CLS)
+Two perf/UX refinements to the donate-embed block:
+1. **Eager load** — the donation form is the page's PRIMARY content, so the block now triggers the FundraiseUp loader
+   itself at decorate time (eager phase) instead of waiting for the site-wide delayed phase (~3s). Exported
+   `loadFundraiseUp()` from `scripts/donate.js` (idempotent — guards on `window.FundraiseUp`, and now installs the
+   Trusted-Types frame hardening itself so an eager caller gets a working widget); `donate-embed.js` imports + calls it.
+   The delayed-phase call in scripts.js stays as a harmless no-op for other pages. Verified: FRU script requested at
+   **~384ms** (was ~3160ms) — form hydrates ~8× sooner. (Other pages keep the delayed behaviour — this is scoped to
+   pages that actually have the block.)
+2. **Firm height / no CLS** — reserved the form's rendered height on the block so nothing shifts when the iframe
+   hydrates, at every viewport. Measured on the live widget: **716px mobile (<768)** (328-wide form; honoree tooltip
+   wraps) and **698px from 768 up**. Set as `min-height` in `blocks/donate-embed/donate-embed.css` (min, not fixed, so
+   the form can grow if FRU ever gets taller). Verified: reservedBefore==formHeight at 390 (716) and 1440 (698) → zero
+   layout movement.
+- Gates: lint 0 errors (7 pre-existing no-console warnings in tests/a11y, unrelated) · stylelint ✓ · breakpoint ✓.
+- eslint: donate.js now has one named export → added a scoped `import/prefer-default-export` disable (the module is
+  side-effecting/self-running, so a named export is correct — not a default).
+
+### 2026-09-15 — Retire custom-form-donate block; migrate all pages + samples to donate-embed
+Now that donate-embed is proven, removed the hand-built block and switched everything over:
+- **Deleted** `blocks/custom-form-donate/` (js+css) — replaced by `donate-embed`.
+- **Real page** `content/en/home/get-involved/special-funds/chris-evert-50th-anniversary.plain.html`: swapped the
+  `custom-form-donate` table for `| Donate Embed | / | XJYDXZPC |` in the same split-even section (quote + donate-embed).
+- **Block sample:** added `content/drafts/block-samples/donate-embed.plain.html` (new library sample, element ID
+  XJYDXZPC, explains the text-carries-the-ID rationale + firm-height/no-CLS note). Repointed the old
+  `custom-form-donate.plain.html` sample to the donate-embed block with a "retired → see Donate Embed" note so it isn't
+  left unstyled.
+- **Section sample:** `content/drafts/sections-samples/section-split-even-donate.plain.html` — donate cell now uses the
+  donate-embed block; updated the descriptive copy (`custom-form-donate` → `donate-embed`).
+- **a11y config:** `tests/a11y/a11y.config.js` — `/drafts/block-samples/custom-form-donate` → `/drafts/block-samples/donate-embed`.
+- **Importer:** `tools/importer/import-chris-evert-v1.js` now emits a `Donate Embed` block (one cell = element ID
+  XJYDXZPC) instead of the old 5-row Custom Form Donate table, so a re-import reproduces the new markup. (+ comment fixes.)
+- Verified LOCAL: block sample @390 decorates → form hydrates (716px reserved == form height, no shift), no
+  `.custom-form-donate` in DOM. Gates: lint 0 errors · breakpoint ✓. (a11y test harness Chromium isn't installed in
+  this env — config change is a URL swap only; verify a11y where the harness runs.)
+- **Deploy:** block deletion + a11y config + importer = git push (block code already committed). The 3 CONTENT files are
+  git-ignored (live on DA) — must be re-published to DA for the real page + samples to show the new block.

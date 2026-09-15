@@ -893,7 +893,11 @@ main .section.center.map-wide > div {
   }
 
   /* cancel the global inter-wrapper spacing (which pushes a 2nd block down out
-     of row alignment) — matched at equal specificity to the rule that adds it */
+     of row alignment) — matched at equal specificity to the rule that adds it.
+     This top-aligns the donation form (a `donate-embed` block) with the sibling
+     quote block, matching the source (form top === quote top). Centering of the
+     ~376px FundraiseUp iframe within its column lives in the block's own CSS
+     (blocks/donate-embed/donate-embed.css). */
   main .section.split-even > div[class$='-wrapper'] + div[class$='-wrapper'] {
     margin-top: 0;
   }

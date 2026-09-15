@@ -10,7 +10,7 @@
  *   2. Columns — campaign copy (3 paras) LEFT + Chris Evert photo (20250820-
  *      chrissie50.jpg) RIGHT.
  *   3. SPLIT-EVEN — a Quote block (Selah Stibbins testimonial) LEFT + the inline
- *      donation form (custom-form-donate → FundraiseUp CHRIS50) RIGHT, two equal
+ *      donation form (donate-embed → FundraiseUp CHRIS50) RIGHT, two equal
  *      columns (`split-even`). Content reproduced from the approved
  *      section-split-even-donate sample.
  *   4. Trailing full-bleed black strip above the footer (Spacer, stats-band-bg).
@@ -186,19 +186,16 @@ export default {
     ];
     const COLUMN_IMG = '/content/dam/usta-foundation/get-involved/20250820-chrissie50.jpg';
     const COLUMN_IMG_ALT = 'Chris Evert';
-    // split-even: Quote (Selah Stibbins) + custom-form-donate (from the sample).
+    // split-even: Quote (Selah Stibbins) + donate-embed (native FundraiseUp inline form).
     const QUOTE_PARAS = [
       '“The coaches and players at the Evert Academy pushed me to become the best tennis player and person I could be.',
       '"The Jimmy Evert Scholarship really helped make it possible for me to excel in my first year competing in college.”',
     ];
     const QUOTE_ATTR = "- Selah Stibbins, Howard University '26";
-    const DONATE_FORM = {
-      title: 'Celebrating a Champion!',
-      amounts: '50 | 50 | 50 | 50 | 50 | 50',
-      designate: 'Designate to the Jimmy Evert Merit Scholarship Fund',
-      cta: 'Donate and Support',
-      href: 'https://ustaf.donorsupport.co/page/CHRIS50?elementTitle=Donation%20Form&elementName=Chris%2050%20Donation%20Embed',
-    };
+    // Native FundraiseUp inline embed — the CHRIS50 campaign's element ID. The
+    // donate-embed block carries this as plain text (a fragment-only anchor
+    // doesn't survive publishing) and the widget hydrates it into the live form.
+    const DONATE_ELEMENT_ID = 'XJYDXZPC';
 
     const p = (text) => { const el = document.createElement('p'); el.textContent = text; return el; };
     const cell = (text) => { const d = document.createElement('div'); d.textContent = text; return d; };
@@ -233,16 +230,9 @@ export default {
       main.append(WebImporter.DOMUtils.createTable([
         ['Quote'], [quoteBody], [quoteAttr],
       ], document));
-      const a = document.createElement('a');
-      a.href = DONATE_FORM.href; a.textContent = DONATE_FORM.href;
-      const linkCell = document.createElement('div'); linkCell.append(a);
       main.append(WebImporter.DOMUtils.createTable([
-        ['Custom Form Donate'],
-        [cell(DONATE_FORM.title)],
-        [cell(DONATE_FORM.amounts)],
-        [cell(DONATE_FORM.designate)],
-        [cell(DONATE_FORM.cta)],
-        [linkCell],
+        ['Donate Embed'],
+        [cell(DONATE_ELEMENT_ID)],
       ], document));
       main.append(WebImporter.Blocks.createBlock(document, {
         name: 'Section Metadata', cells: { style: 'split-even' },
