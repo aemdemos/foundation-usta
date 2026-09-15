@@ -3449,3 +3449,38 @@ quote block, spacer band, metadata).
   (x135) + form right (x735), side-by-side. So the real page can drop the block and use the native embed anchor 1:1.
 - **Dev-server note:** `aem up` must be started with `nohup … &` (NOT setsid/disown, which the harness reaps); it caches
   the content listing at startup so new drafts need a restart, and locally-authored drafts serve under `/content/…`.
+
+### 2026-09-15 — split-even: center the native FRU embed in its column + top-align (source-parity positioning)
+On the drafts/meet Chris-Evert test, the native FRU donation iframe was flush-LEFT in its split-even column and sat +14px
+low vs the quote. Source truth (measured @1440): the form is CENTERED within its 570px column (the source wraps it in a
+`<center>` → iframe at left 832 / right 1208) and its TOP aligns exactly with the quote (delta 0). Fixed in `styles.css`
+split-even rules (CSS only — no content change):
+  • `main .section.split-even > .default-content-wrapper:last-child { text-align:center }` — centers the inline-embed
+    iframe in its column at every viewport (and in the single content column on mobile). `:last-child` also lifts
+    specificity above the earlier `.center-intro` rule (avoids stylelint no-descending-specificity — see css-pitfalls-eds).
+  • inside the @768 block: `…split-even > .default-content-wrapper > p:first-child { margin-top:0 }` — zeroes the leading
+    paragraph's block margin so the embed top-aligns with the quote (kills the +14px offset).
+- Verified vs source: @1440 form left 832/right 1208, topDelta 0 (exact match); @992 centered (left 558) topDelta 0;
+  @390 form fills the 328 column, stacked below quote (source stacks on mobile too). Gates: stylelint ✓ · breakpoint ✓.
+- Scoped to `.default-content-wrapper` so a block-based split-even column (e.g. quote+quote) is unaffected.
+
+### 2026-09-15 — split-even donate: theme-scope decision + form-load-speed analysis
+Two follow-up questions on the native FRU embed:
+1. **"Theme: general → should the CSS live in general.css?"** No general.css exists — and shouldn't. In `aem.js`
+   `decorateTemplateAndTheme()`, **Theme** metadata only ADDS a body class (`body.general`); it does NOT load a
+   stylesheet. Only **Template** loads `templates/<name>/<name>.css` (e.g. news). Convention here: theme-scoped rules
+   live in `styles.css` under `body.general …` (already ~30 lines of button-COLOR rules). Tried scoping the split-even
+   layout rules to `body.general`, but **reverted**: (a) the layout follows from the section style + content shape, not
+   the theme; (b) `Theme`→body-class only happens on the aem.live pipeline — the LOCAL dev server does NOT emit
+   `<meta name=theme>` for drafts, so `body.general` is absent locally and a body.general scope silently no-ops in
+   preview (confirmed: draft body class = "appear" only; live page body = "general appear"). Kept the rules scoped to
+   `.section.split-even > .default-content-wrapper` (structure-based, verifiable locally, robust to theme changes).
+2. **"Form takes time to load — do we need an EDS Embed block to make it fast?"** Measured: the FRU widget script is
+   requested at **~3.16s** (the delayed phase = `loadDelayed()` behind a 3s setTimeout in scripts.js), downloads in
+   ~29ms, and the inline form hydrates immediately after. So the ~3s delay is INTENTIONAL and CORRECT for perf — FRU is
+   a heavy 3rd-party (loads its own script + nested iframes + Stripe); loading it eagerly would tank LCP/TBT (the home
+   PageSpeed work in the 2026-09-10 entry specifically pushed FRU into the delayed phase for this reason). An EDS Embed
+   BLOCK would NOT make it faster — it'd still load the same FRU script; a block that loaded FRU eagerly would be
+   SLOWER. The right perf pattern is what we have (delayed 3rd-party) — optionally we could reserve the ~698px height
+   with a min-height placeholder to avoid layout shift when it hydrates (CLS), but that's a polish, not a speed win.
+   Conclusion: keep the native inline embed on the delayed FRU loader; no Embed block needed.
