@@ -3408,3 +3408,44 @@ Fix: removed the forced `aspect-ratio` + `object-fit:cover` so intrinsic ratio d
 local @1440 vs source: Donnelly 2.000 (190h), Game Changer 1.498 (254h, uncropped now), Opening Night 2.000 (190h) —
 exact ratio match; titles stagger like the source. No other tier forces a ratio (768/992 only touch flex/width). CSS fix
 → visible in local preview; deploys via GitHub push. Gates: stylelint ✓ · breakpoint-check ✓.
+
+### 2026-09-15 — Donate form: native FundraiseUp INLINE EMBED auto-activates (custom-form-donate block NOT needed)
+User observation confirmed: the Chris-Evert-50th donation form is a FundraiseUp **inline embed** that hydrates
+AUTOMATICALLY — no custom block required. Source markup is just a hidden anchor inside an embed container:
+`<div class="cmp-embed"><center><a href="#XJYDXZPC" style="display:none"></a></center></div>`. The FundraiseUp loader
+(already loaded site-wide by `scripts/donate.js`) scans the document for an `<a href="#<ElementID>">` and REPLACES it
+in place with the live donation iframe. `XJYDXZPC` is this form's FundraiseUp element ID (maps to the CHRIS50 campaign
+in the FRU dashboard).
+- **Test page:** `content/drafts/donate-widget-test/chris-evert-native-embed.plain.html` — content is just
+  `<p><a href="#XJYDXZPC">…</a></p>` (plus copy). Local URL (new draft folders serve under the `/content/` prefix):
+  `http://localhost:3000/content/drafts/donate-widget-test/chris-evert-native-embed`.
+- **Result:** after the delayed phase loads FRU (~3s), the anchor is consumed and replaced by the REAL FRU iframe
+  (`iframe#XJYDXZPC`, title "Donation Form", 698px): freq toggle, "Celebrating a Champion!", six $50 tiers, custom
+  amount, dedicate + honoree, "Designate to the Jimmy Evert Merit Scholarship Fund", "Donate and Support" — exact source
+  match, fully interactive. It hydrated even on **localhost** (the old `custom-form-donate.js` comment claimed the FRU
+  account is domain-restricted to prod; that did NOT block the inline embed here).
+- **Implication / next step (not yet applied to the live page):** the real Chris-Evert page
+  (`content/en/home/get-involved/special-funds/chris-evert-50th-anniversary.plain.html`) can DROP the hand-built
+  `custom-form-donate` block and instead author the FRU inline-embed anchor `<a href="#XJYDXZPC">`, letting the widget
+  activate itself (source-faithful, less code to maintain). The `split-even` section (quote left / form right) still
+  applies — the anchor/iframe just replaces the block in the right column. Leave `custom-form-donate` block in the repo
+  until the page is re-authored + published to DA (outward-facing, on request).
+- **Dev-server gotcha:** `aem up` caches its content-file listing at startup — brand-new draft files 404 until restart;
+  and locally-authored drafts serve under `/content/…` (bare `/drafts/…` proxies to aem.page). A stray probe file
+  `content/drafts/block-samples/_donate-native-probe.plain.html` was created during testing; deletion is hook-blocked,
+  so it remains (noindex, harmless) pending the content pipeline.
+
+### 2026-09-15 — Chris Evert page: exact copy under drafts/meet with custom-form-donate → native FRU embed (VERIFIED)
+On a feature branch, copied the LIVE Chris-Evert page
+(`content/en/home/get-involved/special-funds/chris-evert-50th-anniversary.plain.html`) verbatim to
+`content/drafts/meet/chris-evert-50th-anniversary.plain.html`, changing ONLY the donation piece: removed the
+`custom-form-donate` block and dropped in the native FundraiseUp inline-embed anchor `<p><a href="#XJYDXZPC"></a></p>`
+in the same `split-even` section (quote left / form right). Everything else identical (h1 center intro, columns text+photo,
+quote block, spacer band, metadata).
+- **Verified @1440 on localhost** (`/content/drafts/meet/chris-evert-50th-anniversary`): after the delayed phase loads FRU,
+  the anchor is consumed and replaced by the REAL FRU iframe (`iframe#XJYDXZPC`, "Donation Form", 698px) — full form
+  (freq toggle, "Celebrating a Champion!", six $50 tiers, custom amount, dedicate+honoree, "Designate to the Jimmy Evert
+  Merit Scholarship Fund", "Donate and Support"). `custom-form-donate` block absent; `split-even` still holds quote left
+  (x135) + form right (x735), side-by-side. So the real page can drop the block and use the native embed anchor 1:1.
+- **Dev-server note:** `aem up` must be started with `nohup … &` (NOT setsid/disown, which the harness reaps); it caches
+  the content listing at startup so new drafts need a restart, and locally-authored drafts serve under `/content/…`.
