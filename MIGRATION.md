@@ -3523,3 +3523,23 @@ Two perf/UX refinements to the donate-embed block:
 - Gates: lint 0 errors (7 pre-existing no-console warnings in tests/a11y, unrelated) · stylelint ✓ · breakpoint ✓.
 - eslint: donate.js now has one named export → added a scoped `import/prefer-default-export` disable (the module is
   side-effecting/self-running, so a named export is correct — not a default).
+
+### 2026-09-15 — Retire custom-form-donate block; migrate all pages + samples to donate-embed
+Now that donate-embed is proven, removed the hand-built block and switched everything over:
+- **Deleted** `blocks/custom-form-donate/` (js+css) — replaced by `donate-embed`.
+- **Real page** `content/en/home/get-involved/special-funds/chris-evert-50th-anniversary.plain.html`: swapped the
+  `custom-form-donate` table for `| Donate Embed | / | XJYDXZPC |` in the same split-even section (quote + donate-embed).
+- **Block sample:** added `content/drafts/block-samples/donate-embed.plain.html` (new library sample, element ID
+  XJYDXZPC, explains the text-carries-the-ID rationale + firm-height/no-CLS note). Repointed the old
+  `custom-form-donate.plain.html` sample to the donate-embed block with a "retired → see Donate Embed" note so it isn't
+  left unstyled.
+- **Section sample:** `content/drafts/sections-samples/section-split-even-donate.plain.html` — donate cell now uses the
+  donate-embed block; updated the descriptive copy (`custom-form-donate` → `donate-embed`).
+- **a11y config:** `tests/a11y/a11y.config.js` — `/drafts/block-samples/custom-form-donate` → `/drafts/block-samples/donate-embed`.
+- **Importer:** `tools/importer/import-chris-evert-v1.js` now emits a `Donate Embed` block (one cell = element ID
+  XJYDXZPC) instead of the old 5-row Custom Form Donate table, so a re-import reproduces the new markup. (+ comment fixes.)
+- Verified LOCAL: block sample @390 decorates → form hydrates (716px reserved == form height, no shift), no
+  `.custom-form-donate` in DOM. Gates: lint 0 errors · breakpoint ✓. (a11y test harness Chromium isn't installed in
+  this env — config change is a URL swap only; verify a11y where the harness runs.)
+- **Deploy:** block deletion + a11y config + importer = git push (block code already committed). The 3 CONTENT files are
+  git-ignored (live on DA) — must be re-published to DA for the real page + samples to show the new block.
