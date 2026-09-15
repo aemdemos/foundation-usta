@@ -1,0 +1,29 @@
+/*
+ * donate-embed — the FundraiseUp inline donation form.
+ *
+ * The block holds the placeholder anchor that FundraiseUp replaces with its
+ * ~376px-wide donation iframe. The source centers the form within its column
+ * (a <center> wrapper); reproduce that so it sits centered in the split-even
+ * column (and in the single content column on mobile), not flush-left.
+ */
+.donate-embed {
+  text-align: center;
+}
+
+/* Placeholder anchor: hidden but present so the FundraiseUp loader can find and
+   replace it. Not display:none — the widget needs it in the tree to hydrate. */
+.donate-embed .donate-embed-anchor {
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  color: transparent;
+}
+
+/* The hydrated FundraiseUp iframe fills the form's natural width, centered. */
+.donate-embed iframe {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}

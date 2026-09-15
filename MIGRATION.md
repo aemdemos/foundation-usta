@@ -3484,3 +3484,24 @@ Two follow-up questions on the native FRU embed:
    SLOWER. The right perf pattern is what we have (delayed 3rd-party) — optionally we could reserve the ~698px height
    with a min-height placeholder to avoid layout shift when it hydrates (CLS), but that's a polish, not a speed win.
    Conclusion: keep the native inline embed on the delayed FRU loader; no Embed block needed.
+
+### 2026-09-15 — donate-embed BLOCK (plain FRU anchor doesn't survive publishing → carry the ID as text)
+CONFIRMED on the deployed branch preview (issue7-widget…aem.live/drafts/meet/chris-evert-50th-anniversary): the plain
+authored anchor `<a href="#XJYDXZPC">` does NOT work post-publish — the pipeline strips the FRAGMENT-only href down to
+`/` (same failure mode donate.js documents for query-only `?form=` hrefs), so FundraiseUp never sees element ID
+`XJYDXZPC` and the form never hydrates. It only worked on the LOCAL dev server (which preserves the raw href).
+- **Fix — new `donate-embed` block** (`blocks/donate-embed/{js,css}`): authoring contract is ONE cell holding the FRU
+  element ID as PLAIN TEXT (`| Donate Embed | / | XJYDXZPC |`) — text survives publishing where an href fragment does
+  not. `decorate()` extracts the ID (from text, or a surviving `#…` href, or a pasted source snippet) and re-creates the
+  `<a href="#<ID>">` placeholder at decorate time (well before the delayed-phase FRU loader runs), so the widget
+  hydrates it exactly as on the source. Anchor is visually-hidden (clip-path inset, NOT display:none — the widget needs
+  it in the tree). Block CSS centers the ~376px iframe in its column (source `<center>`); split-even top-alignment comes
+  from the existing `div[class$='-wrapper'] + div[class$='-wrapper'] { margin-top:0 }` rule (both columns are now blocks:
+  quote + donate-embed). Removed the earlier `.default-content-wrapper` split-even rules (obsolete — embed is a block now).
+- Verified LOCAL @1440: block extracts XJYDXZPC → anchor → FRU hydrates → form left 832/right 1208, topDelta 0 (source
+  match). Gates: lint 0 errors (7 pre-existing no-console WARNINGS in tests/a11y, unrelated) · stylelint ✓ · breakpoint ✓.
+- **Authoring contract for the real page:** replace the `custom-form-donate` block with a `donate-embed` block whose one
+  cell is the FRU element ID (`XJYDXZPC` for CHRIS50). Keep the `split-even` section (quote + donate-embed).
+- **PENDING pipeline proof:** block CODE deploys via git push to the branch; the DRAFT CONTENT (now using the block) is
+  git-ignored and lives on DA — the branch preview still serves the OLD anchor content until the updated draft is
+  published to DA. Must re-verify hydration on the branch preview AFTER the content is on DA.

@@ -893,35 +893,14 @@ main .section.center.map-wide > div {
   }
 
   /* cancel the global inter-wrapper spacing (which pushes a 2nd block down out
-     of row alignment) — matched at equal specificity to the rule that adds it */
+     of row alignment) — matched at equal specificity to the rule that adds it.
+     This top-aligns the donation form (a `donate-embed` block) with the sibling
+     quote block, matching the source (form top === quote top). Centering of the
+     ~376px FundraiseUp iframe within its column lives in the block's own CSS
+     (blocks/donate-embed/donate-embed.css). */
   main .section.split-even > div[class$='-wrapper'] + div[class$='-wrapper'] {
     margin-top: 0;
   }
-
-  /* When the split-even column is DEFAULT CONTENT holding the native FundraiseUp
-     inline-embed (the source wraps the donation iframe in a <center>), drop the
-     leading paragraph's block margin so the embed's top aligns with the sibling
-     quote block's top — matching the source (form top === quote top). NOT scoped
-     to a theme: this positioning follows from the section style + content shape,
-     not `Theme: general` — and `Theme` only adds a body class on the aem.live
-     pipeline (the local dev server doesn't emit the meta), so a body.general
-     scope would silently no-op in local preview. Theme-specific rules in this
-     file (e.g. body.general button COLORS) are genuinely theme concerns; layout
-     is not. */
-  main .section.split-even > .default-content-wrapper > p:first-child {
-    margin-top: 0;
-  }
-}
-
-/* Center the native FundraiseUp inline-embed (iframe) within its split-even
-   column at EVERY viewport — the source centers it with a <center> wrapper, so
-   the ~376px donation form sits centered in its ~570px column (and centered in
-   the single content column on mobile), not flush-left. Scoped to default
-   content (the embed is authored as the LAST wrapper) so it never affects a
-   block-based split-even column. `:last-child` also lifts specificity above the
-   earlier `.center-intro` rule (avoids no-descending-specificity). */
-main .section.split-even > .default-content-wrapper:last-child {
-  text-align: center;
 }
 
 @media (width >= 992px) {
