@@ -91,3 +91,16 @@ body.news main .default-content-wrapper p:has(> picture) + p {
   line-height: 22.86px;
   color: #333;
 }
+
+/* Related Articles feed (news.js) — card look comes from `.cards.news` in
+   blocks/cards/cards.css; only the link deltas live here (the feed wraps image +
+   title in <a>; keep them looking like the plain image/heading). */
+body.news .cards.news .cards-news-card-image a {
+  display: block;
+  line-height: 0;
+}
+
+body.news .cards.news .cards-news-card-title a {
+  color: inherit;
+  text-decoration: none;
+}
