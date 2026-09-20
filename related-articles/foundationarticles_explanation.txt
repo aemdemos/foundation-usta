@@ -1,0 +1,195 @@
+USTA List Component (usta/components/core/list) - Column Explanations
+========================================================================
+
+This document explains the purpose of each column in the generated 'foundationarticles.csv' file. The component referenced is 'usta/components/core/list', which inherits from AEM's Core Components v2 List ('core/wcm/components/list/v2/list') and is backed by the Sling Model 'com.usta.digital.model.list.ListImpl'.
+
+------------------------------------------------------------------------
+1. page path
+------------------------------------------------------------------------
+* Purpose: Defines the absolute path of the Article Page in the JCR repository.
+
+------------------------------------------------------------------------
+2. childDepth
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Child Depth
+* Technical Field: `./childDepth`
+* Purpose: Specifies how many levels of child pages to recursively traverse and load when populating the list using the "Children" source type (`listFrom: children`).
+
+------------------------------------------------------------------------
+3. cq:lastModified
+------------------------------------------------------------------------
+* Dialog / Authoring Label: N/A (System Metadata)
+* Technical Field: `jcr:content/cq:lastModified`
+* Purpose: The timestamp representing when the page or component configuration was last updated in the AEM repository.
+
+------------------------------------------------------------------------
+4. cq:styleIds
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Styles (Style System)
+* Technical Field: `./cq:styleIds`
+* Purpose: A comma-separated list of Style IDs applied to the List component via the AEM Style System. These map to custom CSS classes and design variations configured in template policies.
+
+The CSV file contains specific translated style ID values. Here is the detailed description of each possible style value and its corresponding numeric ID in the raw TXT file:
+
+- Value: list-horizontal-layout
+  * ID: 1749658235103
+  * CSS Class: `.list-horizontal-layout`
+  * Purpose & Layout: Instructs the content fragment list wrapper (`.contentfragmentlist-wrapper`) to apply a horizontal row-based layout. It configures the child elements (image, title, details) within a flexible flexbox layout, with responsive paddings and typography optimized for tablet and mobile devices.
+
+- Value: min-3-columns
+  * ID: 1749658240695
+  * CSS Class: `.min-3-columns`
+  * Purpose & Layout: Configures the layout grid to maintain a minimum of 3 columns across medium-to-large desktop viewports.
+
+- Value: max-3-columns
+  * ID: 1749658292253
+  * CSS Class: `.max-3-columns`
+  * Purpose & Layout: Triggers AEM's default 3-column layout mixin (`.default-column-layout`). Each list item is allocated approximately 33.33% of the container width on large displays, scaling down to a single-column layout on mobile viewports.
+
+- Value: min-4-columns
+  * ID: 1749658241243
+  * CSS Class: `.min-4-columns`
+  * Purpose & Layout: Configures the layout grid to maintain a minimum of 4 columns across wider desktop viewports.
+
+- Value: max-4-columns
+  * ID: 1749658292818
+  * CSS Class: `.max-4-columns`
+  * Purpose & Layout: Triggers AEM's default 4-column layout mixin (`.default-column-layout`). Each list item is allocated 25% of the container width on wide desktop monitors, responsively adapting to 3 columns on tablets, and wrapping to a single-column layout on mobile viewports.
+
+------------------------------------------------------------------------
+5. linkItems
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Link items (under Item Settings)
+* Technical Field: `./linkItems`
+* Purpose: A boolean flag (`true` / `false`) indicating whether the list items (such as the titles and images) should be rendered as hyperlinks pointing to their respective detail pages.
+
+------------------------------------------------------------------------
+6. listFrom
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Build list using / List Source
+* Technical Field: `./listFrom` (internally mapped to Source in ListImpl.java)
+* Purpose: Determines the source or query strategy used to populate the list. Supported options include:
+  - `static`: Uses an explicit list of pages defined under `pages`.
+  - `children`: Recursively gathers children of a given page.
+  - `tags`: Searches for pages matching specified tags under a search root.
+  - `search`: Performs a keyword search under a designated directory.
+
+------------------------------------------------------------------------
+7. maxItems
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Max Items
+* Technical Field: `./maxItems`
+* Purpose: The absolute limit of maximum items that should ever be returned by the list. If set to `0` (or empty), there is no limit.
+
+------------------------------------------------------------------------
+8. maxOnPageItems
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Page Size (under List Settings)
+* Technical Field: `./maxOnPageItems`
+* Purpose: Configures pagination limits—the maximum number of list items rendered on a single page or loaded on click before pagination controls are required. Defaults to 9 if empty.
+
+------------------------------------------------------------------------
+9. orderBy
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Order by (under List Settings)
+* Technical Field: `./orderBy`
+* Purpose: Determines which metadata field to sort the list items by. Common choices include:
+  - `title`: Sorts alphabetically by page title.
+  - `modified`: Sorts by `publishDate` or (if empty) by `cq:lastModified`.
+
+------------------------------------------------------------------------
+10. pages
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Pages (under Static configuration)
+* Technical Field: `./pages`
+* Purpose: A comma-separated array of JCR page paths that are explicitly shown in the list when `listFrom` is set to `static`.
+
+------------------------------------------------------------------------
+11. paginationType
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Pagination Type (under List Settings)
+* Technical Field: `./paginationType`
+* Purpose: Controls the visual layout of pagination controls:
+  - `more`: Shows a "Load More" button to append more items dynamically.
+  - `number`: Renders traditional numeric page selectors (1, 2, 3, etc.).
+
+------------------------------------------------------------------------
+12. parentPage
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Parent Page (under Children configuration)
+* Technical Field: `./parentPage`
+* Purpose: The parent page JCR path under which all sub-pages are gathered when `listFrom` is set to `children`.
+
+------------------------------------------------------------------------
+13. publishDate
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Publish Date
+* Technical Field: `./publishDate`
+* Purpose: An override date field to specify a custom publication timestamp for the page/component, which can be displayed to users or used for chronological sorting.
+
+------------------------------------------------------------------------
+14. rss
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Enable RSS (under RSS Settings)
+* Technical Field: `./rss`
+* Purpose: A boolean flag (`true` / `false`) indicating if RSS feed generation is enabled. When active, appending `.rss.xml` to the page URL fetches the list items in XML format.
+
+------------------------------------------------------------------------
+15. showDescription
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Show Description (under Item Settings)
+* Technical Field: `./showDescription`
+* Purpose: A boolean flag (`true` / `false`) indicating whether the list item descriptions (such as page summary or teaser text) should be displayed beneath the title.
+
+------------------------------------------------------------------------
+16. showEyebrow
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Show Eyebrow (under Item Settings)
+* Technical Field: `./showEyebrow`
+* Purpose: A boolean flag (`true` / `false`) that controls whether the list item renders its "Eyebrow" (auxiliary tag, category, or section label) above the main title.
+
+------------------------------------------------------------------------
+17. showImage
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Show Image (under Image Settings)
+* Technical Field: `./showImage`
+* Purpose: A boolean flag (`true` / `false`) that determines whether the featured/thumbnail images associated with each list item should be rendered in the list.
+
+------------------------------------------------------------------------
+18. showModificationDate
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Show Date (under Item Settings)
+* Technical Field: `./showModificationDate`
+* Purpose: A boolean flag (`true` / `false`) indicating whether the list item dates (custom publication date or modification date) should be shown next to the item.
+
+------------------------------------------------------------------------
+19. sortOrder
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Sort Order
+* Technical Field: `./sortOrder`
+* Purpose: Dictates the sorting direction:
+  - `asc`: Ascending order (A-Z or oldest to newest).
+  - `desc`: Descending order (Z-A or newest to oldest).
+
+------------------------------------------------------------------------
+20. tags
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Tags (under Tags configuration)
+* Technical Field: `./tags`
+* Purpose: An array of tag paths (e.g. `usta:categories/about-usta/usta-foundation`) representing tag constraints. Used only when `listFrom` is set to `tags`.
+
+------------------------------------------------------------------------
+21. tagsMatch
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Match (under Tags configuration)
+* Technical Field: `./tagsMatch`
+* Purpose: Determines the boolean logic when multiple tags are specified:
+  - `any`: Pages matching at least one of the tags are included.
+  - `all`: Pages must match all of the tags to be included.
+
+------------------------------------------------------------------------
+22. tagsSearchRoot
+------------------------------------------------------------------------
+* Dialog / Authoring Label: Primary Parent Page (under List Settings / Tag search root)
+* Technical Field: `./tagsSearchRoot`
+* Purpose: Sets the primary root JCR path under which AEM should search for tag-matched pages when building the list from tags.
