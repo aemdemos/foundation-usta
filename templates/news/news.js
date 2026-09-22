@@ -118,8 +118,11 @@ function selectCandidates(mode, entries, { tags, pages }) {
   }
 
   if (mode === 'tags') {
+    // tags mode MUST pull only from the tagged pool. If the author set list-from=tags
+    // but left news-tags empty, return nothing rather than falling back to every
+    // article — showing all pages would violate the tag-scoping contract.
     const wanted = new Set(tags.map(tagKey).filter(Boolean));
-    if (!wanted.size) return entries; // no tags authored → behave like children
+    if (!wanted.size) return [];
     return entries.filter((e) => splitList(e.newstags)
       .some((t) => wanted.has(tagKey(t))));
   }
