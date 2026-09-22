@@ -42,6 +42,14 @@ function dateValue(entry) {
   return Number.isNaN(fallback) ? 0 : fallback;
 }
 
+/* Last-modified (republish) timestamp → sortable number; 0 if absent/unparseable.
+   Used as the tie-break so articles sharing a publication date resolve in the same
+   order the source list component does (its orderBy is "modified"). */
+function modifiedValue(entry) {
+  const t = Date.parse(entry.lastModified || '');
+  return Number.isNaN(t) ? 0 : t;
+}
+
 /* The date shown on a card. Authors set Publication Date only when known; when it
    is empty we fall back to the query-index last-modified/republish date (same key
    the sort uses), formatted to match the "August 20, 2026" style. '' if neither. */
@@ -185,9 +193,17 @@ export default async function decorate(main) {
   const candidates = selectCandidates(mode, entries, { tags, pages })
     .filter((e) => e.path && normalizePath(e.path) !== current);
 
-  const sorted = candidates.sort((a, b) => (order === 'asc'
-    ? dateValue(a) - dateValue(b)
-    : dateValue(b) - dateValue(a)));
+  // Sort by publication date; on a tie, fall back to last-modified ASCENDING —
+  // the source list (orderBy="modified") breaks same-date ties earliest-modified
+  // first, and does so regardless of the primary sort direction (verified against
+  // both an asc and a desc source page).
+  const sorted = candidates.sort((a, b) => {
+    const byDate = order === 'asc'
+      ? dateValue(a) - dateValue(b)
+      : dateValue(b) - dateValue(a);
+    if (byDate) return byDate;
+    return modifiedValue(a) - modifiedValue(b);
+  });
 
   const articles = sorted.slice(0, limit);
   if (!articles.length) return;
