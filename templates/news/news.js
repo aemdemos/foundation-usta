@@ -1,6 +1,7 @@
 import {
   buildBlock, createOptimizedPicture, decorateBlock, loadBlock, getMetadata,
 } from '../../scripts/aem.js';
+import { dateValue, modifiedValue, displayDate } from './news-sort.js';
 
 /* Read a metadata value by its normalized key (e.g. "list-from"). The published
    pipeline normalizes metadata names to lowercase-hyphenated, but the local dev
@@ -33,32 +34,9 @@ function readMeta(key) {
 const DEFAULT_LIMIT = 3;
 const NEWS_INDEX_PATH = '/news-index.json';
 
-/* Publication date (e.g. "May 06, 2026") → sortable number; last-modified is the
-   fallback when an article has no publication date (a republish date). 0 if neither. */
-function dateValue(entry) {
-  const primary = Date.parse(entry.publicationdate || '');
-  if (!Number.isNaN(primary)) return primary;
-  const fallback = Date.parse(entry.lastModified || '');
-  return Number.isNaN(fallback) ? 0 : fallback;
-}
-
-/* Last-modified (republish) timestamp → sortable number; 0 if absent/unparseable.
-   Used as the tie-break so articles sharing a publication date resolve in the same
-   order the source list component does (its orderBy is "modified"). */
-function modifiedValue(entry) {
-  const t = Date.parse(entry.lastModified || '');
-  return Number.isNaN(t) ? 0 : t;
-}
-
-/* The date shown on a card. Authors set Publication Date only when known; when it
-   is empty we fall back to the query-index last-modified/republish date (same key
-   the sort uses), formatted to match the "August 20, 2026" style. '' if neither. */
-function displayDate(entry) {
-  if (entry.publicationdate) return entry.publicationdate;
-  const t = Date.parse(entry.lastModified || '');
-  if (Number.isNaN(t)) return '';
-  return new Date(t).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' });
-}
+/* Date/sort helpers (dateValue, modifiedValue, displayDate) live in news-sort.js
+   so they can be unit-tested in Node without pulling in aem.js's browser globals.
+   See tests/news/news-sort.test.mjs. */
 
 /* Normalize a path for comparison: drop a trailing `.html`, and strip the source
    AEM `/content/<repo>` prefix so authored `/content/usta-foundation/en/…` paths
