@@ -40,7 +40,7 @@ indices:
         value: attribute(el, "content")
       lastModified:
         select: none
-        value: parseTimestamp(headers("last-modified"), "ddd, DD MMM YYYY hh:mm:ss GMT")
+        value: parseTimestamp(headers["last-modified"], "ddd, DD MMM YYYY hh:mm:ss GMT")
       robots:
         select: head > meta[name="robots"]
         value: attribute(el, "content")
@@ -55,6 +55,7 @@ indices:
       - '/**/news/**'
     exclude:
       - '/drafts/**'
+      - '/**/news'       # the news listing/landing page itself is not an article
     target: /news-index.json
     properties:
       title:
@@ -77,4 +78,4 @@ indices:
         value: attribute(el, "content")
       lastModified:
         select: none
-        value: parseTimestamp(headers("last-modified"), "ddd, DD MMM YYYY hh:mm:ss GMT")
+        value: parseTimestamp(headers["last-modified"], "ddd, DD MMM YYYY hh:mm:ss GMT")
