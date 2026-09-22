@@ -142,12 +142,18 @@ main > .section.hero-container:has(.hero.banner) {
   margin-top: 16px;
 }
 
-/* CTA button (decorated in hero.js) — 40px tall, CONTENT-width. The source
-   "LEARN MORE" box GROWS with the viewport (148px @390/768 → 163px @1280 →
-   190px @1440+), NOT a fixed pill. Our label is a constant ~128px, so the
-   horizontal padding scales to hit those boxes: 10px (mobile→992), 17px (@1200),
-   31px (@1440). Vertical padding stays 14px (40px tall via box-sizing). */
-.hero.banner a.button:any-link {
+/* CTA button — 40px tall, CONTENT-width. The source "LEARN MORE" box GROWS with
+   the viewport (148px @390/768 → 163px @1280 → 190px @1440+), NOT a fixed pill.
+   Our label is a constant ~128px, so the horizontal padding scales to hit those
+   boxes: 10px (mobile→992), 17px (@1200), 31px (@1440). Vertical padding stays
+   14px (40px tall via box-sizing).
+   Selector is STRUCTURAL (the standalone CTA <p><a>), NOT the runtime `.button`
+   class hero.js adds: the DA authoring canvas re-renders inline text through
+   ProseMirror and strips inline classes like `.button`, so a `a.button` rule
+   never matches in the editor (the link shows unstyled). Matching the raw
+   `p:has(> a:only-child) > a` works in BOTH the EDS runtime AND the DA canvas —
+   the same approach columns.feature uses for its CTAs. */
+.hero.banner p:has(> a:only-child) > a:any-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -168,8 +174,8 @@ main > .section.hero-container:has(.hero.banner) {
   text-decoration: none;
 }
 
-.hero.banner a.button:hover,
-.hero.banner a.button:focus-visible {
+.hero.banner p:has(> a:only-child) > a:hover,
+.hero.banner p:has(> a:only-child) > a:focus-visible {
   border-color: transparent;
   background-color: var(--link-hover-color);
   color: var(--background-color);
@@ -255,7 +261,7 @@ main > .section.hero-container:has(.hero.banner) {
    breakpoint, only the approved 768/992/1200 queries. Scoped to :not(body.general)
    so only the homepage banner is affected. */
 @media (width >= 1200px) {
-  body:not(.general) .hero.banner a.button:any-link {
+  body:not(.general) .hero.banner p:has(> a:only-child) > a:any-link {
     width: calc(16.65vw - 50px);
     padding: 14px; /* label centers via flex; width drives the box */
   }
@@ -296,7 +302,7 @@ body.general .hero.banner.block > div > div {
    template banner buttons are CONTENT-width with generous horizontal padding
    (source "WHAT WE DO" = 183px: ~118px label + ~32px each side). Drop the fixed
    238px width and use 24px side padding so it sizes to the label like the source. */
-body.general .hero.banner a.button:any-link {
+body.general .hero.banner p:has(> a:only-child) > a:any-link {
   width: auto;
   padding: 14px 24px;
 }
