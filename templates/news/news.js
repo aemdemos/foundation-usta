@@ -1,36 +1,115 @@
 import {
-  buildBlock, createOptimizedPicture, decorateBlock, loadBlock,
+  buildBlock, createOptimizedPicture, decorateBlock, loadBlock, getMetadata,
 } from '../../scripts/aem.js';
 
-/* news template: builds the "Related Articles" feed in code — reads the news
-   query-index, builds a `cards (news)` block from the latest articles, attaches it. */
-const RELATED_LIMIT = 3;
-const NEWS_INDEX_PATH = '/news-index.json';
-
-/* Publication date (e.g. "May 06, 2026") → sortable number; 0 if unparseable. */
-function dateValue(dateStr) {
-  if (!dateStr) return 0;
-  const t = Date.parse(dateStr);
-  return Number.isNaN(t) ? 0 : t;
+/* Read a metadata value by its normalized key (e.g. "list-from"). The published
+   pipeline normalizes metadata names to lowercase-hyphenated, but the local dev
+   server serving raw `.plain.html` drafts keeps the author's label casing/spaces
+   (e.g. "List From"). Fall back to a normalized scan of all <meta name> so the
+   same page previews identically in both environments. */
+function readMeta(key) {
+  const direct = getMetadata(key);
+  if (direct) return direct;
+  const match = [...document.head.querySelectorAll('meta[name]')]
+    .find((m) => m.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') === key);
+  return match ? match.content : '';
 }
 
-/* Latest news from the query-index (newest first), excluding the current page; [] if unreadable. */
-async function getLatestNews(limit, excludePath) {
-  let entries = [];
+/* news template: builds the "Related Articles" feed in code. The feed is driven
+   by author-facing page metadata so editors can steer it per page without code:
+
+     • list-from   children | tags | static   (default: children)
+     • sort-order  asc | desc                  (default: desc)
+     • max-items   integer                     (default: 3)
+     • news-tags   comma-separated tag(s)      (used by list-from=tags)
+     • pages       comma-separated page paths  (used by list-from=static)
+
+   Resolution ladder (most-specific wins): static → tags → children.
+     - static   : exactly the articles named in `pages`.
+     - tags     : articles that share at least one `news-tags` value with this page.
+     - children : every article in the news query-index (the default).
+   Every mode excludes the current page, sorts by publication date (falling back
+   to last-modified/republish date), applies sort-order, then caps at max-items. */
+const DEFAULT_LIMIT = 3;
+const NEWS_INDEX_PATH = '/news-index.json';
+
+/* Publication date (e.g. "May 06, 2026") → sortable number; last-modified is the
+   fallback when an article has no publication date (a republish date). 0 if neither. */
+function dateValue(entry) {
+  const primary = Date.parse(entry.publicationdate || '');
+  if (!Number.isNaN(primary)) return primary;
+  const fallback = Date.parse(entry.lastModified || '');
+  return Number.isNaN(fallback) ? 0 : fallback;
+}
+
+/* The date shown on a card. Authors set Publication Date only when known; when it
+   is empty we fall back to the query-index last-modified/republish date (same key
+   the sort uses), formatted to match the "August 20, 2026" style. '' if neither. */
+function displayDate(entry) {
+  if (entry.publicationdate) return entry.publicationdate;
+  const t = Date.parse(entry.lastModified || '');
+  if (Number.isNaN(t)) return '';
+  return new Date(t).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' });
+}
+
+/* Normalize a path for comparison: drop a trailing `.html`, and strip the source
+   AEM `/content/<repo>` prefix so authored `/content/usta-foundation/en/…` paths
+   resolve to the EDS-relative `/en/…` used in the index. */
+function normalizePath(path) {
+  if (!path) return '';
+  return path.trim()
+    .replace(/\.html$/, '')
+    .replace(/^\/content\/[^/]+/, '');
+}
+
+/* A tag's comparable key: its leaf segment, lower-cased. Lets full taxonomy paths
+   (`usta:categories/about-usta/usta-foundation`) match the leaf slug stored in the
+   index (`usta-foundation`). */
+function tagKey(tag) {
+  const trimmed = (tag || '').trim().toLowerCase();
+  const leaf = trimmed.split('/').pop();
+  return leaf || '';
+}
+
+/* Split a comma-separated metadata value into a clean array. */
+function splitList(value) {
+  return (value || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/* Fetch the news query-index (all articles); [] if unreadable. */
+async function fetchIndex() {
   try {
     const resp = await fetch(NEWS_INDEX_PATH);
     if (!resp.ok) throw new Error(`news index ${resp.status}`);
     const json = await resp.json();
-    entries = Array.isArray(json.data) ? json.data : [];
+    return Array.isArray(json.data) ? json.data : [];
   } catch (e) {
     return [];
   }
+}
 
-  const current = excludePath.replace(/\.html$/, '');
-  return entries
-    .filter((e) => e.path && e.path.replace(/\.html$/, '') !== current)
-    .sort((a, b) => dateValue(b.publicationdate) - dateValue(a.publicationdate))
-    .slice(0, limit);
+/* Resolve the candidate articles for a mode, before sort/limit and current-page
+   exclusion (which the caller applies uniformly). */
+function selectCandidates(mode, entries, { tags, pages }) {
+  if (mode === 'static') {
+    // Preserve the author's given order as a stable base; date-sort still applies.
+    const wanted = pages.map(normalizePath);
+    const byPath = new Map(entries.map((e) => [normalizePath(e.path), e]));
+    return wanted.map((p) => byPath.get(p)).filter(Boolean);
+  }
+
+  if (mode === 'tags') {
+    const wanted = new Set(tags.map(tagKey).filter(Boolean));
+    if (!wanted.size) return entries; // no tags authored → behave like children
+    return entries.filter((e) => splitList(e.newstags)
+      .some((t) => wanted.has(tagKey(t))));
+  }
+
+  // children (default): the whole news index.
+  return entries;
 }
 
 /* One cards-news row: [ image | h3 title, date, desc, Read More ]. Cells passed
@@ -58,9 +137,10 @@ function newsRow(entry) {
   titleLink.textContent = entry.title || '';
   title.append(titleLink);
   bodyElems.push(title);
-  if (entry.publicationdate) {
+  const dateText = displayDate(entry);
+  if (dateText) {
     const date = document.createElement('p');
-    date.textContent = entry.publicationdate;
+    date.textContent = dateText;
     bodyElems.push(date);
   }
   if (entry.description) {
@@ -83,9 +163,26 @@ function newsRow(entry) {
  * @param {Element} main the page's <main> element
  */
 export default async function decorate(main) {
-  // Reverse the newest-first list so the LATEST card lands on the right (matches the source).
-  const articles = (await getLatestNews(RELATED_LIMIT, window.location.pathname)).reverse();
-  if (!articles.length) return; // no index / nothing to show
+  // Read the author-facing configuration from page metadata.
+  const mode = (readMeta('list-from') || 'children').trim().toLowerCase();
+  const order = (readMeta('sort-order') || 'desc').trim().toLowerCase();
+  const limit = parseInt(readMeta('max-items'), 10) || DEFAULT_LIMIT;
+  const tags = splitList(readMeta('news-tags'));
+  const pages = splitList(readMeta('pages'));
+
+  const entries = await fetchIndex();
+  if (!entries.length) return; // no index / nothing to show
+
+  const current = normalizePath(window.location.pathname);
+  const candidates = selectCandidates(mode, entries, { tags, pages })
+    .filter((e) => e.path && normalizePath(e.path) !== current);
+
+  const sorted = candidates.sort((a, b) => (order === 'asc'
+    ? dateValue(a) - dateValue(b)
+    : dateValue(b) - dateValue(a)));
+
+  const articles = sorted.slice(0, limit);
+  if (!articles.length) return;
 
   const heading = document.createElement('h2');
   heading.id = 'related-articles';
