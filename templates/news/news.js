@@ -79,13 +79,21 @@ function splitList(value) {
     .filter(Boolean);
 }
 
-/* Fetch the news query-index (all articles); [] if unreadable. */
+/* True for a real article: a page BELOW a `/news/` folder (has a slug segment
+   after it). Filters out the news landing page itself (…/news), which the query
+   index includes (title "News", placeholder image, no date) and which would
+   otherwise render as an empty related card. */
+function isArticle(entry) {
+  return !!entry.path && /\/news\/[^/]+/.test(normalizePath(entry.path));
+}
+
+/* Fetch the news query-index (real articles only); [] if unreadable. */
 async function fetchIndex() {
   try {
     const resp = await fetch(NEWS_INDEX_PATH);
     if (!resp.ok) throw new Error(`news index ${resp.status}`);
     const json = await resp.json();
-    return Array.isArray(json.data) ? json.data : [];
+    return Array.isArray(json.data) ? json.data.filter(isArticle) : [];
   } catch (e) {
     return [];
   }

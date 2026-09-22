@@ -55,6 +55,7 @@ indices:
       - '/**/news/**'
     exclude:
       - '/drafts/**'
+      - '/**/news'       # the news listing/landing page itself is not an article
     target: /news-index.json
     properties:
       title:
