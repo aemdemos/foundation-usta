@@ -1,13 +1,11 @@
 import {
   buildBlock, createOptimizedPicture, decorateBlock, loadBlock, getMetadata,
 } from '../../scripts/aem.js';
-import { dateValue, modifiedValue, displayDate } from './news-sort.js';
+import { displayDate, sortNews, cardTitle } from './news-sort.js';
 
-/* Read a metadata value by its normalized key (e.g. "list-from"). The published
-   pipeline normalizes metadata names to lowercase-hyphenated, but the local dev
-   server serving raw `.plain.html` drafts keeps the author's label casing/spaces
-   (e.g. "List From"). Fall back to a normalized scan of all <meta name> so the
-   same page previews identically in both environments. */
+// Read a metadata value by normalized key (e.g. "list-from"). The published
+// pipeline lowercase-hyphenates names; the dev server serving raw `.plain.html`
+// keeps the author's label ("List From"), so fall back to a normalized scan.
 function readMeta(key) {
   const direct = getMetadata(key);
   if (direct) return direct;
@@ -16,64 +14,41 @@ function readMeta(key) {
   return match ? match.content : '';
 }
 
-/* news template: builds the "Related Articles" feed in code. The feed is driven
-   by author-facing page metadata so editors can steer it per page without code:
-
-     • list-from   children | tags | static   (default: children)
-     • sort-order  asc | desc                  (default: desc)
-     • max-items   integer                     (default: 3)
-     • news-tags   comma-separated tag(s)      (used by list-from=tags)
-     • pages       comma-separated page paths  (used by list-from=static)
-
-   Resolution ladder (most-specific wins): static → tags → children.
-     - static   : exactly the articles named in `pages`.
-     - tags     : articles that share at least one `news-tags` value with this page.
-     - children : every article in the news query-index (the default).
-   Every mode excludes the current page, sorts by publication date (falling back
-   to last-modified/republish date), applies sort-order, then caps at max-items. */
+// The feed is author-driven via page metadata (resolution ladder: static → tags
+// → children):
+//   list-from   children | tags | static   (default: children)
+//   sort-order  asc | desc                  (default: desc)
+//   max-items   integer                     (default: 3)
+//   news-tags   comma-separated tag(s)      (list-from=tags)
+//   pages       comma-separated page paths  (list-from=static)
 const DEFAULT_LIMIT = 3;
 const NEWS_INDEX_PATH = '/news-index.json';
 
-/* Date/sort helpers (dateValue, modifiedValue, displayDate) live in news-sort.js
-   so they can be unit-tested in Node without pulling in aem.js's browser globals.
-   See tests/news/news-sort.test.mjs. */
-
-/* Normalize a path for comparison: drop a trailing `.html`, and strip the source
-   AEM `/content/<repo>` prefix so authored `/content/usta-foundation/en/…` paths
-   resolve to the EDS-relative `/en/…` used in the index. */
+// Normalize a path for comparison: drop trailing `.html` and the source AEM
+// `/content/<repo>` prefix so authored paths resolve to the EDS-relative `/en/…`.
 function normalizePath(path) {
   if (!path) return '';
-  return path.trim()
-    .replace(/\.html$/, '')
-    .replace(/^\/content\/[^/]+/, '');
+  return path.trim().replace(/\.html$/, '').replace(/^\/content\/[^/]+/, '');
 }
 
-/* A tag's comparable key: its leaf segment, lower-cased. Lets full taxonomy paths
-   (`usta:categories/about-usta/usta-foundation`) match the leaf slug stored in the
-   index (`usta-foundation`). */
+// A tag's comparable key: its leaf segment, lower-cased, so a full taxonomy path
+// (`usta:categories/about-usta/usta-foundation`) matches the index leaf slug.
 function tagKey(tag) {
-  const trimmed = (tag || '').trim().toLowerCase();
-  const leaf = trimmed.split('/').pop();
-  return leaf || '';
+  return (tag || '').trim().toLowerCase().split('/').pop() || '';
 }
 
-/* Split a comma-separated metadata value into a clean array. */
+// Split a comma-separated metadata value into a clean array.
 function splitList(value) {
-  return (value || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  return (value || '').split(',').map((s) => s.trim()).filter(Boolean);
 }
 
-/* True for a real article: a page BELOW a `/news/` folder (has a slug segment
-   after it). Filters out the news landing page itself (…/news), which the query
-   index includes (title "News", placeholder image, no date) and which would
-   otherwise render as an empty related card. */
+// True for a real article: a page BELOW a `/news/` folder. Excludes the news
+// landing page (…/news), which the index includes but which has no article card.
 function isArticle(entry) {
   return !!entry.path && /\/news\/[^/]+/.test(normalizePath(entry.path));
 }
 
-/* Fetch the news query-index (real articles only); [] if unreadable. */
+// Fetch the news query-index (real articles only); [] if unreadable.
 async function fetchIndex() {
   try {
     const resp = await fetch(NEWS_INDEX_PATH);
@@ -85,39 +60,30 @@ async function fetchIndex() {
   }
 }
 
-/* Resolve the candidate articles for a mode, before sort/limit and current-page
-   exclusion (which the caller applies uniformly). */
+// Candidate articles for a mode, before sort/limit and current-page exclusion.
 function selectCandidates(mode, entries, { tags, pages }) {
   if (mode === 'static') {
-    // Preserve the author's given order as a stable base; date-sort still applies.
-    const wanted = pages.map(normalizePath);
+    // Named pages, in the author's order (date-sort still applies afterwards).
     const byPath = new Map(entries.map((e) => [normalizePath(e.path), e]));
-    return wanted.map((p) => byPath.get(p)).filter(Boolean);
+    return pages.map((p) => byPath.get(normalizePath(p))).filter(Boolean);
   }
-
   if (mode === 'tags') {
-    // tags mode MUST pull only from the tagged pool. If the author set list-from=tags
-    // but left news-tags empty, return nothing rather than falling back to every
-    // article — showing all pages would violate the tag-scoping contract.
+    // Tag-scoped pool only. Empty news-tags → nothing (never fall back to all).
     const wanted = new Set(tags.map(tagKey).filter(Boolean));
     if (!wanted.size) return [];
-    return entries.filter((e) => splitList(e.newstags)
-      .some((t) => wanted.has(tagKey(t))));
+    return entries.filter((e) => splitList(e.newstags).some((t) => wanted.has(tagKey(t))));
   }
-
-  // children (default): the whole news index.
-  return entries;
+  return entries; // children (default): the whole news index
 }
 
-/* One cards-news row: [ image | h3 title, date, desc, Read More ]. Cells passed
-   as `{ elems }` so cards.js `decorateNews` sees the <p>s as direct children. */
+// One cards-news row: [ image | h3 title, date, desc, Read More ]. Cells passed
+// as `{ elems }` so cards.js `decorateNews` sees the <p>s as direct children.
 function newsRow(entry) {
-  // Image links to the article but is DECORATIVE for AT (the title link already
-  // names it): empty alt + aria-hidden + tabindex=-1 avoids a redundant stop.
+  // Image links to the article but is decorative for AT (the title link names
+  // it): empty alt + aria-hidden + tabindex=-1 avoids a redundant stop.
   let imageLink = null;
   if (entry.image) {
-    // Cards render ~230px but the index image is 1200px; serve a right-sized
-    // responsive <picture> (500 ≈ the slot at 2×).
+    // Cards render ~230px; serve a right-sized <picture> (500 ≈ the slot at 2×).
     const picture = createOptimizedPicture(entry.image, '', false, [{ width: '500' }]);
     imageLink = document.createElement('a');
     imageLink.href = entry.path;
@@ -126,12 +92,12 @@ function newsRow(entry) {
     imageLink.append(picture);
   }
 
-  // Body cell contents. Title text links to the article (like the source).
+  // Body cell: short "Related Title" (or full title) linking to the article.
   const bodyElems = [];
   const title = document.createElement('h3');
   const titleLink = document.createElement('a');
   titleLink.href = entry.path;
-  titleLink.textContent = entry.title || '';
+  titleLink.textContent = cardTitle(entry);
   title.append(titleLink);
   bodyElems.push(title);
   const dateText = displayDate(entry);
@@ -160,7 +126,7 @@ function newsRow(entry) {
  * @param {Element} main the page's <main> element
  */
 export default async function decorate(main) {
-  // Read the author-facing configuration from page metadata.
+  // Author-facing configuration from page metadata (see the constants above).
   const mode = (readMeta('list-from') || 'children').trim().toLowerCase();
   const order = (readMeta('sort-order') || 'desc').trim().toLowerCase();
   const limit = parseInt(readMeta('max-items'), 10) || DEFAULT_LIMIT;
@@ -168,25 +134,13 @@ export default async function decorate(main) {
   const pages = splitList(readMeta('pages'));
 
   const entries = await fetchIndex();
-  if (!entries.length) return; // no index / nothing to show
+  if (!entries.length) return;
 
   const current = normalizePath(window.location.pathname);
   const candidates = selectCandidates(mode, entries, { tags, pages })
     .filter((e) => e.path && normalizePath(e.path) !== current);
 
-  // Sort by publication date; on a tie, fall back to last-modified ASCENDING —
-  // the source list (orderBy="modified") breaks same-date ties earliest-modified
-  // first, and does so regardless of the primary sort direction (verified against
-  // both an asc and a desc source page).
-  const sorted = candidates.sort((a, b) => {
-    const byDate = order === 'asc'
-      ? dateValue(a) - dateValue(b)
-      : dateValue(b) - dateValue(a);
-    if (byDate) return byDate;
-    return modifiedValue(a) - modifiedValue(b);
-  });
-
-  const articles = sorted.slice(0, limit);
+  const articles = sortNews(candidates, order).slice(0, limit);
   if (!articles.length) return;
 
   const heading = document.createElement('h2');
@@ -194,7 +148,7 @@ export default async function decorate(main) {
   heading.textContent = 'Related Articles';
 
   const block = buildBlock('cards', articles.map(newsRow));
-  block.classList.add('news'); // cards `news` variant
+  block.classList.add('news');
 
   // Attach into the marked section (Section Metadata), else append one.
   let section = main.querySelector('.section.related-articles');
@@ -203,7 +157,6 @@ export default async function decorate(main) {
     section.classList.add('section', 'related-articles');
     main.append(section);
   }
-  // Standard cards container class so the section matches an authored one.
   section.classList.add('cards-container');
   const headingWrapper = document.createElement('div');
   headingWrapper.className = 'default-content-wrapper';

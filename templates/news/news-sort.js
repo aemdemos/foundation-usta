@@ -1,56 +1,41 @@
-/* Pure date/sort helpers for the news "Related Articles" feed, extracted from
-   news.js so they can be unit-tested in Node (news.js itself imports aem.js,
-   which touches `window`). No DOM/browser dependencies here. */
+// Pure date/sort/title helpers for the news "Related Articles" feed, split from
+// news.js so they can be unit-tested in Node (news.js imports aem.js → window).
 
-/* The query-index emits `lastModified` as a UNIX-SECONDS number (e.g. 1790086644),
-   NOT a date string — so `Date.parse(entry.lastModified)` returns NaN and the
-   last-modified fallback silently collapses to 0. Normalize it to milliseconds:
-   accept the numeric-seconds form (the index), a numeric string, or a parseable
-   date string (belt-and-braces). 0 when absent/unparseable. */
-export function lastModifiedMs(entry) {
+// query-index `lastModified` is UNIX SECONDS (number), so Date.parse() → NaN.
+// Normalize to ms: numeric seconds, numeric string, or a date string; 0 if none.
+function lastModifiedMs(entry) {
   const raw = entry.lastModified;
   if (raw === undefined || raw === null || raw === '') return 0;
   const num = Number(raw);
-  if (!Number.isNaN(num)) return num * 1000; // unix seconds → ms
+  if (!Number.isNaN(num)) return num * 1000;
   const parsed = Date.parse(raw);
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-/* Publication date (e.g. "May 06, 2026") → sortable number; last-modified is the
-   fallback when an article has no publication date (a republish date). 0 if neither. */
+// Sort key: publication date, falling back to last-modified. 0 when neither.
 export function dateValue(entry) {
   const primary = Date.parse(entry.publicationdate || '');
-  if (!Number.isNaN(primary)) return primary;
-  return lastModifiedMs(entry);
+  return Number.isNaN(primary) ? lastModifiedMs(entry) : primary;
 }
 
-/* Last-modified (republish) timestamp → sortable number; 0 if absent/unparseable.
-   Used as the tie-break so articles sharing a publication date resolve in the same
-   order the source list component does (its orderBy is "modified"). */
-export function modifiedValue(entry) {
-  return lastModifiedMs(entry);
-}
-
-/* The date shown on a card. Authors set Publication Date only when known; when it
-   is empty we fall back to the query-index last-modified/republish date (same key
-   the sort uses), formatted to match the "August 20, 2026" style. '' if neither. */
+// Card date: the author's Publication Date, else the last-modified date formatted
+// "August 20, 2026". '' when neither is set.
 export function displayDate(entry) {
   if (entry.publicationdate) return entry.publicationdate;
   const ms = lastModifiedMs(entry);
-  if (!ms) return '';
-  return new Date(ms).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' });
+  return ms ? new Date(ms).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' }) : '';
 }
 
-/* Sort news entries by publication date (last-modified fallback), applying
-   sort-order; on a tie, fall back to last-modified ASCENDING — the source list
-   (orderBy="modified") breaks same-date ties earliest-modified first, regardless
-   of the primary sort direction. Returns a NEW array (does not mutate input). */
+// Card heading: the short "Related Title" (source nav title) when set, else the
+// full article title. Trims so a blank value falls back.
+export function cardTitle(entry) {
+  return (entry.relatedtitle || '').trim() || entry.title || '';
+}
+
+// Sort by publication date (day-granularity), then break same-day ties by the
+// finer last-modified timestamp — both following `order`. Returns a new array.
 export function sortNews(entries, order) {
-  return entries.slice().sort((a, b) => {
-    const byDate = order === 'asc'
-      ? dateValue(a) - dateValue(b)
-      : dateValue(b) - dateValue(a);
-    if (byDate) return byDate;
-    return modifiedValue(a) - modifiedValue(b);
-  });
+  const dir = order === 'asc' ? 1 : -1;
+  return entries.slice().sort((a, b) => dir * (dateValue(a) - dateValue(b))
+    || dir * (lastModifiedMs(a) - lastModifiedMs(b)));
 }
