@@ -3706,3 +3706,17 @@ exactly what the source's content column measures at ≥1200. Both describe the 
   **no horizontal overflow** at any width. News article H1 + columns-media block also track the fluid column (1070 @1100).
 - Gates: lint 0 errors (7 pre-existing a11y no-console warnings) · breakpoint-check ✓ (768/992/1200). CSS-only → visible
   in local preview; deploys via git push.
+
+### 2026-09-23 — Fixed broken body image on frances-tiafoe-awards-njtl-alumnus (unlocalized content.da.live hotlink)
+The article's body image (columns media-right) + its Metadata Image both pointed at a `content.da.live/…` URL that
+401s (auth-gated) — so the image was broken and had never been localized. It was the ONLY news page still hotlinking
+content.da.live (all 71 others were localized to /media-da/). Fix (per Content-Import Rule — finalize-assets, not
+hand-authoring blocks): re-pointed the two img srcs to the servable SOURCE coreimg URL
+(`…/image.coreimg.jpeg/1755111414064/20250811-tiafoe-ustaf-p.jpeg`, 200/JPEG/720KB) then ran
+`node tools/assets/localize-assets.mjs en/home/news/frances-tiafoe-awards-njtl-alumnus-with-college-scholarship`
+→ downloaded to `content/media-da/en/home/news/frances-tiafoe-awards-…/media-9e383c2e….jpeg`, both src+metadata
+rewritten to the local /media-da path, 0 leftover hotlinks. Verified LOCAL: img loads (naturalWidth 1170×780,
+complete=true), serves 200 on dev, no content.da.live anywhere in content/en/home/news/.
+- **Deploy:** the corrected `.plain.html` + the new media-da image are git-ignored DA content — must be re-uploaded/
+  published to DA for the fix to show on aem.page/aem.live (outward-facing, on user request). The LIVE page already
+  serves a working `media_…png` (published earlier), so only the local content copy was stale; re-publish to sync.
