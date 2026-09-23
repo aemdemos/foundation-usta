@@ -3657,3 +3657,52 @@ pane): the feed was absent, `document.body.className` was just `"appear"` (no `n
   (WHM 2026 / RFLF / Yonex, titles+dates+desc+Read More), H1 = rgb(51,51,51). Applies to ALL templates (news, and any
   future `templates/<name>/`), not just news. Gates: lint 0 errors (7 pre-existing a11y no-console warnings, unrelated)
   · breakpoint-check ✓ (768/992/1200). Deploys via git push (code-only; no content change).
+
+### 2026-09-23 — Mobile content column 328 → 336px (align to customer's stated design system)
+Customer provided the authoritative source breakpoints/widths: `@small-mobile`/`@mobile` (<768) content **max-width:
+336px**, `@tablet` 720, `@desktop` (≥992) 1200. Our mobile column was **328px** (originally tuned at 390 to clear the
+floating Donate tab). Aligned the mobile column to the customer's **336px** — step 1 of reconciling to their spec
+(tablet 720 already matches; the desktop 970/1170-vs-flat-1200 gap is a SEPARATE follow-up, not touched here).
+- **Global rule** `styles.css main > .section > div`: 328 → **336** (the single source of truth every section wrapper
+  inherits). Also the `narrow`/`medium`/`wide` section-style mobile caps (same column) 328 → 336.
+- **Per-block mobile content-column caps** that mirror the global column (all release at the 768 tier): `cards.css`
+  content/stats/support/tiles `ul` 328 → 336; cards-news feed `ul` 338 → **346** (= 336 image + the li's 2×5px inline
+  padding); `embed-instagram` 328 → 336; `columns` collage-heading cap 328 → 336. `columns` statement band was ALREADY
+  336 (unchanged). Updated the matching explanatory comments (side-margin math 31→27px @390).
+- **Deliberately NOT changed** (not the content column): cards-expand card `height: 328px`; the 310/312 card-internal
+  widths + 9px inset; `hero` 348px text column; image-crop comments. These are element geometry, not the section measure.
+- **Verified LOCAL @360** (overflow sweep baseline): section content column = **336px** (left inset 12px), news feed
+  column = 336px, **no horizontal overflow** (scrollWidth 360 == viewport). Feed still renders 3 cards.
+- Gates: lint 0 errors (7 pre-existing a11y no-console warnings, unrelated) · breakpoint-check ✓ (768/992/1200).
+  (overflow-sweep CLI Chromium not installed in this env → verified overflow via MCP Playwright at 360 instead.)
+  CSS-only → visible in local preview; deploys via git push.
+
+### 2026-09-23 — Desktop content column: fixed 970 plateau → fluid (min(vw,1200) − 30), clamps at 1170
+Step 2 of the breakpoint-reconciliation with the customer's spec (`@desktop (min-width:992) → content max-width:1200`).
+**Re-measured the LIVE source** (home "Your support" heading, by getBoundingClientRect) across the desktop range and
+found our implementation diverged in the **992–1199 window** — a real, visible bug:
+| viewport | SOURCE content col | OURS (before) |
+|---|---|---|
+| 1100 | 1070 (fluid, vw−30) | **970 fixed** (−100) |
+| 1199 | 1169 (fluid, vw−30) | **970 fixed** (−199) |
+| 1200 | 1170 (clamped) | 1170 ✓ |
+| 1440 | 1170 (clamped) | 1170 ✓ |
+The source runs ONE fluid desktop container — `max-width:1200` + 15px gutter each side → content = `min(vw,1200) − 30`,
+fluid 992→1199 and clamped at 1170 from 1200. Ours held a FIXED **970** plateau from 992 then jumped to 1170 at 1200,
+so on any 1024–1199 laptop our content was up to **~199px too narrow** vs the source. (This also resolves the earlier
+"1170 vs flat 1200" confusion: the customer's `1200` is the OUTER container; 1200 − 2×15 gutter = 1170 CONTENT, which is
+exactly what the source's content column measures at ≥1200. Both describe the same layout.)
+- **Fix (styles.css):** replaced the two-step 992→`970` / 1200→`1170` on `main > .section > div` with ONE desktop rule
+  at ≥992: `box-sizing:border-box; max-width:1200px; padding-inline:15px` (fluid below 1200, clamps at 1170 above). This
+  COLLAPSES the desktop content-width into a single tier — the separate 1200 content-width breakpoint is gone (1200 is
+  still used elsewhere e.g. medium/wide bands, so it stays a project breakpoint). Applied the SAME fluid model to the
+  (currently unused) `.container-max` utility for consistency.
+- **NOT changed:** the `narrow`(810) / `medium`(772/970) / `wide`(902/1170) section-style bands and the split-section
+  tiers keep their explicit per-band measured widths — they're intentionally narrower than the content column and were
+  measured per-band, NOT the general column the customer flagged. Full-bleed blocks (cards-expand, banner-stats-grid,
+  cards-content) already use `min(970/1170, calc(100vw−90px))` self-contained escapes — unaffected.
+- **Verified LOCAL vs SOURCE** (home + who-we-are + a news article), content column now matches at EVERY desktop width:
+  1100 → **1070** (L=15), 1199 → **1169** (L=15), 1200 → **1170** (L=15), 1440 → **1170** (L=135) — exact source match;
+  **no horizontal overflow** at any width. News article H1 + columns-media block also track the fluid column (1070 @1100).
+- Gates: lint 0 errors (7 pre-existing a11y no-console warnings) · breakpoint-check ✓ (768/992/1200). CSS-only → visible
+  in local preview; deploys via git push.

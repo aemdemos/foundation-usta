@@ -7,7 +7,7 @@
      Our section wrapper is a touch wider (970/1170), which flips the heading +
      featured line-wrap vs the source; constrain to the source widths so they
      wrap identically (heading 2 lines @992, featured 2 lines @992/1200). Mobile
-     content width (328px) comes from the GLOBAL rule (styles.css) — no per-block
+     content width (336px) comes from the GLOBAL rule (styles.css) — no per-block
      inset needed. */
   box-sizing: border-box;
   margin-inline: auto;
@@ -97,7 +97,7 @@
 }
 
 /* Mobile: number stacked ABOVE its label, both FULL-WIDTH and centered (source
-   number + label each span the full 328px column, centered — align-items:stretch
+   number + label each span the full 336px column, centered — align-items:stretch
    so they don't shrink-wrap). 16px gap between the number and its label. */
 .banner-stats-grid .banner-stats-grid-item {
   display: flex;
