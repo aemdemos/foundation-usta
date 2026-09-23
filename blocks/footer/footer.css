@@ -178,6 +178,99 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
 }
 
 /* ============================================================
+   Tablet (768–991): the source does NOT use the mobile stack here. Measured live
+   on the source at 768/900 (getBoundingClientRect + computed styles):
+     • LOGO on its OWN row, left-aligned, small ~116px (NOT the ~290 mobile logo).
+     • KEEP UP button on its OWN row BELOW the logo, CENTERED on the page
+       (button centre cx=384 == viewport/2 @768), ~48% of the content width
+       (W=308 @768, 348 @900). Button: 40px tall, padding 14px, font 14px/20 wt400,
+       letter-spacing 1px, radius 3px, bg #0373f3, uppercase (all matched already).
+     • Then a row of [nav 2×2 grid on the LEFT | social block on the RIGHT, content
+       centered]. • Then full-width legal, LEFT-aligned.
+   NOTE: authored as a `min-width: 768` tier (mobile-first, per The Breakpoint
+   Rule — never mix min/max). The desktop `@media (width >= 992px)` block BELOW
+   re-declares every property this tier sets, so from 992 up the desktop layout
+   fully overrides this one via the cascade.
+   ============================================================ */
+@media (width >= 768px) {
+  footer .footer {
+    display: grid;
+
+    /* nav takes the wider left column, social the narrower right — the source
+       social block starts ~60% across (L≈466 of the 640 content @768). */
+    grid-template-columns: 3fr 2fr;
+    grid-template-areas:
+      'brand brand'
+      'nav social'
+      'legal legal';
+    align-items: start;
+    column-gap: 30px;
+
+    /* source tablet gutter is a FLUID one-column inset (~64px @768 → 82px @910),
+       NOT our fixed 40px — so the logo + nav + legal all start further in and
+       track the source. 8.33vw = 1/12 of the viewport (Bootstrap col offset). */
+    padding: 40px 8.33vw;
+  }
+
+  /* brand row spans both columns: logo (own row, left) then KEEP UP (own row,
+     centered). Stays a flex column (mobile default); just tune the gaps. */
+  footer .footer-brand {
+    grid-area: brand;
+    align-items: stretch;
+    gap: 44px;
+    margin-bottom: 48px;
+  }
+
+  /* source tablet logo SCALES with the viewport (~116px @768 → 140px @910), NOT a
+     fixed size and NOT the ~290 mobile logo. 15.4vw matches both measured points. */
+  footer .footer-brand img {
+    width: 15.4vw;
+  }
+
+  /* KEEP UP sits on its OWN row, CENTERED on the page, ~48% of the content width
+     (source cx == viewport centre; W 308@768 → 348@900). Target ONLY the button's
+     wrapper — production wraps BOTH the logo <a> AND the button <a> each in their
+     own <p>, so a bare `> p` would also center the LOGO's <p> and shove the logo
+     toward the middle (the drift seen on preview). `:has(.footer-keepup)` scopes
+     the centering to the button row; the logo <p> stays full-width/left. */
+  footer .footer-brand > p:has(.footer-keepup) {
+    width: 48%;
+    margin: 0 auto;
+  }
+
+  footer .footer-brand .footer-keepup:any-link {
+    width: 100%;
+    max-width: none;
+  }
+
+  /* nav: left column, 2×2 grid (source row-gap ~56px between the two rows) */
+  footer .footer-nav {
+    grid-area: nav;
+  }
+
+  footer .footer-nav ul {
+    margin: 0;
+    gap: 36px 16px;
+  }
+
+  /* social: right column, content centered, top-aligned with the nav */
+  footer .footer-social {
+    grid-area: social;
+    margin-bottom: 0;
+    text-align: center;
+  }
+
+  /* legal: full width, CENTERED (measured on source @910: copyright cx = page
+     centre, links row centered — same as mobile, NOT left-aligned). Only needs
+     the grid placement + top gap here; the base mobile `text-align:center` +
+     `justify-content:center` on the links carry through. */
+  footer .footer-legal {
+    grid-area: legal;
+    margin-top: 40px;
+  }
+}
+
+/* ============================================================
    Desktop (>= 992px): 3-column top row, centered footer band
    ============================================================ */
 @media (width >= 992px) {
@@ -197,9 +290,11 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
     padding: 48px 40px;
   }
 
-  /* left column: logo on top row, KEEP UP button below it */
+  /* left column: logo on top row, KEEP UP button below it (reset the tablet
+     tier's row direction back to a stacked column) */
   footer .footer-brand {
     grid-area: brand;
+    flex-direction: column;
     align-items: flex-start;
     gap: 40px;
     margin-bottom: 0;
@@ -213,9 +308,16 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
   }
 
   /* The KEEP UP button is wrapped in a <p>; as a flex item under
-     align-items:flex-start it would shrink-wrap. Stretch it to the full 290px
-     brand column so the button can center within it. */
-  footer .footer-brand > p {
+     align-items:flex-start it would shrink-wrap. Stretch it to the full brand
+     column so the button can center within it. The `:has(.footer-keepup)` twin
+     matches the tablet tier's selector specificity (0,3,1) so this desktop reset
+     actually wins over the tablet `width:48%;margin:0 auto` (which is still active
+     at ≥992 since it uses min-width) — otherwise the button <p> stays 48%-capped
+     and the 237px button shifts right. */
+  footer .footer-brand > p,
+  footer .footer-brand > p:has(.footer-keepup) {
+    width: auto;
+    margin: 0;
     align-self: stretch;
   }
 
@@ -267,6 +369,11 @@ footer .footer-legal p:last-child a:not(:last-child)::after {
   footer .footer-legal {
     grid-area: legal;
     margin-top: 48px;
+    text-align: center; /* reset the tablet tier's left-align */
+  }
+
+  footer .footer-legal p:last-child {
+    justify-content: center; /* reset the tablet tier's flex-start */
   }
 }
 
