@@ -523,14 +523,15 @@
   text-decoration: underline;
 }
 
-/* Tablet (768–991): cards GROW to fill the whole row, so the feed spans the full
-   content width no matter how many cards there are (3 cards → 3-up full width,
-   4 → 4-up) — never a fixed 25/33% that leaves an empty slot. `flex-basis:0` +
-   `flex-grow:1` distributes the row evenly; max-width caps a lone/2-card row so
-   cards don't blow up oversized. */
+/* Tablet (768–991): the SOURCE lays this feed at a FIXED 3-up — three cards per
+   row, and a 4th card WRAPS to a second row (it does NOT squeeze four into one
+   cramped row). So pin each card to a one-third basis (grow disabled) so exactly
+   3 fill the row and any 4th wraps beneath. (Desktop ≥992 below switches back to
+   fill-the-row so a 4-card feed goes 4-up there — matching the source's wider
+   desktop layout.) */
 @media (width >= 768px) {
   .cards.news > ul > li {
-    flex: 1 1 0;
+    flex: 0 0 33.333%;
     max-width: 33.333%;
     padding: 15px 5px;
   }

@@ -3720,3 +3720,15 @@ complete=true), serves 200 on dev, no content.da.live anywhere in content/en/hom
 - **Deploy:** the corrected `.plain.html` + the new media-da image are git-ignored DA content — must be re-uploaded/
   published to DA for the fix to show on aem.page/aem.live (outward-facing, on user request). The LIVE page already
   serves a working `media_…png` (published earlier), so only the local content copy was stale; re-publish to sync.
+
+### 2026-09-23 — cards (news) TABLET: 4-card feed → 3-up + wrap (was 4 cramped in one row)
+User: on a news article with a 4-card Related-Articles feed, the TABLET view crammed all 4 into one row (each ~25%,
+titles wrapping tall), but the SOURCE shows a FIXED 3-up with the 4th card wrapping to a second row. Root cause:
+the tablet tier (`@media width>=768`) used `.cards.news > ul > li { flex: 1 1 0; max-width: 33.333% }` — `flex-grow:1`
+let 4 cards shrink to 25% and share one row. Fix: pin the basis at the tablet tier — `flex: 0 0 33.333%` (grow
+disabled) so exactly 3 fit per row and a 4th wraps. Desktop (`>=992`) is UNCHANGED (`flex: 1 1 0` fill-the-row →
+4-up), matching the source's wider desktop layout.
+- Verified LOCAL vs source screenshots: @900 4-card feed → row1 cards 0/1/2 (W240, L90/330/570), row2 card 3
+  (W240, L90, wrapped) — matches source 3-up+wrap; 3-card feed @900 still 3-up no wrap; @1280 4-card feed still 4-up
+  one row (W293). No horizontal overflow at any width.
+- Gates: stylelint ✓ · breakpoint-check ✓ (768/992/1200 min-width only). CSS-only → live in preview; deploys via git push.
