@@ -3192,6 +3192,78 @@ inline handler. Source layout is IG-LEFT / text-RIGHT (a split-left section), on
   @1280: IG left (x55→625, 570px) / article text right (x655, 570px), **sideBySide:true**, single embed, real IG card
   hydrates. Backup + manifest SHA refreshed (`8d6faeb0…`). Gates: syntax ✓ · lint 0 errors.
 
+### 2026-09-10 — columns-feature-collage: stray empty <p>s stole flex width (thumbnails 245 not 266)
+Homepage "For decades…" collage left-images were too small vs source (thumbnails 245×182 / portrait 272 wide, vs
+source 266×199 / 296). Root cause in `columns.js` `decorateFeature`: it removed empty `<p>` wrappers BEFORE moving the
+`<picture>`s into the stack/portrait — but the source wraps each `<picture>` in its own `<p>`, so at cleanup time
+those `<p>`s still held a picture and were kept; after the pictures were relocated the `<p>`s were left behind as 3
+EMPTY flex children in the collage row, stealing ~45px so the stack+portrait couldn't reach their 266/296 flex-grow
+targets (grew to 245/272). Fix: run the empty-`<p>` cleanup AFTER relocating the pictures (scoped `:scope > p`).
+Verified local vs source: thumb 266×199 (was 245×182), portrait 296×401 (was 272), stack→portrait gap 15, thumbs
+touching (gap 0) — exact match at 1600; tablet 768 (thumbs row + portrait below) + 992 intact; no overflow. Gates:
+lint 0 · breakpoint ✓ · overflow ✓ (360/768/992/1200/1920). Pure decoration fix (no re-import) — deploys on GitHub push.
+
+### 2026-09-10 — Homepage hero LEARN MORE: width must GROW past 1440 (was capped ~192px)
+User DevTools showed source button 238px @1728 vs ours 192px. Earlier fix scaled padding but CAPPED at 31px (~192px
+max), so past 1440 ours stopped growing while the source keeps widening. Measured source: it's ~30% of the 50vw text
+panel — width grows LINEARLY 150@1200 → 190@1440 → 238@1728 → 270@1920 (≈ 0.1665·vw − 50px). Replaced the ≥1200
+padding-clamp with a fluid **`width: calc(16.65vw - 50px)`** (label centered by the base flex rule); base rule
+(`padding:14px 10px`, ~150px) covers ≤1200. Verified local vs source exact at every width: 1200:150, 1440:190,
+1600:216, 1728:238, 1920:270; vertical gap subhead→button 16px and left edge 189 both match. (Source wraps the `<a>`
+in a 56px `<div>` with 8px top/bottom pad, but the rendered button box + 16px gap are identical, so no change needed
+there.) Gates: lint 0 · breakpoint ✓ · overflow ✓ (360/768/992/1200/1920). Deploys on GitHub push.
+
+### 2026-09-10 — Related Articles: real dates + news-tags on the 12 related-card articles + helix query
+Investigated the source's Related Articles (list-core-component). Findings: (a) it's an AEM tag-list on the single
+blanket tag **`usta-foundation`** — no per-topic category exists; (b) the source exposes a real per-article date ONLY
+inside related-cards, and it differs from the sitemap `<lastmod>` we imported (a bulk republish stamp); (c) only **12
+of 72** articles ever appear as related-cards, so only those 12 have a discoverable real date + carry the tag.
+- **Dates:** compared our 12 vs source real dates — 10 already matched, **2 were wrong** (both were the 05-06
+  republish stamp): WHM-2026 (Stewart&Robles) May 06→**March 25, 2026**; RFLF-**partner**-to-empo May 06→**April 15,
+  2026**. Fixed via a surgical single-row edit of the metadata `Publication Date` (word-diff confirmed only `May 06`→
+  the real date changed; related-card dates + body untouched). The RFLF **announce-inaugural** article (Sept 04) is a
+  DIFFERENT page and was already correct. The other 60 articles have NO source-verified date anywhere — left as the
+  sitemap stamp (the truest value the source offers).
+- **Tags:** added a `news-tags` metadata row = `usta-foundation` to exactly those **12** related-card articles (per
+  direction — keeps the query pool = the set the source actually surfaces). Verified 12/12.
+- **helix-query.yaml:** added `newstags` property to the `news` index (`select: head > meta[name="news-tags"]`) so the
+  tag flows into `news-index.json`; the Related Articles feed can then query `newstags contains usta-foundation, minus
+  current, limit 3`.
+- **Deploy:** helix-query change → GitHub push; the 12 content pages → DA preview/publish (then news-index.json
+  regenerates with newstags + corrected dates). Validation draft kept at
+  `content/drafts/date-fix-validation/women-s-history-month-2026.plain.html`.
+
+### 2026-09-10 — Performance: PageSpeed 86→ higher via EDS best practices (images, LCP preload, video facade, delayed 3rd-party)
+PageSpeed desktop was 86 (LCP 1.6s orange, Speed Index 2.6s red; flags: 206 KiB oversized images, no LCP
+fetchpriority, 521 KiB unused JS). Root causes were all in-our-control except the CDN cache/minify flags. Fixes
+(all verified locally, no visual regressions, gates green):
+- **Oversized collage images (206 KiB):** `columns.js` `capPictureWidth()` caps the collage thumbnails/portrait
+  renditions at 600px / 750px (they display ≤266/296px) instead of EDS's default `width=2000`. Renditions verified
+  600/750; images stay sharp (native 512/613px).
+- **Hero LCP (fetchpriority flag):** `hero.js` `preloadHeroImage()` injects `<link rel=preload as=image
+  fetchpriority=high>` for the hero's background rendition (derived from the AUTHORED image — still fully content
+  -managed; swap the image and the preload follows). Applied to banner + text-up. Verified preload href === hero bg URL.
+- **YouTube unused JS (biggest lever):** replaced the eager iframe with a **click-to-load facade** (poster thumbnail
+  + play button; real iframe injected on click with autoplay). Verified: **0 YouTube player scripts before click**
+  (was ~8), 8 load only on click. Facade is a keyboard-accessible `<button aria-label>`; a11y ✓.
+- **Delayed 3rd-party:** wrapped `loadDelayed()` in a 3s `setTimeout` (EDS convention) so the FundraiseUp donate tab
+  (15 scripts) + consent gate load AFTER interactive. Verified 0 FundraiseUp requests in first 1.5s, loads after 3s
+  (tab still appears). Remaining PageSpeed flags (minify CSS 27 KiB, cache lifetimes 60 KiB) are platform/CDN-managed,
+  not code.
+- Gates: lint 0 · breakpoint ✓ · overflow ✓ · a11y ✓. Deploys on GitHub push (hero.js, columns.js/css, scripts.js).
+
+### 2026-09-10 — Mobile perf: responsive hero rendition (LCP 3.2s → fix; desktop already 100)
+Desktop hit 100; mobile 93 (only orange metric: LCP 3.2s; top insight "improve image delivery 157 KiB"). Cause: the
+hero LCP background still requested a flat `width=2000` even on a 360px phone (~124 KiB of the 157). Fix in `hero.js`:
+`heroRenditionWidth()` sizes the full-bleed rendition to `viewport × DPR`, snapped to CDN-friendly buckets
+[750,1000,1600,2000]; `heroBgUrlAt()` applies it to BOTH the background AND the preload. Verified: mobile 360/DPR2 →
+**width=750** (was 2000, need ~720), desktop 1400 → 1600, wide 1920 → 2000 — sharp at every size (mobile screenshot
+confirmed no blur), still author-managed. Applied to banner + text-up heroes.
+- Remaining mobile flags (render-blocking 140ms, minify CSS 27 KiB / JS 9 KiB, unused CSS 10 KiB, cache 13 KiB) are
+  EDS PLATFORM/CDN-controlled: head.html is the standard boilerplate (untouchable), one critical styles.css, aem.js +
+  scripts.js as modules; production CDN minifies + sets cache headers (the aem.page preview does not). Not code-fixable.
+- Gates: lint 0 · breakpoint ✓ · overflow ✓. Deploys on GitHub push (hero.js).
+
 **MIGRATION STATUS:** all general-template + specialized pages imported; financials PDFs **live on DA**. Full-site
 link + breadcrumb validation PASSED (see `VALIDATION.md`). Outstanding: **2 PDFs** localized locally, pending DA
 upload (blocked on the credential opt-in). Only **404.html** (T7, hero-error) remains unmigrated from the full scope.
@@ -3361,3 +3433,203 @@ shows the **2025** one. **Fix:** corrected the `Pages` metadata in both static d
 - Live-correct count now 5 (2 static + 3 children/desc). children/asc (49) still blocked on empty index `lastModified`.
 - IMPORTANT method note: earlier "52 correct" was from a SIMULATION that injected modified stamps the live index lacks.
   Live checks (branch preview render) are the source of truth — children/asc do NOT match live until lastModified populates.
+### 2026-09-14 — News: `six-student-athletes…tiafoe-fund` video was WRONGLY split-right → re-imported full-width
+The YouTube video on `/en/home/news/six-student-athletes-awarded-first-grants-frances-tiafoe-fund` rendered as a
+`split-right` section (video beside the paragraph). Source truth: the embed sits in a **full-width `aem-GridColumn--default--12`**
+column BELOW the text, so it must be a plain full-width `video-embed` block — NO split. The page was originally imported
+by an older importer; the CURRENT `import-news-v1.js` `wrapVideoSections()` already routes col-12 videos to the `else`
+(full-width) branch, so **no code change was needed** — a clean single-page re-import fixed it (per Content-Import Rule:
+re-import, don't hand-edit block structure).
+- Steps: re-bundled `import-news-v1.js` → single-URL `run-bulk-import.js --force` (94.7% completeness) →
+  `localize-assets` (3 imgs downloaded, 0 hotlinks). Verified local `.plain.html`: 0 `split-right`, single `video-embed`,
+  all other blocks intact (columns media-right, social, reactions, cards news / related-articles).
+- **Re-import gotcha:** a fresh import does NOT re-emit the manually-added `news-tags: usta-foundation` metadata row
+  (that's a documented post-import manual edit for the Related-Articles query pool — see the 2026-09-10 dates/tags entry).
+  Re-added it by hand after import. Corrected related-card dates (Mar 25 / Apr 15) survived the re-import.
+- **NOT YET LIVE:** localhost `/en/**` + aem.live serve from the DA preview bus, so the fix only appears once the page is
+  uploaded/published to DA (outward-facing — on user request). Local file is corrected and verified.
+
+### 2026-09-14 — Home "Ready on the court" mission band: left-aligned + wider (center,narrow → medium)
+Per request + source measurement, the homepage "Ready on the court. Ready for life." mission band was `center, narrow`
+(text-centered, capped 810px). Source is actually LEFT-aligned copy on a wider measure — the p grows to ~1090px @1920
+(vs our 810 cap). Changed the section style to **`medium`** (708 @768 → 772 @992 → 970 @1200): dropping `center` makes the
+text left-aligned (only `.center` sets `text-align:center`; `.medium` just centers the column via `margin-inline:auto`),
+and `medium` is the "just wider than narrow" step. No CSS change — reused the existing `medium` width tokens (same band
+used for who-we-are mission intro). Content-only edit in `content/en/home.plain.html`.
+- **NOT YET LIVE:** homepage content serves from the DA preview bus (localhost + aem.live), so this appears only after the
+  page is re-uploaded/published to DA (outward-facing — on user request).
+
+### 2026-09-14 (rev) — Home: correct the two mission/collage sections (supersedes same-day entry above)
+Clarified the two asks after user feedback:
+1. **"Ready on the court" band** stays **CENTERED**, just needs to be **wider** than `narrow` (source p grows to ~1090
+   @1920 vs our 810 cap). Final style = **`center, medium`** (was `center, narrow`). Content edit in
+   `content/index.plain.html` (the `index` DA doc = the live homepage; `content/en/home.plain.html` is NOT what `/`
+   serves — earlier I edited the wrong file). **NOT live until the index page is published to DA.**
+2. **"For decades" collage body text** was **centered** but the SOURCE **left-aligns** it at desktop. Root cause: the
+   base `.columns.feature p { text-align:center }` (correct for the mobile stacked layout) was not overridden when the
+   collage goes two-column at ≥768. Added a scoped override:
+   `.columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p { text-align:left }`.
+   Verified: mobile 390 = center (source), tablet 768 + desktop 1920 = left (source). This is a **CSS** fix → shows in
+   local preview immediately; deploys via GitHub push.
+- **Preview gotcha reconfirmed:** the dev server serves the homepage HTML from the DA content bus, so CONTENT edits
+  (the `center, medium` style) don't appear locally until DA publish; CSS edits DO appear locally.
+- Gates: stylelint ✓ (columns.css) · breakpoint-check ✓ (768/992/1200 min-width only).
+
+### 2026-09-14 — cards-support: left-align card body at desktop (was centered at all widths)
+The homepage "Your support makes a difference." cards-support block centered the card title, description AND LEARN MORE
+at every width. Re-measured the SOURCE: mobile (390) IS centered (single-column stack), but desktop (≥768, 4-up) is
+**LEFT-aligned** — title/desc/CTA all share the image's left edge (135 @1440). The old CSS + comment ("centered at ALL
+widths") was wrong. Fix in `blocks/cards/cards.css` @768 block: set `text-align:left` on `.cards.support > ul > li` and
+its `.cards-support-card-body h4` (the base mobile rules keep center < 768). Verified local: mobile 390 = center; desktop
+1440 = left, title/desc/CTA + image all at left 135 (exact source match). CSS fix → visible in local preview; deploys via
+GitHub push. Gates: stylelint ✓ · breakpoint-check ✓.
+
+### 2026-09-14 — sync `en/home` doc to match index (center, medium)
+Applied the same "Ready on the court" fix to `content/en/home.plain.html` (the `en/home` DA doc) as to `index`:
+style `medium` → **`center, medium`** (centered + wider than narrow). Both homepage docs now identical for this section.
+Content change → needs DA publish to appear in preview/live.
+
+### 2026-09-15 — cards-news: images cropped to 2:1 → let them use natural aspect ratio (source parity)
+Related-Articles teaser images looked "flattened/cut" vs source (reported on the Agassi news page). Root cause in
+`blocks/cards/cards.css`: `.cards.news .cards-news-card-image img` forced `aspect-ratio: 2 / 1` + `object-fit: cover`,
+which CROPS any image that isn't 2:1. The SOURCE renders each teaser at its OWN natural ratio (height:auto, object-fit
+default): most are 400×200 (2:1) but some are taller, e.g. the "2026 Game Changer Award" image is 400×267 (~1.5:1).
+Fix: removed the forced `aspect-ratio` + `object-fit:cover` so intrinsic ratio drives height (matches source). Verified
+local @1440 vs source: Donnelly 2.000 (190h), Game Changer 1.498 (254h, uncropped now), Opening Night 2.000 (190h) —
+exact ratio match; titles stagger like the source. No other tier forces a ratio (768/992 only touch flex/width). CSS fix
+→ visible in local preview; deploys via GitHub push. Gates: stylelint ✓ · breakpoint-check ✓.
+
+### 2026-09-15 — Donate form: native FundraiseUp INLINE EMBED auto-activates (custom-form-donate block NOT needed)
+User observation confirmed: the Chris-Evert-50th donation form is a FundraiseUp **inline embed** that hydrates
+AUTOMATICALLY — no custom block required. Source markup is just a hidden anchor inside an embed container:
+`<div class="cmp-embed"><center><a href="#XJYDXZPC" style="display:none"></a></center></div>`. The FundraiseUp loader
+(already loaded site-wide by `scripts/donate.js`) scans the document for an `<a href="#<ElementID>">` and REPLACES it
+in place with the live donation iframe. `XJYDXZPC` is this form's FundraiseUp element ID (maps to the CHRIS50 campaign
+in the FRU dashboard).
+- **Test page:** `content/drafts/donate-widget-test/chris-evert-native-embed.plain.html` — content is just
+  `<p><a href="#XJYDXZPC">…</a></p>` (plus copy). Local URL (new draft folders serve under the `/content/` prefix):
+  `http://localhost:3000/content/drafts/donate-widget-test/chris-evert-native-embed`.
+- **Result:** after the delayed phase loads FRU (~3s), the anchor is consumed and replaced by the REAL FRU iframe
+  (`iframe#XJYDXZPC`, title "Donation Form", 698px): freq toggle, "Celebrating a Champion!", six $50 tiers, custom
+  amount, dedicate + honoree, "Designate to the Jimmy Evert Merit Scholarship Fund", "Donate and Support" — exact source
+  match, fully interactive. It hydrated even on **localhost** (the old `custom-form-donate.js` comment claimed the FRU
+  account is domain-restricted to prod; that did NOT block the inline embed here).
+- **Implication / next step (not yet applied to the live page):** the real Chris-Evert page
+  (`content/en/home/get-involved/special-funds/chris-evert-50th-anniversary.plain.html`) can DROP the hand-built
+  `custom-form-donate` block and instead author the FRU inline-embed anchor `<a href="#XJYDXZPC">`, letting the widget
+  activate itself (source-faithful, less code to maintain). The `split-even` section (quote left / form right) still
+  applies — the anchor/iframe just replaces the block in the right column. Leave `custom-form-donate` block in the repo
+  until the page is re-authored + published to DA (outward-facing, on request).
+- **Dev-server gotcha:** `aem up` caches its content-file listing at startup — brand-new draft files 404 until restart;
+  and locally-authored drafts serve under `/content/…` (bare `/drafts/…` proxies to aem.page). A stray probe file
+  `content/drafts/block-samples/_donate-native-probe.plain.html` was created during testing; deletion is hook-blocked,
+  so it remains (noindex, harmless) pending the content pipeline.
+
+### 2026-09-15 — Chris Evert page: exact copy under drafts/meet with custom-form-donate → native FRU embed (VERIFIED)
+On a feature branch, copied the LIVE Chris-Evert page
+(`content/en/home/get-involved/special-funds/chris-evert-50th-anniversary.plain.html`) verbatim to
+`content/drafts/meet/chris-evert-50th-anniversary.plain.html`, changing ONLY the donation piece: removed the
+`custom-form-donate` block and dropped in the native FundraiseUp inline-embed anchor `<p><a href="#XJYDXZPC"></a></p>`
+in the same `split-even` section (quote left / form right). Everything else identical (h1 center intro, columns text+photo,
+quote block, spacer band, metadata).
+- **Verified @1440 on localhost** (`/content/drafts/meet/chris-evert-50th-anniversary`): after the delayed phase loads FRU,
+  the anchor is consumed and replaced by the REAL FRU iframe (`iframe#XJYDXZPC`, "Donation Form", 698px) — full form
+  (freq toggle, "Celebrating a Champion!", six $50 tiers, custom amount, dedicate+honoree, "Designate to the Jimmy Evert
+  Merit Scholarship Fund", "Donate and Support"). `custom-form-donate` block absent; `split-even` still holds quote left
+  (x135) + form right (x735), side-by-side. So the real page can drop the block and use the native embed anchor 1:1.
+- **Dev-server note:** `aem up` must be started with `nohup … &` (NOT setsid/disown, which the harness reaps); it caches
+  the content listing at startup so new drafts need a restart, and locally-authored drafts serve under `/content/…`.
+
+### 2026-09-15 — split-even: center the native FRU embed in its column + top-align (source-parity positioning)
+On the drafts/meet Chris-Evert test, the native FRU donation iframe was flush-LEFT in its split-even column and sat +14px
+low vs the quote. Source truth (measured @1440): the form is CENTERED within its 570px column (the source wraps it in a
+`<center>` → iframe at left 832 / right 1208) and its TOP aligns exactly with the quote (delta 0). Fixed in `styles.css`
+split-even rules (CSS only — no content change):
+  • `main .section.split-even > .default-content-wrapper:last-child { text-align:center }` — centers the inline-embed
+    iframe in its column at every viewport (and in the single content column on mobile). `:last-child` also lifts
+    specificity above the earlier `.center-intro` rule (avoids stylelint no-descending-specificity — see css-pitfalls-eds).
+  • inside the @768 block: `…split-even > .default-content-wrapper > p:first-child { margin-top:0 }` — zeroes the leading
+    paragraph's block margin so the embed top-aligns with the quote (kills the +14px offset).
+- Verified vs source: @1440 form left 832/right 1208, topDelta 0 (exact match); @992 centered (left 558) topDelta 0;
+  @390 form fills the 328 column, stacked below quote (source stacks on mobile too). Gates: stylelint ✓ · breakpoint ✓.
+- Scoped to `.default-content-wrapper` so a block-based split-even column (e.g. quote+quote) is unaffected.
+
+### 2026-09-15 — split-even donate: theme-scope decision + form-load-speed analysis
+Two follow-up questions on the native FRU embed:
+1. **"Theme: general → should the CSS live in general.css?"** No general.css exists — and shouldn't. In `aem.js`
+   `decorateTemplateAndTheme()`, **Theme** metadata only ADDS a body class (`body.general`); it does NOT load a
+   stylesheet. Only **Template** loads `templates/<name>/<name>.css` (e.g. news). Convention here: theme-scoped rules
+   live in `styles.css` under `body.general …` (already ~30 lines of button-COLOR rules). Tried scoping the split-even
+   layout rules to `body.general`, but **reverted**: (a) the layout follows from the section style + content shape, not
+   the theme; (b) `Theme`→body-class only happens on the aem.live pipeline — the LOCAL dev server does NOT emit
+   `<meta name=theme>` for drafts, so `body.general` is absent locally and a body.general scope silently no-ops in
+   preview (confirmed: draft body class = "appear" only; live page body = "general appear"). Kept the rules scoped to
+   `.section.split-even > .default-content-wrapper` (structure-based, verifiable locally, robust to theme changes).
+2. **"Form takes time to load — do we need an EDS Embed block to make it fast?"** Measured: the FRU widget script is
+   requested at **~3.16s** (the delayed phase = `loadDelayed()` behind a 3s setTimeout in scripts.js), downloads in
+   ~29ms, and the inline form hydrates immediately after. So the ~3s delay is INTENTIONAL and CORRECT for perf — FRU is
+   a heavy 3rd-party (loads its own script + nested iframes + Stripe); loading it eagerly would tank LCP/TBT (the home
+   PageSpeed work in the 2026-09-10 entry specifically pushed FRU into the delayed phase for this reason). An EDS Embed
+   BLOCK would NOT make it faster — it'd still load the same FRU script; a block that loaded FRU eagerly would be
+   SLOWER. The right perf pattern is what we have (delayed 3rd-party) — optionally we could reserve the ~698px height
+   with a min-height placeholder to avoid layout shift when it hydrates (CLS), but that's a polish, not a speed win.
+   Conclusion: keep the native inline embed on the delayed FRU loader; no Embed block needed.
+
+### 2026-09-15 — donate-embed BLOCK (plain FRU anchor doesn't survive publishing → carry the ID as text)
+CONFIRMED on the deployed branch preview (issue7-widget…aem.live/drafts/meet/chris-evert-50th-anniversary): the plain
+authored anchor `<a href="#XJYDXZPC">` does NOT work post-publish — the pipeline strips the FRAGMENT-only href down to
+`/` (same failure mode donate.js documents for query-only `?form=` hrefs), so FundraiseUp never sees element ID
+`XJYDXZPC` and the form never hydrates. It only worked on the LOCAL dev server (which preserves the raw href).
+- **Fix — new `donate-embed` block** (`blocks/donate-embed/{js,css}`): authoring contract is ONE cell holding the FRU
+  element ID as PLAIN TEXT (`| Donate Embed | / | XJYDXZPC |`) — text survives publishing where an href fragment does
+  not. `decorate()` extracts the ID (from text, or a surviving `#…` href, or a pasted source snippet) and re-creates the
+  `<a href="#<ID>">` placeholder at decorate time (well before the delayed-phase FRU loader runs), so the widget
+  hydrates it exactly as on the source. Anchor is visually-hidden (clip-path inset, NOT display:none — the widget needs
+  it in the tree). Block CSS centers the ~376px iframe in its column (source `<center>`); split-even top-alignment comes
+  from the existing `div[class$='-wrapper'] + div[class$='-wrapper'] { margin-top:0 }` rule (both columns are now blocks:
+  quote + donate-embed). Removed the earlier `.default-content-wrapper` split-even rules (obsolete — embed is a block now).
+- Verified LOCAL @1440: block extracts XJYDXZPC → anchor → FRU hydrates → form left 832/right 1208, topDelta 0 (source
+  match). Gates: lint 0 errors (7 pre-existing no-console WARNINGS in tests/a11y, unrelated) · stylelint ✓ · breakpoint ✓.
+- **Authoring contract for the real page:** replace the `custom-form-donate` block with a `donate-embed` block whose one
+  cell is the FRU element ID (`XJYDXZPC` for CHRIS50). Keep the `split-even` section (quote + donate-embed).
+- **PENDING pipeline proof:** block CODE deploys via git push to the branch; the DRAFT CONTENT (now using the block) is
+  git-ignored and lives on DA — the branch preview still serves the OLD anchor content until the updated draft is
+  published to DA. Must re-verify hydration on the branch preview AFTER the content is on DA.
+
+### 2026-09-15 — donate-embed: eager load + firm height (fast form, zero CLS)
+Two perf/UX refinements to the donate-embed block:
+1. **Eager load** — the donation form is the page's PRIMARY content, so the block now triggers the FundraiseUp loader
+   itself at decorate time (eager phase) instead of waiting for the site-wide delayed phase (~3s). Exported
+   `loadFundraiseUp()` from `scripts/donate.js` (idempotent — guards on `window.FundraiseUp`, and now installs the
+   Trusted-Types frame hardening itself so an eager caller gets a working widget); `donate-embed.js` imports + calls it.
+   The delayed-phase call in scripts.js stays as a harmless no-op for other pages. Verified: FRU script requested at
+   **~384ms** (was ~3160ms) — form hydrates ~8× sooner. (Other pages keep the delayed behaviour — this is scoped to
+   pages that actually have the block.)
+2. **Firm height / no CLS** — reserved the form's rendered height on the block so nothing shifts when the iframe
+   hydrates, at every viewport. Measured on the live widget: **716px mobile (<768)** (328-wide form; honoree tooltip
+   wraps) and **698px from 768 up**. Set as `min-height` in `blocks/donate-embed/donate-embed.css` (min, not fixed, so
+   the form can grow if FRU ever gets taller). Verified: reservedBefore==formHeight at 390 (716) and 1440 (698) → zero
+   layout movement.
+- Gates: lint 0 errors (7 pre-existing no-console warnings in tests/a11y, unrelated) · stylelint ✓ · breakpoint ✓.
+- eslint: donate.js now has one named export → added a scoped `import/prefer-default-export` disable (the module is
+  side-effecting/self-running, so a named export is correct — not a default).
+
+### 2026-09-15 — Retire custom-form-donate block; migrate all pages + samples to donate-embed
+Now that donate-embed is proven, removed the hand-built block and switched everything over:
+- **Deleted** `blocks/custom-form-donate/` (js+css) — replaced by `donate-embed`.
+- **Real page** `content/en/home/get-involved/special-funds/chris-evert-50th-anniversary.plain.html`: swapped the
+  `custom-form-donate` table for `| Donate Embed | / | XJYDXZPC |` in the same split-even section (quote + donate-embed).
+- **Block sample:** added `content/drafts/block-samples/donate-embed.plain.html` (new library sample, element ID
+  XJYDXZPC, explains the text-carries-the-ID rationale + firm-height/no-CLS note). Repointed the old
+  `custom-form-donate.plain.html` sample to the donate-embed block with a "retired → see Donate Embed" note so it isn't
+  left unstyled.
+- **Section sample:** `content/drafts/sections-samples/section-split-even-donate.plain.html` — donate cell now uses the
+  donate-embed block; updated the descriptive copy (`custom-form-donate` → `donate-embed`).
+- **a11y config:** `tests/a11y/a11y.config.js` — `/drafts/block-samples/custom-form-donate` → `/drafts/block-samples/donate-embed`.
+- **Importer:** `tools/importer/import-chris-evert-v1.js` now emits a `Donate Embed` block (one cell = element ID
+  XJYDXZPC) instead of the old 5-row Custom Form Donate table, so a re-import reproduces the new markup. (+ comment fixes.)
+- Verified LOCAL: block sample @390 decorates → form hydrates (716px reserved == form height, no shift), no
+  `.custom-form-donate` in DOM. Gates: lint 0 errors · breakpoint ✓. (a11y test harness Chromium isn't installed in
+  this env — config change is a URL swap only; verify a11y where the harness runs.)
+- **Deploy:** block deletion + a11y config + importer = git push (block code already committed). The 3 CONTENT files are
+  git-ignored (live on DA) — must be re-published to DA for the real page + samples to show the new block.

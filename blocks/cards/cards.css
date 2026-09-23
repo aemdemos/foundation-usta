@@ -424,7 +424,11 @@
   }
 }
 
-/* Landscape image — source is a 400×200 (2:1) image, full card width, no radius. */
+/* Landscape image — full card width, no radius. The SOURCE renders each teaser
+   image at its OWN natural aspect ratio (height:auto, no crop): most are 400×200
+   (2:1) but some are taller, e.g. 400×267 (~1.5:1). Do NOT force a fixed
+   aspect-ratio + object-fit:cover — that crops the taller images (the "flattened
+   / cut picture" bug). Let the intrinsic ratio drive the height, like the source. */
 .cards.news .cards-news-card-image {
   line-height: 0;
 }
@@ -434,8 +438,6 @@
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 2 / 1;
-  object-fit: cover;
   border-radius: 0;
 }
 
@@ -1055,7 +1057,14 @@ main .section:has(.cards.profile) .default-content-wrapper p {
     min-width: 0;
     width: auto;
 
-    /* text stays centered (source); only the h4 title is left-aligned */
+    /* From 768 the source LEFT-aligns the whole card body — title, description
+       AND the LEARN MORE link all share the image's left edge (the mobile stacked
+       layout centers them; the 4-up desktop layout does not). */
+    text-align: left;
+  }
+
+  .cards.support .cards-support-card-body h4 {
+    text-align: left;
   }
 
   .cards.support .cards-support-card-image img {
