@@ -70,7 +70,7 @@
 /* --- base / mobile-first: stack everything --- */
 
 /* Mobile column width is handled GLOBALLY (styles.css: `main > .section > div`
-   caps to the source's 328px centered column on mobile), so the feature block
+   caps to the source's 336px centered column on mobile), so the feature block
    needs no per-block mobile inset. Reset at 768 below. */
 
 .columns.feature .columns-feature-row {
@@ -267,12 +267,12 @@
   color: #000; /* source heading is pure black (#000), not the #333 body text color */
 }
 
-/* Mobile: the SOURCE constrains this heading to the fixed ~328px centered column
+/* Mobile: the SOURCE constrains this heading to the fixed ~336px centered column
    (like the collage/text below it) so it wraps "For decades, our work has / had
    an impact nationwide." — ours spanned the full 400px. Cap + center on mobile;
    release at the desktop tier where the heading runs full-width. */
 .section.columns-container:has(.columns-feature-collage) .default-content-wrapper {
-  max-width: 328px;
+  max-width: 336px;
   margin-inline: auto;
 }
 
