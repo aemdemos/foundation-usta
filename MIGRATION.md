@@ -3680,3 +3680,71 @@ Our implementation maps to these 1:1 (we author mobile-first / `min-width` — s
 - `@desktop`'s `1200` is the OUTER container; the content column inside is `1170` (= 1200 − 30px Bootstrap gutter),
   fluid below 1200 and clamped at 1170 above — matching the live source.
 - Updated `tools/quality/breakpoints.json` `grid.containerMaxWidthPx` to record `{ base:336, 768:720, 992:"fluid: min(vw,1200)-30", 1200:1170 }`. AGENTS.md needs no change (it hardcodes no widths; it points to breakpoints.json).
+
+### 2026-09-23 — Footer TABLET tier (768–991): was falling back to mobile stack → source multi-column layout
+User: the migrated footer in TABLET view followed the MOBILE layout (full-width logo + full-width KEEP UP
+button + everything stacked + centered), which the source does NOT do. Root cause: footer.css had only a
+mobile base + a `@media (width >= 992px)` desktop tier, so the whole 768–991 range inherited the mobile stack.
+- **Measured the LIVE source footer at 768 + 900** (getBoundingClientRect on logo/KEEP UP/nav/social/legal).
+  Source TABLET layout: SMALL logo (~116px @768, NOT the ~290 mobile logo) on its OWN row, left; then the
+  KEEP UP button on its OWN row BELOW the logo, CENTERED on the page (button centre cx=384 == viewport/2 @768),
+  ~48% of the content width (W=308 @768 / 348 @900 — NOT full-bleed, NOT beside the logo); then a row of
+  [nav 2×2 grid on the LEFT | social block on the RIGHT, content centered]; then full-width legal LEFT-aligned.
+  (CORRECTION from a first pass that placed the button beside the logo — the source centers it on its own row.)
+- **Fix (blocks/footer/footer.css):** added a `@media (width >= 768px)` tablet tier (mobile-first / min-width
+  only, per The Breakpoint Rule — NOT a min+max range) that sets `.footer` to a grid
+  `grid-template-columns: 3fr 2fr` with areas `brand brand / nav social / legal legal`; brand row flex-row with
+  116px logo + a 50%-width KEEP UP; nav 2×2 (36/16 gap); social right, centered; legal full-width left-aligned.
+  The existing `@media (width >= 992px)` desktop tier cascades OVER it — added explicit resets there for the
+  props the tablet tier introduced (`.footer-brand flex-direction:column`, `.footer-brand>p flex:0 1 auto`,
+  `.footer-legal text-align:center` + `p:last-child justify-content:center`) so desktop is unchanged.
+- **Verified LOCAL vs SOURCE @768:** logo 116 (=src 116), KEEP UP L200/W344 (src L230/W308), nav 2×2 with col2
+  at L245 (src 262), social/fb at L545 (src 530), legal left-aligned at content-left, NO horizontal overflow.
+  Structure now matches the source tablet layout (screenshot confirmed). **Desktop @1280 re-verified unchanged:**
+  brand column stacked (logo 210 + KEEP UP 237), nav horizontal beside it, social right, legal centered, no overflow.
+- Gates: lint 0 errors (7 pre-existing a11y no-console warnings) · stylelint ✓ (footer.css) · breakpoint-check ✓
+  (768/992/1200 min-width only). CSS-only → visible in local preview; deploys via git push.
+
+### 2026-09-23 — Footer tablet: logo left-position + size drift (fluid gutter + fluid logo)
+Follow-up on the tablet footer: the logo was too small and its left edge (and the nav's) sat further left than the
+source. Root cause: our tablet tier used a FIXED 40px side gutter + FIXED 116px logo, but the source uses a FLUID
+one-column inset gutter and a FLUID logo. Measured source vs ours at the identical 910px width:
+  • logo: source L=82/W=140 vs ours L=40/W=116  • nav WHO: source L=82 vs ours L=40.
+Fix (footer.css tablet tier): `.footer` padding `40px` → `40px 8.33vw` (1/12 viewport = the source's fluid gutter,
+so logo+nav+legal all track it); logo width `116px` → `15.4vw` (matches source 116@768 → 140@910). KEEP UP already
+centered on the page (cx=viewport/2). Verified LOCAL vs SOURCE: @768 logo L64/W118 (src 70/116), @910 logo L76/W140
+(src 82/140), nav WHO tracks the logo edge, KEEP UP cx=page-centre at both, NO overflow. Desktop @1280 unchanged
+(logo L40/W210, KEEP UP L40/W237). Gates: stylelint ✓ · breakpoint-check ✓ (768/992/1200 min-width only; the vw
+values are property values, not breakpoints). CSS-only → live in preview; deploys via git push.
+
+### 2026-09-23 — Footer tablet logo drift on PREVIEW — root cause: `> p` centered the LOGO's wrapper too
+User: on the branch PREVIEW (preview-aemcoder.adobe.io) the tablet footer logo sat shoved toward center, though it
+was correct on localhost. Diagnosed from the preview's DEV-TOOLS DOM: the PUBLISHED pipeline wraps BOTH the logo <a>
+AND the KEEP UP <a> each in their own <p> inside `.footer-brand`, whereas the LOCAL `.plain.html` fragment has the
+logo as a BARE <a> (no <p>) + the button in a <p>. My tablet rule `footer .footer-brand > p { width:48%; margin:0
+auto }` therefore matched the LOGO's <p> in production → centered a 48% box with the logo at its left edge → logo
+appeared pushed to center-left. It never showed locally because there was no logo <p> to match.
+- **Fix:** scoped the centering to ONLY the button wrapper — `footer .footer-brand > p:has(.footer-keepup)`. The
+  logo's <p> (production) now stays full-width/left; the button's <p> is the only one centered.
+- **Verified by SIMULATING the production shape locally** (JS-wrapped the logo <a> in a <p>): logo <p> = full width
+  (792) with the logo at L=79 (far-left, unchanged); button <p> centered (cx=475=viewport/2 @950). Logo geometry
+  identical with/without the <p> wrap → robust to both content shapes. Desktop unchanged.
+- Gates: lint 0 errors · stylelint ✓ · breakpoint-check ✓. CSS-only. NOTE: this is the fix that resolves the
+  PREVIEW/production drift specifically — must be committed + pushed for the branch preview to pick it up.
+
+### 2026-09-23 — Footer desktop regression from the `:has(.footer-keepup)` fix — specificity reset
+The `:has(.footer-keepup)` tablet rule (0,3,1 specificity) OUT-SPECIFIED the desktop reset `footer .footer-brand > p`
+(0,2,1), and since the tablet tier uses `min-width:768` it stays active at ≥992 — so the button <p> kept `width:48%`
+at desktop, shrink-wrapping to ~114px and shifting the 237px KEEP UP button RIGHT (L=102 in the production
+logo-in-<p> shape). Fixed: the desktop reset now also lists `footer .footer-brand > p:has(.footer-keepup)` (matching
+0,3,1 specificity), so it wins by source order (desktop block comes after tablet). Verified at 1280 in BOTH content
+shapes (bare logo <a> AND logo wrapped in <p>): logo L40/W210, KEEP UP L40/W237 left-aligned. Tablet re-checked @910
+(production shape): logo far-left L76/W140, KEEP UP centered cx=455, no overflow. Gates: stylelint ✓ · breakpoint ✓.
+
+### 2026-09-23 — Footer tablet legal: CENTERED, not left-aligned (correction)
+User: the "@2025 … ALL RIGHTS RESERVED" legal row on tablet should be CENTERED, was shifted left. Re-measured the
+LIVE source @910: copyright + links row are `text-align:center` (copyright cx = page centre 455), NOT left-aligned.
+My earlier tablet rule set `text-align:left` (+ `justify-content:flex-start` on the links) — that was the drift (the
+768px reading looked left-aligned only because centered text nearly fills the narrow column). Removed both; the base
+mobile `text-align:center` + links `justify-content:center` now carry through the tablet tier. Verified LOCAL @910:
+copyright cx=455 (page centre), text-align center — matches source. Gates: stylelint ✓ · breakpoint ✓.
