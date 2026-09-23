@@ -413,12 +413,14 @@ main img {
   }
 }
 
+/* Desktop: ONE fluid tier — capped at 1200 with the 15px gutter (content =
+   min(viewport,1200) − 30, clamping at 1170), matching the source container and
+   the global `main > .section > div` rule above. */
 @media (width >= 992px) {
-  .container-max { max-width: 970px; }
-}
-
-@media (width >= 1200px) {
-  .container-max { max-width: 1170px; }
+  .container-max {
+    max-width: 1200px;
+    padding-inline: 15px;
+  }
 }
 
 /* sections */
@@ -461,15 +463,20 @@ main > .section:empty {
   }
 }
 
+/* DESKTOP (>=992): the source runs ONE fluid container — capped at 1200px with a
+   15px gutter each side, so the content column is `min(viewport, 1200) - 30` =
+   fluid 962 @992 → 1070 @1100 → 1169 @1199, then CLAMPED at 1170 from 1200 up.
+   (Measured live on the source: content col 962/1070/1169/1170 at 992/1100/1199/
+   1440.) This is a SINGLE tier — no separate 1200 breakpoint — matching the
+   customer's `@desktop (min-width:992) → content max-width:1200` (1200 − 2×15 =
+   1170 content). Replaces the earlier fixed 970 plateau (992–1199), which was up
+   to ~199px too narrow vs the source at 1199. border-box so the 15px side padding
+   is INSIDE the 1200 cap. */
 @media (width >= 992px) {
   main > .section > div {
-    max-width: 970px;
-  }
-}
-
-@media (width >= 1200px) {
-  main > .section > div {
-    max-width: 1170px;
+    box-sizing: border-box;
+    max-width: 1200px;
+    padding-inline: 15px;
   }
 }
 
