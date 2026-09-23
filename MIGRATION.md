@@ -3633,3 +3633,27 @@ Now that donate-embed is proven, removed the hand-built block and switched every
   this env — config change is a URL swap only; verify a11y where the harness runs.)
 - **Deploy:** block deletion + a11y config + importer = git push (block code already committed). The 3 CONTENT files are
   git-ignored (live on DA) — must be re-published to DA for the real page + samples to show the new block.
+
+### 2026-09-23 — News Related-Articles feed missing in DA preview pane — case-sensitive `template` meta lookup
+User: the Related Articles feed renders on aem.page (`/drafts/rusmeen/tiafoe-houston-youth-clinic`) but NOT in the DA
+authoring preview pane. Reproduced LOCALLY (dev server serving raw `.plain.html` = same casing as the DA preview
+pane): the feed was absent, `document.body.className` was just `"appear"` (no `news` class), and
+`getMetadata('template')` returned '' — so `news.js` never ran.
+- **Root cause:** the feed is gated on `news.js` running, which only happens if `scripts.js` `loadTemplateCSS()`
+  resolves a template name via `getMetadata('template')`. aem.js `getMetadata` is CASE-SENSITIVE
+  (`meta[name="template"]`). The PUBLISHED pipeline (aem.page/aem.live) lowercase-hyphenates metadata keys →
+  `<meta name="template">` matches → feed renders. The DA PREVIEW PANE + dev server serve the raw draft with the
+  author's ORIGINAL casing → `<meta name="Template">`, `<meta name="List From">`, etc. → the lookup misses → no
+  template class, no template CSS/JS, no feed. (`news.js`'s own `readMeta()` normalized fallback never gets a chance —
+  the GATE that loads news.js runs first and misses.) Confirmed live: aem.page emits `template`/`list-from`/… ;
+  raw draft emits `Template`/`List From`/… .
+- **Fix (scripts.js only — aem.js is untouchable):** added `getMetadataNormalized(key)` (same normalized head scan
+  `news.js` already uses) and switched `loadTemplateCSS()` to resolve the template name through it, so a capitalized
+  `Template` resolves in the preview pane exactly as lowercase does live. Also `document.body.classList.add(name)`
+  there, because aem.js `decorateTemplateAndTheme()` only adds the body class for the lowercase key — so `body.news`-
+  scoped article typography (H1 #333, body 16/18) now applies in the preview pane too.
+- **Verified LOCAL** (reproduces the preview-pane casing): raw draft `/content/drafts/rusmeen/tiafoe-houston-youth-clinic`
+  AND proxied real path `/en/home/news/tiafoe-houston-youth-clinic` → `body.className = "news appear"`, feed = 3 cards
+  (WHM 2026 / RFLF / Yonex, titles+dates+desc+Read More), H1 = rgb(51,51,51). Applies to ALL templates (news, and any
+  future `templates/<name>/`), not just news. Gates: lint 0 errors (7 pre-existing a11y no-console warnings, unrelated)
+  · breakpoint-check ✓ (768/992/1200). Deploys via git push (code-only; no content change).

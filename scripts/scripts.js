@@ -247,10 +247,33 @@ export function decorateMain(main) {
  * page declares no template.
  * @returns {Promise<string|null>} the resolved template name, or null
  */
+/**
+ * Read a metadata value by NORMALIZED key. The published pipeline lowercase-
+ * hyphenates metadata names (`Template` → `template`), but the DA authoring
+ * preview pane and the dev server serve the raw `.plain.html` with the author's
+ * ORIGINAL casing (`<meta name="Template">`). aem.js `getMetadata` is
+ * case-sensitive, so a capitalized key misses there. Fall back to a normalized
+ * scan so the template resolves identically in the preview pane and live.
+ * @param {string} key normalized (lowercase-hyphenated) metadata key
+ * @returns {string} the value, or '' when absent
+ */
+function getMetadataNormalized(key) {
+  const direct = getMetadata(key);
+  if (direct) return direct;
+  const match = [...document.head.querySelectorAll('meta[name]')]
+    .find((m) => m.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') === key);
+  return match ? match.content : '';
+}
+
 async function loadTemplateCSS() {
-  const template = getMetadata('template');
+  const template = getMetadataNormalized('template');
   if (!template) return null;
   const name = toClassName(template);
+  // aem.js decorateTemplateAndTheme() adds the body class only when the
+  // lowercase `template` meta is present, so in the preview pane (capitalized
+  // key) it's missing — add it here so `body.<name>`-scoped template CSS
+  // (e.g. news article typography) applies in preview too.
+  document.body.classList.add(name);
   try {
     await loadCSS(`${window.hlx.codeBasePath}/templates/${name}/${name}.css`);
   } catch (e) {
