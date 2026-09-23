@@ -57,7 +57,11 @@
 .embed-instagram .instagram-media {
   width: 100% !important;
   min-width: 0 !important;
-  max-width: 540px !important; /* Instagram's own max; column caps it to ~458 @1200 */
+
+  /* Source constrains the embed to a FIXED ~368px (measured on the live source at
+     desktop), NOT Instagram's default 540px max — so ours was rendering ~172px too
+     wide. Cap at 368 to match the source's embed dimensions. */
+  max-width: 368px !important;
   margin: 0 auto !important;
 }
 

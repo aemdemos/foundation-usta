@@ -3732,3 +3732,32 @@ disabled) so exactly 3 fit per row and a 4th wraps. Desktop (`>=992`) is UNCHANG
   (W240, L90, wrapped) — matches source 3-up+wrap; 3-card feed @900 still 3-up no wrap; @1280 4-card feed still 4-up
   one row (W293). No horizontal overflow at any width.
 - Gates: stylelint ✓ · breakpoint-check ✓ (768/992/1200 min-width only). CSS-only → live in preview; deploys via git push.
+
+### 2026-09-23 — embed-instagram: cap embed width 540 → 368px (was wider than source)
+User: on ngounoue-excellence-team-junior-french-open the Instagram embed rendered LARGER than the source. Measured
+the live source at desktop: the IG embed is a FIXED ~368px wide (computed width 367.984), centered in the content
+column (L=456 @1280). Ours used `.embed-instagram .instagram-media { max-width: 540px }` (Instagram's own default max)
+so it rendered up to 540 — ~172px too wide. Fix: `max-width: 540px → 368px !important`. Verified LOCAL vs source:
+desktop embed now W=368 (== source 368), centered cx=640 @1280 (L=456, matches source); mobile @390 caps to the 336
+content column (W=336, no overflow) since width:100% bounds it below the 368 max. Gates: stylelint ✓ · breakpoint ✓.
+CSS-only → live in preview; deploys via git push. NOTE: applies to the standalone (text-less) IG embed variant used
+on ngounoue; the split-left (embed-beside-text) variant inherits the same 368 cap, still fits its col-5.
+
+### 2026-09-23 — Fix 2025-NJTL-essay-winners: stray header-only `table` block → interleaved plain list
+User: on usta-foundation-to-celebrate-winners-of-2025-national-junior-ten the winners rendered as a bordered `table`
+holding only the 4 grade HEADERS (Freshmen/Sophomores/Juniors/Seniors), with the winner-name `<ul>` lists detached
+BELOW it — the source is a PLAIN interleaved list (each grade heading immediately followed by its 2 bulleted names).
+Root cause: the importer's `wrapGradeListTable()` matched the "…following categories:" lead-in + grade-header lines,
+but this page authors the names as `<ul>` lists (not "Name - Chapter" `<p>` lines), so it wrapped the bare headers
+into a table and orphaned the lists.
+- **Content fix (this page only, per user — no re-import):** replaced the `.table` block + 4 detached `<ul>`s in
+  `content/en/home/news/usta-foundation-to-celebrate-winners-of-2025-national-junior-ten.plain.html` with the
+  interleaved structure `<p>Freshmen</p><ul>…2 li…</ul>` × 4 grades, matching the source (plain `<p>` headings, not
+  bold — source renders them unstyled). Verified LOCAL: 0 `table` blocks; renders Freshmen→2, Sophomores→2, Juniors→2,
+  Seniors→2 interleaved, matching the source screenshot.
+- **Importer HARDENED for future imports** (so a re-import won't reintroduce this): `wrapGradeListTable()` now BAILS
+  when the detected groups are header-only (no `<p>` name lines) — i.e. the list-based variant — leaving it as plain
+  default content. Only the paragraph-line variant (2026 essay winners) still becomes a table. Re-bundled
+  import-news-v1.bundle.js. (Not executed — single-page content fix applied directly.)
+- **Deploy:** the corrected `.plain.html` is git-ignored DA content — re-upload/publish to DA for aem.page/aem.live
+  (outward-facing, on request). Importer source+bundle deploy via git push.

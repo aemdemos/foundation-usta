@@ -643,6 +643,15 @@ function wrapGradeListTable(document, root) {
     }
     if (groups.length < 2) return;
 
+    // BAIL if the groups are header-ONLY (no "Name - Chapter" <p> lines after each
+    // header). That means this page authors the winners as <ul>/<ol> lists rather
+    // than plain paragraph lines (e.g. usta-foundation-to-celebrate-winners-of-2025-
+    // …): converting the bare headers into a table orphans the lists. Leave the
+    // whole thing as plain default content (heading + list, interleaved) — which is
+    // exactly how the source renders it. wrapGradeListTable only handles the
+    // paragraph-line variant (2026 essay winners), never the list variant.
+    if (!groups.some((g) => g.length > 1)) return;
+
     // One single-cell row per group (header + its name lines, kept as paragraphs).
     const rows = [['Table']];
     groups.forEach((g) => {

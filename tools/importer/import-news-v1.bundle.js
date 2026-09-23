@@ -1,26 +1,9 @@
 /* eslint-disable */
 var CustomImportScript = (() => {
   var __defProp = Object.defineProperty;
-  var __defProps = Object.defineProperties;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-  var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
   var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __propIsEnum = Object.prototype.propertyIsEnumerable;
-  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-  var __spreadValues = (a, b) => {
-    for (var prop in b || (b = {}))
-      if (__hasOwnProp.call(b, prop))
-        __defNormalProp(a, prop, b[prop]);
-    if (__getOwnPropSymbols)
-      for (var prop of __getOwnPropSymbols(b)) {
-        if (__propIsEnum.call(b, prop))
-          __defNormalProp(a, prop, b[prop]);
-      }
-    return a;
-  };
-  var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -34,26 +17,6 @@ var CustomImportScript = (() => {
     return to;
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-  var __async = (__this, __arguments, generator) => {
-    return new Promise((resolve, reject) => {
-      var fulfilled = (value) => {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      };
-      var rejected = (value) => {
-        try {
-          step(generator.throw(value));
-        } catch (e) {
-          reject(e);
-        }
-      };
-      var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
-      step((generator = generator.apply(__this, __arguments)).next());
-    });
-  };
 
   // tools/importer/import-news-v1.js
   var import_news_v1_exports = {};
@@ -216,7 +179,7 @@ var CustomImportScript = (() => {
     ...PAGE_TEMPLATE.sections && PAGE_TEMPLATE.sections.length > 1 ? [transform2] : []
   ];
   function executeTransformers(hookName, element, payload) {
-    const enhancedPayload = __spreadProps(__spreadValues({}, payload), { template: PAGE_TEMPLATE });
+    const enhancedPayload = { ...payload, template: PAGE_TEMPLATE };
     transformers.forEach((transformerFn) => {
       try {
         transformerFn.call(null, hookName, element, enhancedPayload);
@@ -265,7 +228,7 @@ var CustomImportScript = (() => {
     try {
       const u = new URL(permalink);
       permalink = `${u.origin}${u.pathname}`;
-    } catch (e) {
+    } catch {
     }
     if (!permalink) return null;
     const cell = document.createElement("div");
@@ -329,12 +292,11 @@ var CustomImportScript = (() => {
       ...root.querySelectorAll("blockquote.instagram-media")
     ];
     nodes.forEach((el) => {
-      var _a, _b;
       if (isHiddenDup(el)) {
         el.remove();
         return;
       }
-      const raw = el.getAttribute("src") || el.getAttribute("data-instgrm-permalink") || ((_b = (_a = el.querySelector && el.querySelector('a[href*="instagram.com/"]') || {}).getAttribute) == null ? void 0 : _b.call(_a, "href")) || "";
+      const raw = el.getAttribute("src") || el.getAttribute("data-instgrm-permalink") || (el.querySelector && el.querySelector('a[href*="instagram.com/"]') || {}).getAttribute?.("href") || "";
       const permalink = instaPermalinkFrom(raw);
       if (!permalink) return;
       if (seen.has(permalink)) {
@@ -356,12 +318,11 @@ var CustomImportScript = (() => {
       bq.replaceWith(buildTweetBlock(document, bq));
     });
     root.querySelectorAll("blockquote.instagram-media").forEach((bq) => {
-      var _a, _b;
       if (isHiddenDup(bq)) {
         bq.remove();
         return;
       }
-      const permalink = bq.getAttribute("data-instgrm-permalink") || ((_b = (_a = bq.querySelector('a[href*="instagram.com/"]') || {}).getAttribute) == null ? void 0 : _b.call(_a, "href")) || "";
+      const permalink = bq.getAttribute("data-instgrm-permalink") || (bq.querySelector('a[href*="instagram.com/"]') || {}).getAttribute?.("href") || "";
       const block = buildInstagramBlock(document, instaPermalinkFrom(permalink) || permalink);
       if (block) bq.replaceWith(block);
       else bq.remove();
@@ -606,6 +567,7 @@ var CustomImportScript = (() => {
         if (cur) cur.push(ps[i]);
       }
       if (groups.length < 2) return;
+      if (!groups.some((g) => g.length > 1)) return;
       const rows = [["Table"]];
       groups.forEach((g) => {
         const cell = document.createElement("div");
@@ -633,10 +595,7 @@ var CustomImportScript = (() => {
     });
     layout.sort((a, b) => b.querySelectorAll("table").length - a.querySelectorAll("table").length);
     layout.forEach((t) => {
-      if (t.querySelector("table") && [...t.querySelectorAll("table")].some((inner) => {
-        var _a;
-        return OUR_BLOCK_NAMES.test((((_a = inner.querySelector("th, td")) == null ? void 0 : _a.textContent) || "").trim());
-      })) return;
+      if (t.querySelector("table") && [...t.querySelectorAll("table")].some((inner) => OUR_BLOCK_NAMES.test((inner.querySelector("th, td")?.textContent || "").trim()))) return;
       const frag = document.createDocumentFragment();
       t.querySelectorAll(":scope > tbody > tr > td, :scope > tr > td, :scope > tbody > tr > th, :scope > tr > th").forEach((cell) => {
         while (cell.firstChild) frag.append(cell.firstChild);
@@ -737,25 +696,25 @@ var CustomImportScript = (() => {
     // Runs in-page BEFORE transform. Resolve this article's publication date from
     // the site sitemap (<lastmod>), matched by pathname. Same-origin fetch, awaited
     // by the runner. Best-effort: on any failure the date is simply omitted.
-    onLoad: (_0) => __async(void 0, [_0], function* ({ document }) {
+    onLoad: async ({ document }) => {
       resolvedPublicationDate = "";
       try {
         const here = normPath(document.location.pathname);
-        const res = yield fetch("/sitemap.xml", { credentials: "omit" });
+        const res = await fetch("/sitemap.xml", { credentials: "omit" });
         if (!res.ok) return;
-        const xml = yield res.text();
+        const xml = await res.text();
         const entries = [...xml.matchAll(/<loc>([^<]+)<\/loc>\s*(?:<lastmod>([^<]+)<\/lastmod>)?/gi)];
         const match = entries.find((e) => {
           try {
             return normPath(new URL(e[1]).pathname) === here;
-          } catch (e2) {
+          } catch {
             return false;
           }
         });
         if (match && match[2]) resolvedPublicationDate = formatIsoDate(match[2].trim());
       } catch (e) {
       }
-    }),
+    },
     transform: ({ document, url, params }) => {
       const main = document.querySelector("#mainContent") || document.querySelector("main") || document.body;
       const emittedBlocks = ["cards-news"];
@@ -772,9 +731,8 @@ var CustomImportScript = (() => {
       });
       const metaDescription = descP ? (descP.textContent || "").trim().replace(/\s+/g, " ") : "";
       const heroImg = [...main.querySelectorAll("img, picture")].find((el) => {
-        var _a, _b;
         if (el.closest("ul")) return false;
-        const alt = el.getAttribute("alt") || ((_b = (_a = el.querySelector) == null ? void 0 : _a.call(el, "img")) == null ? void 0 : _b.getAttribute("alt")) || "";
+        const alt = el.getAttribute("alt") || el.querySelector?.("img")?.getAttribute("alt") || "";
         return !/facebook|twitter|linkedin|copy|print|checkmark/i.test(alt);
       });
       let metaImage = null;
@@ -823,12 +781,8 @@ var CustomImportScript = (() => {
         const first = t.querySelector("th, td");
         return first && /^\s*metadata\s*$/i.test(first.textContent || "");
       });
-      const hasRow = (key) => !!metaTable && [...metaTable.querySelectorAll("tr")].some((tr) => {
-        var _a;
-        return /^(td|th)$/i.test(((_a = tr.firstElementChild) == null ? void 0 : _a.tagName) || "") && (tr.firstElementChild.textContent || "").trim().toLowerCase() === key.toLowerCase();
-      });
+      const hasRow = (key) => !!metaTable && [...metaTable.querySelectorAll("tr")].some((tr) => /^(td|th)$/i.test(tr.firstElementChild?.tagName || "") && (tr.firstElementChild.textContent || "").trim().toLowerCase() === key.toLowerCase());
       const addMetaRow = (key, value) => {
-        var _a;
         if (!metaTable || !value || hasRow(key)) return;
         const tr = document.createElement("tr");
         const k = document.createElement("td");
@@ -837,12 +791,12 @@ var CustomImportScript = (() => {
         if (typeof value === "string") v.textContent = value;
         else v.append(value);
         tr.append(k, v);
-        ((_a = metaTable.querySelector("tbody")) == null ? void 0 : _a.append(tr)) || metaTable.append(tr);
+        metaTable.querySelector("tbody")?.append(tr) || metaTable.append(tr);
       };
       addMetaRow("Description", metaDescription);
       addMetaRow("Image", metaImage);
       addMetaRow("Template", "news");
-      addMetaRow("Publication Date", (params == null ? void 0 : params.publicationDate) || resolvedPublicationDate);
+      addMetaRow("Publication Date", params?.publicationDate || resolvedPublicationDate);
       WebImporter.rules.transformBackgroundImages(main, document);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
       const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
