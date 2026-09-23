@@ -3633,3 +3633,173 @@ Now that donate-embed is proven, removed the hand-built block and switched every
   this env — config change is a URL swap only; verify a11y where the harness runs.)
 - **Deploy:** block deletion + a11y config + importer = git push (block code already committed). The 3 CONTENT files are
   git-ignored (live on DA) — must be re-published to DA for the real page + samples to show the new block.
+
+### 2026-09-22 — Related Articles is now metadata-driven (list-from / sort-order / max-items / news-tags / pages)
+The news template (`templates/news/news.js`) built Related Articles as a fixed "latest-3, newest-first" feed.
+Authors now steer it per page via metadata (mirrors the source AEM list component config in `foundationarticles.csv`):
+- **list-from** `children | tags | static` (default `children`) — resolution ladder, most-specific wins:
+  - `static` → exactly the articles named in **pages** (comma-separated paths; a source `/content/<repo>/…`
+    prefix is auto-stripped to EDS-relative; otherwise matched as-is per request "do nothing" on path fixups).
+  - `tags` → articles sharing ≥1 **news-tags** value with this page. Tags compared by **leaf slug**
+    (`usta:categories/…/usta-foundation` → `usta-foundation`) to match the index's `newstags` leaf. Empty tags → children.
+  - `children` (default) → every article in `/news-index.json` (children == "from news-index.json" per author).
+- **sort-order** `asc | desc` (default `desc`); **max-items** int (default 3).
+- Sort key: `publicationdate`, **falling back to `lastModified`** (republish date) when a pub date is empty.
+- Current page always excluded; result capped at max-items.
+- **Publication Date authoring** comes from the sheet's `publishDate` column: set on the **12** articles that have a
+  real date, left **empty** on the other 60 so runtime falls back to the query-index date. `displayDate()` mirrors the
+  sort fallback for the card's *visible* date — shows `publicationdate` when set, else formats `lastModified` to the
+  same "August 20, 2026" style, else nothing. (NB: index `lastModified` is currently blank for all rows; helix-query
+  populates it from the HTTP `last-modified` header on (re)publish, so the fallback fills in once these drafts ship.)
+- **`readMeta()` helper**: `getMetadata()` matches exact meta names, which works on preview/publish (names normalized
+  to `list-from` etc.) but NOT on local dev serving raw `.plain.html` drafts (names keep label casing `List From`).
+  `readMeta` falls back to a normalized scan so the same page previews in both. NOTE: locally, `scripts.js`'s own
+  `getMetadata('template')` also fails for drafts, so the template JS only auto-runs on **normalized** pages
+  (real `/en/**` content + preview/live) — verified there (frances-tiafoe page: 3 dynamic cards, correct order).
+- Metadata seeded onto **all 72 `content/drafts/rusmeen/*.plain.html`** from the CSV (52 children / 18 tags / 2 static).
+- Verify: lint 0 errors · breakpoint-check ✓ · logic unit-tested vs live index (children/tags×asc,desc/static all correct).
+- **Empty "NEWS" card fix:** the news query index (`include: /**/news/**`) also matched the folder landing page
+  `/en/home/news` (title "News", placeholder image, no date) → it rendered as an empty related card. Fixed two ways:
+  (a) `isArticle()` filter in `fetchIndex()` keeps only paths with a slug **below** `/news/` (`/news/[^/]+`); and
+  (b) `helix-query.yaml` news index now excludes `/**/news`. Verified: filter drops exactly `/en/home/news`, keeps 72.
+
+### 2026-09-22 — Related-articles parity: tag data corrected + modified tie-break (original-vs-ours diff)
+Comparing our pages to the live source (`ustafoundation.com`) surfaced THREE causes of related-article mismatch:
+1. **Tag data was wrong.** KEY INSIGHT: the sheet's `tags` column is the tags-mode **query filter**, NOT each article's
+   own tags. Ground truth is the SOURCE page's `data-tags` attribute — scraped all 73: **70 carry `usta-foundation`**
+   (2 also `usta-news`; 3 untagged: `daymond-john…`, `njtl-essay-grant-recipients-2020`, `…transformative-2-7-million…`).
+   Our index only had `newstags` on 12 (from the earlier import) and even those diverged. **Fix:** synced **News Tags**
+   metadata on all rusmeen drafts from `data-tags` → 69 tagged (67 `usta-foundation` + 2 `usta-foundation,usta-news`),
+   3 rows removed/omitted. (Do NOT re-derive tags from the sheet's filter column — use the source `data-tags`.)
+2. **No tie-break.** Source list component sorts by `orderBy=modified`; many articles share `publicationdate` (esp.
+   `May 06, 2026`) so ties decided the visible set. **Fix:** `templates/news/news.js` sort now falls back to
+   `modifiedValue()` (query-index `lastModified`) on a date tie, respecting asc/desc. Unit-tested with simulated stamps.
+3. **One article never migrated** — `usta-foundation-celebrates-24-outstanding-students-through-caree` (Career Excellence
+   Week, Sept 16 2026) exists on source but NOT in our index/content/drafts/CSV (published after the sheet export).
+   This shifts all **52 children pages** by one (their top-3 slides). NOT fixed this pass — needs a content import.
+- **CAVEATS (not yet visible):** (a) synced tags + tie-break only take effect after the drafts are **published** — the
+  live index still has the old 12-tag data and **`lastModified` is empty for all 73 rows** (helix-query fills it from the
+  HTTP `last-modified` header on (re)publish). Until then the tie-break is a no-op and tag pages use stale data.
+  (b) Even fully corrected, deep date-ties among ~70 same-tag/same-date articles may not byte-match the source's exact order.
+- Verify: lint 0 errors. Gates deferred to post-publish (feature is index-data-dependent).
+
+### 2026-09-22 — Verified 6 PR-#9 test pages by simulating post-publish data; fixed tie-break DIRECTION
+Built a simulation dataset (`/tmp/sim.json`): index publication dates + source `data-tags` + sheet `cq:lastModified`
+(= the index `lastModified` after (re)publish), then ran the exact template algorithm and diffed vs each ORIGINAL's
+rendered related list. Findings:
+- **Tie-break was directional — BUG, now fixed.** Two independent originals prove the source breaks same-date ties by
+  **modified ASCENDING regardless of primary sort** (desc page celebrate-winners: Donnelly@16:00 before GameChanger@22:20;
+  asc page gala: Realize-Dream@15:14:30 before BHM@15:14:41). Old code tied in the primary direction → wrong on desc.
+  Fixed: tie-break is now always `modifiedValue(a)-modifiedValue(b)`.
+- **children/asc pages now MATCH exactly** (tiafoe-houston, njtl-ata → WHM, RFLF-partner, 2023-essay). ✅
+- **children/desc (celebrate-winners): off by one ONLY due to the missing article** (Career Excellence Week). Our slots
+  1–2 == original's 2–3; tie-break correct. Will fully match once that article is imported.
+- **tags pages still diverge — a limitation, not a bug.** The source's tags list is NOT "all same-tag articles sorted by
+  date+modified." On the yonex (tags/asc) page the source shows `pledges-800`/`black-history` (later modified) but SKIPS
+  `2023-njtl-essay`/`six-student` (earlier modified, same May-06 date) that our pure date+modified sort picks. The AEM
+  list component applies additional criteria we can't reconstruct from available data (likely a curated/related-by-topic
+  facet or a different secondary key). Documented as a known gap; children pages are the reliably-matchable case.
+
+### 2026-09-22 — Imported the missing article → children/desc pages now match the source
+`usta-foundation-celebrates-24-outstanding-students-through-caree` (Career Excellence Week, pub **Sept 16 2026**) was
+on the live source but never migrated (published after the CSV export), so it was absent from our index — shifting every
+children/**desc** related list by one. **Imported via the news importer** (profile-driven, NOT hand-authored):
+`run-bulk-import.js --import-script tools/importer/import-news-v1.bundle.js --urls <one-url> --force` → 95.4% completeness,
+saved to `content/en/home/news/…caree.plain.html`. Then added the feature metadata rows (List From=children, Sort Order=desc,
+Max Items=3, News Tags=usta-foundation — it carries `data-tags="usta-foundation"` on source; not in the sheet so fleet
+defaults used) and copied the page to `content/drafts/rusmeen/` (fleet now 74 files). Added its URL to `urls-news.txt`.
+- **Verified (simulated post-publish):** children/desc top-3 now == source exactly — Career-Excellence(Sep16),
+  Donnelly(Sep04), GameChanger(Sep04), including the correct earliest-modified-first tie-break on the two Sep-04 items.
+- Effective after publish (article must enter `/news-index.json`). children/asc pages already matched; this closes desc.
+- Gates: lint 0 errors.
+
+### 2026-09-22 — Static pages fixed (Pages path resolution) — LIVE-VERIFIED
+The 2 static pages resolved only 2 of 3 `Pages`: the entry `…billie-jean-king-at-` (stray trailing dash from the source
+AEM slug) had no match in our index, which has `…billie-jean-king-at` (2025 article) and `…-at-0` (2026 article). Source
+shows the **2025** one. **Fix:** corrected the `Pages` metadata in both static drafts
+(`usta-foundation-receives-transformative-…`, `daymond-john-…`) to `…billie-jean-king-at`. All 3 now resolve.
+- **LIVE-verified** on branch preview (published drafts to DA + previewed): both render exactly
+  Community-Impact-Hub / Billie-Jean-King-2025 / Williams-Family — **matches source**. (All 3 share May 06, so the tie
+  keeps author order — correct for the asc page.)
+- Live-correct count now 5 (2 static + 3 children/desc). children/asc (49) still blocked on empty index `lastModified`.
+- IMPORTANT method note: earlier "52 correct" was from a SIMULATION that injected modified stamps the live index lacks.
+  Live checks (branch preview render) are the source of truth — children/asc do NOT match live until lastModified populates.
+
+### 2026-09-22 — news.js `lastModified` parse bug fixed (date-fallback sort now works)
+Root cause behind "children/asc do NOT match until lastModified populates": the query-index emits `lastModified` as a
+**UNIX-seconds NUMBER** (e.g. `1790086644`), but `templates/news/news.js` sorted with `Date.parse(entry.lastModified)`
+— `Date.parse(1790086644)` → **NaN**, so the last-modified fallback silently collapsed to **0**. With 60/73 articles
+having no Publication Date, their sort key was all-0 (tied) → insertion order, which is why 48/53 children pages showed
+the SAME 3 related articles regardless of the current page, and cards for date-less articles rendered a BLANK date.
+- **Fix:** added `lastModifiedMs(entry)` — coerces numeric seconds (→ ×1000 ms), tolerates a numeric string or a
+  parseable date string, else 0. Used in `dateValue` (fallback), `modifiedValue` (tie-break), and `displayDate` (card date).
+- **Effect (measured against live `news-index.json`):** articles with sort-key 0 went **60/73 → 0/73**; a date-less card
+  (e.g. leylah-fernandez) now shows "September 22, 2026" instead of blank. Live-verified on the running dev server:
+  `2023-njtl-essay-contest-winners` Related Articles now render WITH dates and sort by date desc.
+- **Caveat (still true):** our migrated `lastModified` values are all bunched on 2026-09-22 (same-day migration), so this
+  fix makes the fallback *function* but cannot reproduce the source's historical ordering for children pages on its own —
+  matching the source exactly would need real per-article dates backfilled (or static-pinning). User chose "fix sort bug
+  only" for now. Validation snapshot: EXACT 4, same-set-diff-order 1, differ 63, source-empty 5 (of 73).
+- Gates: `npm run lint` 0 errors (JS-only change; no CSS → overflow/typography/a11y unaffected).
+
+### 2026-09-22 — news sort logic extracted + unit-tested (works once dates differ)
+Requirement: prove the date-fallback sort is correct when articles have DIFFERENT publication / last-modified dates
+(today's migrated index bunches all `lastModified` on one day, so live can't demonstrate ordering). Since `news.js`
+imports `aem.js` (touches `window`) it can't be imported in Node, so the pure date/sort helpers were extracted:
+- **New `templates/news/news-sort.js`** — `lastModifiedMs`, `dateValue`, `modifiedValue`, `displayDate`, `sortNews`
+  (no DOM deps). `news.js` now imports them → single source of truth, no drift.
+- **New `tests/news/news-sort.test.mjs`** (`npm run test:news`, 16 assertions, imports the REAL module): varied pub
+  dates (asc/desc), varied `lastModified`-only (the fix), mixed keys, same-date tie-break (earliest-modified first in
+  BOTH directions), number/numeric-string/ISO `lastModified` forms, and `displayDate` fallback. **16/16 pass.**
+- Live-re-verified after the refactor: `news-sort.js` loads in the browser; `2023-njtl-essay-contest-winners` Related
+  Articles render with dates and correct desc order.
+- Gates: `npm run lint` 0 errors; `npm run test:news` 16/16.
+
+### 2026-09-23 — same-date tie-break now follows sort direction (timestamp-aware)
+Publication Date is DAY-granularity ("May 06, 2026"), so two articles published the same day tie on the primary sort
+key. Previously the tie-break used lastModified ASCENDING regardless of direction; now it uses the finer lastModified
+TIMESTAMP **in the same direction as the primary sort** (desc → most-recently-modified first, asc → earliest first).
+- `templates/news/news-sort.js` `sortNews()`: `dir = asc?1:-1`; primary `dir*(dateValue(a)-dateValue(b))`, tie
+  `dir*(modifiedValue(a)-modifiedValue(b))`.
+- `news.js` `decorate()` now CALLS `sortNews(candidates, order)` instead of an inline duplicate (single source of truth);
+  import trimmed to `{ displayDate, sortNews }`.
+- `tests/news/news-sort.test.mjs`: replaced the old "earliest-first-both-directions" tie assertions with direction-
+  following ones + a same-DAY (hour-level) tie case. **18/18 pass.**
+- Live-verified on dev server (Yonex page renders 4 cards, no console errors); output unchanged there because that
+  pool has no same-date ties — the change only reorders genuinely same-date articles.
+- Gates: `npm run lint` 0 errors; `npm run test:news` 18/18.
+
+### 2026-09-23 — Related-Articles card short title ("Related Title" metadata)
+The source shows a SHORT editorial nav title on each Related-Articles card (e.g. "WHM 2026: Stewart & Robles"),
+distinct from the full article title our cards showed. Investigation (curl + Playwright DOM search of each source
+article) proved the short title is authored per-page in the source AEM as a navTitle and is emitted ONLY when that
+article is FEATURED in another page's feed — an article's OWN page never contains it. The source only ever features
+the same ~12 articles, so exactly **12 short titles exist anywhere on the public site**; the other 60 are unreachable
+(confirmed "2026 Game Changer Award" is NOT in its own article's DOM). Full set would require the migration spreadsheet.
+- **New field "Related Title"** (meta `related-title` → index `relatedtitle`), added to `helix-query.yaml` (both
+  `default` and `news` indices).
+- **`news.js` card heading** uses new `cardTitle(entry)` helper (in `news-sort.js`): `relatedtitle` when set, else full
+  `title`. Trims so blank/whitespace falls back.
+- **Content:** added a "Related Title" metadata row to ALL 73 news DA sources (handled BOTH DA cell formats — plain
+  `<div>` on 61, `<p>`-wrapped on 12). 12 filled with the known source short titles, 61 left EMPTY (fall back to full
+  title). Verified via DA re-fetch: 73/73 have the row, 12 filled, 0 mismatches. All 73 previewed + published.
+- Live meta confirmed: WHM page emits `<meta name="related-title" content="WHM 2026: &#x26; Robles">`; empty pages omit it.
+- The 12 filled slugs: women-s-history-month-2026… (WHM 2026: Stewart & Robles), usta-foundation-and-reginald-f-lewis…
+  partner (USTAF partners with RFLF), scholarship…billie-jean-king-at-0 (2026 Donnelly Scholarship), reginald-f-lewis…
+  announce-inaugural (2026 Game Changer Award), celebrates-24-outstanding-students (Career excellence week), plus 7 where
+  the source short == full title (2023-njtl-essay-contest-winners, black-history-month-2026…, pledges-800-000…,
+  launches-community-impact-hub…, launches-williams-family…, scholarship…billie-jean-king-at, six-student-athletes…).
+- **PENDING DEPLOY:** `relatedtitle` won't appear in the live `/news-index.json` until `helix-query.yaml` + `news.js`
+  are committed/pushed and code-synced (then a re-index). Until then cards fall back to full title (verified live on the
+  dev server — correct fallback). Gates: `npm run lint` 0 errors; `npm run test:news` 23/23.
+
+### 2026-09-23 — news template cleanup (PR production-ready)
+Trimmed all block comments to single-line across `news.js` / `news-sort.js` / the test; removed dead code and tightened:
+- Dropped `modifiedValue()` — it was a verbatim alias of the (now module-private) `lastModifiedMs()`; `sortNews` calls
+  `lastModifiedMs` directly. `dateValue` uses a single ternary. Removed the stale "helpers moved to…" comment block.
+- `selectCandidates` static branch simplified (map lookup inline); `decorate()` inlines the `sortNews().slice()` and drops
+  now-obvious inline comments. No behavior change.
+- Test: removed the redundant `modifiedValue reads unix seconds` assertion (covered by `dateValue falls back to
+  lastModified`) and its import. 22/22 pass.
+- Verified live on dev server: feed still renders 3 cards with correct fallback titles/dates, no console errors.
+- Gates: `npm run lint` 0 errors; `npm run test:news` 22/22.
