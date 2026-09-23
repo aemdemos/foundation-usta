@@ -3657,3 +3657,26 @@ pane): the feed was absent, `document.body.className` was just `"appear"` (no `n
   (WHM 2026 / RFLF / Yonex, titles+dates+desc+Read More), H1 = rgb(51,51,51). Applies to ALL templates (news, and any
   future `templates/<name>/`), not just news. Gates: lint 0 errors (7 pre-existing a11y no-console warnings, unrelated)
   · breakpoint-check ✓ (768/992/1200). Deploys via git push (code-only; no content change).
+
+### 2026-09-23 — FINAL breakpoints (confirmed against customer spec) — canonical reference
+The customer confirmed the authoritative USTA Foundation breakpoints + content widths (source Less variables):
+```
+@small-mobile: ~"(max-width: 365px)";  -- content max-width: 336px;
+@mobile:       ~"(max-width: 767px)";  -- content max-width: 336px;
+@tablet:       ~"(min-width: 768px) and (max-width: 991px)";  -- content max-width: 720px;
+@desktop:      ~"(min-width: 992px)";  -- content max-width: 1200px;
+```
+Our implementation maps to these 1:1 (we author mobile-first / `min-width` — same boundaries, opposite direction):
+
+| Customer breakpoint | Content max-width | Ours |
+|---|---|---|
+| `@small-mobile` (≤365) | 336 | **336** ✅ |
+| `@mobile` (≤767) | 336 | **336** (base tier; no separate small-mobile split — both 336) ✅ |
+| `@tablet` (768–991) | 720 | **720** ✅ |
+| `@desktop` (≥992) | 1200 | **1200 outer container → 1170 content col** (1200 − 2×15 gutter); fluid `min(vw,1200)−30` clamping at 1170 ✅ |
+
+- **Breakpoint boundaries: `[768, 992, 1200]`**, mobile-first, `min-width` only — single source of truth in
+  `tools/quality/breakpoints.json` (enforced by `node tools/quality/breakpoint-check.mjs`).
+- `@desktop`'s `1200` is the OUTER container; the content column inside is `1170` (= 1200 − 30px Bootstrap gutter),
+  fluid below 1200 and clamped at 1170 above — matching the live source.
+- Updated `tools/quality/breakpoints.json` `grid.containerMaxWidthPx` to record `{ base:336, 768:720, 992:"fluid: min(vw,1200)-30", 1200:1170 }`. AGENTS.md needs no change (it hardcodes no widths; it points to breakpoints.json).
