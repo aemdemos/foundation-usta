@@ -6,15 +6,15 @@
 
 /* Constrain the block to the SOURCE content column (viewport − gutters, capped
    at 1200) so the 4 cards match the source's widths/insets instead of filling
-   our wider section container. Mobile inset = 31px each side (content 328). */
+   our wider section container. Mobile inset = 27px each side (content 336). */
 .cards.content {
   box-sizing: border-box;
 
-  /* Mobile: source caps the single-column card at a fixed 328px, CENTERED — so
+  /* Mobile: source caps the single-column card at a fixed 336px, CENTERED — so
      the card pulls away from the edges as the viewport widens (clearing the
      floating Donate button) rather than scaling to fill. Released at 768 where
      the 4-up grid takes over. */
-  max-width: 328px;
+  max-width: 336px;
   margin-inline: auto;
   padding-inline: 0;
 }
@@ -389,7 +389,7 @@
    computed styles (.list-core-component) at 390/768/992/1200. */
 
 /* The "Related Articles" heading sits in the same section as the feed and is
-   inset by the GLOBAL mobile 328px content column (styles.css) — no per-block
+   inset by the GLOBAL mobile 336px content column (styles.css) — no per-block
    nudge needed; it aligns with the card column and clears the Donate tab. */
 
 /* Row of cards. Source: flex-wrap row; each card is flex-basis 33% with a 5px
@@ -398,11 +398,11 @@
   list-style: none;
   margin: 0 auto;
 
-  /* Mobile: source caps the feed card at a fixed ~328px, CENTERED, so it pulls
+  /* Mobile: source caps the feed card at a fixed ~336px, CENTERED, so it pulls
      away from the edges as the viewport widens (clearing the floating Donate
      button) rather than scaling. The 768 tier below resets the cap for the 3-up
-     row. (338 = 328 image + the li's 2×5px inline padding.) */
-  max-width: 338px;
+     row. (346 = 336 image + the li's 2×5px inline padding.) */
+  max-width: 346px;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
@@ -802,11 +802,11 @@ main .section:has(.cards.profile) .default-content-wrapper p {
   list-style: none;
   margin: 0 auto;
 
-  /* Mobile: source caps the single-column stat card at a fixed 328px, CENTERED,
+  /* Mobile: source caps the single-column stat card at a fixed 336px, CENTERED,
      so it pulls away from the edges as the viewport widens (imgL 31@390 → 86@500,
      clearing the floating Donate button) rather than scaling. The 768 tier below
      sets its own max-width, releasing this cap. */
-  max-width: 328px;
+  max-width: 336px;
   padding: 0;
   display: grid;
   grid-template-columns: 1fr;
@@ -907,7 +907,7 @@ main .section:has(.cards.profile) .default-content-wrapper p {
 
 /* Section intro (default content above the cards): "Your support makes a
    difference." heading + subtitle. Source renders these centered and black
-   (#000). Mobile inset is handled by the GLOBAL 328px content column
+   (#000). Mobile inset is handled by the GLOBAL 336px content column
    (styles.css) — the intro only needs its center + color here. */
 .cards-container:has(.cards.support) .default-content-wrapper {
   text-align: center;
@@ -919,14 +919,14 @@ main .section:has(.cards.profile) .default-content-wrapper p {
 }
 
 /* Row of cards: flex wrap, evenly distributed (source: justify-content space-around).
-   Mobile: source caps the single-column card at a fixed 328px, CENTERED, so it
+   Mobile: source caps the single-column card at a fixed 336px, CENTERED, so it
    pulls away from the edges as the viewport widens (clearing the floating Donate
    button) rather than scaling to fill. The 768 tier below sets its own max-width,
    releasing this cap. */
 .cards.support > ul {
   list-style: none;
   margin: 0 auto;
-  max-width: 328px;
+  max-width: 336px;
   padding: 32px 0;
   display: flex;
   flex-wrap: wrap;
@@ -1101,12 +1101,12 @@ main .section:has(.cards.profile) .default-content-wrapper p {
   margin: 0 auto;
 
   /* Mobile: source caps the tiles container at a FIXED width and CENTERS it, so
-     the ~328px image never scales with the viewport — it pulls away from the
+     the ~336px image never scales with the viewport — it pulls away from the
      right edge as the screen widens, clearing the floating Donate button exactly
      like the source (a plain `padding:0 16px` scaled with the viewport and kept
-     the card near the edge). Cap = the 328px image column, centered (imgL 31 @390,
+     the card near the edge). Cap = the 336px image column, centered (imgL 31 @390,
      51 @430, 86 @500 — matching the source). */
-  max-width: 328px;
+  max-width: 336px;
   padding: 0;
   display: grid;
   grid-template-columns: 1fr;
@@ -1147,7 +1147,7 @@ main .section:has(.cards.profile) .default-content-wrapper p {
   text-transform: none; /* label is authored in uppercase */
 }
 
-/* 4-up from the tablet tier. Release the mobile 328px cap (source switches to a
+/* 4-up from the tablet tier. Release the mobile 336px cap (source switches to a
    wide multi-column grid here) — 720 content at 768 (image 168). */
 @media (width >= 768px) {
   .cards.tiles > ul {

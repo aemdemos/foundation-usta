@@ -3657,3 +3657,22 @@ pane): the feed was absent, `document.body.className` was just `"appear"` (no `n
   (WHM 2026 / RFLF / Yonex, titles+dates+desc+Read More), H1 = rgb(51,51,51). Applies to ALL templates (news, and any
   future `templates/<name>/`), not just news. Gates: lint 0 errors (7 pre-existing a11y no-console warnings, unrelated)
   · breakpoint-check ✓ (768/992/1200). Deploys via git push (code-only; no content change).
+
+### 2026-09-23 — Mobile content column 328 → 336px (align to customer's stated design system)
+Customer provided the authoritative source breakpoints/widths: `@small-mobile`/`@mobile` (<768) content **max-width:
+336px**, `@tablet` 720, `@desktop` (≥992) 1200. Our mobile column was **328px** (originally tuned at 390 to clear the
+floating Donate tab). Aligned the mobile column to the customer's **336px** — step 1 of reconciling to their spec
+(tablet 720 already matches; the desktop 970/1170-vs-flat-1200 gap is a SEPARATE follow-up, not touched here).
+- **Global rule** `styles.css main > .section > div`: 328 → **336** (the single source of truth every section wrapper
+  inherits). Also the `narrow`/`medium`/`wide` section-style mobile caps (same column) 328 → 336.
+- **Per-block mobile content-column caps** that mirror the global column (all release at the 768 tier): `cards.css`
+  content/stats/support/tiles `ul` 328 → 336; cards-news feed `ul` 338 → **346** (= 336 image + the li's 2×5px inline
+  padding); `embed-instagram` 328 → 336; `columns` collage-heading cap 328 → 336. `columns` statement band was ALREADY
+  336 (unchanged). Updated the matching explanatory comments (side-margin math 31→27px @390).
+- **Deliberately NOT changed** (not the content column): cards-expand card `height: 328px`; the 310/312 card-internal
+  widths + 9px inset; `hero` 348px text column; image-crop comments. These are element geometry, not the section measure.
+- **Verified LOCAL @360** (overflow sweep baseline): section content column = **336px** (left inset 12px), news feed
+  column = 336px, **no horizontal overflow** (scrollWidth 360 == viewport). Feed still renders 3 cards.
+- Gates: lint 0 errors (7 pre-existing a11y no-console warnings, unrelated) · breakpoint-check ✓ (768/992/1200).
+  (overflow-sweep CLI Chromium not installed in this env → verified overflow via MCP Playwright at 360 instead.)
+  CSS-only → visible in local preview; deploys via git push.

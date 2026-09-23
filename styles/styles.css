@@ -427,17 +427,17 @@ main > .section {
 }
 
 /* Section content sits on the SOURCE grid. MOBILE: the source lays ALL content in
-   ONE FIXED 328px column, CENTERED — its side margins GROW with the viewport
-   (31px @390, 51px @430), so nothing ever reaches the floating Donate tab (fixed
+   ONE FIXED 336px column, CENTERED — its side margins GROW with the viewport
+   (27px @390, 47px @430), so nothing ever reaches the floating Donate tab (fixed
    at the right edge, left ~x377). This is a SINGLE GLOBAL width rule: every
-   section content wrapper (default content AND block wrappers) shares the 328px
+   section content wrapper (default content AND block wrappers) shares the 336px
    column on mobile, so blocks no longer need their own per-block mobile caps.
    From 768 it opens to the Bootstrap-3 container widths (720/970/1170) per tier
    (layered in the media queries below), matching the source grid. Full-bleed
    blocks (stats/cards-stats bands, cards-expand) set their own width + negative
    margin on the BLOCK element to escape this wrapper — unaffected. */
 main > .section > div {
-  max-width: 328px;
+  max-width: 336px;
   margin-inline: auto;
   padding: 0;
 }
@@ -668,11 +668,11 @@ main .section.center p {
 
 /* narrow — constrain the section's content to a single narrower measure than
    the default grid (max 810px), CONSISTENT across viewports. On MOBILE it caps to
-   the source's 328px content column (centered) like all other content, so it stays
+   the source's 336px content column (centered) like all other content, so it stays
    clear of the floating Donate tab; from 768 it opens to the 810px measure. Used
    for short intros / statements (e.g. "Ready on the court. Ready for life."). */
 main .section.narrow > div {
-  max-width: 328px;
+  max-width: 336px;
   margin-inline: auto;
 }
 
@@ -689,10 +689,10 @@ main .section.narrow > div {
      • wide   — the "supporters" band:    708 @768 → 902 @992 → 1170 @1200
    Each breakpoint is set explicitly because `.section.medium` outspecifies the
    global `main > .section > div` width rule (which would otherwise leave the
-   mobile 328 cap in place at the larger tiers). Mobile stays the 328 column. */
+   mobile 336 cap in place at the larger tiers). Mobile stays the 336 column. */
 main .section.medium > div,
 main .section.wide > div {
-  max-width: 328px;
+  max-width: 336px;
   margin-inline: auto;
 }
 
@@ -759,7 +759,7 @@ main .section.center.map-wide > div {
    uses the SAME default page content width as the rest of the site (720/970/1170
    per tier), so it's as wide as the home page — not narrowed.
 
-   MOBILE (<768): no grid. The global 328px rule stacks everything in the single
+   MOBILE (<768): no grid. The global 336px rule stacks everything in the single
    content column (heading, then tweet, then body). The two-column split is a
    desktop affordance only. */
 @media (width >= 768px) {
@@ -868,7 +868,7 @@ main .section.center.map-wide > div {
    so it works for any pair of blocks without nth-child logic. Same centered page
    content width as the rest of the site (720/970/1170 per tier).
 
-   MOBILE (<768): no grid — the global 328px rule stacks the two blocks in the
+   MOBILE (<768): no grid — the global 336px rule stacks the two blocks in the
    single content column, in authored order. Two-column split is desktop-only. */
 @media (width >= 768px) {
   main > .section.split-even {

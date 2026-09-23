@@ -13,10 +13,10 @@
   flex-direction: column;
   gap: 32px;
 
-  /* Mobile: cap to the source's FIXED 328px content column, CENTERED — margins
+  /* Mobile: cap to the source's FIXED 336px content column, CENTERED — margins
      grow with the viewport so content never reaches the floating Donate tab. The
      768 grid tier below releases this cap. */
-  max-width: 328px;
+  max-width: 336px;
   margin-inline: auto;
 }
 
@@ -72,7 +72,7 @@
     column-gap: var(--grid-gap); /* 30px shared gutter */
     align-items: start;
 
-    /* release the mobile 328px cap — the section grid container handles width */
+    /* release the mobile 336px cap — the section grid container handles width */
     max-width: none;
     margin-inline: 0;
   }
