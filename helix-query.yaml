@@ -27,6 +27,11 @@ indices:
       breadcrumbtitle:
         select: head > meta[name="breadcrumb-title"]
         value: attribute(el, "content")
+      # Short card/nav title shown on Related-Articles cards (Metadata: "Related
+      # Title"). Falls back to `title` at read time when empty (news.js).
+      relatedtitle:
+        select: head > meta[name="related-title"]
+        value: attribute(el, "content")
       description:
         select: head > meta[name="description"]
         value: attribute(el, "content")
@@ -55,10 +60,16 @@ indices:
       - '/**/news/**'
     exclude:
       - '/drafts/**'
+      - '/**/news'       # the news listing/landing page itself is not an article
     target: /news-index.json
     properties:
       title:
         select: head > meta[property="og:title"]
+        value: attribute(el, "content")
+      # Short card/nav title shown on Related-Articles cards (Metadata: "Related
+      # Title"). Falls back to `title` at read time when empty (news.js).
+      relatedtitle:
+        select: head > meta[name="related-title"]
         value: attribute(el, "content")
       description:
         select: head > meta[name="description"]
