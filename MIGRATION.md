@@ -3761,3 +3761,23 @@ into a table and orphaned the lists.
   import-news-v1.bundle.js. (Not executed — single-page content fix applied directly.)
 - **Deploy:** the corrected `.plain.html` is git-ignored DA content — re-upload/publish to DA for aem.page/aem.live
   (outward-facing, on request). Importer source+bundle deploy via git push.
+
+### 2026-09-24 — Mobile perf: drop render-blocking `@import brand.css` chain (inline tokens into styles.css)
+PageSpeed mobile on a news page (daymond-john…) — CWV all GREEN (FCP 1.4s, LCP 1.8s, TBT 20ms, CLS 0.003); only
+Speed Index orange (4.9s). PageSpeed "Render-blocking requests — est 600ms" + the network tree showed the fixable
+item: `styles/styles.css` began with `@import url('brand.css')`, which CHAINS a 2nd render-blocking request
+(styles.css must download+parse before brand.css is even fetched → styles 150ms + brand 450ms serial).
+- **Fix:** inlined the 6 USED brand tokens (`--heading-semibold-font-family`, `--brand-blue`, `--brand-orange`,
+  `--stats-band-bg`, `--section-blue-bg`, `--section-yellow-bg`) into styles.css `:root`, removed the `@import`, and
+  deleted the now-orphaned `styles/brand.css`. (head.html is untouchable, so a 2nd parallel `<link>` isn't an option;
+  inlining is the correct fix — styles.css is already `<link>`ed in head.) Dropped 3 DEAD brand tokens
+  (`--content-max-width`, `--cards-band-bg`, `--heading-size-*`) that nothing consumed (styles.css uses
+  `--heading-font-size-*`).
+- **Verified LOCAL:** all 6 tokens resolve (`--brand-blue:#0373f3` etc.), NO brand.css stylesheet requested
+  (`hasImportChain:false`), home renders unchanged. Gates: stylelint ✓ · lint 0 errors · breakpoint ✓.
+- **The Speed-Index 4.9s residual is largely INTENTIONAL / not worth regressing perf for:** the FundraiseUp donate
+  tab + its font (`static.fundraiseup.com/…woff2` at ~4.9s in the tree) are deliberately deferred to the delayed
+  phase (3s `setTimeout` in scripts.js loadPage) to keep them off the LCP/TBT critical path — loading them earlier
+  would improve Speed Index but hurt LCP/TBT/"unused JS". CWV are the scored metrics and are all green; SI is
+  unscored-ish weight. Left the delayed-FRU pattern as-is (documented rationale in the 2026-09-15 donate entries).
+- **Deploy:** CSS-only (styles.css edit + brand.css deletion) → git push; re-check PageSpeed after code-sync.

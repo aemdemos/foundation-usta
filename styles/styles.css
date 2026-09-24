@@ -1,5 +1,3 @@
-@import url('brand.css');
-
 /*
  * Copyright 2020 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
@@ -27,6 +25,18 @@
      The condensed display face (h1/h2, up to 100px) especially needs this. */
   --body-font-family: "Graphik Regular", roboto-fallback, tahoma, sans-serif;
   --heading-font-family: "Graphik XXCond Bold", graphik-xxcond-fallback, "Arial Narrow", tahoma, sans-serif;
+  --heading-semibold-font-family: "Graphik Semibold", tahoma, sans-serif;
+
+  /* brand palette + section-band backgrounds (formerly styles/brand.css — inlined
+     here to drop the render-blocking `@import url('brand.css')` chain, which cost
+     ~450ms on the mobile critical path; head.html is untouchable so the tokens
+     can't be a 2nd parallel <link>). Block-agnostic; applied via `section-<color>`
+     styles + button/stats-band CSS. */
+  --brand-blue: #0373f3;
+  --brand-orange: #e87722;
+  --stats-band-bg: #000;
+  --section-blue-bg: #e2f7ff; /* light-blue support band (source #e2f7ff) */
+  --section-yellow-bg: #ffefbe; /* cream/yellow impact-stats band (source #FFEFBE) */
 
   /* body sizes — mobile-first (source: 16px body @ <768, 18px @ >=768) */
   --body-font-size-m: 16px;
