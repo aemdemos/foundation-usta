@@ -362,7 +362,6 @@
   }
 
   .columns.feature:has(.columns-feature-collage) .columns-feature-row > div {
-    flex: 1;
     text-align: left;
   }
 
@@ -418,7 +417,7 @@
 @media (width >= 992px) {
   .columns.feature:has(.columns-feature-collage) .columns-feature-collage {
     flex-direction: row;
-    align-items: flex-start; /* portrait (401) taller than stack → top-align */
+    flex: 1;
     gap: 15px; /* source stack → portrait gap */
     max-width: 577px; /* 266+15+296 at the 1200 cap */
   }
@@ -639,3 +638,5 @@ main > .section.hero-container:has(.hero.banner) + .section.columns-container:ha
     margin: 0 15px;
   }
 }
+
+
