@@ -1404,6 +1404,18 @@ black, centered, 22/24.2 → 28/30.8 @768). Verified @1200 (28/30.8 wt700 italic
 screenshot confirms the slant matches the source. Lesson reinforced: walk to the DEEPEST text-bearing element
 (`<h4><b><i>`), not just the first wrapper — each nested tag can add weight/style.
 
+### 2026-09-24 — Header resize jitter fix at 991px/992px breakpoint (all pages)
+Addressed a cross-page resize issue where nav content appeared to slide laterally when
+crossing the desktop breakpoint (`991px ↔ 992px`). Root cause: on breakpoint change,
+the mobile off-canvas `.nav-sections` transform transition could animate while styles
+switched between mobile/desktop states.
+- **Fix (`blocks/header/header.js`):** in the `isDesktop` media-query `change`
+  handler, temporarily force `navSections.style.transition = 'none'`, reset nav
+  state (`aria-expanded='false'`, close dropdowns), then remove the inline
+  transition on the next animation frame.
+- **Result:** prevents unintended resize-time horizontal sliding while preserving
+  normal menu behavior after the breakpoint settles.
+
 ### 2026-09-06 — quote-image: attribution is ITALIC (source wraps it in <i>) — reverted the upright override
 Same deep-element issue on quote-image: the source attribution is `<p>` > **`<i>`** — the `<i>` computes
 **italic**, weight 400, Graphik Regular, 16/24 @390 → 18/24 @1200, right, #000. In the earlier pass I'd wrongly
@@ -3781,3 +3793,20 @@ item: `styles/styles.css` began with `@import url('brand.css')`, which CHAINS a 
   would improve Speed Index but hurt LCP/TBT/"unused JS". CWV are the scored metrics and are all green; SI is
   unscored-ish weight. Left the delayed-FRU pattern as-is (documented rationale in the 2026-09-15 donate entries).
 - **Deploy:** CSS-only (styles.css edit + brand.css deletion) → git push; re-check PageSpeed after code-sync.
+
+### 2026-09-24 — Resize jitter FIX v2 (confirmed): disable mobile nav transform transition during breakpoint swap
+Follow-up to the earlier 991/992 jitter fix: user still saw right-to-left sliding while resizing.
+Instrumented live page at 993→991 with frame sampling and found the exact culprit:
+`header nav .nav-sections` still transitioned `transform` for ~0.3s during the breakpoint
+change (`left` sequence moved from ~-133 to -991 over samples) even with the prior patch.
+
+- **Root cause:** transition was being re-enabled too early (`requestAnimationFrame`) while
+  CSS switched from desktop (`transform:none`) to mobile closed (`translateX(-100%)`).
+- **Final fix (`blocks/header/header.js`):**
+  - On `isDesktop` media-query change, force closed nav state and set
+    `navSections.style.transition = 'none'` with no immediate restore.
+  - In `toggleMenu()`, restore transition only when the user explicitly opens the
+    mobile menu (`aria-expanded` false → true).
+- **Verification:** frame sampling now shows `nav-sections` `leftSpan: 0` across all
+  post-resize samples (no animated drift), while intentional menu open still animates
+  with `transitionDuration: 0.3s`.

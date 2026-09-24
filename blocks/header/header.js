@@ -146,6 +146,13 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
     ? !forceExpanded
     : nav.getAttribute('aria-expanded') === 'true';
   const button = nav.querySelector('.nav-hamburger button');
+
+  // If a breakpoint change temporarily disabled the panel transition, restore it
+  // only when the user explicitly opens the mobile menu.
+  if (!expanded && navSections && navSections.style.transition === 'none') {
+    navSections.style.removeProperty('transition');
+  }
+
   document.body.style.overflowY = (expanded || isDesktop.matches) ? '' : 'hidden';
   // Anchor the slide-in panel just below the full header (nav bar + breadcrumb),
   // measured live so it stays correct regardless of header height.
@@ -308,7 +315,13 @@ export default async function decorate(block) {
   isDesktop.addEventListener('change', () => {
     document.body.style.overflowY = '';
     nav.setAttribute('aria-expanded', 'false');
-    if (navSections) closeAllDropdowns(navSections);
+    if (navSections) {
+      // Prevent off-canvas transform animation from firing on breakpoint
+      // changes (991px <-> 992px). Keep transition disabled after resize;
+      // toggleMenu() restores it when the user intentionally opens the menu.
+      navSections.style.transition = 'none';
+      closeAllDropdowns(navSections);
+    }
   });
 
   const navWrapper = document.createElement('div');
