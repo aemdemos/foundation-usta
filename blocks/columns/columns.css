@@ -638,5 +638,3 @@ main > .section.hero-container:has(.hero.banner) + .section.columns-container:ha
     margin: 0 15px;
   }
 }
-
-
