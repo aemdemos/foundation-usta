@@ -25,8 +25,14 @@ export interface NewsArticleBaseline {
 export class NewsArticlePage {
   constructor(private page: Page) {}
 
-  async goto(url: string): Promise<void> {
+     async goto(url: string): Promise<void> {
     await this.page.goto(url, { waitUntil: "domcontentloaded" });
+    // EDS (Adobe Edge Delivery Services) pages load header/footer as
+    // separate fragments fetched asynchronously, sometimes after other
+    // content on the page. Waiting for one link isn't reliable (the
+    // first links to appear may be in the body, not the header/footer).
+    // Wait for network activity to settle instead.
+    await this.page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
   }
 
   async extract(): Promise<NewsArticleBaseline> {
@@ -86,8 +92,10 @@ export class NewsArticlePage {
 
       let breadcrumb: { text: string; href: string | null }[] = [];
       if (h1El) {
-        const homeLinks = Array.from(
-          document.querySelectorAll('a[href="/en/home.html"], a[href$="/home.html"]')
+                const homeLinks = Array.from(
+          document.querySelectorAll(
+            'a[href="/en/home.html"], a[href$="/home.html"], a[href="/en/home"], a[href$="/home"]'
+          )
         );
         const beforeH1 = homeLinks.filter(
           (a) => (a.compareDocumentPosition(h1El) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
