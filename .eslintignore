@@ -3,3 +3,4 @@ helix-importer-ui
 tools/importer/*.bundle.js
 tools/importer/**/*.bundle.js
 tools/importer/backups/**
+e2e-test/
