@@ -10,6 +10,18 @@ export interface ImageInfo {
   alt: string;
 }
 
+export interface RelatedArticle {
+  title: string;
+  href: string | null;
+  date: string | null;
+}
+
+export interface EmbedCounts {
+  youtube: number;
+  instagram: number;
+  twitter: number;
+}
+
 export interface NewsArticleBaseline {
   pageTitle: string;
   h1: string;
@@ -20,6 +32,10 @@ export interface NewsArticleBaseline {
   footerText: string;
   footerLinks: LinkInfo[];
   socialLinks: LinkInfo[];
+  author: string | null;
+  publishDate: string | null;
+  embeds: EmbedCounts;
+  relatedArticles: RelatedArticle[];
 }
 
 export class NewsArticlePage {
@@ -153,6 +169,89 @@ export class NewsArticlePage {
         socialDomains.some((d) => (l.href || "").includes(d))
       );
 
+            // Author/byline: many articles open with "By [Name]" as the very
+      // first line of content. Detected non-destructively - bodyText is
+      // left completely unchanged so existing baselines stay valid.
+      let author: string | null = null;
+      const byMatch = bodyText.match(/^by\s+([A-Za-z][a-zA-Z0-9.,'\s]+?)(?:\n|$)/i);
+      if (byMatch && byMatch[1]) {
+        author = byMatch[1].trim();
+      }
+
+      // Publish date: best-effort. Looks for a "Month DD, YYYY" pattern
+      // near the top of the content. May return null on articles that
+      // don't display their own publish date on the page itself.
+      let publishDate: string | null = null;
+      const dateMatch = bodyText
+        .slice(0, 300)
+        .match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b/);
+      if (dateMatch) {
+        publishDate = dateMatch[0];
+      }
+
+      // Embed counts: count both fully-loaded iframes (by domain) and
+      // pre-render placeholder markup (e.g. Twitter's <blockquote> before
+      // its widget JS runs), so slow-loading embeds aren't undercounted
+      // on whichever side happens to extract a moment earlier.
+      const iframes = Array.from(document.querySelectorAll("iframe"));
+      const iframeSrcs = iframes.map((f) => f.getAttribute("src") || "");
+
+      const youtubeCount =
+        iframeSrcs.filter((s) => /youtube\.com|youtu\.be/.test(s)).length +
+        document.querySelectorAll('[class*="youtube"]').length;
+
+      const instagramCount =
+        iframeSrcs.filter((s) => /instagram\.com/.test(s)).length +
+        document.querySelectorAll("blockquote.instagram-media").length;
+
+      const twitterCount =
+        iframeSrcs.filter((s) => /twitter\.com|x\.com/.test(s)).length +
+        document.querySelectorAll("blockquote.twitter-tweet").length;
+
+      const embeds = {
+        youtube: youtubeCount,
+        instagram: instagramCount,
+        twitter: twitterCount,
+      };
+
+      // Related Articles: title, link, and date for each item in the
+      // "Related Articles" section (found earlier for image-boundary
+      // detection above).
+      const relatedArticles: { title: string; href: string | null; date: string | null }[] = [];
+      const headingCandidates2 = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+      const relatedHeading2 = headingCandidates2.find((el) =>
+        /related articles/i.test(el.textContent || "")
+      );
+      if (relatedHeading2) {
+        let container: Element | null = relatedHeading2.parentElement;
+        let steps = 0;
+        while (container && steps < 4) {
+          const items = container.querySelectorAll("li");
+          if (items.length > 0) break;
+          container = container.parentElement;
+          steps++;
+        }
+        if (container) {
+          const items = Array.from(container.querySelectorAll("li"));
+          for (const item of items) {
+            const titleLink = item.querySelector("h3 a, h2 a") as HTMLAnchorElement | null;
+            const title = titleLink ? textOf(titleLink) : "";
+            const href = titleLink ? titleLink.getAttribute("href") : null;
+            const itemText = (item as HTMLElement).innerText || item.textContent || "";
+            const dateMatch2 = itemText.match(
+              /(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}/
+            );
+            if (title) {
+              relatedArticles.push({
+                title,
+                href,
+                date: dateMatch2 ? dateMatch2[0] : null,
+              });
+            }
+          }
+        }
+      }
+
       return {
         pageTitle,
         h1,
@@ -163,7 +262,12 @@ export class NewsArticlePage {
         footerText,
         footerLinks,
         socialLinks,
+        author,
+        publishDate,
+        embeds,
+        relatedArticles,
       };
+    
     });
   }
 }

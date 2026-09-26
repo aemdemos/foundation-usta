@@ -252,5 +252,34 @@
       "text": "",
       "href": "https://www.linkedin.com/company/usta-foundation"
     }
+  ],
+  "author": null,
+  "publishDate": null,
+  "embeds": {
+    "youtube": 0,
+    "instagram": 0,
+    "twitter": 0
+  },
+  "relatedArticles": [
+    {
+      "title": "WHM 2026: Stewart & Robles",
+      "href": "/en/home/news/women-s-history-month-2026-how-two-community-impact-hub-leaders",
+      "date": "March 25, 2026"
+    },
+    {
+      "title": "USTAF partners with RFLF",
+      "href": "/en/home/news/usta-foundation-and-reginald-f-lewis-foundation-partner-to-empo",
+      "date": "April 15, 2026"
+    },
+    {
+      "title": "USTA Foundation and Yonex team up to transform communities and empower the next generation of leaders",
+      "href": "/en/home/news/usta-foundation-and-yonex-team-up-to-transform-communities-and-e",
+      "date": "May 19, 2026"
+    },
+    {
+      "title": "USTA Foundation partners with Chase to award over $250,000 to help support young people on and off the court",
+      "href": "/en/home/news/usta-foundation-partners-with-chase-to-award-over-250-000-to-he",
+      "date": "July 08, 2026"
+    }
   ]
 }
