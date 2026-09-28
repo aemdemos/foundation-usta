@@ -3810,3 +3810,20 @@ change (`left` sequence moved from ~-133 to -991 over samples) even with the pri
 - **Verification:** frame sampling now shows `nav-sections` `leftSpan: 0` across all
   post-resize samples (no animated drift), while intentional menu open still animates
   with `transitionDuration: 0.3s`.
+
+### 2026-09-28 — Site-wide: every link opens in a new tab (customer requirement)
+Customer asked for EVERY link on the site to open in a new tab. NOTE: this is a deliberate DEVIATION from the source,
+which only opens its footer's external links in a new tab (KEEP UP, Facebook/Instagram/LinkedIn, Careers, Terms,
+Privacy, Donor PDF). The source keeps header nav, internal links, related-article cards and article-body externals
+in the same tab. The customer chose "every link" when shown this.
+- **Implementation (scripts/scripts.js only):** `openLinksInNewTab()` is one delegated, capture-phase `click`
+  listener on `document`, registered first in `loadPage()`. On click it sets `target="_blank"` + `rel="noopener"`
+  on the clicked `a[href]` just before the browser navigates. This covers links built at ANY time (header, footer,
+  blocks, the related-articles feed) with no per-block changes.
+- **Skipped on purpose:** in-page `#` anchors, `javascript:`/`mailto:`/`tel:` links, and `?form=` donate links. Those
+  open the FundraiseUp overlay on the current page, so a new tab would break the donate flow. Links that already
+  set a target (social share, Instagram fallback) are left alone.
+- Verified: dev server serves the new function; skip rules checked against the site's real link shapes (nav, internal,
+  external portal, atptour, careers, PDF → new tab; `?form=DONATE`/`?form=JLLI`, `#…`, mailto, tel → same tab).
+  Gates: lint 0 errors (7 pre-existing a11y no-console warnings) · breakpoint-check ✓. NOT browser-clicked this
+  session: the Playwright tool failed to connect. JS-only; deploys via git push.
