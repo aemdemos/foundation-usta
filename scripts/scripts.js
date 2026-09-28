@@ -361,7 +361,28 @@ function loadDelayed() {
   // load anything that can be postponed to the latest here
 }
 
+/**
+ * Open every link on the site in a new tab (site-wide requirement). A single
+ * delegated, capture-phase click listener sets the target just before the
+ * browser navigates, so it covers links created at any time (header, footer,
+ * blocks, the related-articles feed) without touching any block. Skipped:
+ * in-page `#` anchors, `javascript:`/`mailto:`/`tel:` links, and `?form=` donate
+ * links (they open the FundraiseUp overlay on this page), plus any link that
+ * already declares a target.
+ */
+function openLinksInNewTab() {
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest?.('a[href]');
+    if (!a || a.target) return;
+    const href = a.getAttribute('href');
+    if (/^(#|javascript:|mailto:|tel:)/i.test(href) || /[?&]form=/.test(href)) return;
+    a.target = '_blank';
+    a.relList.add('noopener');
+  }, true);
+}
+
 async function loadPage() {
+  openLinksInNewTab();
   await loadEager(document);
   await loadLazy(document);
   // Defer the delayed phase ~3s (EDS convention) so non-critical third parties
