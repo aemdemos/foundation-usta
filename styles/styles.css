@@ -41,6 +41,8 @@
      without it those blue strips render transparent. */
   --cards-band-bg: var(--section-blue-bg);
   --section-yellow-bg: #ffefbe; /* cream/yellow impact-stats band (source #FFEFBE) */
+  --sage-grey-bg: #dcdfcf; /* footer / toc-profile track sage */
+  --pale-grey-bg: #eef0f0; /* video placeholder pale grey */
 
   /* body sizes — mobile-first (source: 16px body @ <768, 18px @ >=768) */
   --body-font-size-m: 16px;
@@ -575,6 +577,25 @@ main .section.center-intro > .default-content-wrapper:first-child {
 
 main .section.center-intro > .default-content-wrapper:first-child .button-wrapper {
   text-align: center;
+}
+
+/* Section Metadata `background` options (DA library /.da/library/blocks,
+   options tab). scripts.js adds the matching option name as a section class;
+   each option needs a rule here, named exactly like the option. */
+main .section.light-blue-bg {
+  background-color: var(--section-blue-bg);
+}
+
+main .section.cream-yellow-bg {
+  background-color: var(--section-yellow-bg);
+}
+
+main .section.sage-grey-bg {
+  background-color: var(--sage-grey-bg);
+}
+
+main .section.pale-grey-bg {
+  background-color: var(--pale-grey-bg);
 }
 
 /* dark band variant (e.g. stats) */
