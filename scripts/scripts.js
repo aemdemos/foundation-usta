@@ -202,6 +202,49 @@ function decorateSectionMetadata(main) {
   });
 }
 
+let sectionBackgroundsPromise;
+
+/**
+ * Reads the section background options from the published DA library sheet
+ * (/.da/library/blocks → options tab, key `background`, values
+ * `name=#hex | …`). Fetched once per page; resolves to {} if unavailable.
+ * @returns {Promise<Object<string, string>>} option name → color
+ */
+function getSectionBackgrounds() {
+  sectionBackgroundsPromise ??= fetch('/.da/library/blocks.json')
+    .then((resp) => (resp.ok ? resp.json() : {}))
+    .then((json) => {
+      const option = json.options?.data?.find((item) => item.key === 'background');
+      const colors = {};
+      (option?.values || '').split('|').forEach((pair) => {
+        const [name, color] = pair.split('=').map((s) => s.trim());
+        if (name && color) colors[name] = color;
+      });
+      return colors;
+    })
+    .catch(() => ({}));
+  return sectionBackgroundsPromise;
+}
+
+/**
+ * Applies Section Metadata `background` values (the section's data-background)
+ * using the DA library options: the matching option (by name or by color) is
+ * added as a section class. The color itself comes from the matching
+ * `main .section.<name>` rule in styles.css, so a new option needs a new rule.
+ * @param {Element} root container to search for sections
+ */
+async function applySectionBackgrounds(root = document) {
+  const sections = root.querySelectorAll('.section[data-background]');
+  if (!sections.length) return;
+  const colors = await getSectionBackgrounds();
+  sections.forEach((section) => {
+    const value = section.dataset.background.trim().toLowerCase();
+    const name = Object.keys(colors)
+      .find((n) => n.toLowerCase() === value || colors[n].toLowerCase() === value);
+    if (name) section.classList.add(toClassName(name));
+  });
+}
+
 /**
  * Removes stray injected tracking anchors (e.g. Hotjar's "_hjSafeContext"
  * about:blank link) that get captured into imported content. Hotjar injects
@@ -314,6 +357,7 @@ async function loadEager(doc) {
   const main = doc.querySelector('main');
   if (main) {
     decorateMain(main);
+    applySectionBackgrounds(main); // not awaited: the options fetch must not block LCP
     document.body.classList.add('appear');
     await loadSection(main.querySelector('.section'), waitForFirstImage);
   }
@@ -339,6 +383,9 @@ async function loadLazy(doc) {
   const main = doc.querySelector('main');
   await loadTemplateJS(templateName, main);
   await loadSections(main);
+  // re-run for sections added after eager decoration (e.g. fragments); the
+  // options sheet is already cached
+  await applySectionBackgrounds();
 
   const { hash } = window.location;
   const element = hash ? doc.getElementById(hash.substring(1)) : false;
