@@ -3889,3 +3889,34 @@ After the first pass, the user reported bad spacing on the hero library page. A 
   3. `hero` Banner Hero example has no image, so it shows the block's solid-blue no-image fallback.
 - Gates: lint 0 errors · stylelint ✓ · breakpoint ✓ · axe (project config) 0 serious/critical violations on hero,
   cards, columns, toc-profile, spacer, quote and table library pages, and the label passes color-contrast.
+
+### 2026-09-29 — Home: blue strip above "Your support makes a difference" merged into the band (parity fix)
+Reported on aem.page: the 17px light-blue strip (a `spacer` block) was not visible; it ran straight into the
+light-blue support band below. Removing the band's padding in devtools revealed the strip but left far too much space.
+- **Root cause 1 (stale selector):** every spacer-spacing rule in styles.css matched `.spacer[style*='cards-band-bg']`,
+  but the root `index` spacers are authored `color: section-blue-bg`, so NONE of the rules applied. The spacer section
+  had 0 margin and the band had 0 top margin, so the strip sat flush on the same-color band. The first blue strip
+  (above "For decades…") was hit by the same bug (40px below it instead of 76).
+- **Root cause 2 (dead token):** `/en/home` still authors `color: cards-band-bg`, and the 2026-09-24 perf cleanup
+  deleted `--cards-band-bg` as "dead". So on `/en/home` the strips rendered TRANSPARENT.
+- **Root cause 3 (band rhythm):** inside the band, the global h2 `margin-top: 0.8em` (61px) stacked on the 56px band
+  padding, and the card list had 32px of top padding.
+- **Fix (styles.css):** restored `--cards-band-bg` as an alias of `--section-blue-bg` (legacy content). The blue-spacer
+  rules now match BOTH names via `:is(...)`. Strip before a blue band: margin 34/17 (<768) → 50/17 (>=768), and the
+  preceding section's bottom margin is zeroed so it can't collapse with (and on mobile out-size) the strip margin.
+  GOTCHA: `:has()` cannot nest, so that rule keys on `section + spacer-container + (.highlight|.section-blue)`.
+  Floating strip below-gap 76 now starts at 768 (was 992), matching the source.
+- **Fix (cards.css, support band):** band padding 49/8 (<768), 65/40 (>=768). Intro h2 margin 0 and subtitle
+  margin-top 0 (flush, as on the source). Card list top padding 32 → 0. Cards wrapper margin-top 24 (<768) / 40.
+- **Measured source vs ours (390 / 768 / 992 / 1440), `/` and `/en/home` identical:**
+  LEARN MORE→strip 34/50/50/50 vs 34/53/51/50 (768/992 residual = the collage cell is 1–3px taller than the
+  LEARN MORE column) · strip 17 ✓ · white gap 17 ✓ · band→h2 49/65/65/65 ✓ · h2→subtitle 0 ✓ ·
+  subtitle→cards 32/48/48/48 ✓ · last LEARN MORE→band bottom 52/82/94/82 vs 52/82/106/82 (992 = card text wrap
+  height, pre-existing) · first strip→"For decades" 60/76/76/76 ✓.
+- **Gates:** lint 0 errors (7 pre-existing no-console warnings) · stylelint ✓ · breakpoint ✓. `check:overflow`,
+  `check:typography` and `test:a11y` could not launch (Playwright expects chromium_headless_shell-1187; not installed).
+  Ran equivalents in the preview browser: 0px horizontal overflow at 320/390/768/992/1199/1200/1440/1920 on both
+  pages; support h2 44/48.4 (<768), 76/83.6 (>=768), weight 500, unchanged. axe (WCAG 2.x A/AA, all rules): only
+  `color-contrast` on the existing white-on-#0373f3 brand buttons / nav Donate. That was pre-existing, and the
+  project a11y config turns this rule off.
+- CSS-only; deploys via git push. No content changes needed (both token names are supported).

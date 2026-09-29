@@ -36,6 +36,10 @@
   --brand-orange: #e87722;
   --stats-band-bg: #000;
   --section-blue-bg: #e2f7ff; /* light-blue support band (source #e2f7ff) */
+
+  /* legacy alias — authored spacers on /en/home still say `color: cards-band-bg`;
+     without it those blue strips render transparent. */
+  --cards-band-bg: var(--section-blue-bg);
   --section-yellow-bg: #ffefbe; /* cream/yellow impact-stats band (source #FFEFBE) */
 
   /* body sizes — mobile-first (source: 16px body @ <768, 18px @ >=768) */
@@ -975,22 +979,27 @@ main > .section.toc-profile-container + .section.spacer-container {
 
 /* Blue spacer floating after the video / impact feature sections: give the
    spacer section whitespace above and below (source ~56 above / 76 below on
-   desktop, 40/60 on mobile). */
-main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) {
+   desktop, 40/60 on mobile). The strip color is authored either as the current
+   token `section-blue-bg` or the legacy alias `cards-band-bg` — match both. */
+main > .section.spacer-container:has(:is(.spacer[style*='section-blue-bg'], .spacer[style*='cards-band-bg'])) {
   margin: 40px 0 60px;
 }
 
-/* The blue spacer immediately before the light-blue support section sits close:
-   a THIN white gap below it (a 17px white "border" the same height as the
-   strip), then the support section's own top padding gives the heading its room
-   (matches the source ~82px strip-to-heading gap, not the full 76px float). */
-main > .section.spacer-container:has(.spacer[style*='cards-band-bg']):has(+ .section.highlight),
-main > .section.spacer-container:has(.spacer[style*='cards-band-bg']):has(+ .section.section-blue) {
-  margin-bottom: 17px;
+/* The blue spacer immediately before the light-blue support section (source,
+   measured 390/768/992/1440): white gap above the strip 34px (<768) / 50px
+   (>=768), the 17px strip, then a 17px white gap, then the band. The preceding
+   section's own 40px bottom margin would collapse with (and on mobile out-size)
+   the strip's top margin, so it is zeroed and the strip owns the whole gap.
+   (`:has()` can't nest, so this keys on "spacer section, then blue band".) */
+main > .section:has(+ .section.spacer-container + :is(.section.highlight, .section.section-blue)) {
+  margin-bottom: 0;
 }
 
-main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) + .section.highlight,
-main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) + .section.section-blue {
+main > .section.spacer-container:has(:is(.spacer[style*='section-blue-bg'], .spacer[style*='cards-band-bg'])):has(+ :is(.section.highlight, .section.section-blue)) {
+  margin: 34px 0 17px;
+}
+
+main > .section.spacer-container:has(:is(.spacer[style*='section-blue-bg'], .spacer[style*='cards-band-bg'])) + :is(.section.highlight, .section.section-blue) {
   margin-top: 0;
 }
 
@@ -1025,9 +1034,19 @@ footer {
 }
 /* stylelint-enable no-descending-specificity */
 
+@media (width >= 768px) {
+  main > .section.spacer-container:has(:is(.spacer[style*='section-blue-bg'], .spacer[style*='cards-band-bg'])) {
+    margin-bottom: 76px;
+  }
+
+  main > .section.spacer-container:has(:is(.spacer[style*='section-blue-bg'], .spacer[style*='cards-band-bg'])):has(+ :is(.section.highlight, .section.section-blue)) {
+    margin: 50px 0 17px;
+  }
+}
+
 @media (width >= 992px) {
-  main > .section.spacer-container:has(.spacer[style*='cards-band-bg']) {
-    margin: 56px 0 76px;
+  main > .section.spacer-container:has(:is(.spacer[style*='section-blue-bg'], .spacer[style*='cards-band-bg'])) {
+    margin-top: 56px;
   }
 
   main > .section.spacer-container:has(.spacer[style*='section-yellow-bg']) {

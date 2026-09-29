@@ -919,6 +919,39 @@ main .section:has(.cards.profile) .default-content-wrapper p {
   color: #000;
 }
 
+/* Band vertical rhythm (source, measured at 390 / 768 / 992 / 1440):
+   band top → heading 49px (<768) / 65px (>=768); heading and subtitle stack
+   flush (no gap); subtitle → first card image 32 / 48px; last LEARN MORE → band
+   bottom 52 / 82px. The band owns the gaps: the heading's default 0.8em top
+   margin and the list's top padding are dropped so they don't stack on top. */
+main .section:is(.highlight, .section-blue):has(.cards.support) {
+  padding: 49px 0 8px;
+}
+
+.cards-container:has(.cards.support) .default-content-wrapper h2 {
+  margin: 0;
+}
+
+.cards-container:has(.cards.support) .default-content-wrapper p {
+  margin-top: 0;
+}
+
+/* intro → cards gap: wrapper 24 + card top padding 8 = 32 (mobile) */
+main .section.cards-container:has(.cards.support) > .cards-wrapper {
+  margin-top: 24px;
+}
+
+@media (width >= 768px) {
+  main .section:is(.highlight, .section-blue):has(.cards.support) {
+    padding: 65px 0 40px;
+  }
+
+  /* wrapper 40 + card top padding 8 = 48 */
+  main .section.cards-container:has(.cards.support) > .cards-wrapper {
+    margin-top: 40px;
+  }
+}
+
 /* Row of cards: flex wrap, evenly distributed (source: justify-content space-around).
    Mobile: source caps the single-column card at a fixed 336px, CENTERED, so it
    pulls away from the edges as the viewport widens (clearing the floating Donate
@@ -928,7 +961,7 @@ main .section:has(.cards.profile) .default-content-wrapper p {
   list-style: none;
   margin: 0 auto;
   max-width: 336px;
-  padding: 32px 0;
+  padding: 0 0 32px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -1050,7 +1083,7 @@ main .section:has(.cards.profile) .default-content-wrapper p {
     max-width: min(708px, calc(100vw - 60px));
     margin-inline: auto;
     gap: 12px;
-    padding: 32px 0;
+    padding: 0 0 32px;
   }
 
   .cards.support > ul > li {
