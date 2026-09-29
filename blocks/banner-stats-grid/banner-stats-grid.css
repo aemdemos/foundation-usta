@@ -14,6 +14,13 @@
   text-align: center;
 }
 
+/* 768–991: the source content column is a FIXED 720px (tablet container). */
+@media (width >= 768px) {
+  .banner-stats-grid {
+    max-width: 720px;
+  }
+}
+
 /* Source content column grows as viewport − 90px and caps at the parent grid
    width, so the stat columns widen with the viewport (labels reflow: e.g.
    "coaches, mentors & volunteers" is 3 lines up to ~1200 then 2 lines beyond).
@@ -49,17 +56,10 @@
 }
 
 /* Featured stat — source h1: 54→100 blue, centered. The source constrains the
-   featured line to a narrow centered column so it wraps (240px @768 → 4 lines,
-   ~669px @992 → 2 lines), not the full content width. Reproduce per tier. */
+   featured line to a narrow centered column so it wraps (its 240px tablet cell
+   @768 → 4 lines, ~669px @992 → 2 lines), not the full content width. */
 .banner-stats-grid .banner-stats-grid-featured {
   margin: 32px 0 0; /* source heading→featured gap = 32px */
-}
-
-@media (width >= 768px) {
-  .banner-stats-grid .banner-stats-grid-featured h1,
-  .banner-stats-grid .banner-stats-grid-featured p {
-    max-width: 240px;
-  }
 }
 
 @media (width >= 992px) {
@@ -130,22 +130,90 @@
   text-align: center;
 }
 
+/* 768–991 (source tablet grid): a fixed 720px row of 240px columns laid out with
+   space-around — the featured stat + 74% + 79% fill row 1, and 270+ / 67,000+
+   center on row 2 (60 | 120 | 60 free space). Each item keeps the mobile stack
+   (number ABOVE label) and is vertically centered on its row. Measured on the
+   source: 6px cell insets (h1/number 228px wide), label 168px (30px insets),
+   heading→featured 48px, row 1 → row 2 content 80px (40px item padding + 40 gap).
+   The featured row stays outside .banner-stats-grid-items in the DOM, so the
+   items wrapper becomes display:contents to join the same flex rows. */
 @media (width >= 768px) {
+  .banner-stats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    row-gap: 40px;
+  }
+
+  .banner-stats-grid .banner-stats-grid-heading {
+    flex: 0 0 100%;
+    margin-bottom: 8px;
+  }
+
+  .banner-stats-grid .banner-stats-grid-featured,
+  .banner-stats-grid .banner-stats-grid-item {
+    flex: 0 0 240px;
+    min-width: 0; /* long words ("233,000+", "organizations") overflow the cell like the source instead of widening it */
+    box-sizing: border-box;
+    padding-inline: 6px;
+  }
+
+  .banner-stats-grid .banner-stats-grid-featured {
+    margin: 0;
+  }
+
   .banner-stats-grid .banner-stats-grid-items {
-    /* minmax(0,1fr) so the two columns stay truly equal and can shrink below the
-       label's min-content width (repeat(2,1fr) let a wide label push its track
-       past half, overflowing the row at 768). */
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 60px 30px;
+    display: contents;
+  }
+
+  .banner-stats-grid .banner-stats-grid-item {
+    padding-block: 40px;
+  }
+
+  .banner-stats-grid .banner-stats-grid-label {
+    margin-inline: 30px;
   }
 }
 
-/* From 768: each item is number | label side-by-side as TWO EQUAL centered
+/* From 992 the source switches to a flow layout: heading, featured line, then a
+   2-column grid of number | label pairs. Undo the 768–991 tablet row. */
+@media (width >= 992px) {
+  .banner-stats-grid {
+    display: block;
+  }
+
+  .banner-stats-grid .banner-stats-grid-heading {
+    margin-bottom: 0;
+  }
+
+  .banner-stats-grid .banner-stats-grid-featured {
+    margin: 32px 0 0;
+    padding-inline: 0;
+  }
+
+  .banner-stats-grid .banner-stats-grid-items {
+    /* minmax(0,1fr) so the two columns stay truly equal and can shrink below the
+       label's min-content width (repeat(2,1fr) let a wide label push its track
+       past half, overflowing the row). */
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 60px 30px;
+  }
+
+  .banner-stats-grid .banner-stats-grid-label {
+    margin-inline: 0;
+  }
+}
+
+/* From 992: each item is number | label side-by-side as TWO EQUAL centered
    halves (source: item is a flex row, space-around; number and label each take
    ~half and are centered — so the label wraps within its narrow half, e.g.
    "come from families of need" → 2–3 lines, matching the source). */
-@media (width >= 768px) {
+@media (width >= 992px) {
   .banner-stats-grid .banner-stats-grid-item {
+    padding: 0;
     flex-direction: row;
     align-items: center;
     justify-content: center;
