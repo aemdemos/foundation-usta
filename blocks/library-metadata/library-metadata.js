@@ -36,7 +36,11 @@ export default function decorate(block) {
 
   const wrapper = block.parentElement;
   const section = block.closest('.section');
-  if (section && wrapper && wrapper !== section.firstElementChild) {
-    section.prepend(wrapper);
-  }
+  if (!section || !wrapper) return;
+  if (wrapper !== section.firstElementChild) section.prepend(wrapper);
+  // Some blocks own their section's margins with high-specificity rules (hero,
+  // columns-stats, spacer zero them or set 17px). Reset them here so the
+  // library-page rhythm (section padding in library-metadata.css) is the same
+  // for every variant.
+  section.style.marginBlock = '0';
 }

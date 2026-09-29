@@ -3864,3 +3864,28 @@ On the DA library pages (`/.da/library/blocks/*`, e.g. `.da/library/blocks/cards
   scripts expect Playwright's chromium_headless_shell-1187, but only 1205/1208 are installed. The same axe scan and
   overflow sweep were run in the preview browser instead.
 - Code-only; deploys via git push. No content changes.
+
+### 2026-09-29 — `library-metadata` v2: consistent rhythm on ALL 17 library pages (hero fix)
+After the first pass, the user reported bad spacing on the hero library page. A sweep of all 17
+`/.da/library/blocks/*` pages at 390/992/1440 found the section-margin approach was being overridden:
+- **hero** (`main > .section.hero-container:has(.hero.banner|.text-up) { margin: 0 }`, plus a desktop
+  `+ .section { margin-top: 0 }`): labels had **0px** above them and touched the breadcrumb or the previous hero.
+- **columns-stats** (17px section top margin, 0 below) and **spacer** (`margin: 0; padding: 0` section) also own
+  their section margins, so their pages had uneven gaps at the top and bottom.
+- **toc-profile**: the block's own `margin-top: 48px/77px` pushed the tabs 48–77px below the label.
+- **Fix:** decorate() sets `section.style.marginBlock = '0'` on labelled sections. An inline style is the reliable
+  way to beat those block rules (up to 0,8,2 specificity) without `!important`. The rhythm moved to section
+  PADDING (`--grid-gap` top and bottom, so 30px under the breadcrumb and 60px between variants; the last section
+  gets `--grid-gap × 2` before the footer). `:has(> .library-metadata-wrapper)` beats spacer's `padding: 0`. The
+  example block's own `margin-top` is also zeroed in labelled sections, so label → example is always 20px.
+- **Result (measured, all 17 pages × 390/992/1440):** 30px above the first label · 60px between variants · 20px
+  label → example · ~60px before the footer · no horizontal overflow. Real pages are unaffected; these rules only
+  match sections that contain a library-metadata label.
+- **Library CONTENT issues found (not changed; the docs were left as-is on purpose):**
+  1. `widget`: the example points to `/widgets/sample-widget`. The repo has no `widgets/` folder, so it renders a
+     "404 Page Not Found" box.
+  2. `custom-form-donate`: the block was retired in favour of `donate-embed` (see the donate entries above) and has
+     no code. The library still lists it (404 on the block JS/CSS). It should be replaced by a donate-embed entry.
+  3. `hero` Banner Hero example has no image, so it shows the block's solid-blue no-image fallback.
+- Gates: lint 0 errors · stylelint ✓ · breakpoint ✓ · axe (project config) 0 serious/critical violations on hero,
+  cards, columns, toc-profile, spacer, quote and table library pages, and the label passes color-contrast.

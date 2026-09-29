@@ -43,18 +43,27 @@
 
 /* Library-page rhythm. EDS tags the label's own section/wrapper with
    `library-metadata-container` / `-wrapper`, so these hooks only ever match
-   sections that hold a label. Variants get a wider gap between them than the
-   default 40px section margin, and the label hugs the example it describes
-   (the global wrapper rule would put 32/40px between them; `:first-child` —
-   true once decorate() moves the label up — lifts specificity above it). */
-main > .section.library-metadata-container {
-  margin-block: calc(var(--grid-gap) * 2);
+   sections that hold a label. decorate() resets the section's margins (several
+   blocks set their own), so the rhythm lives in PADDING, which doesn't collapse
+   and isn't touched by those blocks: 30px under the breadcrumb, 60px between
+   variants, 60px before the footer. The `:has()` lifts specificity above
+   spacer's `padding: 0` section rule. */
+main > .section.library-metadata-container:has(> .library-metadata-wrapper) {
+  padding-block: var(--grid-gap);
 }
 
-main > .section.library-metadata-container:first-of-type {
-  margin-top: var(--grid-gap);
+main > .section.library-metadata-container:has(> .library-metadata-wrapper):last-of-type {
+  padding-bottom: calc(var(--grid-gap) * 2);
 }
 
+/* The label hugs the example it describes. The global wrapper rule would put
+   32/40px between them, and some blocks add their own top margin (toc-profile
+   48/77px); `:first-child` (true once decorate() moves the label up) lifts
+   specificity above both. */
 main > .section.library-metadata-container > .library-metadata-wrapper:first-child + div[class$="-wrapper"] {
   margin-top: calc(var(--grid-gap) * 2 / 3);
+}
+
+main > .section.library-metadata-container > .library-metadata-wrapper:first-child + div[class$="-wrapper"] > .block {
+  margin-top: 0;
 }
