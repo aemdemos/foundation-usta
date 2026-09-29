@@ -1,0 +1,60 @@
+/* library-metadata — the friendly name/description label that sits above each
+   variant on a DA block-library page. Colours, fonts and spacing come from the
+   global tokens in styles.css; the site has no radius/border-width tokens, so
+   the two small shape values are declared once here as block-local props. */
+.library-metadata {
+  --library-metadata-radius: 4px;
+  --library-metadata-accent-width: 4px;
+
+  box-sizing: border-box;
+  padding: calc(var(--grid-gap) / 2) calc(var(--grid-gap) * 2 / 3);
+  border-left: var(--library-metadata-accent-width) solid var(--brand-blue);
+  border-radius: var(--library-metadata-radius);
+  background-color: var(--light-color);
+  color: var(--dark-color);
+}
+
+.library-metadata p {
+  margin: 0;
+}
+
+.library-metadata .library-metadata-name {
+  font-family: var(--heading-semibold-font-family);
+  font-size: calc(var(--body-font-size-m) * 1.125);
+  font-weight: 600;
+  line-height: var(--body-line-height);
+}
+
+.library-metadata .library-metadata-description {
+  font-size: var(--body-font-size-xs);
+  line-height: var(--body-line-height);
+  color: var(--text-color);
+}
+
+.library-metadata .library-metadata-name + .library-metadata-description {
+  margin-top: calc(var(--grid-gap) / 6);
+}
+
+@media (width >= 768px) {
+  .library-metadata {
+    padding: calc(var(--grid-gap) * 2 / 3) var(--grid-gap);
+  }
+}
+
+/* Library-page rhythm. EDS tags the label's own section/wrapper with
+   `library-metadata-container` / `-wrapper`, so these hooks only ever match
+   sections that hold a label. Variants get a wider gap between them than the
+   default 40px section margin, and the label hugs the example it describes
+   (the global wrapper rule would put 32/40px between them; `:first-child` —
+   true once decorate() moves the label up — lifts specificity above it). */
+main > .section.library-metadata-container {
+  margin-block: calc(var(--grid-gap) * 2);
+}
+
+main > .section.library-metadata-container:first-of-type {
+  margin-top: var(--grid-gap);
+}
+
+main > .section.library-metadata-container > .library-metadata-wrapper:first-child + div[class$="-wrapper"] {
+  margin-top: calc(var(--grid-gap) * 2 / 3);
+}

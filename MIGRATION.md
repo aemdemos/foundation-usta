@@ -3827,3 +3827,40 @@ in the same tab. The customer chose "every link" when shown this.
   external portal, atptour, careers, PDF → new tab; `?form=DONATE`/`?form=JLLI`, `#…`, mailto, tel → same tab).
   Gates: lint 0 errors (7 pre-existing a11y no-console warnings) · breakpoint-check ✓. NOT browser-clicked this
   session: the Playwright tool failed to connect. JS-only; deploys via git push.
+
+### 2026-09-29 — New `library-metadata` block (DA block-library variant labels)
+On the DA library pages (`/.da/library/blocks/*`, e.g. `.da/library/blocks/cards`), each variant is followed by a
+`library-metadata` table (`name` / `description` rows). There was no block for it, so the preview and the DA
+"Insert block" preview showed the raw key/value text ("name / Content Cards / description / …").
+- **Block (`blocks/library-metadata/`)**, display-only. It reads the rows by key (case-insensitive, trimmed; either
+  row may be missing), rebuilds the block as `<p class="library-metadata-name">` + `<p class="library-metadata-description">`
+  with the values only, and moves the label's wrapper to the **top of its section**, above the example. It uses `<p>`,
+  not headings, so heading order, a11y and the TOC are unaffected. If neither row has a value, the block is `hidden`.
+  No hard-coded strings; all text comes from the table.
+- **Authoring contract unchanged:** the library documents are NOT modified. The DA Library panel still reads
+  name/description from the source tables; this decoration only affects the rendered preview.
+- **Styling:** light-grey panel (`--light-color`), 4px `--brand-blue` left accent, 4px radius, padding from `--grid-gap`
+  (15/20 → 20/30 from 768). Name: `--heading-semibold-font-family`, `--body-font-size-m` × 1.125 (18 → 20.25px).
+  Description: `--body-font-size-xs`, `--text-color` (#333 on #f5f5f5, axe contrast ✓). The site has NO radius or
+  border-width tokens, so those two values are block-local custom props (`--library-metadata-radius` /
+  `--library-metadata-accent-width`).
+- **Spacing (gotcha):** the global wrapper rule (`main .section > div[class$="-wrapper"]:not(…) + div[class$="-wrapper"]`,
+  specificity 0,4,3) put 40px between the label and its example, the same as the 40px between sections, so a label
+  looked equally attached to the variant above it. Fix, scoped to the block's own EDS hooks
+  (`.library-metadata-container` section / `.library-metadata-wrapper`): variant sections get `--grid-gap × 2` (60px)
+  margin, the first gets `--grid-gap` (30px) under the breadcrumb, and label → example is `--grid-gap × 2/3` (20px) via
+  `…> .library-metadata-wrapper:first-child + div[class$="-wrapper"]` (0,5,2, which beats the global rule; `:first-child`
+  is true once decorate() has moved the label).
+- **Cards library check (all 7):** content, news, profile, stats, tiles, support and expand all render correctly
+  at 390/768/1440, and all images load (blank areas in a full-page screenshot were only lazy loading). Labels match
+  the section content column (336/720/962–1170); profile and expand are intentionally narrower, centered by
+  their own source layout. The content (16px) and support (32px) variants keep their own list top padding, so their
+  first card sits a little further below the label. That padding matches the source site and is left as is,
+  because changing cards.css would change real pages.
+- **Verified:** lint 0 errors (7 pre-existing no-console warnings in tests/a11y) · breakpoint-check ✓ · axe-core
+  4.10.3 with the project's a11y config (WCAG 2.0–2.2 A/AA, color-contrast off as configured) → 0 violations on
+  `/.da/library/blocks/cards`, and the label passes color-contrast when checked separately. No horizontal overflow at
+  320/390/768/992/1199/1200/1440/1920. NOTE: `npm run test:a11y` / `check:overflow` could not launch here because the
+  scripts expect Playwright's chromium_headless_shell-1187, but only 1205/1208 are installed. The same axe scan and
+  overflow sweep were run in the preview browser instead.
+- Code-only; deploys via git push. No content changes.
