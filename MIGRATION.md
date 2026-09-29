@@ -3920,3 +3920,22 @@ light-blue support band below. Removing the band's padding in devtools revealed 
   `color-contrast` on the existing white-on-#0373f3 brand buttons / nav Donate. That was pre-existing, and the
   project a11y config turns this rule off.
 - CSS-only; deploys via git push. No content changes needed (both token names are supported).
+
+### 2026-09-29 — Section `background` options: one name per color (`light-blue-bg`/`cream-yellow-bg` → `section-*-bg`)
+The DA library Section Metadata `background` options (added in #28) used their own names for two colors that already
+had tokens: `light-blue-bg` painted `--section-blue-bg` and `cream-yellow-bg` painted `--section-yellow-bg`. Now every
+option name matches the token it paints: `section-blue-bg`, `section-yellow-bg`, `sage-grey-bg`, `pale-grey-bg`.
+- **Code (styles.css):** `main .section.light-blue-bg` → `.section-blue-bg`, `.cream-yellow-bg` → `.section-yellow-bg`.
+  No other references in code or local content. These classes are separate from the `section-blue` / `section-yellow`
+  section STYLES, which also set padding.
+- **HOW IT WIRES (gotcha):** `applySectionBackgrounds()` in scripts.js reads `/.da/library/blocks.json` → options → key
+  `background` (`name=#hex | …`) and adds the matching option NAME as the section class. The CSS rule name must
+  therefore equal the option name in the DA sheet. **The DA sheet must be renamed at the same time:**
+  `sage-grey-bg=#dcdfcf | section-blue-bg=#e2f7ff | section-yellow-bg=#ffefbe | pale-grey-bg=#eef0f0`.
+- **Validated locally** by mocking the sheet and injecting test sections (every name and every hex):
+  - New sheet: all 4 names and both hexes get the right class and color (e2f7ff / ffefbe / dcdfcf / eef0f0).
+  - Current sheet (old names): blue and yellow render transparent, because the classes are `light-blue-bg` and
+    `cream-yellow-bg`, which no longer have rules. So deploy the code and the sheet rename together.
+  - A section authored with the old NAME stops matching once the sheet is renamed. Authoring by hex still works. No
+    local content uses the option.
+- Gates: lint 0 errors (7 pre-existing warnings) · stylelint ✓ · breakpoint ✓.

@@ -581,12 +581,13 @@ main .section.center-intro > .default-content-wrapper:first-child .button-wrappe
 
 /* Section Metadata `background` options (DA library /.da/library/blocks,
    options tab). scripts.js adds the matching option name as a section class;
-   each option needs a rule here, named exactly like the option. */
-main .section.light-blue-bg {
+   each option needs a rule here, named exactly like the option — and like the
+   color token it paints, so there is ONE name per color. */
+main .section.section-blue-bg {
   background-color: var(--section-blue-bg);
 }
 
-main .section.cream-yellow-bg {
+main .section.section-yellow-bg {
   background-color: var(--section-yellow-bg);
 }
 
