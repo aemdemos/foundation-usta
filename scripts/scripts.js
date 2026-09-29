@@ -139,14 +139,10 @@ function buildAutoBlocks(main) {
 
 /**
  * Extra mark on a bold + italic standalone link → cta-button style class.
- * Strikethrough arrives as <del> from aem.page and <s>/<strike> from other sources.
  */
 const CTA_BUTTON_STYLES = {
   sub: 'cta-blue',
-  sup: 'cta-link',
-  del: 'cta-black',
-  s: 'cta-black',
-  strike: 'cta-black',
+  sup: 'cta-black',
 };
 
 /**
@@ -154,8 +150,7 @@ const CTA_BUTTON_STYLES = {
  * Standalone link, formatted:
  *   bold → .button.primary · italic → .button.secondary · bold+italic → .button.accent
  *   bold+italic+subscript → .cta-button.cta-blue (solid blue site CTA)
- *   bold+italic+superscript → .cta-button.cta-link (uppercase underlined text CTA)
- *   bold+italic+strikethrough → .cta-button.cta-black (black rounded CTA)
+ *   bold+italic+superscript → .cta-button.cta-black (black rounded CTA)
  * @param {HTMLElement} main The main container element
  */
 function decorateButtons(main) {
@@ -179,14 +174,14 @@ function decorateButtons(main) {
 
     // bold + italic + one extra mark → the site's own CTA styles (cta-button).
     // Checked first so plain bold / italic / bold+italic keep their behaviour.
-    // aem.page emits sub/sup INSIDE the link (<a><sub>…</sub></a>) but
-    // strikethrough OUTSIDE it (<del><em><strong><a>), so look both ways.
-    const marks = 'sub, sup, del, s, strike';
+    // aem.page emits sub/sup INSIDE the link (<a><sub>…</sub></a>); other
+    // sources may put them outside it, so look both ways.
+    const marks = Object.keys(CTA_BUTTON_STYLES).join(', ');
     const mark = strong && em && (a.closest(marks) || a.querySelector(marks));
     if (mark && p.contains(mark)) {
       p.className = 'button-wrapper';
       a.className = `cta-button ${CTA_BUTTON_STYLES[mark.tagName.toLowerCase()]}`;
-      // drop marks inside the link so the label isn't shrunk/raised/struck
+      // drop marks inside the link so the label isn't shrunk/raised
       a.querySelectorAll(marks).forEach((m) => m.replaceWith(...m.childNodes));
       // unwrap every formatting element (any nesting order) between <p> and <a>
       let outer = a;

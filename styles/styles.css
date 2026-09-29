@@ -380,7 +380,7 @@ button.button.accent:disabled:focus-visible {
 
 /* cta-button — the source site's own CTA styles for DEFAULT CONTENT. Authored as
    a standalone link formatted bold + italic + ONE extra mark (decorateButtons):
-     subscript → .cta-blue  · superscript → .cta-link  · strikethrough → .cta-black
+     subscript → .cta-blue  · superscript → .cta-black
    A separate class from `.button`, so the bold / italic / bold+italic buttons
    above (and every theme/block override of them) are unchanged. */
 a.cta-button:any-link {
@@ -422,27 +422,6 @@ a.cta-button:focus-visible {
 
 /* cta-blue — solid blue CTA (source LEARN MORE on hero / columns / general
    pages): the base rule above. */
-
-/* cta-link — uppercase underlined text CTA (source cards-news READ MORE). */
-a.cta-button.cta-link:any-link {
-  min-height: 0;
-  border: 0;
-  border-radius: 0;
-  padding: 0;
-  background-color: transparent;
-  color: var(--link-color);
-  font-size: 16px;
-  line-height: 24px;
-  letter-spacing: normal;
-  text-decoration: underline;
-}
-
-a.cta-button.cta-link:hover,
-a.cta-button.cta-link:focus-visible {
-  background-color: transparent;
-  color: var(--link-hover-color);
-  text-decoration: underline;
-}
 
 /* cta-black — black, fully rounded 56px CTA (source 404 BACK TO HOMEPAGE). */
 a.cta-button.cta-black:any-link {

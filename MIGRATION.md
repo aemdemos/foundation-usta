@@ -3890,7 +3890,7 @@ After the first pass, the user reported bad spacing on the hero library page. A 
 - Gates: lint 0 errors · stylelint ✓ · breakpoint ✓ · axe (project config) 0 serious/critical violations on hero,
   cards, columns, toc-profile, spacer, quote and table library pages, and the label passes color-contrast.
 
-### 2026-09-29 — Default-content CTA buttons: bold + italic + sub / sup / strikethrough (`cta-button`)
+### 2026-09-29 — Default-content CTA buttons: bold + italic + subscript / superscript (`cta-button`)
 Authors needed a way to put the site's real CTA buttons in DEFAULT content (until now only blocks had them).
 **Per user direction, the existing link → button rules are UNCHANGED:** bold → `.button.primary`, italic →
 `.button.secondary`, bold+italic → `.button.accent` keep their original boilerplate styles and the `body.general`
@@ -3900,20 +3900,24 @@ it was reverted.) The new options sit on top:
   | Authored | Class | Look (source origin) |
   |---|---|---|
   | bold + italic + **subscript** | `.cta-button.cta-blue` | solid brand-blue CTA, 40px, 3px radius, 18px Graphik Semibold 400 uppercase, 1px tracking (hero/columns/general LEARN MORE) |
-  | bold + italic + **superscript** | `.cta-button.cta-link` | uppercase underlined link-blue text CTA, no box (cards-news READ MORE) |
-  | bold + italic + **strikethrough** | `.cta-button.cta-black` | black, fully rounded 56px CTA (hero-error BACK TO HOMEPAGE) |
+  | bold + italic + **superscript** | `.cta-button.cta-black` | black, fully rounded 56px CTA (hero-error BACK TO HOMEPAGE) |
 - **scripts.js `decorateButtons()`:** the bold+italic+mark check runs BEFORE the existing branches, so plain
   bold/italic/bold+italic are untouched. **Gotcha (verified on real aem.page output):** DA/aem.page emits sub/sup
-  **inside** the link (`<em><strong><a><sub>Label</sub></a></strong></em>`) but strikethrough **outside** it
-  (`<del><em><strong><a>`), so the check looks both up (`closest`) and down (`querySelector`). It unwraps every
-  formatting wrapper between `<p>` and `<a>` (any nesting order) and strips inner marks, so the label isn't shrunk,
-  raised or struck. Mark → class map: `CTA_BUTTON_STYLES` (`del`/`s`/`strike` all → black).
+  **inside** the link (`<em><strong><a><sub>Label</sub></a></strong></em>`), so the check looks both up
+  (`closest`) and down (`querySelector`). It unwraps every formatting wrapper between `<p>` and `<a>` (any nesting
+  order) and strips the inner marks, so the label isn't shrunk or raised. Mark → class map: `CTA_BUTTON_STYLES`.
+- **Iterations (user decisions, same day):** v1 had three styles: subscript → blue, superscript → `.cta-link`
+  (uppercase underlined READ MORE text CTA), strikethrough → black. The text-link style was dropped: it's a link
+  style, not a button, and on the source it only appears inside cards-news / related-articles, which style it
+  themselves. Then the black button moved from strikethrough to **superscript** and strikethrough was dropped.
+  Bold + italic + strikethrough now falls through to the existing bold + italic `.button.accent` behaviour (the
+  `<del>` stays around the link). Library page + block sample updated to match.
 - **styles.css:** a separate `a.cta-button` class (not `.button`), so none of the existing `.button` rules, theme
   overrides or block resets can interact with it. Visible `:focus-visible` outline. Labels wrap on narrow screens.
 - **news.css:** the article inline-link color rule (`…default-content-wrapper a`, 0,2,3) would paint cta text blue
   on blue. It's now `a:where(:not(.cta-button))`. `:where` keeps the original specificity (a plain `:not` tripped
   `no-descending-specificity`), and every existing link still matches.
-- **DA Block Library:** `/.da/library/blocks/buttons` has Blue Button / Text Link Button / Black Button, one
+- **DA Block Library:** `/.da/library/blocks/buttons` has Blue Button / Black Button, one
   section each (formatted link + `library-metadata` label). Added `{"name":"Buttons"}` to
   `/.da/library/blocks.json` (15 entries). GET → merge → POST kept the `options` sheet. The config `library` sheet
   already points at that index (unchanged). Page previewed, not published. Local copy + pre-change index backup:
