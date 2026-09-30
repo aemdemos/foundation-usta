@@ -3985,3 +3985,79 @@ option name matches the token it paints: `section-blue-bg`, `section-yellow-bg`,
   - A section authored with the old NAME stops matching once the sheet is renamed. Authoring by hex still works. No
     local content uses the option.
 - Gates: lint 0 errors (7 pre-existing warnings) · stylelint ✓ · breakpoint ✓.
+
+### 2026-09-30 — Reactions block removal: generic `remove-block` script + first news page
+Customer wants the `custom-widget-reactions` block ("Reactions" + emoji row + "Be the first to add a reaction")
+removed from ALL news pages (62 of the 73 local news pages carry it). Done page by page on the LOCAL content (no
+importer re-run); the author uploads each page to DA.
+- **Script:** `node tools/content/remove-block.mjs [--dry-run] <block-name> <page> [...pages]` (page = path under
+  `content/`, with or without `.plain.html`). Generic, reusable for any block. It matches the block by its FIRST class
+  token (so variants match, and `custom-widget-reactions-other` does not), removes the whole balanced `<div>` subtree,
+  and is idempotent (a page without the block is reported and left alone). No dependencies (a tag-balancing
+  scanner, not a DOM library).
+- **Gotcha (caught on the first run and fixed):** the v1 script also dropped every section left "empty" (only
+  whitespace + section-metadata). That deleted the **Related Articles** section, which in the document is ONLY
+  `section-metadata: style = related-articles` because the news template fills in the feed at runtime. Now it only
+  removes a section that HELD the removed block and has nothing left; sections that were metadata-only to begin with
+  are never touched. The page was restored from the backup and re-run.
+- **First page:** `en/home/news/2023-njtl-essay-contest-winners`. The diff removes only the reactions table.
+  Backup: `migration-work/reactions-removal/2023-njtl-essay-contest-winners.before.plain.html`.
+- **Local preview path (gotcha):** the dev server mounts local content at `/content/…`
+  (`/content/en/home/news/<slug>`); `/en/home/news/<slug>` is proxied from aem.page (DA), so it keeps showing the
+  block until the page is uploaded to DA and previewed.
+- **Verified (local preview):** no reactions block; share bar → Related Articles 61px @1440 and @768, 40px @390. The
+  desktop gap equals a news page that never had the block (frances-tiafoe-fund-surpasses-1-million-raised: 61px).
+  Related Articles still renders 3 cards; no horizontal overflow at 390/768/1440.
+- **Gates:** `npx eslint tools/content/remove-block.mjs` 0 problems (`npm run lint` doesn't pick up `.mjs`) ·
+  `npm run lint` 0 errors (7 pre-existing warnings) · breakpoint-check ✓. No CSS/JS change to the site.
+- **Next:** run the script on the remaining 61 pages (page by page, as agreed), then retire the block code
+  (`blocks/custom-widget-reactions/`), its block sample and its DA library entry once no page uses it.
+- **Page 2:** `en/home/news/black-history-month-2026-community-impact-hub-leader-john-borde` — only the reactions
+  table removed (backup in `migration-work/reactions-removal/`). Verified: share bar → Related Articles 40/61/61px
+  @390/768/1440, 3 related cards, no overflow. 60 pages remain.
+- **Batch 1 (10 pages, alphabetical):** carol-ngounoue-runner-up-wimbledon-event, chris-evert-honored-espn-sports-humanitarian-awards,
+  chris-evert-honored-espys-usta-foundation-work, chris-evert-usta-foundation-much-more,
+  clervie-ngounoue-first-junior-grand-slam-australia, clervie-ngounoue-wins-first-junior-grand-slam-australian-open,
+  daymond-john-and-matt-ebert-share-wisdom-with-usta-foundation-s, delray-beach-youth-tennis-foundation-athletes-hit-the-court-with,
+  desert-smash-brings-together-hollywood-and-pro-tennis-to-benefit, espn-chris-mckendry-supports-usta-foundation.
+  Integrity check `migration-work/reactions-removal/verify-removal.mjs` (the ONLY diff vs the backup is one contiguous
+  reactions table; related-articles metadata kept): 10/10 OK (plus pages 1–2 re-checked OK). Preview: every page ends
+  with the share bar → Related Articles (3 cards), 40/61/61px @390/768/1440, no overflow. List: `batch-1.txt`.
+  **50 pages remain.**
+- **Batch 2 (ALL remaining 50 pages, per user "do for all"):** list in `migration-work/reactions-removal/batch-2.txt`.
+  Every page had exactly ONE reactions table; `verify-removal.mjs` 50/50 OK (only that table removed, no sections
+  dropped, related-articles metadata kept). **0 local news pages now contain `custom-widget-reactions`** (62/62 done).
+  Preview (390/768/1440): no reactions anywhere, no overflow on any page. The "flags" were all pre-existing and unrelated:
+  - 6 pages never had a `social` share bar, so the article ends with text or columns before Related Articles (same
+    40/61px gap): laver-cup-launches-2025-…, usta-foundation-launches-community-impact-hub-initiative,
+    usta-foundation-launches-williams-family-excellence-program-at-2, usta-foundation-scholarship-recipients-meet-billie-jean-king-at
+    (ends in columns), usta-foundation-to-celebrate-winners-of-2025-…, usta-foundation-to-honor-andre-agassi-….
+  - `usta-foundation-receives-transformative-2-7-million-gift-from-t`: the LOCAL file has its `metadata` table INSIDE the
+    related-articles section (not its own last section; the only news page like this). So the LOCAL preview treats it as a
+    block (404 `blocks/metadata`), template/`pages` meta aren't applied, and Related Articles shows 0 cards. Pre-existing:
+    untouched by the removal. The DA/aem.page version renders fine (template news, 3 static related cards), because
+    DA extracts the metadata table wherever it sits.
+  - `njtl-essay-grant-recipients-2020` has the Evert "Rally to Rebuild" content. Correct: the source URL 301-redirects
+    to `evert-speaks-on-rally-to-rebuild`.
+- **Next:** author uploads the 62 pages to DA. Once live content no longer uses it, retire `blocks/custom-widget-reactions/`,
+  its block sample (`drafts/block-samples/custom-widget-reactions`) and its DA library entry.
+
+### 2026-09-30 — `custom-widget-reactions` block RETIRED (code removed)
+The author previewed + published all 62 cleaned news pages. Verified before deleting any code: **0/62** news pages contain the
+block on aem.page or aem.live, and **0/88** pages in the live query-index use it.
+- **Removed:** `blocks/custom-widget-reactions/` (js + css) and its 6 emoji icons (`icons/Clap|Light_Bulb|Love|Smile|
+  Thumbs_Down|Thumbs_Up.svg`). Nothing else referenced them. Dropped its sample URL from `tests/a11y/a11y.config.js`.
+- **News importer** (`tools/importer/import-news-v1.js` + the matching lines in `.bundle.js`, hand-mirrored and
+  `node --check` OK): the source `div.reactions` widget is now DROPPED (`?.remove()`), not converted. Also removed
+  `buildReactionsBlock()`, the `reactions` import-report entry, and `custom widget reactions` from `OUR_BLOCK_NAMES`. A
+  re-import can't bring the block back. `tools/importer/backups/news/` is left as the historical known-good snapshot.
+- **Still in DA (author's step; the code is gone, so these would render the raw rows as text):**
+  `/drafts/block-samples/custom-widget-reactions` (published) and `/.da/library/blocks/custom-widget-reactions`
+  + its "Custom Widget Reactions" row in `/.da/library/blocks.json`. The local sample copy stays (content deletion
+  isn't allowed from this environment). Personal drafts under `drafts/rusmeen|shivani|date-fix-validation` still carry
+  the table too (not live pages).
+- **Gates:** `npm run lint` 0 errors (7 pre-existing warnings) · eslint importer + remove-block 0 problems · breakpoint ✓ ·
+  `check:svg` ✓. `test:a11y` still can't launch (headless-shell-1187 missing), so the same axe-core WCAG 2.x A/AA scan was run
+  in the preview browser on 2023-njtl-essay-contest-winners: **0 violations** (the reactions target-size issue is gone).
+  Published news pages render with no console errors, share bar → Related Articles 61px @1440, 3 cards, no overflow.
+- Code change deploys via git push (not yet committed).
