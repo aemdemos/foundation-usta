@@ -138,7 +138,19 @@ function buildAutoBlocks(main) {
 }
 
 /**
+ * Extra mark on a bold + italic standalone link → cta-button style class.
+ */
+const CTA_BUTTON_STYLES = {
+  sub: 'cta-blue',
+  sup: 'cta-black',
+};
+
+/**
  * Decorates formatted links to style them as buttons.
+ * Standalone link, formatted:
+ *   bold → .button.primary · italic → .button.secondary · bold+italic → .button.accent
+ *   bold+italic+subscript → .cta-button.cta-blue (solid blue site CTA)
+ *   bold+italic+superscript → .cta-button.cta-black (black rounded CTA)
  * @param {HTMLElement} main The main container element
  */
 function decorateButtons(main) {
@@ -159,6 +171,24 @@ function decorateButtons(main) {
     const strong = a.closest('strong');
     const em = a.closest('em');
     if (!strong && !em) return;
+
+    // bold + italic + one extra mark → the site's own CTA styles (cta-button).
+    // Checked first so plain bold / italic / bold+italic keep their behaviour.
+    // aem.page emits sub/sup INSIDE the link (<a><sub>…</sub></a>); other
+    // sources may put them outside it, so look both ways.
+    const marks = Object.keys(CTA_BUTTON_STYLES).join(', ');
+    const mark = strong && em && (a.closest(marks) || a.querySelector(marks));
+    if (mark && p.contains(mark)) {
+      p.className = 'button-wrapper';
+      a.className = `cta-button ${CTA_BUTTON_STYLES[mark.tagName.toLowerCase()]}`;
+      // drop marks inside the link so the label isn't shrunk/raised
+      a.querySelectorAll(marks).forEach((m) => m.replaceWith(...m.childNodes));
+      // unwrap every formatting element (any nesting order) between <p> and <a>
+      let outer = a;
+      while (outer.parentElement !== p) outer = outer.parentElement;
+      outer.replaceWith(a);
+      return;
+    }
 
     p.className = 'button-wrapper';
     a.className = 'button';
