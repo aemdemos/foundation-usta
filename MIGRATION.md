@@ -3985,3 +3985,47 @@ option name matches the token it paints: `section-blue-bg`, `section-yellow-bg`,
   - A section authored with the old NAME stops matching once the sheet is renamed. Authoring by hex still works. No
     local content uses the option.
 - Gates: lint 0 errors (7 pre-existing warnings) · stylelint ✓ · breakpoint ✓.
+
+### 2026-09-30 — NEW `calendar` block + test page `drafts/meet/calendar` (USTA National Campus events calendar)
+Source: https://www.ustanationalcampus.com/en/home/calendar.html (Vue `.v-calendar`, sibling USTA site). Built as a
+test page, running on a LOCAL events JSON.
+- **Data (key finding):** the source loads events from
+  `/usta/events?dataPagePath=/content/dam/nationalcampus/content-fragments/events/national-campus-events&source=contentFragments`
+  (361 events). That response has **no `Access-Control-Allow-Origin`**. Verified in a real browser: the same-origin fetch
+  returns 200 / 361 events; the same fetch from main--foundation-usta--aemdemos.aem.page is BLOCKED (CORS). The only
+  ACAO:* request in DevTools is the Adobe Analytics beacon (omtrdc.net), which carries no events. Options: (1) DA
+  spreadsheet (authorable), (2) ask the source team to add CORS for our domains, then point `source` at their URL.
+  The block reads either shape, so it's a config change.
+- **Local JSON (chosen for now):** `tools/importer/convert-calendar-events.mjs` → `drafts/meet/calendar-events.json`.
+  It's a code-bus file served at `/drafts/meet/calendar-events.json`, in EDS-sheet shape
+  (`{ data:[{title, description, start, end, type, link}] }`), so a DA sheet can replace it 1:1. 359 of 361 events
+  (2 have no date). Dates are DATE-ONLY: the feed's `T00:00:00Z` is a date, not a time. All maths is in UTC, so no
+  timezone shift. Verified: Sep 2026 event days = 7, 11, 16–20, 25–28, exactly the source's highlights.
+- **Block (`blocks/calendar/`), authoring = key/value rows:** `source` plus every visible string (title, type/month/year
+  labels, all, search, no-events, legend, results-title with `{type} {month} {year}` tokens, register, event-link,
+  calendar-view, sort, sort-date, sort-name) and `years` (default 3, from this year). Weekday and month names come from
+  `Intl` (page lang). Types come from the data (All / Tennis / Pickleball / Padel).
+  - Calendar view: filters | month grid | day panel (1fr 2fr 1fr from 768, stacked on mobile). Event days are
+    semibold `--link-color` (#0357b8); the selected day is a #0357b8 box and keeps its own weight. Out-of-month cells are
+    blank. Prev/next aria-labels are the target month names. Keyboard: roving tabindex; arrows, Home/End and
+    PageUp/PageDown work like the source date picker.
+  - Search → results view spanning cols 2–3: "Results for 'All in September 2026'", 100×100 month/day badge, title,
+    dates ("Sep 16 - 19" / "Sep 07"), description, black pill REGISTER. Calendar-view icon returns; sort menu
+    (fieldset radios) sorts by date (default) or name. Sep 2026 "All" = 16 events, the same set as the source.
+  - **Security:** event descriptions are feed HTML. They are parsed with DOMParser (inert) and REBUILT with createElement
+    from an allow-list (p, b, strong, i, em, br, ul, ol, li, and http(s) `a`). No innerHTML, and no DOMPurify
+    dependency (zero-deps rule). The source URL and event links must be http(s).
+  - Icons: `icons/calendar-view.svg` (3.0KB) and `icons/sort-events.svg` (0.8KB), from the source clientlib with IDs and
+    a dangling clip-path stripped.
+- **Test page:** `tools/importer/import-calendar-v1.js` (+ bundle, `urls-calendar.txt`) → `drafts/meet/calendar`. Labels
+  are read from the rendered source DOM, and the source strings shown only after a search are captured once. Local URL:
+  `/content/drafts/meet/calendar`. 23% "completeness" is expected (day numbers and the source footer are not content).
+  Locally the Metadata table renders as text; that's normal for raw local drafts, and DA converts it on upload.
+- **Deviations:** the day-panel "Register for event" link uses #0357b8, not the source #0373f3 (4.43:1, fails AA).
+  "Search Events" renders as h2; the source page has no h1 at all, so a real page should add one.
+- **Verified @1440/390:** layout matches the source screenshot. No horizontal overflow at
+  320/390/768/992/1199/1200/1440/1920. axe WCAG 2.x A/AA: 0 violations in calendar, day-panel and results views.
+  lint 0 errors (7 pre-existing warnings) · stylelint ✓ · breakpoint ✓ · check:svg ✓. `check:overflow` / `test:a11y`
+  scripts can't launch (missing chromium_headless_shell-1187, pre-existing); their checks were run in the preview browser.
+- NOT uploaded to DA / not pushed. Before a real page: move events to a DA sheet (or get CORS on the source feed) and
+  set `source`.
