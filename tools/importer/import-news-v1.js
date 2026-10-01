@@ -112,20 +112,6 @@ function buildSocialBlock(document, align) {
 }
 
 /*
- * Build a `custom-widget-reactions` block. The source reactions bar is a dynamic
- * Vue component (`div.reactions`, with the "Be the first to add a reaction"
- * empty-state prompt); our block recreates it from just two authored rows —
- * the title and the prompt (the fixed emoji set lives in the block itself).
- */
-function buildReactionsBlock(document) {
-  return WebImporter.DOMUtils.createTable([
-    ['Custom Widget Reactions'],
-    ['Reactions'],
-    ['Be the first to add a reaction'],
-  ], document);
-}
-
-/*
  * Convert a source `blockquote.twitter-tweet` into our `quote (tweet)` block.
  * The source blockquote is: one/more <p> (tweet body, inline links) followed by
  * a trailing "— Name (@handle) Date" text+links run (NOT wrapped in <p>). Our
@@ -685,7 +671,7 @@ function wrapGradeListTable(document, root) {
  */
 // Names of the block tables THIS importer creates via createTable — these must
 // never be flattened as if they were source layout tables.
-const OUR_BLOCK_NAMES = /^(columns|social|cards|table|video embed|embed instagram|quote|custom widget reactions|section metadata|metadata)\b/i;
+const OUR_BLOCK_NAMES = /^(columns|social|cards|table|video embed|embed instagram|quote|section metadata|metadata)\b/i;
 
 function flattenLayoutTables(document, root) {
   const layout = [...root.querySelectorAll('table')].filter((t) => {
@@ -886,7 +872,6 @@ export default {
     if (tweetCount) emittedBlocks.push(`quote-tweet×${tweetCount}`);
     if (igCount) emittedBlocks.push(`embed-instagram×${igCount}`);
     if (main.querySelector('.socialmediasharing')) emittedBlocks.push('social');
-    if (main.querySelector('.reactions')) emittedBlocks.push('reactions');
 
     // 0. Capture Description + Image from the ORIGINAL article DOM, before any
     //    mutation. The source head has no og:description / og:image (JS-injected,
@@ -980,12 +965,9 @@ export default {
       shareEl.replaceWith(buildSocialBlock(document, align));
     }
 
-    // 2b. Replace the source REACTIONS widget (`div.reactions`, older articles
-    //     only) with our custom-widget-reactions block.
-    const reactionsEl = main.querySelector('.reactions');
-    if (reactionsEl) {
-      reactionsEl.replaceWith(buildReactionsBlock(document));
-    }
+    // 2b. Drop the source REACTIONS widget (`div.reactions`, older articles only).
+    //     The customer retired reactions (2026-09-30), so it is NOT migrated.
+    main.querySelector('.reactions')?.remove();
 
     // 3. Replace the RELATED ARTICLES widget with our cards (news) block.
     //    The real feed is a <ul> of <li> cards; convert it in place and keep the

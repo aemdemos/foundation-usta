@@ -114,3 +114,64 @@
     margin: 0 auto !important;
   }
 }
+
+/* --- embed beside article text in a `split-left` section ---
+   The embed is the block (left) and the article text is default content (right).
+   The source lays this on AEM grid spans, not equal halves — by default embed
+   col-5 | text col-7 (newport-njtl) — and the Instagram post fills its column
+   edge to edge (width 100%), with no 368px cap and no centering. Reproduces the
+   source's Bootstrap geometry: tracks of 5/12 + 7/12 of the container with no gap,
+   each column inset by half a gutter (6px at 768, 15px from 992), and from 992 a
+   fluid container of min(1200px, 100vw − 30px). Result: post 288 / 371 / 458 /
+   470px at 768 / 992 / 1200 / 1440. The text top aligns with the post. Mobile is
+   unchanged (stacked).
+   Articles the source splits differently can use a variant: `Embed Instagram
+   (col-4)` → 4 | 8 (robin-montgomery), `(col-6)` → 6 | 6 (realize-the-dream). */
+@media (width >= 768px) {
+  main > .section.split-left:has(.embed-instagram) {
+    grid-template-columns: 5fr 7fr;
+    column-gap: 0;
+  }
+
+  main > .section.split-left:has(.embed-instagram.col-4) {
+    grid-template-columns: 4fr 8fr;
+  }
+
+  main > .section.split-left:has(.embed-instagram.col-6) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  main > .section.split-left:has(.embed-instagram) > div {
+    box-sizing: border-box;
+    padding-inline: 6px;
+  }
+
+  /* the text column starts level with the post (beats the global 40px
+     block→next-wrapper margin, hence the matching sibling selector) */
+  main > .section.split-left:has(.embed-instagram) > div[class$='-wrapper'] + div.default-content-wrapper,
+  main > .section.split-left:has(.embed-instagram) > div[class$='-wrapper'] + div.default-content-wrapper > :first-child {
+    margin-top: 0;
+  }
+
+  .section.split-left .embed-instagram .embed-instagram-embed {
+    justify-content: flex-start;
+  }
+
+  /* source iframe: width 100% of the column incl. its 1px border (border-box),
+     12px bottom margin */
+  .section.split-left .embed-instagram .instagram-media {
+    box-sizing: border-box !important;
+    max-width: none !important;
+    margin: 0 0 12px !important;
+  }
+}
+
+@media (width >= 992px) {
+  main > .section.split-left:has(.embed-instagram) {
+    max-width: min(1200px, calc(100vw - 30px));
+  }
+
+  main > .section.split-left:has(.embed-instagram) > div {
+    padding-inline: 15px;
+  }
+}

@@ -195,13 +195,6 @@ var CustomImportScript = (() => {
       [""]
     ], document);
   }
-  function buildReactionsBlock(document) {
-    return WebImporter.DOMUtils.createTable([
-      ["Custom Widget Reactions"],
-      ["Reactions"],
-      ["Be the first to add a reaction"]
-    ], document);
-  }
   function buildTweetBlock(document, blockquote) {
     const paras = [...blockquote.querySelectorAll(":scope > p")];
     const bodyCell = document.createElement("div");
@@ -586,7 +579,7 @@ var CustomImportScript = (() => {
     });
     return built;
   }
-  var OUR_BLOCK_NAMES = /^(columns|social|cards|table|video embed|embed instagram|quote|custom widget reactions|section metadata|metadata)\b/i;
+  var OUR_BLOCK_NAMES = /^(columns|social|cards|table|video embed|embed instagram|quote|section metadata|metadata)\b/i;
   function flattenLayoutTables(document, root) {
     const layout = [...root.querySelectorAll("table")].filter((t) => {
       const firstCell = t.querySelector("th, td");
@@ -723,7 +716,6 @@ var CustomImportScript = (() => {
       if (tweetCount) emittedBlocks.push(`quote-tweet\xD7${tweetCount}`);
       if (igCount) emittedBlocks.push(`embed-instagram\xD7${igCount}`);
       if (main.querySelector(".socialmediasharing")) emittedBlocks.push("social");
-      if (main.querySelector(".reactions")) emittedBlocks.push("reactions");
       const descP = [...main.querySelectorAll("p")].find((p) => {
         if (p.querySelector("picture, img, a[href]") && (p.textContent || "").trim().length < 60) return false;
         if (p.closest("ul")) return false;
@@ -766,10 +758,7 @@ var CustomImportScript = (() => {
         const align = shareEl.classList.contains("position-right") ? "right" : "left";
         shareEl.replaceWith(buildSocialBlock(document, align));
       }
-      const reactionsEl = main.querySelector(".reactions");
-      if (reactionsEl) {
-        reactionsEl.replaceWith(buildReactionsBlock(document));
-      }
+      main.querySelector(".reactions")?.remove();
       const relatedHeading = [...main.querySelectorAll("h2")].find((h) => /related articles/i.test(h.textContent));
       const relatedUl = relatedHeading ? [...main.querySelectorAll("ul")].find((ul) => ul.querySelector('li a[href*="/news/"], li a[href]')) : null;
       if (relatedUl) {
