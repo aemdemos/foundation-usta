@@ -218,6 +218,53 @@
   }
 }
 
+/* 2-column directory — the redesigned Board tab (Advisory Board | Honorary
+   Board). Source: two equal halves of the panel, everything CENTERED, columns
+   inset 8px (mobile) / 12px (768) / 30px (992+) with the heading 26px below the
+   column top, and a 2px #979797 divider down the full height between them. */
+.table.directory.table-directory-2-cols {
+  gap: 0;
+  text-align: center;
+}
+
+.table.directory.table-directory-2-cols .table-directory-col {
+  padding: 26px 8px 16px;
+}
+
+@media (width >= 768px) {
+  .table.directory.table-directory-2-cols {
+    gap: 0;
+  }
+
+  .table.directory.table-directory-2-cols .table-directory-col {
+    padding-inline: 12px;
+  }
+
+  .table.directory.table-directory-2-cols .table-directory-col + .table-directory-col {
+    margin-left: 0;
+    border-left: 0;
+  }
+
+  /* divider = an overlay on the right edge of the column that has a neighbour
+     (source: a 2px ::after on the Advisory column) — takes no layout space */
+  .table.directory.table-directory-2-cols .table-directory-col:has(+ .table-directory-col) {
+    position: relative;
+  }
+
+  .table.directory.table-directory-2-cols .table-directory-col:has(+ .table-directory-col)::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 0 auto;
+    border-left: 2px solid #979797;
+  }
+}
+
+@media (width >= 992px) {
+  .table.directory.table-directory-2-cols .table-directory-col {
+    padding-inline: 30px;
+  }
+}
+
 /* ==================================================================
    Single-column LIST table (news winners grouped by grade/category). Built by
    table.js as `.table-list > .table-list-group` — one group per row (a header

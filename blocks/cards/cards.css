@@ -785,6 +785,183 @@ main .section:has(.cards.profile) .default-content-wrapper p {
   line-height: 24px;
 }
 
+/* ------------------------------------------------------------------
+   Board of Directors tab (leadership-and-staff #tab=boardofdirectors) — the
+   redesigned source, measured live at 375/768/992/1200/1440:
+     <h3> band "Board of Directors" → `cards (profile, bio)` (2 big cards)
+     <p><strong> band "Officers and Directors" → `columns (profile)` (12 rows,
+       styled in columns.css)
+     `table (directory)` (Advisory | Honorary, see table.css)
+   Source panel = our content column inset 4px (mobile, 328) / 6px (768, 708) /
+   15px from 992 (the global 15px gutter: 962 → 1170), so every band, card and
+   row lands on the source's x/width.
+   Tab bar → first band: source 62px (mobile) / 78px (768+) = the tab panel's
+   own 32px top margin + the section padding below.
+   ------------------------------------------------------------------ */
+main .section:has(.cards.profile.bio) {
+  padding-top: 30px;
+}
+
+main .section:has(.cards.profile.bio) > div {
+  box-sizing: border-box;
+  padding-inline: 4px;
+}
+
+main .section:has(.cards.profile.bio) .default-content-wrapper {
+  max-width: 336px;
+  margin-inline: auto;
+}
+
+/* Wrapper rhythm: band → cards 8px; cards → next band 152px; officer rows →
+   directory 48px (mobile) / 80px (768+) */
+main .section:has(.cards.profile.bio) > .default-content-wrapper + .cards-wrapper {
+  margin-top: 8px;
+}
+
+main .section:has(.cards.profile.bio) > .cards-wrapper + .default-content-wrapper {
+  margin-top: 152px;
+}
+
+main .section:has(.cards.profile.bio) > :is(.cards-wrapper, .columns-wrapper) + .table-wrapper {
+  margin-top: 48px;
+}
+
+/* Band — source: 40px #e2f7ff bar, 18/24 bold Graphik Regular, centered, black */
+main .section:has(.cards.profile.bio) .default-content-wrapper h3 {
+  margin: 0;
+  padding: 8px 0;
+  background-color: var(--section-blue-bg);
+  font-family: var(--body-font-family);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+  text-align: center;
+  color: #000;
+}
+
+@media (width >= 768px) {
+  main .section:has(.cards.profile.bio) {
+    padding-top: 46px;
+  }
+
+  main .section:has(.cards.profile.bio) > :is(.cards-wrapper, .columns-wrapper) + .table-wrapper {
+    margin-top: 80px;
+  }
+
+  main .section:has(.cards.profile.bio) > div {
+    padding-inline: 6px;
+  }
+
+  main .section:has(.cards.profile.bio) .default-content-wrapper {
+    max-width: 720px;
+  }
+}
+
+@media (width >= 992px) {
+  main .section:has(.cards.profile.bio) > div {
+    padding-inline: 15px;
+  }
+
+  main .section:has(.cards.profile.bio) .default-content-wrapper {
+    max-width: 1200px;
+  }
+}
+
+/* cards-profile bio — the two Board cards: undo the staff white-card look;
+   1-up mobile → 2-up from 768. Each card: a 16px top/bottom inset, the photo
+   (288 → 384px tall, 24px corners), 25px gap, then the #e5e5e5 grey box (name
+   22 → 28 Graphik Semibold, bold role, bio). Cards in a row share a height. */
+.cards.profile.bio > ul {
+  max-width: none;
+  padding: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.cards.profile.bio > ul > li {
+  box-sizing: border-box;
+  justify-self: stretch;
+  width: auto;
+  max-width: none;
+  padding: 16px 4px;
+  overflow: visible;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.cards.profile.bio .cards-profile-card-image img {
+  height: 288px;
+  aspect-ratio: auto;
+  object-position: 50% 50%;
+  border-radius: 24px;
+}
+
+.cards.profile.bio .cards-profile-card-body {
+  flex: 1;
+  margin-top: 25px;
+  padding: 24px 8px;
+  background-color: #e5e5e5;
+  border-radius: 24px;
+}
+
+.cards.profile.bio > ul > li .cards-profile-card-body h4 {
+  margin: 0 0 24px;
+  font-size: 22px;
+  line-height: 24.2px;
+  font-weight: 500;
+}
+
+.cards.profile.bio .cards-profile-card-body p {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-style: normal;
+}
+
+.cards.profile.bio .cards-profile-card-body p::before {
+  content: none;
+}
+
+@media (width >= 768px) {
+  .cards.profile.bio > ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cards.profile.bio > ul > li {
+    padding: 16px 6px;
+  }
+
+  .cards.profile.bio .cards-profile-card-image img {
+    height: 384px;
+  }
+
+  .cards.profile.bio .cards-profile-card-body {
+    padding: 40px 12px;
+  }
+
+  .cards.profile.bio > ul > li .cards-profile-card-body h4 {
+    font-size: 28px;
+    line-height: 30.8px;
+  }
+
+  .cards.profile.bio .cards-profile-card-body p {
+    font-size: 18px;
+  }
+}
+
+@media (width >= 992px) {
+  .cards.profile.bio > ul > li {
+    padding: 16px 15px;
+  }
+
+  .cards.profile.bio .cards-profile-card-body {
+    padding: 40px 30px;
+  }
+}
+
 /* cards-stats — 4-up stat cards on the cream band: circular photo + a large
    stat number (90px Graphik XXCond Bold) + a caption (18px Graphik Semibold).
    Values from source computed styles (our-impact.html) at 390/768/992/1200.
