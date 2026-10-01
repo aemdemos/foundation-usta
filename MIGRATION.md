@@ -4069,3 +4069,23 @@ block on aem.page or aem.live, and **0/88** pages in the live query-index use it
   in the preview browser on 2023-njtl-essay-contest-winners: **0 violations** (the reactions target-size issue is gone).
   Published news pages render with no console errors, share bar → Related Articles 61px @1440, 3 cards, no overflow.
 - Code change deploys via git push (not yet committed).
+
+### 2026-10-01 — hero `text-up`: no-CTA height (special-funds)
+
+- **Issue:** the special-funds hero (h1 + subhead, **no buttons**) was ~170–210px shorter than the source
+  (466/754/730/620/596 vs source 678/926/926/816/792 @390/768/992/1280/1440). The top framing (48px / 80px) already
+  matched; the source keeps a much taller band under the subhead (empty spacer components in its hero container).
+- **Fix (`blocks/hero/hero.css`, text-up only):** `.hero.text-up.block:not(:has(.button-container))` →
+  `padding-bottom: 356px` mobile / `468px` ≥768 (measured subhead-bottom→hero-bottom on the source). Heroes that have a CTA
+  (who-we-are, get-involved, what-we-do, YPI `tall`, college-scholarship) don't match the selector and are unchanged. Special-funds is
+  currently the only no-CTA text-up hero.
+- **Text panel (same no-CTA scope):** a sweep from 320 to 1920 still showed −143/−59/−24/+24px at 320/430–600/768 because
+  the h1/subhead wrapped differently. The source special-funds panel is **50vw wide at 8.333vw left on mobile too** (not
+  the CTA heroes' 56vw at 32px), with a **4px** inner gutter below 768, **6px** at 768–991 and the shared **15px** from 992
+  (h1 L31/W152 @320, L36/W187 @390, L70/W372 @768, L81/W438 @900, L98/W466 @992). Matched with
+  `:not(:has(.button-container)) > div` / `> div > div` rules.
+- **Result:** hero height matches the source **exactly (0px diff) at all 27 widths swept**: 320, 360, 375, 390, 414, 430,
+  480, 540, 600, 700, 767, 768, 800, 850, 900, 950, 991, 992, 1024, 1100, 1199, 1200, 1280, 1366, 1440, 1600 and 1920
+  (e.g. 821@320, 678@390, 571@767, 926@768–1100, 816@1199–1366, 792@1440–1600, 682@1920). Heights for who-we-are,
+  get-involved, what-we-do and YPI re-checked at 390/768/992/1280/1440: unchanged.
+- **Gates:** lint 0 errors (7 pre-existing warnings) · breakpoint ✓ · check:overflow ✓ · test:a11y ✓.
