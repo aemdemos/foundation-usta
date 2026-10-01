@@ -96,35 +96,45 @@
 }
 
 /* From 768: cards across the shared grid, left-aligned text. Column-gap uses the
-   site --grid-gap so cards land on the 12-col lines. The grid ADAPTS to the card
-   count so the row always fills the full width (no empty trailing slot): a 3-card
-   feed spreads 3-up, a 4-card feed is 4-up. Default = 4-up. */
+   site --grid-gap so cards land on the 12-col lines. Default = 4-up. */
 @media (width >= 768px) {
   .cards.content > ul {
+    --cards-content-gap: 12px; /* source column gap at the 768 tier (image 168) */
+
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 32px 12px; /* source column gap is 12px at the 768 tier (image 168) */
+    gap: 32px var(--cards-content-gap);
     padding: 32px 0;
-  }
-
-  /* exactly 3 cards → 3-up spread */
-  .cards.content > ul:has(> li:nth-child(3):last-child) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  /* exactly 2 cards → 2-up spread */
-  .cards.content > ul:has(> li:nth-child(2):last-child) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cards.content > ul > li {
     text-align: left;
+  }
+
+  /* Fewer than 4 cards (get-involved "Signature Events" = 3): the source keeps
+     each card at its 4-up width (an AEM 3/12 column: 25% of the row, half-gap
+     padding each side) and distributes the columns with space-around — cards do
+     NOT stretch to fill the row (source 1440: 270 wide at x185/585/985). Mirror
+     that: widen the list by one gap, 25% tracks, padded items, space-around. */
+  .cards.content > ul:has(> li:nth-child(3):last-child),
+  .cards.content > ul:has(> li:nth-child(2):last-child) {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 25%;
+    justify-content: space-around;
+    column-gap: 0;
+    margin-inline: calc(var(--cards-content-gap) / -2);
+  }
+
+  .cards.content > ul:has(> li:nth-child(3):last-child) > li,
+  .cards.content > ul:has(> li:nth-child(2):last-child) > li {
+    padding-inline: calc(var(--cards-content-gap) / 2);
   }
 }
 
 /* From 992 the source column gap opens to 30px (image 203 → 255). */
 @media (width >= 992px) {
   .cards.content > ul {
-    gap: 32px var(--grid-gap);
+    --cards-content-gap: var(--grid-gap);
   }
 }
 
