@@ -161,18 +161,9 @@
   text-decoration: none;
 }
 
+/* source: hover only darkens the color — no underline */
 .quote.tweet a:hover {
   color: var(--link-hover-color);
-  text-decoration: underline;
-}
-
-/* Inline links inside the tweet body sit within a text block, so they must be
-   distinguished by more than color (WCAG link-in-text-block); underline them.
-   (The source uses color-only links — a source a11y quirk; we underline the
-   in-text ones to pass axe, a minimal, defensible deviation.) The standalone
-   handle/date links are their own line and stay clean. */
-.quote.tweet .quote-tweet-body a:any-link {
-  text-decoration: underline;
 }
 
 @media (width >= 768px) {

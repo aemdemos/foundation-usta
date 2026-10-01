@@ -3890,6 +3890,52 @@ After the first pass, the user reported bad spacing on the hero library page. A 
 - Gates: lint 0 errors · stylelint ✓ · breakpoint ✓ · axe (project config) 0 serious/critical violations on hero,
   cards, columns, toc-profile, spacer, quote and table library pages, and the label passes color-contrast.
 
+### 2026-09-29 — Default-content CTA buttons: bold + italic + subscript / superscript (`cta-button`)
+Authors needed a way to put the site's real CTA buttons in DEFAULT content (until now only blocks had them).
+**Per user direction, the existing link → button rules are UNCHANGED:** bold → `.button.primary`, italic →
+`.button.secondary`, bold+italic → `.button.accent` keep their original boilerplate styles and the `body.general`
+blue override. (A first pass restyled those globally; the user asked to keep them as-is and ADD new options, so
+it was reverted.) The new options sit on top:
+- **Authoring contract (standalone link, alone in its paragraph):**
+  | Authored | Class | Look (source origin) |
+  |---|---|---|
+  | bold + italic + **subscript** | `.cta-button.cta-blue` | solid brand-blue CTA, 40px, 3px radius, 18px Graphik Semibold 400 uppercase, 1px tracking (hero/columns/general LEARN MORE) |
+  | bold + italic + **superscript** | `.cta-button.cta-black` | black, fully rounded 56px CTA (hero-error BACK TO HOMEPAGE) |
+- **scripts.js `decorateButtons()`:** the bold+italic+mark check runs BEFORE the existing branches, so plain
+  bold/italic/bold+italic are untouched. **Gotcha (verified on real aem.page output):** DA/aem.page emits sub/sup
+  **inside** the link (`<em><strong><a><sub>Label</sub></a></strong></em>`), so the check looks both up
+  (`closest`) and down (`querySelector`). It unwraps every formatting wrapper between `<p>` and `<a>` (any nesting
+  order) and strips the inner marks, so the label isn't shrunk or raised. Mark → class map: `CTA_BUTTON_STYLES`.
+- **Iterations (user decisions, same day):** v1 had three styles: subscript → blue, superscript → `.cta-link`
+  (uppercase underlined READ MORE text CTA), strikethrough → black. The text-link style was dropped: it's a link
+  style, not a button, and on the source it only appears inside cards-news / related-articles, which style it
+  themselves. Then the black button moved from strikethrough to **superscript** and strikethrough was dropped.
+  Bold + italic + strikethrough now falls through to the existing bold + italic `.button.accent` behaviour (the
+  `<del>` stays around the link). Library page + block sample updated to match.
+- **styles.css:** a separate `a.cta-button` class (not `.button`), so none of the existing `.button` rules, theme
+  overrides or block resets can interact with it. Visible `:focus-visible` outline. Labels wrap on narrow screens.
+- **news.css:** the article inline-link color rule (`…default-content-wrapper a`, 0,2,3) would paint cta text blue
+  on blue. It's now `a:where(:not(.cta-button))`. `:where` keeps the original specificity (a plain `:not` tripped
+  `no-descending-specificity`), and every existing link still matches.
+- **DA Block Library:** `/.da/library/blocks/buttons` has Blue Button / Black Button, one
+  section each (formatted link + `library-metadata` label). Added `{"name":"Buttons"}` to
+  `/.da/library/blocks.json` (15 entries). GET → merge → POST kept the `options` sheet. The config `library` sheet
+  already points at that index (unchanged). Page previewed, not published. Local copy + pre-change index backup:
+  `migration-work/da-lib/`. Nit: the page has no h1, so its auto title/breadcrumb reads "<sub>Learn More</sub>";
+  this only shows on the library preview page.
+- **Block sample:** `/drafts/block-samples/buttons` uploaded to DA and previewed (same scaffold as the other samples:
+  spacer → h1 intro + Source → spacer → one section per variant (label paragraph, Source, the button) → spacer →
+  metadata Title "Buttons — Block Sample" + noindex). Renders all 3 correctly. Source links stay plain links.
+  axe 0 violations, no overflow. Added to `tests/a11y/a11y.config.js` urls. There is NO local
+  `content/drafts/block-samples/buttons.plain.html` (content files aren't hand-written); the dev server serves the
+  page from aem.page preview. DA source copy: `migration-work/da-lib/sample-buttons.html`.
+- **Verified:** lint 0 errors (7 pre-existing warnings) · stylelint news.css ✓ · breakpoint ✓. The library page
+  decorates all 3 from real aem.page markup. Measured 157×40 blue / 95×24 text / 252×56 black. No overflow at
+  320/768/1440 on the library page and on a news article with the 3 injected. axe (project config): 0 violations
+  except the pre-existing reactions-widget target-size. Existing buttons (who-we-are, /404, hero-error, home) match
+  the original values exactly. No existing content uses sub/sup/strike on a standalone link. `test:a11y` /
+  `check:overflow` / `check:typography` still can't launch (Playwright headless-shell mismatch); the checks were
+  run in the preview browser.
 ### 2026-09-29 — Home: blue strip above "Your support makes a difference" merged into the band (parity fix)
 Reported on aem.page: the 17px light-blue strip (a `spacer` block) was not visible; it ran straight into the
 light-blue support band below. Removing the band's padding in devtools revealed the strip but left far too much space.
@@ -3940,3 +3986,105 @@ spreads the columns with `justify-content: space-around`.
   `test:a11y` could not launch (Playwright expects chromium_headless_shell-1187, which is not installed). I measured in
   the preview browser instead: 0px horizontal overflow at 320/390/767/768/991/992/1199/1200/1440/1920. CSS-only, with
   no markup changes.
+### 2026-09-29 — Section `background` options: one name per color (`light-blue-bg`/`cream-yellow-bg` → `section-*-bg`)
+The DA library Section Metadata `background` options (added in #28) used their own names for two colors that already
+had tokens: `light-blue-bg` painted `--section-blue-bg` and `cream-yellow-bg` painted `--section-yellow-bg`. Now every
+option name matches the token it paints: `section-blue-bg`, `section-yellow-bg`, `sage-grey-bg`, `pale-grey-bg`.
+- **Code (styles.css):** `main .section.light-blue-bg` → `.section-blue-bg`, `.cream-yellow-bg` → `.section-yellow-bg`.
+  No other references in code or local content. These classes are separate from the `section-blue` / `section-yellow`
+  section STYLES, which also set padding.
+- **HOW IT WIRES (gotcha):** `applySectionBackgrounds()` in scripts.js reads `/.da/library/blocks.json` → options → key
+  `background` (`name=#hex | …`) and adds the matching option NAME as the section class. The CSS rule name must
+  therefore equal the option name in the DA sheet. **The DA sheet must be renamed at the same time:**
+  `sage-grey-bg=#dcdfcf | section-blue-bg=#e2f7ff | section-yellow-bg=#ffefbe | pale-grey-bg=#eef0f0`.
+- **Validated locally** by mocking the sheet and injecting test sections (every name and every hex):
+  - New sheet: all 4 names and both hexes get the right class and color (e2f7ff / ffefbe / dcdfcf / eef0f0).
+  - Current sheet (old names): blue and yellow render transparent, because the classes are `light-blue-bg` and
+    `cream-yellow-bg`, which no longer have rules. So deploy the code and the sheet rename together.
+  - A section authored with the old NAME stops matching once the sheet is renamed. Authoring by hex still works. No
+    local content uses the option.
+- Gates: lint 0 errors (7 pre-existing warnings) · stylelint ✓ · breakpoint ✓.
+
+### 2026-10-01 — Tweet link hover + link tooltips (issue EDS-51)
+- **Tweet (quote.tweet) hover:** source hover only darkens the color (#0357b8 → #23527c), no underline (measured on
+  carol-ngounoue-runner-up-wimbledon-event). Removed `text-decoration: underline` from `.quote.tweet a:hover`. Note
+  `.quote.tweet a:any-link` (0,3,1) outranks the global `a:hover` underline, so links stay un-underlined.
+- **Tooltips:** source sets no `title` on any link. Removed the boilerplate `a.title = a.title || a.textContent` from
+  `decorateButtons()` (scripts.js) and the redundant `title` on social share buttons (they keep `aria-label`).
+- **Known a11y deviation (pre-existing since 6d6985d):** tweet inline links are color-only, so axe flags
+  `link-in-text-block` (serious). This matches the source; the underline was removed on request.
+### 2026-09-30 — Reactions block removal: generic `remove-block` script + first news page
+Customer wants the `custom-widget-reactions` block ("Reactions" + emoji row + "Be the first to add a reaction")
+removed from ALL news pages (62 of the 73 local news pages carry it). Done page by page on the LOCAL content (no
+importer re-run); the author uploads each page to DA.
+- **Script:** `node tools/content/remove-block.mjs [--dry-run] <block-name> <page> [...pages]` (page = path under
+  `content/`, with or without `.plain.html`). Generic, reusable for any block. It matches the block by its FIRST class
+  token (so variants match, and `custom-widget-reactions-other` does not), removes the whole balanced `<div>` subtree,
+  and is idempotent (a page without the block is reported and left alone). No dependencies (a tag-balancing
+  scanner, not a DOM library).
+- **Gotcha (caught on the first run and fixed):** the v1 script also dropped every section left "empty" (only
+  whitespace + section-metadata). That deleted the **Related Articles** section, which in the document is ONLY
+  `section-metadata: style = related-articles` because the news template fills in the feed at runtime. Now it only
+  removes a section that HELD the removed block and has nothing left; sections that were metadata-only to begin with
+  are never touched. The page was restored from the backup and re-run.
+- **First page:** `en/home/news/2023-njtl-essay-contest-winners`. The diff removes only the reactions table.
+  Backup: `migration-work/reactions-removal/2023-njtl-essay-contest-winners.before.plain.html`.
+- **Local preview path (gotcha):** the dev server mounts local content at `/content/…`
+  (`/content/en/home/news/<slug>`); `/en/home/news/<slug>` is proxied from aem.page (DA), so it keeps showing the
+  block until the page is uploaded to DA and previewed.
+- **Verified (local preview):** no reactions block; share bar → Related Articles 61px @1440 and @768, 40px @390. The
+  desktop gap equals a news page that never had the block (frances-tiafoe-fund-surpasses-1-million-raised: 61px).
+  Related Articles still renders 3 cards; no horizontal overflow at 390/768/1440.
+- **Gates:** `npx eslint tools/content/remove-block.mjs` 0 problems (`npm run lint` doesn't pick up `.mjs`) ·
+  `npm run lint` 0 errors (7 pre-existing warnings) · breakpoint-check ✓. No CSS/JS change to the site.
+- **Next:** run the script on the remaining 61 pages (page by page, as agreed), then retire the block code
+  (`blocks/custom-widget-reactions/`), its block sample and its DA library entry once no page uses it.
+- **Page 2:** `en/home/news/black-history-month-2026-community-impact-hub-leader-john-borde` — only the reactions
+  table removed (backup in `migration-work/reactions-removal/`). Verified: share bar → Related Articles 40/61/61px
+  @390/768/1440, 3 related cards, no overflow. 60 pages remain.
+- **Batch 1 (10 pages, alphabetical):** carol-ngounoue-runner-up-wimbledon-event, chris-evert-honored-espn-sports-humanitarian-awards,
+  chris-evert-honored-espys-usta-foundation-work, chris-evert-usta-foundation-much-more,
+  clervie-ngounoue-first-junior-grand-slam-australia, clervie-ngounoue-wins-first-junior-grand-slam-australian-open,
+  daymond-john-and-matt-ebert-share-wisdom-with-usta-foundation-s, delray-beach-youth-tennis-foundation-athletes-hit-the-court-with,
+  desert-smash-brings-together-hollywood-and-pro-tennis-to-benefit, espn-chris-mckendry-supports-usta-foundation.
+  Integrity check `migration-work/reactions-removal/verify-removal.mjs` (the ONLY diff vs the backup is one contiguous
+  reactions table; related-articles metadata kept): 10/10 OK (plus pages 1–2 re-checked OK). Preview: every page ends
+  with the share bar → Related Articles (3 cards), 40/61/61px @390/768/1440, no overflow. List: `batch-1.txt`.
+  **50 pages remain.**
+- **Batch 2 (ALL remaining 50 pages, per user "do for all"):** list in `migration-work/reactions-removal/batch-2.txt`.
+  Every page had exactly ONE reactions table; `verify-removal.mjs` 50/50 OK (only that table removed, no sections
+  dropped, related-articles metadata kept). **0 local news pages now contain `custom-widget-reactions`** (62/62 done).
+  Preview (390/768/1440): no reactions anywhere, no overflow on any page. The "flags" were all pre-existing and unrelated:
+  - 6 pages never had a `social` share bar, so the article ends with text or columns before Related Articles (same
+    40/61px gap): laver-cup-launches-2025-…, usta-foundation-launches-community-impact-hub-initiative,
+    usta-foundation-launches-williams-family-excellence-program-at-2, usta-foundation-scholarship-recipients-meet-billie-jean-king-at
+    (ends in columns), usta-foundation-to-celebrate-winners-of-2025-…, usta-foundation-to-honor-andre-agassi-….
+  - `usta-foundation-receives-transformative-2-7-million-gift-from-t`: the LOCAL file has its `metadata` table INSIDE the
+    related-articles section (not its own last section; the only news page like this). So the LOCAL preview treats it as a
+    block (404 `blocks/metadata`), template/`pages` meta aren't applied, and Related Articles shows 0 cards. Pre-existing:
+    untouched by the removal. The DA/aem.page version renders fine (template news, 3 static related cards), because
+    DA extracts the metadata table wherever it sits.
+  - `njtl-essay-grant-recipients-2020` has the Evert "Rally to Rebuild" content. Correct: the source URL 301-redirects
+    to `evert-speaks-on-rally-to-rebuild`.
+- **Next:** author uploads the 62 pages to DA. Once live content no longer uses it, retire `blocks/custom-widget-reactions/`,
+  its block sample (`drafts/block-samples/custom-widget-reactions`) and its DA library entry.
+
+### 2026-09-30 — `custom-widget-reactions` block RETIRED (code removed)
+The author previewed + published all 62 cleaned news pages. Verified before deleting any code: **0/62** news pages contain the
+block on aem.page or aem.live, and **0/88** pages in the live query-index use it.
+- **Removed:** `blocks/custom-widget-reactions/` (js + css) and its 6 emoji icons (`icons/Clap|Light_Bulb|Love|Smile|
+  Thumbs_Down|Thumbs_Up.svg`). Nothing else referenced them. Dropped its sample URL from `tests/a11y/a11y.config.js`.
+- **News importer** (`tools/importer/import-news-v1.js` + the matching lines in `.bundle.js`, hand-mirrored and
+  `node --check` OK): the source `div.reactions` widget is now DROPPED (`?.remove()`), not converted. Also removed
+  `buildReactionsBlock()`, the `reactions` import-report entry, and `custom widget reactions` from `OUR_BLOCK_NAMES`. A
+  re-import can't bring the block back. `tools/importer/backups/news/` is left as the historical known-good snapshot.
+- **Still in DA (author's step; the code is gone, so these would render the raw rows as text):**
+  `/drafts/block-samples/custom-widget-reactions` (published) and `/.da/library/blocks/custom-widget-reactions`
+  + its "Custom Widget Reactions" row in `/.da/library/blocks.json`. The local sample copy stays (content deletion
+  isn't allowed from this environment). Personal drafts under `drafts/rusmeen|shivani|date-fix-validation` still carry
+  the table too (not live pages).
+- **Gates:** `npm run lint` 0 errors (7 pre-existing warnings) · eslint importer + remove-block 0 problems · breakpoint ✓ ·
+  `check:svg` ✓. `test:a11y` still can't launch (headless-shell-1187 missing), so the same axe-core WCAG 2.x A/AA scan was run
+  in the preview browser on 2023-njtl-essay-contest-winners: **0 violations** (the reactions target-size issue is gone).
+  Published news pages render with no console errors, share bar → Related Articles 61px @1440, 3 cards, no overflow.
+- Code change deploys via git push (not yet committed).

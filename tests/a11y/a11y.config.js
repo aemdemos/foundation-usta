@@ -62,7 +62,6 @@ export default {
     '/drafts/block-samples/custom-content-related-articles',
     '/drafts/block-samples/embed-instagram',
     '/drafts/block-samples/video-embed',
-    '/drafts/block-samples/custom-widget-reactions',
     '/drafts/block-samples/donate-embed',
     // Homepage blocks (already live on /en/home) — sample pages for the library:
     '/drafts/block-samples/hero-banner',

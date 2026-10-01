@@ -72,12 +72,13 @@ body.news main .default-content-wrapper p {
   }
 }
 
-/* inline links in article body — brand blue, underline on hover */
-body.news main .default-content-wrapper a {
+/* inline links in article body — brand blue, underline on hover. Skip the
+   default-content `.cta-button`s, which set their own colors (styles.css). */
+body.news main .default-content-wrapper a:where(:not(.cta-button)) {
   color: var(--link-color, #0357b8);
 }
 
-body.news main .default-content-wrapper a:hover {
+body.news main .default-content-wrapper a:where(:not(.cta-button)):hover {
   text-decoration: underline;
 }
 
