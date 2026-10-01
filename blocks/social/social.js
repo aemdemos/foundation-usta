@@ -75,7 +75,6 @@ export default function decorate(block) {
     const el = document.createElement(isShare ? 'a' : 'button');
     el.className = `social-btn social-btn--${network}`;
     el.setAttribute('aria-label', LABELS[network]);
-    el.title = LABELS[network];
     el.innerHTML = ICONS[network];
 
     if (isShare) {
