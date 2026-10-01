@@ -638,3 +638,165 @@ main > .section.hero-container:has(.hero.banner) + .section.columns-container:ha
     margin: 0 15px;
   }
 }
+
+/* ==================================================================
+   columns-profile — person rows: [photo | name, title + bio]. One block row per
+   person. Source: leadership-and-staff #tab=boardofdirectors, "Officers and
+   Directors" (measured live at 375/768/992/1200/1440).
+     Mobile: stacked — photo (272 tall), 16px gap, grey box.
+     768+:  photo col 3/12 | grey box 9/12 of the panel; photo 256 tall,
+            vertically centred; the grey box stretches to the row.
+   Grey box height = content + bottom padding (47 / 40 / 63px). The source also
+   pads some bios with empty `&nbsp;` paragraphs (stripped by EDS); the 768+
+   min-height reproduces the rows those spacers bring to exactly 268 / 267px.
+   Typography (source h5 + p): name Graphik Semibold 500 20/22 → 22/24.2 from
+   768, black, left, 34px to the bio; bio Graphik Regular 400 16/24 → 18/24.
+   The section's lead-in paragraph (a bold label, authored <p><strong>…</strong></p>
+   as on the source) is the light-blue band (below).
+   ================================================================== */
+.columns.profile > div {
+  gap: 16px;
+  padding: 16px 0;
+}
+
+/* mobile insets: photo 2px each side, grey box flush left / 4px right */
+.columns.profile .columns-figure {
+  margin-inline: 2px;
+}
+
+.columns.profile .columns-figure img {
+  height: 272px;
+  object-fit: cover;
+  object-position: 50% 50%;
+  border-radius: 24px;
+}
+
+.columns.profile > div > div:not(.columns-img-col) {
+  margin-right: 4px;
+  padding: 34px 4px 47px;
+  background-color: #e5e5e5;
+  border-radius: 24px;
+}
+
+.columns.profile > div > div > h4 {
+  margin: 0 0 34px;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 20px;
+  line-height: 22px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-align: left;
+  text-transform: none;
+  color: #000;
+}
+
+.columns.profile > div > div > p {
+  margin: 0;
+  font-family: var(--body-font-family);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-align: left;
+  color: #000;
+}
+
+/* Source panel = our content column inset 4px (mobile 328) / 6px (768, 708) /
+   15px from 992 (the global gutter: 962 → 1170). */
+main .section:has(.columns.profile) > div {
+  box-sizing: border-box;
+  padding-inline: 4px;
+}
+
+/* Lead-in band — source: 40px #e2f7ff bar, label Graphik Regular bold 18/24,
+   black, centred; the first row starts 8px below it. */
+main .section:has(.columns.profile) .default-content-wrapper > p {
+  margin: 0;
+  padding: 8px 0;
+  background-color: var(--section-blue-bg);
+  font-family: var(--body-font-family);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-align: center;
+  text-transform: none;
+  color: #000;
+}
+
+/* the label itself is the bold run (source <b> = 700, not "bolder" 900) */
+main .section:has(.columns.profile) .default-content-wrapper > p strong {
+  font-weight: 700;
+}
+
+main .section:has(.columns.profile) > .default-content-wrapper + .columns-wrapper {
+  margin-top: 8px;
+}
+
+@media (width >= 768px) {
+  main .section:has(.columns.profile) > div {
+    padding-inline: 6px;
+  }
+
+  /* [4 | photo 25%−6 | 4 | text 75%−6 | 4] — the leading 4px is the photo
+     column's own padding so the % resolve against the full panel. */
+  .columns.profile > div {
+    display: grid;
+    grid-template-columns: calc(25% - 2px) calc(75% - 6px);
+    column-gap: 4px;
+    align-items: center;
+    padding: 16px 0;
+  }
+
+  .columns.profile > div > .columns-img-col {
+    display: flex;
+    align-items: center;
+    min-height: 268px;
+    padding-left: 4px;
+  }
+
+  .columns.profile .columns-figure {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .columns.profile .columns-figure img {
+    height: 256px;
+  }
+
+  .columns.profile > div > div:not(.columns-img-col) {
+    align-self: stretch;
+    margin-right: 0;
+    padding: 50px 6px 40px;
+  }
+
+  .columns.profile > div > div > h4 {
+    font-size: 22px;
+    line-height: 24.2px;
+  }
+
+  .columns.profile > div > div > p {
+    font-size: 18px;
+  }
+}
+
+@media (width >= 992px) {
+  main .section:has(.columns.profile) > div {
+    padding-inline: 15px;
+  }
+
+  /* [10 | photo 25%−14.5 | 10 | text 75%−14.5 | 9] */
+  .columns.profile > div {
+    grid-template-columns: calc(25% - 4.5px) calc(75% - 14.5px);
+    column-gap: 10px;
+  }
+
+  .columns.profile > div > .columns-img-col {
+    min-height: 267px;
+    padding-left: 10px;
+  }
+
+  .columns.profile > div > div:not(.columns-img-col) {
+    padding: 50px 15px 63px;
+  }
+}
