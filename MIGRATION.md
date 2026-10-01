@@ -4170,3 +4170,22 @@ Measured live at 390/768/992/1200/1440 (AEM containers, getBoundingClientRect + 
   the checker, or author the label as a `<p>` (source markup).
 - Gates: lint 0 errors (7 pre-existing warnings) · stylelint ✓ · breakpoint ✓ · check:overflow ✓ · test:a11y ✓
   (sample + leadership page) · check:typography ✗ on the sample only (the open item above).
+
+### 2026-10-01 — toc-profile: source-style tab deep links (`#tab=boardofdirectors` / `#tab=staff`)
+The source Leadership & Staff page deep-links its tabs with `#tab=<label, lowercase, no spaces>`. Measured
+behaviour on the source: a hash on load opens that tab; no/unknown hash → first tab; the URL is normalised to
+`#tab=staff` (history entry REPLACED, not added); clicking a tab rewrites the hash (no scroll, no new history
+entries); changing the hash on an open page switches tab. Ours only matched the exact section slug
+(`#board-of-directors`) on load, so the source links (`#tab=boardofdirectors`) fell back to Staff, and a hash change
+on an open page did nothing.
+- **`blocks/toc-profile/toc-profile.js`:** each entry gets a `key` = label slug without hyphens (`boardofdirectors`).
+  `entryFromHash()` accepts `#tab=<key>` (case-insensitive) AND the plain section anchor (`#board-of-directors`,
+  `#staff`). On load: hash tab or first tab, then `history.replaceState` to `#tab=<key>`. Tab links are now
+  `href="#tab=<key>"` (copy-link gives the source URL); click → show tab + `replaceState`. A `hashchange` listener
+  switches tab; unrelated hashes are ignored. `#…` hrefs are skipped by `openLinksInNewTab()`, so tabs stay in-page.
+- **Verified locally** (`/content/en/home/who-we-are/leadership-and-staff`): load with none / `#tab=boardofdirectors`
+  / `#tab=staff` / `#board-of-directors` / `#staff` / `#tab=BoardOfDirectors` / `#tab=nonsense` → correct tab and
+  panel every time, URL normalised to `#tab=…`; clicks add 0 history entries and don't scroll; hash changes switch
+  tab, unrelated hashes are ignored; the indicator settles under the active tab (x78, w224 for Board).
+- Gates: lint 0 errors (7 pre-existing warnings) · breakpoint ✓ · check:overflow ✓ · test:a11y ✓ (Board deep link
+  + default). Code-only; deploys via git push.

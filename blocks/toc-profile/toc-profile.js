@@ -17,6 +17,11 @@
  *   label | profile-anchor slug
  * where the slug is the target section's Section Metadata `profile-anchor`
  * (falls back to a slug of the label).
+ *
+ * Deep links match the source: `#tab=<label without spaces/punctuation>`
+ * (e.g. `#tab=boardofdirectors`, `#tab=staff`) opens that tab on load or on a
+ * hash change; the plain section anchor (`#board-of-directors`) works too. The
+ * URL is kept in the `#tab=` form as tabs change (history entry replaced).
  */
 
 function textOf(cell) {
@@ -30,6 +35,30 @@ function slugify(str) {
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
+}
+
+// compact tab key used in the source's deep links: "Board of Directors" → "boardofdirectors"
+function tabKey(str) {
+  return slugify(str).replace(/-/g, '');
+}
+
+/**
+ * Resolve a URL hash to an entry. Accepts the source's `#tab=<key>` form
+ * (`#tab=boardofdirectors`, `#tab=staff`) and the plain section anchor
+ * (`#board-of-directors`, `#staff`). Returns null for anything else.
+ */
+function entryFromHash(hash, entries) {
+  let value = (hash || '').replace(/^#/, '');
+  try {
+    value = decodeURIComponent(value);
+  } catch (e) {
+    return null;
+  }
+  value = value.replace(/^tab=/i, '');
+  if (!value) return null;
+  const key = tabKey(value);
+  return entries.find((entry) => entry.anchor === slugify(value)
+    || entry.key === key || tabKey(entry.anchor) === key) || null;
 }
 
 function findAnchorSection(slug) {
@@ -54,7 +83,7 @@ export default function decorate(block) {
     const label = textOf(cells[0]);
     if (!label) return;
     const anchor = slugify(textOf(cells[1])) || slugify(label);
-    entries.push({ label, anchor });
+    entries.push({ label, anchor, key: tabKey(label) });
   });
 
   if (!entries.length) return;
@@ -133,15 +162,25 @@ export default function decorate(block) {
     moveIndicator(activeLink);
   };
 
+  // Reflect the active tab in the URL like the source (`#tab=<key>`), replacing
+  // the current history entry (no back-button spam, no scroll jump).
+  const writeHash = (entry) => {
+    const hash = `#tab=${entry.key}`;
+    if (window.location.hash !== hash) {
+      window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}${hash}`);
+    }
+  };
+
   entries.forEach((entry) => {
     const link = document.createElement('a');
     link.className = 'toc-profile-item';
-    link.href = `#${entry.anchor}`;
+    link.href = `#tab=${entry.key}`;
     link.setAttribute('role', 'tab');
     link.textContent = entry.label;
     link.addEventListener('click', (e) => {
       e.preventDefault();
       setActive(entry.anchor);
+      writeHash(entry);
     });
     nav.append(link);
     links.set(entry.anchor, link);
@@ -178,11 +217,23 @@ export default function decorate(block) {
     moveIndicator(active);
   };
 
-  // Activate the first entry (shows its panel, hides the rest). If the URL hash
-  // names one of the panels, honour it (source deep-links via #tab=…).
-  const hashSlug = slugify((window.location.hash || '').replace(/^#(tab=)?/, ''));
-  const initial = panels.has(hashSlug) ? hashSlug : entries[0].anchor;
-  setActive(initial);
+  // Deep links (source behaviour): open the tab named in the URL hash, else the
+  // first tab, then normalise the URL to `#tab=<key>` — an unknown hash falls
+  // back to the first tab, exactly as the source does.
+  const fromHash = entryFromHash(window.location.hash, entries);
+  const initial = fromHash && panels.has(fromHash.anchor) ? fromHash : entries[0];
+  setActive(initial.anchor);
+  writeHash(initial);
+
+  // A hash change on the open page (address bar edit, in-page link, back/forward)
+  // switches tab too. Unrelated hashes are ignored.
+  window.addEventListener('hashchange', () => {
+    const entry = entryFromHash(window.location.hash, entries);
+    if (!entry || !panels.has(entry.anchor)) return;
+    setActive(entry.anchor);
+    writeHash(entry);
+  });
+
   requestAnimationFrame(syncIndicator);
   window.addEventListener('resize', syncIndicator, { passive: true });
   window.addEventListener('load', syncIndicator, { once: true });
