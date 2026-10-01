@@ -47,6 +47,7 @@ export default {
     '/drafts/block-samples/banner-stats-grid',
     '/drafts/block-samples/cards-tiles',
     '/drafts/block-samples/cards-profile',
+    '/drafts/block-samples/cards-profile-bio',
     '/drafts/block-samples/cards-stats',
     '/drafts/block-samples/cards-content',
     '/drafts/block-samples/cards-expand',

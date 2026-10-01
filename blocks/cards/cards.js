@@ -154,8 +154,12 @@ function decorateProfile(block) {
     });
     ul.append(li);
   });
+  // `bio` cards show a ~555px-wide photo on desktop, so offer a larger rendition there
+  const widths = block.classList.contains('bio')
+    ? [{ media: '(min-width: 768px)', width: '1200' }, { width: '750' }]
+    : [{ width: '750' }];
   ul.querySelectorAll('.cards-profile-card-image img').forEach((img) => {
-    const optimizedPic = createOptimizedPicture(img.src, img.alt, false, [{ width: '750' }]);
+    const optimizedPic = createOptimizedPicture(img.src, img.alt, false, widths);
     // replace the image (and its wrapping <p>, if any) with the optimized picture
     const wrapper = img.closest('picture') || img;
     const p = wrapper.closest('p');

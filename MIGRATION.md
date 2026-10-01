@@ -4108,3 +4108,65 @@ block on aem.page or aem.live, and **0/88** pages in the live query-index use it
   (e.g. 821@320, 678@390, 571@767, 926@768–1100, 816@1199–1366, 792@1440–1600, 682@1920). Heights for who-we-are,
   get-involved, what-we-do and YPI re-checked at 390/768/992/1280/1440: unchanged.
 - **Gates:** lint 0 errors (7 pre-existing warnings) · breakpoint ✓ · check:overflow ✓ · test:a11y ✓.
+
+### 2026-10-01 — cards `(profile, bio)`: Board of Directors leader cards matched to source
+The source Board tab (`leadership-and-staff.html#tab=boardofdirectors`) was redesigned: a light-blue "Board of
+Directors" label bar, then two leader cards, each a **rounded photo panel** above a separate **rounded grey text
+panel** (name, bold role, bio). The authored content already uses `Cards (profile, bio)` with an `<h3>` lead-in, but
+the block still rendered the old staff-tile look (shadowed white card, square photo, divider bars, italic text).
+Measured live at 390/768/992/1200/1440 (AEM containers, getBoundingClientRect + computed styles):
+- **Insets:** every wrapper in the section has a 4px (<768) / 6px (768–991) / 15px (≥992) side inset (= source
+  container padding, same value `columns.profile` already applies in this section). Cards are 1-up <768, 2-up ≥768;
+  each card column has 16px above the photo and 16px below the text panel, and a 4/6/15px inner inset, so photos
+  are 12px (768) / 30px (≥992) apart.
+- **Photo:** 288px (<768) / 384px (≥768) tall, cover-cropped, centred, 24px radius (source = background-image on a
+  fixed-padding container). JS offers a 1200px rendition from 768 (photo is 555px wide on desktop).
+- **Text panel:** 25px below the photo, #e5e5e5, 24px radius; text inset 24/8 (<768), 40/12 (768–991), 40/30 (≥992).
+  Name Graphik Semibold 22/24.2 → 28/30.8 @768; 24px gap (source empty `<p>`); role **bold** (source `<b>`,
+  synthetic bold on Graphik Regular) 16/24 → 18/24; bio 16/24 → 18/24; all #000. Panels in a row stretch to equal height.
+- **Label bar** (the `<h3>` directly before the block): `--section-blue-bg`, 40px (8px padding + 24px line), Graphik
+  Regular 18/24 #000 centred, spans the card row. Tab top → bar top 100px (<768) / 116px (≥768), via padding-top on
+  its wrapper (margin would collapse into the 32px panel margin); bar → photo 24px.
+- **Result:** every x/width matches the source at all 5 widths (e.g. @1200 bar 15/1170, photos 30 & 615 / 555×384,
+  text x60/495, panels 327). Heights match at 768/1200/1440.
+- **Known residual (content artifact, not CSS):** the source's Chris Evert card ends with an extra empty `<p>` (24px)
+  that our content doesn't have. At 992 the source rows are `align-items:center`, so its Chris card sits 12px lower and
+  is 24px shorter than Kathleen's; ours stretches both to 375. On mobile our Chris panel is 24px shorter (312 vs 336),
+  so everything below moves up 24px. Not reproduced: it depends on that one stray paragraph.
+- **Not touched (out of scope):** the "Officers and Directors" label (source = the same light-blue bar; ours is a bold
+  paragraph) and the gap after the card row (source ≈152px to the next bar @1200, ours 40px).
+- Files: `blocks/cards/cards.css` (new `.cards.profile.bio` section), `blocks/cards/cards.js` (bio image rendition).
+- **Gates:** lint 0 errors (7 pre-existing a11y no-console warnings) · stylelint ✓ · breakpoint ✓ · check:overflow ✓
+  (360/768/992/1200/1920) · check:typography ✓ · test:a11y ✓. Installed the missing Playwright
+  `chromium_headless_shell-1187` (`PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright install
+  chromium-headless-shell`), so these CLI gates run again. The gates load the default Staff tab; Board tab overflow
+  was checked in the preview browser: 0px at 390/768/992/1200/1440.
+- Code-only; deploys via git push. No content change needed (the page already authors `cards profile bio`).
+
+### 2026-10-01 — cards `(profile, bio)`: block sample + full typography parity audit
+- **Sample page:** `drafts/block-samples/cards-profile-bio` (scaffold: spacer → h1 intro + Source → spacer →
+  `<h3>Board of Directors</h3>` + `Cards (profile, bio)` → spacer → metadata). Built by a profile importer, not
+  hand-written: `tools/importer/import-sample-cards-profile-bio.js` (+ `.bundle.js`, URL list
+  `urls-sample-cards-profile-bio.txt`). It reads the source Board tab by `data-title` (works while the tab is hidden).
+  Each leader card = a `.full-width` column with a `[data-desktop-background-image]` photo panel and an `<h4>`; the
+  source's empty spacer `<p>`s are dropped, `<b>` role → `<strong>`. Photos localized via `localize-assets.mjs`
+  (2 images, 0 hotlinks; the source chris-evert.jpg is ~6 MB, served resized by EDS). Added to
+  `tests/a11y/a11y.config.js`. Completeness reads 41%, as expected (2 cards of a full page).
+- **Typography audit:** label, name, role, bio on both cards × 360/390/430/768/992/1200/1440/1920, comparing
+  family / size / weight / line-height / letter-spacing / color / align / transform / style / text width / height /
+  x,y offset inside the grey panel / line count / last word of every rendered line. Three real fixes:
+  1. Label bar weight 400 → **700**: source is `<p><b>Board of Directors</b></p>` (synthetic bold on Graphik
+     Regular, same as the role).
+  2. Name weight 400 → **500** (source computed value; single-cut Semibold face, no synthetic bold either way).
+  3. Text `align: start` → **left** (computed-value parity).
+  Result: **840/840 checks identical** to the source. Element screenshots at 390 + 1200 render the same.
+- **Env gotcha:** the repo's `npx playwright install` (build 1187) GARBAGE-COLLECTS other builds, which removed the
+  import runner's build 1208. Reinstall it with the runner's own CLI: from the excat `excat-content-import/scripts`
+  folder run `PLAYWRIGHT_BROWSERS_PATH=/ms-playwright node node_modules/playwright-core/cli.js install
+  chromium-headless-shell`. Both 1187 (quality gates) and 1208 (importer) are now installed.
+- **OPEN decision:** `check:typography` flags the label `<h3>` on the sample (12 drifts: 18/24 Graphik Regular vs the
+  h3 scale 36/56 XXCond). The source uses a `<p>` there, while our content authors an h3. The real page passes only
+  because the Board tab is hidden at load. Options: exempt a heading that leads a `cards (profile, bio)` block in
+  the checker, or author the label as a `<p>` (source markup).
+- Gates: lint 0 errors (7 pre-existing warnings) · stylelint ✓ · breakpoint ✓ · check:overflow ✓ · test:a11y ✓
+  (sample + leadership page) · check:typography ✗ on the sample only (the open item above).

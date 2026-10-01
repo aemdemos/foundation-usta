@@ -795,6 +795,204 @@ main .section:has(.cards.profile) .default-content-wrapper p {
   line-height: 24px;
 }
 
+/* cards (profile, bio) — Board of Directors leader cards: a rounded photo panel
+   above a separate rounded grey text panel (name, bold role, bio paragraph).
+   Source: leadership-and-staff.html#tab=boardofdirectors, measured live at
+   390/768/992/1200/1440.
+
+   Source geometry (AEM containers): each card column carries 8px + 8px vertical
+   padding (16px above the photo and below the text panel) and a side inset of
+   4px (<768) / 6px (768–991) / 15px (>=992), so the photo edges sit 4/6/15px in
+   from the content column and two cards are 12px / 30px apart. The photo panel
+   is a fixed 288px (<768) / 384px (>=768) tall, background-size: cover, centred,
+   24px radius. Photo → text panel = 25px. Text panel: #e5e5e5, 24px radius;
+   text inset 24px vertical / 8px side (<768), 40px / 12px (768–991),
+   40px / 30px (>=992). Name 22/24.2 → 28/30.8 @768 (Graphik Semibold, #000);
+   weight 500; 24px gap; role BOLD 16/24 → 18/24; bio regular 16/24 → 18/24;
+   all left-aligned.
+
+   The 4/6/15px column inset is applied to every wrapper of the section (same
+   value as the source container padding — and as `columns.profile`, which shares
+   this section), so the label band above and the card row share one edge. */
+main .section:has(.cards.profile.bio) > div {
+  box-sizing: border-box;
+  padding-inline: 4px;
+}
+
+.cards.profile.bio > ul {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.cards.profile.bio > ul > li {
+  box-sizing: border-box;
+  max-width: none;
+  padding: 16px 4px;
+  overflow: visible;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.cards.profile.bio .cards-profile-card-image img {
+  height: 288px;
+  aspect-ratio: auto;
+  object-position: 50% 50%;
+  border-radius: 24px;
+}
+
+.cards.profile.bio .cards-profile-card-body {
+  flex: 1 1 auto; /* equal-height text panels across a row */
+  margin-top: 25px;
+  text-align: left;
+  padding: 24px 8px;
+  background-color: #e5e5e5;
+  border-radius: 24px;
+}
+
+.cards.profile.bio .cards-profile-card-body h4 {
+  margin: 0;
+
+  /* source computes 500 on the single-cut Semibold face (no synthetic bold) */
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 24.2px;
+}
+
+.cards.profile.bio .cards-profile-card-body p {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-style: normal;
+}
+
+.cards.profile.bio .cards-profile-card-body p::before {
+  content: none;
+}
+
+/* the source leaves one blank 24px line between the name and the role */
+.cards.profile.bio .cards-profile-card-body h4 + p {
+  margin-top: 24px;
+}
+
+/* Lead-in heading directly above the bio cards ("Board of Directors"): the
+   source renders it as a light-blue label bar spanning the card row — 40px tall
+   (8px padding around a 24px line), text 18/24 Graphik Regular BOLD, black, centred,
+   with its edges 4px (<768) / 6px (768–991) / 0 (>=992) in from the content
+   column (the same inset as the card row). Band bottom → photo top = 24px. */
+main .section:has(.cards.profile.bio) > .default-content-wrapper:has(+ .cards-wrapper > .cards.profile.bio) {
+  max-width: 336px; /* back to the shared content column (the profile rules narrow it) */
+  margin-inline: auto;
+
+  /* tab strip → band: source tab top → band top = 100px (<768) / 116px (>=768);
+     padding (not margin, which would collapse into the section margin) adds the
+     difference on top of the 32px panel margin */
+  padding: 24px 4px 0;
+}
+
+main .section:has(.cards.profile.bio) > .default-content-wrapper:has(+ .cards-wrapper > .cards.profile.bio) :is(h2, h3, h4) {
+  margin: 0;
+  padding: 8px 4px;
+  background-color: var(--section-blue-bg);
+  font-family: var(--body-font-family);
+  font-size: 18px;
+
+  /* source label is <p><b>…</b></p>: synthetic bold on Graphik Regular, like the role */
+  font-weight: 700;
+  line-height: 24px;
+  color: #000;
+  text-align: center;
+}
+
+/* band → card row: 8px here + the card's own 16px top padding = the source's 24px */
+main .section > .default-content-wrapper + .cards-wrapper:has(> .cards.profile.bio) {
+  margin-top: 8px;
+}
+
+@media (width >= 768px) {
+  main .section:has(.cards.profile.bio) > div {
+    padding-inline: 6px;
+  }
+
+  .cards.profile.bio > ul {
+    max-width: none;
+    padding: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .cards.profile.bio > ul > li {
+    padding: 16px 6px;
+  }
+
+  .cards.profile.bio .cards-profile-card-image img {
+    height: 384px;
+  }
+
+  .cards.profile.bio .cards-profile-card-body {
+    padding: 40px 12px;
+  }
+
+  .cards.profile.bio .cards-profile-card-body h4 {
+    font-size: 28px;
+    line-height: 30.8px;
+  }
+
+  .cards.profile.bio .cards-profile-card-body p {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  main .section:has(.cards.profile.bio) > .default-content-wrapper:has(+ .cards-wrapper > .cards.profile.bio) {
+    max-width: 720px;
+    padding: 40px 6px 0;
+  }
+
+  main .section:has(.cards.profile.bio) > .default-content-wrapper:has(+ .cards-wrapper > .cards.profile.bio) :is(h2, h3, h4) {
+    padding-inline: 6px;
+  }
+}
+
+@media (width >= 992px) {
+  main .section:has(.cards.profile.bio) > div {
+    padding-inline: 15px;
+  }
+
+  .cards.profile.bio > ul {
+    max-width: none;
+    padding: 0;
+    gap: 0;
+  }
+
+  .cards.profile.bio > ul > li {
+    padding: 16px 15px;
+  }
+
+  .cards.profile.bio .cards-profile-card-body {
+    padding: 40px 30px;
+  }
+
+  /* undo the generic profile desktop name step-down (18/24, first card 22/32) */
+  .cards.profile.bio .cards-profile-card-body h4,
+  .cards.profile.bio > ul > li:first-child .cards-profile-card-body h4 {
+    font-size: 28px;
+    line-height: 30.8px;
+  }
+
+  main .section:has(.cards.profile.bio) > .default-content-wrapper:has(+ .cards-wrapper > .cards.profile.bio) {
+    max-width: 1200px;
+    padding-inline: 15px;
+  }
+
+  main .section:has(.cards.profile.bio) > .default-content-wrapper:has(+ .cards-wrapper > .cards.profile.bio) :is(h2, h3, h4) {
+    padding-inline: 15px;
+  }
+}
+
 /* cards-stats — 4-up stat cards on the cream band: circular photo + a large
    stat number (90px Graphik XXCond Bold) + a caption (18px Graphik Semibold).
    Values from source computed styles (our-impact.html) at 390/768/992/1200.
