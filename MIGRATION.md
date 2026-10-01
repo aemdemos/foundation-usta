@@ -3985,3 +3985,12 @@ option name matches the token it paints: `section-blue-bg`, `section-yellow-bg`,
   - A section authored with the old NAME stops matching once the sheet is renamed. Authoring by hex still works. No
     local content uses the option.
 - Gates: lint 0 errors (7 pre-existing warnings) · stylelint ✓ · breakpoint ✓.
+
+### 2026-10-01 — Tweet link hover + link tooltips (issue EDS-51)
+- **Tweet (quote.tweet) hover:** source hover only darkens the color (#0357b8 → #23527c), no underline (measured on
+  carol-ngounoue-runner-up-wimbledon-event). Removed `text-decoration: underline` from `.quote.tweet a:hover`. Note
+  `.quote.tweet a:any-link` (0,3,1) outranks the global `a:hover` underline, so links stay un-underlined.
+- **Tooltips:** source sets no `title` on any link. Removed the boilerplate `a.title = a.title || a.textContent` from
+  `decorateButtons()` (scripts.js) and the redundant `title` on social share buttons (they keep `aria-label`).
+- **Known a11y deviation (pre-existing since 6d6985d):** tweet inline links are color-only, so axe flags
+  `link-in-text-block` (serious). This matches the source; the underline was removed on request.

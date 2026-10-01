@@ -161,9 +161,9 @@
   text-decoration: none;
 }
 
+/* source: hover only darkens the color — no underline */
 .quote.tweet a:hover {
   color: var(--link-hover-color);
-  text-decoration: underline;
 }
 
 @media (width >= 768px) {
