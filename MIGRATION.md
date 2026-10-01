@@ -3967,6 +3967,25 @@ light-blue support band below. Removing the band's padding in devtools revealed 
   project a11y config turns this rule off.
 - CSS-only; deploys via git push. No content changes needed (both token names are supported).
 
+### 2026-10-01 — cards-content: 3-card rows keep the 4-up card width (get-involved "Signature Events")
+The user reported that the Signature Events cards were wider than the source. The 2026-09-08 fix made a 3-card row
+fill the whole row, three cards across (370px cards at 1440). The source does NOT stretch them. It is an AEM 12-col grid
+where each card stays a **3/12 column** (25% of the row, with 15px padding each side, or 6px at 768). The row then
+spreads the columns with `justify-content: space-around`.
+- **Source measured (image left/width):** 768 `60/300/540 · 168` · 992 `84/395/705 · 203` · 1200 `93/473/853 · 255` ·
+  1440 `185/585/985 · 270` · 1920 `425/825/1225 · 270`.
+- **Fix (cards.css, `.cards.content` only):** the column gap is now a block-local `--cards-content-gap` (12px at 768,
+  `--grid-gap` from 992). For 2- or 3-card rows, the list is widened by one gap (`margin-inline: -gap/2`). It uses
+  `grid-auto-flow: column; grid-auto-columns: 25%` with `column-gap: 0` and `justify-content: space-around`, and each
+  `li` gets `padding-inline: gap/2`. This copies the source structure, so the positions match exactly. 4-card rows are
+  unchanged.
+- **Ours after the fix:** identical to the source at every tier (992 middle card 394 vs 395 = rounding). On
+  what-we-do, the two 4-card rows are unchanged (168/203/270). Mobile is unchanged (336 column; source page column 328
+  at 390 is a page-level difference, not this variant).
+- **Gates:** lint 0 errors (7 pre-existing no-console warnings) · stylelint ✓ · breakpoint ✓. `check:overflow` and
+  `test:a11y` could not launch (Playwright expects chromium_headless_shell-1187, which is not installed). I measured in
+  the preview browser instead: 0px horizontal overflow at 320/390/767/768/991/992/1199/1200/1440/1920. CSS-only, with
+  no markup changes.
 ### 2026-09-29 — Section `background` options: one name per color (`light-blue-bg`/`cream-yellow-bg` → `section-*-bg`)
 The DA library Section Metadata `background` options (added in #28) used their own names for two colors that already
 had tokens: `light-blue-bg` painted `--section-blue-bg` and `cream-yellow-bg` painted `--section-yellow-bg`. Now every
