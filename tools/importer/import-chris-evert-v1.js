@@ -6,14 +6,14 @@
  * get-involved/special-funds/chris-evert-50th-anniversary.html campaign page.
  *
  * Section sequence (measured on the live rendered DOM at 1280):
- *   1. Centered heading "Celebrating a champion, on and off the court." (`center`).
- *   2. Columns — campaign copy (3 paras) LEFT + Chris Evert photo (20250820-
- *      chrissie50.jpg) RIGHT.
- *   3. SPLIT-EVEN — a Quote block (Selah Stibbins testimonial) LEFT + the inline
+ *   1. Centered <h3> "Celebrating a champion, on and off the court." + Columns text/photo
+ *      row in one `center-intro, split-5-6` section (source has no <h1>).
+ *      Columns: campaign copy (3 paras) LEFT + Chris Evert photo (20250820-chrissie50.jpg) RIGHT.
+ *   2. SPLIT-EVEN — a Quote block (Selah Stibbins testimonial) LEFT + the inline
  *      donation form (donate-embed → FundraiseUp CHRIS50) RIGHT, two equal
  *      columns (`split-even`). Content reproduced from the approved
  *      section-split-even-donate sample.
- *   4. Trailing full-bleed black strip above the footer (Spacer, stats-band-bg).
+ *   3. Trailing full-bleed black strip above the footer (Spacer, stats-band-bg).
  *
  * `Theme = general` — CSS-only page; adds body.general (no template fetch).
  */
@@ -203,23 +203,23 @@ export default {
     // ---- Rebuild main into the target section structure ----
     main.textContent = '';
 
-    // SECTION 1 — centered campaign heading.
-    const h = document.createElement('h1');
-    h.textContent = HEADING;
-    main.append(h);
-    main.append(WebImporter.Blocks.createBlock(document, {
-      name: 'Section Metadata', cells: { style: 'center' },
-    }));
-    emittedBlocks.push('default-content(heading,center)');
-
-    // SECTION 2 — Columns: campaign copy LEFT + Chris Evert photo RIGHT.
-    main.append(document.createElement('hr'));
+    // SECTION 1 — the source title is an <h3> (the page has no <h1>), centred over
+    // the text + photo row in the SAME container. Existing section styles only:
+    // `center-intro` centres the lead-in heading, `split-5-6` sets the source width + 5/6 grid row.
     {
+      const h = document.createElement('h3');
+      h.textContent = HEADING;
+      main.append(h);
       const img = document.createElement('img');
       img.setAttribute('src', absUrl(COLUMN_IMG));
       img.setAttribute('alt', COLUMN_IMG_ALT);
-      main.append(columnsBlock(document, { textNodes: COLUMNS_PARAS.map(p), img, imageSide: 'right' }));
-      emittedBlocks.push('columns(campaign,image-right)');
+      main.append(columnsBlock(document, {
+        textNodes: COLUMNS_PARAS.map(p), img, imageSide: 'right',
+      }));
+      main.append(WebImporter.Blocks.createBlock(document, {
+        name: 'Section Metadata', cells: { style: 'center-intro, split-5-6' },
+      }));
+      emittedBlocks.push('heading(h3)+columns(image-right) in center-intro,split-5-6');
     }
 
     // SECTION 3 — split-even: Quote LEFT + donation form RIGHT.
@@ -235,7 +235,7 @@ export default {
         [cell(DONATE_ELEMENT_ID)],
       ], document));
       main.append(WebImporter.Blocks.createBlock(document, {
-        name: 'Section Metadata', cells: { style: 'split-even' },
+        name: 'Section Metadata', cells: { style: 'split-even' }, // blocks size themselves to section 1's columns
       }));
       emittedBlocks.push('split-even(quote+donate)');
     }

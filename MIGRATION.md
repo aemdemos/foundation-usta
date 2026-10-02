@@ -4297,3 +4297,53 @@ play glyph (perf facade) — none of that chrome.
   and the WHO WE ARE / WHAT WE DO button widths (source fluid 148–188 vs ours 178).
 - Gates: lint 0 errors · stylelint ✓ · breakpoint ✓ · check:overflow ✓ + test:a11y ✓ (home + columns-feature-video
   sample) · check:typography ✓.
+
+### 2026-10-02 — Chris Evert 50th anniversary page: source width, title level, aligned quote + form row
+Page: `/en/home/get-involved/special-funds/chris-evert-50th-anniversary` (importer `import-chris-evert-v1`).
+- **Title:** the source has no `<h1>`; its title is an `<h3>` (56/61.6, 36 mobile, centred). The importer now
+  emits the `<h3>` as default content (it had been promoted to h1 before, which caused the H1/H3 conflict).
+- **Upper section (heading + text/image Columns):** uses the existing section styles `center-intro, medium`
+  (from `drafts/sections-samples`) instead of a new columns variant. **Per user direction, there is no `split-5-6`
+  columns variant; that attempt was reverted.** Widths: 336 / 708 @768 / 772 @992 / 970 @1200, giving text
+  and image columns of 356 + 30 + 356 @992 and 455 + 30 + 455 @1200.
+- **Lower section (Quote + Donate Embed):** stays plain `split-even`. `split-even` now **stacks below 992** and
+  from 992 uses the fluid 1200 column, as on the source. **Per user direction, the alignment lives in the BLOCKS,
+  not a section-width composition** (a `split-even, medium` attempt was reverted). `quote.css` and
+  `donate-embed.css` add `.section.split-even .quote|.donate-embed` widths: 708 centred <992, 356 @992,
+  455 @1200. Both sit flush against the centre gutter (quote `margin-inline: auto 0`, form `0 auto`), so the
+  quote's edges equal the text column's edges and the form block's edges equal the image column's edges.
+  The ~376px FundraiseUp iframe stays centred inside its block.
+- **Verified:** quote, text, form and image column edges are identical at 360/390/768/992/1200/1440/1920, with
+  0 overflow. The `section-split-even-donate` sample inherits the same widths.
+- **Open:** vertical rhythm vs the source (crumb→title 45 vs 8, title→row 54 vs 16, paragraph gaps 14 vs 24).
+- Gates: lint ✓ · breakpoint ✓ · check:overflow ✓ (page + split-even sample) · check:typography ✓ ·
+  test:a11y: only `document-title`, a local-preview artefact (raw body has no `<head>`; metadata Title is set
+  and the published page renders `<title>Chris Evert 50th anniversary</title>`).
+
+### 2026-10-02 — Chris Evert page: `split-5-6` section width + source quote/form widths (supersedes the entry above)
+The user said the `medium` width was too narrow and asked for a section width that exactly matches the source.
+- **New section style `split-5-6`** (styles.css, next to split-even). Upper section = `center-intro, split-5-6`.
+  The `medium` width on this page is gone.
+  - Widths: 328 <768 (the 336 column minus the source's 4px AEM column margins), 708 @768, then the normal
+    fluid column ≥992.
+  - ≥992 the Columns row sits on the shared 12-col grid (`--grid-gap` 30): text cell spans 5, the
+    `.columns-img-col` cell spans 6, column 12 stays empty. That gives 15..485 + 515..1085 @1200 and
+    15..398 + 428..894 @992.
+  - Vertical rhythm (source columns pad 8px):
+    - breadcrumb → heading 7;
+    - heading → row 16;
+    - paragraphs 24 apart;
+    - stacked text → image 16;
+    - image bottom margin 20 (<992);
+    - section → next section 73.
+- **Lower section = plain `split-even`.** ≥992 it is already the source (two halves of 1170, form centred).
+  - quote.css / donate-embed.css (scoped `.section.split-even`) now set the source widths: 328 / 708, then
+    their full half ≥992 (the earlier 356/455 caps were too narrow and are removed).
+  - Quote = source `<blockquote>`: padding 10px 20px per quotation paragraph, 20px between them and before
+    the attribution.
+  - split-even also gets the stacked block gap 26 (<992) and an 8px bottom margin before the footer strip.
+- **Verified** source vs migrated, every element at 390/768/992/1200/1440/1728:
+  - x/y/w/h identical (y measured relative to the heading), including breadcrumb → heading and form → strip;
+  - only ±1px sub-pixel rounding at 390/768/992; 0 overflow.
+- Gates: lint ✓ · breakpoint ✓ · overflow ✓ (page + split-even sample) · typography ✓ · a11y: only the
+  local-preview `document-title` artefact.

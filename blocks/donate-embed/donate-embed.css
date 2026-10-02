@@ -40,3 +40,23 @@
   max-width: 100%;
   vertical-align: top;
 }
+
+/* Form in a `split-even` section (Chris Evert campaign page) — source widths:
+   328 (<768, the form fills it) / 708 (768–991, 376px form centred) when stacked;
+   from 992 it fills its half of the 1170 grid with the form centred in it. */
+.section.split-even .donate-embed {
+  max-width: 328px;
+  margin-inline: auto;
+}
+
+@media (width >= 768px) {
+  .section.split-even .donate-embed {
+    max-width: 708px;
+  }
+}
+
+@media (width >= 992px) {
+  .section.split-even .donate-embed {
+    max-width: none;
+  }
+}

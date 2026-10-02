@@ -178,3 +178,38 @@
     margin-top: 25.714px;
   }
 }
+
+/* Quote in a `split-even` section (Chris Evert campaign page) — source widths:
+   the source <blockquote> sits in an AEM grid column with a 4px (<768) / 6px
+   (768–991) side margin → 328 / 708 wide when stacked; from 992 it fills its
+   half of the 1170 grid (570 @1200). The source blockquote pads 20px BOTH sides. */
+.section.split-even .quote {
+  max-width: 328px;
+  margin-inline: auto;
+}
+
+/* each source <blockquote>: padding 10px 20px, margin-bottom 20px */
+.section.split-even .quote .quote-quotation {
+  padding-right: 20px;
+  margin-bottom: 20px;
+}
+
+.section.split-even .quote .quote-quotation p {
+  padding: 10px 0;
+}
+
+.section.split-even .quote .quote-quotation p + p {
+  margin-top: 20px;
+}
+
+@media (width >= 768px) {
+  .section.split-even .quote {
+    max-width: 708px;
+  }
+}
+
+@media (width >= 992px) {
+  .section.split-even .quote {
+    max-width: none;
+  }
+}

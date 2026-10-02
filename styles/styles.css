@@ -961,21 +961,109 @@ main .section.center.map-wide > div {
   }
 }
 
+/* split-5-6 — a section WIDTH for an uneven text + image row on the source's
+   12-column grid (Chris Evert campaign page). Measured on the source at
+   390/768/992/1200/1440/1728/1920:
+   - <768: 328 wide (the 336 column minus the source's 4px AEM column margins);
+     768–991: 708 (720 minus 6px). Heading, text and image all share it.
+   - >=992: the normal fluid content column (1170 @1200). The heading spans it;
+     a Columns row inside lays its cells on the shared 12-col grid (30px gap):
+     the TEXT cell spans 5 columns, the IMAGE cell 6, and the 12th stays empty
+     (15..485 + 515..1085 @1200; 15..398 + 428..894 @992).
+   Cells are told apart by the image-cell class columns.js already adds, so it
+   works whichever side the image is authored on. Stacked text → image gap 16px. */
+/* stylelint-disable-next-line no-descending-specificity -- different sections */
+main .section.split-5-6 > div {
+  max-width: 328px;
+}
+
+/* source vertical rhythm (each AEM column pads 8px top + bottom): breadcrumb →
+   heading 7, heading → row 16, paragraphs 24 apart (the source's blank <p>s),
+   text → image 16 when stacked, then 73 from the taller column to the next
+   section (93 stacked: the source image keeps a 20px bottom margin). */
+main .section.split-5-6 {
+  margin-bottom: 73px;
+}
+
+main .section.split-5-6 > .default-content-wrapper > :first-child {
+  margin-top: 7px;
+  margin-bottom: 0;
+}
+
+main .section.split-5-6 > .default-content-wrapper + div[class$="-wrapper"]:not(.default-content-wrapper) {
+  margin-top: 16px;
+}
+
+main .section.split-5-6 .columns > div {
+  gap: 16px;
+}
+
+main .section.split-5-6 .columns p {
+  margin: 0;
+}
+
+main .section.split-5-6 .columns p + p {
+  margin-top: 24px;
+}
+
+main .section.split-5-6 .columns > div > .columns-img-col {
+  margin-bottom: 20px;
+}
+
+@media (width >= 768px) {
+  main .section.split-5-6 > div {
+    max-width: 708px;
+  }
+}
+
+@media (width >= 992px) {
+  main .section.split-5-6 > div {
+    max-width: 1200px;
+  }
+
+  main .section.split-5-6 .columns > div {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--grid-gap, 30px);
+  }
+
+  main .section.split-5-6 .columns > div > div {
+    grid-column: span 5;
+  }
+
+  main .section.split-5-6 .columns > div > .columns-img-col {
+    grid-column: span 6;
+    margin-bottom: 0;
+  }
+}
+
 /* split-even — a symmetric, block-agnostic TWO-COLUMN section for TWO blocks
    side by side (e.g. a Quote block left + a donation form block right, as on the
-   source's Chris Evert campaign page). Unlike split-left/right (which key off
-   default-content vs block to decide sides), this simply flows EACH direct
-   wrapper into its own equal column in source order — first→left, second→right —
-   so it works for any pair of blocks without nth-child logic. Same centered page
-   content width as the rest of the site (720/970/1170 per tier).
+   source's Chris Evert campaign page). Each direct wrapper flows into its own
+   equal column in source order (first → left, second → right), so it works for
+   any pair of blocks without nth-child logic.
 
-   MOBILE (<768): no grid — the global 336px rule stacks the two blocks in the
-   single content column, in authored order. Two-column split is desktop-only. */
-@media (width >= 768px) {
+   Source (measured 390/768/992/1200/1440): STACKED below 992 (the two blocks one
+   above the other in the normal content column); from 992 two equal columns with
+   a 30px gutter on the normal fluid content column (466 + 466 at 992, 570 + 570
+   from 1200) — the form block centres itself in its column (donate-embed.css). */
+
+/* source: 8px from the last block to the footer strip; stacked (<992) the second
+   block sits 26px below the first (h4 10 + 2 × 8 column padding) */
+main .section.split-even {
+  margin-bottom: 8px;
+}
+
+main .section.split-even > div[class$='-wrapper'] + div[class$='-wrapper'] {
+  margin-top: 26px;
+}
+
+@media (width >= 992px) {
   main > .section.split-even {
     box-sizing: border-box;
-    max-width: 720px;
+    max-width: 1200px; /* same fluid column as `main > .section > div` (−2×15px) */
     margin-inline: auto;
+    padding-inline: 15px;
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
@@ -984,35 +1072,17 @@ main .section.center.map-wide > div {
   }
 
   /* wrappers are grid items — drop the global per-wrapper width cap/centering.
-     min-width:0 stops a wide block's min-content from stealing >1fr (keeps the
-     two columns equal); margin-top:0 cancels the global inter-wrapper spacing
-     (which would otherwise push the 2nd block down out of row alignment). */
+     min-width:0 keeps the two columns equal; margin-top:0 cancels the global
+     inter-wrapper spacing so the second block top-aligns with the first. */
   main .section.split-even > div {
     max-width: none;
     margin-inline: 0;
+    padding-inline: 0;
     min-width: 0;
   }
 
-  /* cancel the global inter-wrapper spacing (which pushes a 2nd block down out
-     of row alignment) — matched at equal specificity to the rule that adds it.
-     This top-aligns the donation form (a `donate-embed` block) with the sibling
-     quote block, matching the source (form top === quote top). Centering of the
-     ~376px FundraiseUp iframe within its column lives in the block's own CSS
-     (blocks/donate-embed/donate-embed.css). */
   main .section.split-even > div[class$='-wrapper'] + div[class$='-wrapper'] {
     margin-top: 0;
-  }
-}
-
-@media (width >= 992px) {
-  main > .section.split-even {
-    max-width: 970px;
-  }
-}
-
-@media (width >= 1200px) {
-  main > .section.split-even {
-    max-width: 1170px;
   }
 }
 

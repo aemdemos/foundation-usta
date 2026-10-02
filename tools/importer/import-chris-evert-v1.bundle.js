@@ -1,9 +1,26 @@
 /* eslint-disable */
 var CustomImportScript = (() => {
   var __defProp = Object.defineProperty;
+  var __defProps = Object.defineProperties;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
   var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __propIsEnum = Object.prototype.propertyIsEnumerable;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __spreadValues = (a, b) => {
+    for (var prop in b || (b = {}))
+      if (__hasOwnProp.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    if (__getOwnPropSymbols)
+      for (var prop of __getOwnPropSymbols(b)) {
+        if (__propIsEnum.call(b, prop))
+          __defNormalProp(a, prop, b[prop]);
+      }
+    return a;
+  };
+  var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -74,7 +91,7 @@ var CustomImportScript = (() => {
   var ORIGIN = "https://www.ustafoundation.com";
   function executeCleanup(hookName, element, payload) {
     try {
-      transform.call(null, hookName, element, { ...payload, template: PAGE_TEMPLATE });
+      transform.call(null, hookName, element, __spreadProps(__spreadValues({}, payload), { template: PAGE_TEMPLATE }));
     } catch (e) {
       console.error(`Cleanup transformer failed at ${hookName}:`, e);
     }
@@ -84,7 +101,7 @@ var CustomImportScript = (() => {
     if (!u) return u;
     try {
       return new URL(u, ORIGIN).href;
-    } catch {
+    } catch (e) {
       return u;
     }
   }
@@ -137,13 +154,7 @@ var CustomImportScript = (() => {
         '"The Jimmy Evert Scholarship really helped make it possible for me to excel in my first year competing in college.\u201D'
       ];
       const QUOTE_ATTR = "- Selah Stibbins, Howard University '26";
-      const DONATE_FORM = {
-        title: "Celebrating a Champion!",
-        amounts: "50 | 50 | 50 | 50 | 50 | 50",
-        designate: "Designate to the Jimmy Evert Merit Scholarship Fund",
-        cta: "Donate and Support",
-        href: "https://ustaf.donorsupport.co/page/CHRIS50?elementTitle=Donation%20Form&elementName=Chris%2050%20Donation%20Embed"
-      };
+      const DONATE_ELEMENT_ID = "XJYDXZPC";
       const p = (text) => {
         const el = document.createElement("p");
         el.textContent = text;
@@ -155,21 +166,23 @@ var CustomImportScript = (() => {
         return d;
       };
       main.textContent = "";
-      const h = document.createElement("h1");
-      h.textContent = HEADING;
-      main.append(h);
-      main.append(WebImporter.Blocks.createBlock(document, {
-        name: "Section Metadata",
-        cells: { style: "center" }
-      }));
-      emittedBlocks.push("default-content(heading,center)");
-      main.append(document.createElement("hr"));
       {
+        const h = document.createElement("h3");
+        h.textContent = HEADING;
+        main.append(h);
         const img = document.createElement("img");
         img.setAttribute("src", absUrl(COLUMN_IMG));
         img.setAttribute("alt", COLUMN_IMG_ALT);
-        main.append(columnsBlock(document, { textNodes: COLUMNS_PARAS.map(p), img, imageSide: "right" }));
-        emittedBlocks.push("columns(campaign,image-right)");
+        main.append(columnsBlock(document, {
+          textNodes: COLUMNS_PARAS.map(p),
+          img,
+          imageSide: "right"
+        }));
+        main.append(WebImporter.Blocks.createBlock(document, {
+          name: "Section Metadata",
+          cells: { style: "center-intro, split-5-6" }
+        }));
+        emittedBlocks.push("heading(h3)+columns(image-right) in center-intro,split-5-6");
       }
       main.append(document.createElement("hr"));
       {
@@ -180,22 +193,14 @@ var CustomImportScript = (() => {
           [quoteBody],
           [quoteAttr]
         ], document));
-        const a = document.createElement("a");
-        a.href = DONATE_FORM.href;
-        a.textContent = DONATE_FORM.href;
-        const linkCell = document.createElement("div");
-        linkCell.append(a);
         main.append(WebImporter.DOMUtils.createTable([
-          ["Custom Form Donate"],
-          [cell(DONATE_FORM.title)],
-          [cell(DONATE_FORM.amounts)],
-          [cell(DONATE_FORM.designate)],
-          [cell(DONATE_FORM.cta)],
-          [linkCell]
+          ["Donate Embed"],
+          [cell(DONATE_ELEMENT_ID)]
         ], document));
         main.append(WebImporter.Blocks.createBlock(document, {
           name: "Section Metadata",
           cells: { style: "split-even" }
+          // blocks size themselves to section 1's columns
         }));
         emittedBlocks.push("split-even(quote+donate)");
       }
@@ -211,8 +216,12 @@ var CustomImportScript = (() => {
         const first = t.querySelector("th, td");
         return first && /^\s*metadata\s*$/i.test(first.textContent || "");
       });
-      const hasRow = (key) => !!metaTable && [...metaTable.querySelectorAll("tr")].some((tr) => (tr.firstElementChild?.textContent || "").trim().toLowerCase() === key.toLowerCase());
+      const hasRow = (key) => !!metaTable && [...metaTable.querySelectorAll("tr")].some((tr) => {
+        var _a;
+        return (((_a = tr.firstElementChild) == null ? void 0 : _a.textContent) || "").trim().toLowerCase() === key.toLowerCase();
+      });
       const addMetaRow = (key, value) => {
+        var _a;
         if (!metaTable || !value || hasRow(key)) return;
         const tr = document.createElement("tr");
         const k = document.createElement("td");
@@ -220,7 +229,7 @@ var CustomImportScript = (() => {
         const v = document.createElement("td");
         v.textContent = value;
         tr.append(k, v);
-        metaTable.querySelector("tbody")?.append(tr) || metaTable.append(tr);
+        ((_a = metaTable.querySelector("tbody")) == null ? void 0 : _a.append(tr)) || metaTable.append(tr);
       };
       addMetaRow("Theme", "general");
       WebImporter.rules.transformBackgroundImages(main, document);
