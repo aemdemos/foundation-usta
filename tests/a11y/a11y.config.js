@@ -44,6 +44,7 @@ export default {
     // Block-library sample pages (drafts/block-samples/*) — one per pending
     // block, built to source parity. Kept in the sweep so block a11y is enforced.
     '/drafts/block-samples/hero-error',
+    '/drafts/block-samples/hero-text-up-medium',
     '/drafts/block-samples/banner-stats-grid',
     '/drafts/block-samples/cards-tiles',
     '/drafts/block-samples/cards-profile',

@@ -39,11 +39,20 @@ function heroRenditionWidth() {
   return buckets.find((w) => w >= needed) || 2000;
 }
 
-/** Set/replace the width= param on an EDS rendition URL (adds webp+optimize if absent). */
+/**
+ * Set/replace the width= param on an EDS rendition URL and always request WebP.
+ * The authored <img> src keeps the ORIGINAL format (e.g. `format=gif` for a GIF
+ * upload) as its fallback, but a CSS background needs no fallback — and a still
+ * GIF/PNG photo is 3–4× larger than its WebP rendition (college-scholarship hero:
+ * 228 KB gif vs 64 KB webply @750), which made it the mobile LCP bottleneck.
+ */
 function heroBgUrlAt(src, width) {
-  return (/([?&])width=\d+/.test(src))
+  const url = (/([?&])width=\d+/.test(src))
     ? src.replace(/([?&])width=\d+/, `$1width=${width}`)
-    : `${src}${src.includes('?') ? '&' : '?'}width=${width}&format=webply&optimize=medium`;
+    : `${src}${src.includes('?') ? '&' : '?'}width=${width}&optimize=medium`;
+  return /([?&])format=[^&]*/.test(url)
+    ? url.replace(/([?&])format=[^&]*/, '$1format=webply')
+    : `${url}&format=webply`;
 }
 
 /**

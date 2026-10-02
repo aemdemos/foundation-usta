@@ -4388,3 +4388,17 @@ Page: `/en/home/get-involved/young-professional-initiative` (importer `import-yp
 - **Verified** source vs migrated at 360/390/768/992/1200/1440/1600/1728/1920: hero height, h1, subhead and
   button x/y/w/h all identical; 0 overflow.
 - Gates: lint ✓ · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓ (1 passed).
+
+### 2026-10-02 — Block sample: `hero (text-up, medium)`
+- New sample `/drafts/block-samples/hero-text-up-medium`, built by
+  `tools/importer/import-sample-hero-text-up-medium.js` (+ bundle, `urls-sample-hero-text-up-medium.txt`).
+  - Reads the YPI hero from the live source by stable selectors: the h1, the inline background-image on its
+    ancestor, the `.cmp-text p` subhead and the `.button a` CTA.
+  - Same scaffold as the hero-text-up sample: intro (h1, notes, Source link) → `Hero (text-up, medium)` →
+    metadata (noindex).
+  - Photo localized to `media-da/drafts/block-samples/hero-text-up-medium/`, with the same descriptive alt as
+    the YPI page.
+- The sample hero is **identical to the source** YPI hero at 360/390/768/992/1200/1440/1600/1920 (height,
+  h1, subhead, button x/y/w/h); 0 overflow.
+- Added to `tests/a11y/a11y.config.js`.
+- Gates: lint 0 errors · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓ (1 passed).

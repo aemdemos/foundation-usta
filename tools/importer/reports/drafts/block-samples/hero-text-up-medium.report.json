@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "url": "https://www.ustafoundation.com/en/home/get-involved/young-professional-initiative.html",
+  "path": "drafts/block-samples/hero-text-up-medium",
+  "timestamp": "2026-10-02T03:07:34.708Z",
+  "title": "Hero (text-up, medium) — Block Sample",
+  "blocks": [
+    "hero-text-up-medium",
+    "metadata"
+  ]
+}
