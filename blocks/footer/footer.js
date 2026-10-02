@@ -1,16 +1,17 @@
+const FOOTER_PATH = '/footer.plain.html';
+
 /**
- * Fetch the footer fragment. Metadata-independent dual-fetch:
- * /content first (localhost / aem up), then root (DA/EDS production).
+ * Fetch the footer fragment from the site root (EDS serves fragments at the root;
+ * the local dev server proxies the same published fragment).
  */
 async function fetchFooterHtml() {
-  let resp = await fetch('/content/footer.plain.html');
-  if (!resp.ok) resp = await fetch('/footer.plain.html');
+  const resp = await fetch(FOOTER_PATH);
   if (!resp.ok) return null;
   return resp.text();
 }
 
 /**
- * Loads and decorates the footer from content/footer.plain.html.
+ * Loads and decorates the footer from the /footer fragment.
  * Content-first: all links/labels/images come from the fragment.
  * @param {Element} block The footer block element
  */
@@ -19,23 +20,23 @@ export default async function decorate(block) {
   block.textContent = '';
   if (!html) return;
 
-  const footer = document.createElement('div');
-  footer.innerHTML = html;
+  // parse into an inert document: nothing is requested until the media paths
+  // below are fixed and the nodes are moved into the page
+  const footer = new DOMParser().parseFromString(html, 'text/html').body;
 
-  // DA-authored <picture> elements carry <source srcset> renditions whose
-  // filenames differ from the working <img src> (an extra hash suffix) and are
-  // not present locally — the browser would prefer the 404ing <source> and the
-  // logo/icons break. These fragment images need no responsive art-direction,
-  // so drop the <source>s and always use the <img>.
-  footer.querySelectorAll('picture source').forEach((s) => s.remove());
-
-  // The fragment lives at /content/footer.plain.html, so relative image paths
-  // (images/…) must resolve against /content/, not the current page URL.
+  // The fragment's media paths are relative to the FRAGMENT (`./media_…`), not
+  // to the current page — resolve img src + <source> srcset against it.
+  const base = new URL(FOOTER_PATH, window.location.href);
   footer.querySelectorAll('img[src]').forEach((img) => {
-    const src = img.getAttribute('src');
-    if (src && !/^(https?:)?\/\//.test(src) && !src.startsWith('/')) {
-      img.setAttribute('src', `/content/${src}`);
-    }
+    img.src = new URL(img.getAttribute('src'), base).href;
+  });
+  footer.querySelectorAll('source[srcset]').forEach((source) => {
+    source.srcset = source.getAttribute('srcset').split(',')
+      .map((entry) => {
+        const [url, ...descriptor] = entry.trim().split(/\s+/);
+        return [new URL(url, base).href, ...descriptor].join(' ');
+      })
+      .join(', ');
   });
 
   // Assign section roles by order: brand, nav, social, legal.

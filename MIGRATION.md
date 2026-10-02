@@ -4251,3 +4251,18 @@ not fixed sizes — the old CSS (vw logo, fixed 237px button, flex/grid rows, 40
   4 legal links all at the source x/y/size. Side-by-side renders at 1728 + 390 identical.
 - Gates: lint 0 errors · stylelint ✓ · breakpoint ✓ · check:overflow ✓ (home, leadership, a news article) ·
   check:typography ✓ · test:a11y ✓ (all three).
+
+### 2026-10-02 — Header/footer fragments: root only (no /content lookups on EDS)
+Console on aem.page showed `404 /content/nav.plain.html` + `404 /content/footer.plain.html` on every page: both
+blocks fetched `/content/…` first (a leftover from local `--html-folder content` dev) and only then fell back to the
+root. The fragment's relative media (`./media_…`) were also rewritten to `/content/./media_…` (worked by accident).
+- `header.js` / `footer.js`: fetch ONLY `/nav.plain.html` / `/footer.plain.html` (the local dev server proxies the
+  same published fragments, so it works locally too); parse with `DOMParser` (inert — no requests before paths are
+  fixed); resolve every img `src` and `<source srcset>` against the FRAGMENT URL (→ `/media_…`). The old
+  `<source>`-stripping workaround is gone, so the `<picture>` WebP renditions serve again. Breadcrumb query-index
+  lookup is root-only too (`/content/query-index.json` fallback removed).
+- **Note:** local edits to `content/nav.plain.html` / `content/footer.plain.html` no longer show in local preview —
+  nav/footer always come from the published fragment (same as EDS). Change them in DA.
+- Verified locally on `/` and `/en/home/who-we-are/leadership-and-staff`: 0 failed requests, 0 `/content/` requests,
+  all header/footer images load from `/media_…`, footer geometry unchanged. Gates: lint 0 errors · test:a11y ✓ ·
+  check:overflow ✓.
