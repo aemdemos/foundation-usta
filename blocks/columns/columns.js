@@ -55,24 +55,25 @@ function youTubeId(href) {
 }
 
 /**
- * Build the real YouTube iframe (used only after the user clicks the facade).
+ * Build the real YouTube iframe — the source embeds the plain player, so YouTube
+ * renders its own chrome (red play button, title + channel, share / watch later,
+ * "Watch on YouTube"). The authored embed URL is used as-is.
  */
 function buildVideoIframe(src, title) {
   const iframe = document.createElement('iframe');
-  iframe.src = /[?&]autoplay=/.test(src) ? src : `${src}${src.includes('?') ? '&' : '?'}autoplay=1`;
+  iframe.src = src;
   iframe.title = title || 'Video';
   iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+  iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
   iframe.setAttribute('allowfullscreen', '');
-  iframe.setAttribute('loading', 'lazy');
   return iframe;
 }
 
 /**
- * Replace a bare YouTube link with a lightweight click-to-load FACADE instead of
- * an eager iframe: a poster image (YouTube thumbnail) + a play button. The heavy
- * YouTube player scripts (~hundreds of KiB, the bulk of the page's "unused JS")
- * load ONLY when the user actually clicks play. This is the EDS-recommended
- * pattern for third-party video embeds and keeps the initial page lean.
+ * Replace a bare YouTube link with the real YouTube player, mounted only when the
+ * video gets near the viewport (300px ahead). Until then a poster (the YouTube
+ * thumbnail) holds the exact box, so nothing shifts — and a page that is never
+ * scrolled to the video (e.g. a PageSpeed run) never loads YouTube's scripts.
  * @param {HTMLAnchorElement} link the authored YouTube link
  * @param {string} [title] accessible title (from caption/heading, never the URL)
  */
@@ -86,33 +87,28 @@ function embedVideo(link, title) {
   const holder = document.createElement('div');
   holder.className = 'columns-feature-video';
 
-  // Facade = a button (keyboard-accessible) with the poster as its background +
-  // a play glyph. YouTube's hqdefault thumbnail is a small, cacheable image.
-  const facade = document.createElement('button');
-  facade.type = 'button';
-  facade.className = 'columns-feature-video-facade';
-  facade.setAttribute('aria-label', `Play video: ${label}`);
   if (id) {
     const poster = document.createElement('img');
     poster.className = 'columns-feature-video-poster';
     poster.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
     poster.alt = '';
     poster.loading = 'lazy';
-    facade.append(poster);
+    holder.append(poster);
   }
-  const play = document.createElement('span');
-  play.className = 'columns-feature-video-play';
-  play.setAttribute('aria-hidden', 'true');
-  facade.append(play);
 
-  const activate = () => {
-    const iframe = buildVideoIframe(src, label);
-    holder.replaceChildren(iframe);
-    iframe.focus?.();
-  };
-  facade.addEventListener('click', activate);
+  const mount = () => holder.replaceChildren(buildVideoIframe(src, label));
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        observer.disconnect();
+        mount();
+      }
+    }, { rootMargin: '300px 0px' });
+    observer.observe(holder);
+  } else {
+    mount();
+  }
 
-  holder.append(facade);
   const container = link.closest('p') || link;
   container.replaceWith(holder);
 }

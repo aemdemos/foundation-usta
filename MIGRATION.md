@@ -4266,3 +4266,34 @@ root. The fragment's relative media (`./media_…`) were also rewritten to `/con
 - Verified locally on `/` and `/en/home/who-we-are/leadership-and-staff`: 0 failed requests, 0 `/content/` requests,
   all header/footer images load from `/media_…`, footer geometry unchanged. Gates: lint 0 errors · test:a11y ✓ ·
   check:overflow ✓.
+
+### 2026-10-02 — Homepage spacer strips: 17px made explicit for every viewport
+Source homepage strips (light-blue #e2f7ff above "For decades" and "Your support", black at the bottom) are 17px
+tall at 390/768/992/1200/1440. Ours already rendered 17px everywhere, but only via the spacer block's fallback —
+the content authored `desktop: 17px` only. New `tools/content/spacer-all-viewports.mjs [--dry-run] <page>…` adds
+explicit `tablet` + `mobile` rows (= the desktop value) to any spacer that has only a desktop row (idempotent,
+backups in `migration-work/spacer-all-viewports/`). Applied to `index` + `en/home` (3 spacers each); verified
+removing the added rows reproduces the backups, and 17px at all widths with section spacing unchanged.
+**Open (not fixed):** on `/` the first strip is authored `color: #e2f7ff` (raw hex) instead of the token, so the
+spacing rules keyed on the token name don't apply → buttons→strip 40 vs source 56 (@1200), strip→"For decades"
+40 vs 60/76. `/en/home` (token `cards-band-bg`) matches. Fix = author the token on `/` (content) or key the CSS on
+the colour.
+
+### 2026-10-02 — Homepage video card: real YouTube player (red play button + chrome) + source card geometry
+The source embeds a plain YouTube iframe (`width=560 height=315`), so YouTube draws the red play button, title +
+channel avatar, Share / Watch later and "Watch on YouTube". Ours was a click-to-load poster with a grey CSS
+play glyph (perf facade) — none of that chrome.
+- `columns.js` `embedVideo()`: renders the REAL iframe with the authored embed URL as-is, mounted by an
+  IntersectionObserver 300px before the video scrolls into view (poster holds the box until then). A load that
+  never reaches the video (e.g. PageSpeed) loads no YouTube player scripts; a visitor sees the real player.
+  `referrerpolicy=strict-origin-when-cross-origin`; no autoplay.
+- `columns.css` (source values): player 560×315 `max-width:100%` (was 16:9 full width); card padding
+  15/8/16 (<768) · 15/12/32 (768) · 15/30/32 (≥992); heading margin/padding 0; caption 7px below the player.
+  ≥992 row = source 11-column model on a `min(100vw − 30px, 1200px)` container: text column 5/11 (15px padding,
+  16px below the card top), 1/11 gap, card 5/11 (section wrapper max-width 1230px for this block).
+- **Result:** card x/size/radius, heading, player and caption offsets + line breaks identical to the source at
+  992/1200/1440/1920; card internals identical at 390/768 (card 480 / 448 high). Renders pixel-identical @1200.
+- **Not in this change:** the stacked LEFT text column on mobile/tablet (4–6px inset, vertical gap to the card)
+  and the WHO WE ARE / WHAT WE DO button widths (source fluid 148–188 vs ours 178).
+- Gates: lint 0 errors · stylelint ✓ · breakpoint ✓ · check:overflow ✓ + test:a11y ✓ (home + columns-feature-video
+  sample) · check:typography ✓.
