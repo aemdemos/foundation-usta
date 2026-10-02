@@ -4347,3 +4347,44 @@ The user said the `medium` width was too narrow and asked for a section width th
   - only ±1px sub-pixel rounding at 390/768/992; 0 overflow.
 - Gates: lint ✓ · breakpoint ✓ · overflow ✓ (page + split-even sample) · typography ✓ · a11y: only the
   local-preview `document-title` artefact.
+
+### 2026-10-02 — Section sample: `split-5-6`
+- New sample `/drafts/sections-samples/section-split-5-6`, built by
+  `tools/importer/import-sample-section-split-5-6.js` (+ bundle, `urls-sample-section-split-5-6.txt`).
+  - Reads the Chris Evert campaign row from the live source by content selectors: the first `h3`, the
+    `.cmp-text` holding the campaign copy (blank `<p>`s dropped, de-duped), and the photo beside it.
+  - Page layout, top to bottom: spacer → intro (h1, notes, Source link) → spacer → `<h3>` + Columns
+    (text | image) with style `center-intro, split-5-6` → spacer → metadata (noindex).
+  - Photo localized to `media-da/drafts/sections-samples/section-split-5-6/`.
+- The sample's split-5-6 section renders **identically** to the live page's section at
+  390/768/992/1200/1728 (heading, three paragraphs and image x/y/w/h); 0 overflow.
+- Added to `tests/a11y/a11y.config.js`.
+- Gates: lint 0 errors · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓ (1 passed).
+
+### 2026-10-02 — YPI page: broken images, missing h4/h6, new `Hero (text-up, medium)`
+Page: `/en/home/get-involved/young-professional-initiative` (importer `import-ypi-v1`).
+- **Broken images.** On the published page 3 of 5 images rendered `about:error`: ypi-alternate, ypi-3 and
+  ypi-4 referenced unresolved `content.da.live/…/.young-professional-initiative/` media.
+  - Re-imported and localized all 5 to `content/media-da/en/home/get-involved/young-professional-initiative/`
+    (all serve 200).
+  - The importer now keeps the hero's descriptive alt the author set in DA (re-import had blanked it).
+- **Content updated to the current source:**
+  - "As a part of The Young Professional Initiative, you can:" is an `<h4>` (was a bold `<p>`).
+  - "Ways to Get Involved" now has its `<h6>` sub-headings (Attend Events / Fuel the Mission / Build Your
+    Community) before each paragraph. The importer's body mini-format gained `{h4}` / `{h6}`.
+- **Hero height.**
+  - Source hero = content + a fixed band below JOIN US: 258px (<768) / 386px (≥768). That gives 601 @390,
+    814 @768, 790 @992–1536 and 656 from ~1600 (the subhead fits one line).
+  - `tall`'s 601/790 min-height floor was 134px too tall from 1600.
+  - Neither `text-up` nor `tall` matches, so a new **`Hero (text-up, medium)`** variant was added (hero.css).
+    It has no min-height and uses the band above.
+  - Its panel is on the source AEM grid: 1/12 offset, 6/12 wide, inset 4/6/15.
+  - JOIN US = grid column of the 6-col panel, `min-width: max-content`: 4/6 (<768), 3/6 offset 3/6
+    (768–991), 2/6 (≥992).
+  - hero.js re-binds the h1's last two words with U+00A0 for `.medium` — the source h1 is
+    `Young Professional&nbsp;Initiative`, always 2 lines with line 2 overflowing the column. The import
+    pipeline strips the nbsp (same fix as the banner h1).
+  - `tall` is kept but no longer used by any page.
+- **Verified** source vs migrated at 360/390/768/992/1200/1440/1600/1728/1920: hero height, h1, subhead and
+  button x/y/w/h all identical; 0 overflow.
+- Gates: lint ✓ · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓ (1 passed).

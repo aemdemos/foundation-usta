@@ -78,5 +78,6 @@ export default {
     '/drafts/sections-samples/section-center-narrow',
     '/drafts/sections-samples/section-center-intro',
     '/drafts/sections-samples/section-center-wide',
+    '/drafts/sections-samples/section-split-5-6',
   ],
 };

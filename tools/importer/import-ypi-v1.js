@@ -184,15 +184,16 @@ export default {
     const heroCta = ctaOf(heroContainer) || { href: 'https://ustaf.tfaforms.net/67', text: 'JOIN US' };
 
     // YPI content (fixed — captured from the live DOM). Column bodies use a small
-    // "blocks" mini-format: {p:'…'} paragraph, {b:'…'} bold sub-heading, {ul:[…]}
-    // bullet list — reproducing the source's mixed paragraph/heading/bullet copy.
+    // "blocks" mini-format: {p:'…'} paragraph, {h4:'…'} / {h6:'…'} sub-heading (the
+    // source's own heading levels), {ul:[…]} bullet list — reproducing the source's
+    // mixed paragraph/heading/bullet copy.
     // "The future of giving starts here." is a CENTERED intro (heading + 1 para +
     // MAKE A GIFT), separate from the "What is YPI?" columns below it.
     const FUTURE_INTRO = 'The Young Professional Initiative (YPI) is a community of emerging leaders who are passionate about creating opportunities for young people through the power of tennis, education and mentorship.';
     const WHATIS_BODY = [
       { p: 'As an affiliate group of the USTA Foundation, YPI brings together young professionals who are passionate about making a difference.' },
       { p: "This initiative connects you with peers who share a commitment to giving back while helping create opportunities for the next generation. Through networking events, mentorship, fundraising, and mission-driven experiences, YPI supports the USTA Foundation's work to help young people thrive both on and off the tennis court." },
-      { b: 'As a part of The Young Professional Initiative, you can:' },
+      { h4: 'As a part of The Young Professional Initiative, you can:' },
       { ul: [
         'Build meaningful professional and personal relationships',
         'Give back to local communities',
@@ -212,22 +213,20 @@ export default {
         'Access to welcoming tennis opportunities',
       ] },
     ];
-    const WAYS_PARAS = [
-      'Connect with fellow supporters through networking events, volunteer opportunities, mission-focused experiences, and special gatherings throughout the year, including during the US Open.',
-      'Support the USTA Foundation through annual giving, fundraising campaigns, and other initiatives that help create opportunities for young people.',
-      'Join a growing network of young professionals committed to leadership, service, and making a lasting impact.',
+    // source: each way is an <h6> sub-heading followed by its paragraph
+    const WAYS_BODY = [
+      { h6: 'Attend Events' },
+      { p: 'Connect with fellow supporters through networking events, volunteer opportunities, mission-focused experiences, and special gatherings throughout the year, including during the US Open.' },
+      { h6: 'Fuel the Mission' },
+      { p: 'Support the USTA Foundation through annual giving, fundraising campaigns, and other initiatives that help create opportunities for young people.' },
+      { h6: 'Build Your Community' },
+      { p: 'Join a growing network of young professionals committed to leadership, service, and making a lasting impact.' },
     ];
     const QUOTE_TEXT = '"Young leaders can play a key role in championing the next generation. The Young Professional Initiative is vital in the USTA Foundation\'s future & growing its impact."';
     const QUOTE_ATTR = 'Greg Labanowski, Young Professional Initiative';
 
     const p = (text) => { const el = document.createElement('p'); el.textContent = text; return el; };
-    const boldP = (text) => {
-      const el = document.createElement('p');
-      const s = document.createElement('strong');
-      s.textContent = text;
-      el.append(s);
-      return el;
-    };
+    const headingEl = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
     const bulletList = (items) => {
       const ul = document.createElement('ul');
       items.forEach((t) => {
@@ -237,9 +236,10 @@ export default {
       });
       return ul;
     };
-    // Expand the mini-format ({p}/{b}/{ul}) copy model into real DOM nodes.
+    // Expand the mini-format ({p}/{h4}/{h6}/{ul}) copy model into real DOM nodes.
     const bodyNodes = (body) => body.map((item) => {
-      if (item.b) return boldP(item.b);
+      if (item.h4) return headingEl('h4', item.h4);
+      if (item.h6) return headingEl('h6', item.h6);
       if (item.ul) return bulletList(item.ul);
       return p(item.p);
     });
@@ -252,12 +252,16 @@ export default {
     if (heroBgUrl) {
       const bg = document.createElement('img');
       bg.setAttribute('src', absUrl(heroBgUrl));
-      bg.setAttribute('alt', '');
+      // the source's hero photo is a CSS background (no alt); keep the descriptive
+      // alt the author set on the published page so a re-import doesn't drop it
+      bg.setAttribute('alt', 'Two USTA Foundation Young Professional Initiative supporters together at an event');
       heroCells.push([bg]);
     }
     const heroContentCell = [];
     const heroHeading = document.createElement('h1');
-    heroHeading.textContent = 'Young Professional Initiative';
+    // source h1 = "Young Professional&nbsp;Initiative": the nbsp keeps the last two
+    // words together, so it is always 2 lines (line 2 overflows its column, as on the source)
+    heroHeading.textContent = 'Young Professional\u00a0Initiative';
     heroContentCell.push(heroHeading);
     if (heroSubhead) heroContentCell.push(p(heroSubhead));
     if (heroCta) heroContentCell.push(ctaParagraph(document, heroCta.href, heroCta.text));
@@ -265,7 +269,7 @@ export default {
     // "tall" variant: the source YPI hero is a fixed-height box (~790px desktop /
     // ~601px mobile), taller than the default single-CTA text-up hero — reproduced
     // by the `tall` min-height floor in hero.css.
-    main.append(WebImporter.Blocks.createBlock(document, { name: 'Hero (text-up, tall)', cells: heroCells }));
+    main.append(WebImporter.Blocks.createBlock(document, { name: 'Hero (text-up, medium)', cells: heroCells }));
     emittedBlocks.push('hero-text-up-tall');
 
     // Emit a Columns section: heading + body paras + optional CTA in the text cell,
@@ -348,7 +352,7 @@ export default {
 
     // SECTION 5 — YELLOW: "Ways to Get Involved" columns, image LEFT.
     columnsSection({
-      heading: 'Ways to Get Involved', paras: WAYS_PARAS,
+      heading: 'Ways to Get Involved', body: WAYS_BODY,
       img: '/content/dam/usta-foundation/get-involved/ypi-4.png', alt: 'USTA Foundation YPI members',
       imageSide: 'left', yellow: true,
     });

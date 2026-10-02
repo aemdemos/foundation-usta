@@ -579,6 +579,61 @@ main > .section.hero-container:has(.hero.text-up) {
 }
 
 
+/* text-up, medium — YPI's hero, measured on the source at 390/768/992/1200/1440/
+   1600/1728/1920. Height follows the content (h1 + subhead + JOIN US) plus a fixed
+   band below the button: 258px (<768) / 386px (>=768) — so it is 601 @390,
+   814 @768, 790 @992–1536 and 656 from ~1600 where the subhead fits on one line.
+   (`tall` used a 601/790 min-height floor, which is too tall on wide screens.)
+   Panel = the source AEM grid: 1/12 left offset, 6/12 wide, inner inset 4px (<768)
+   / 6px (768–991) / 15px (>=992). The button is a grid column of that 6-col panel,
+   never narrower than its label: 4/6 (<768), 3/6 offset 3/6 (768–991), 2/6 (>=992). */
+.hero.text-up.medium.block {
+  min-height: 0;
+  padding: 48px 0 258px;
+}
+
+.hero.text-up.medium.block > div {
+  box-sizing: border-box;
+  width: 50vw;
+  max-width: none;
+  margin-left: 8.333vw;
+}
+
+.hero.text-up.medium.block > div > div {
+  padding: 0 4px;
+}
+
+.hero.text-up.medium a.button:any-link {
+  width: calc(50vw * 4 / 6 - 8px);
+  min-width: max-content;
+}
+
+@media (width >= 768px) {
+  .hero.text-up.medium.block {
+    padding: 80px 0 386px;
+  }
+
+  .hero.text-up.medium.block > div > div {
+    padding: 0 6px;
+  }
+
+  .hero.text-up.medium a.button:any-link {
+    width: calc(50vw * 3 / 6 - 12px);
+    margin-left: calc(50vw * 3 / 6);
+  }
+}
+
+@media (width >= 992px) {
+  .hero.text-up.medium.block > div > div {
+    padding: 0 15px;
+  }
+
+  .hero.text-up.medium a.button:any-link {
+    width: calc(50vw * 2 / 6 - 30px);
+    margin-left: 0;
+  }
+}
+
 /* ==================================================================
    Variant: error
    ================================================================== */

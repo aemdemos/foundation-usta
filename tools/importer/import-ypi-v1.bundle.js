@@ -1,9 +1,26 @@
 /* eslint-disable */
 var CustomImportScript = (() => {
   var __defProp = Object.defineProperty;
+  var __defProps = Object.defineProperties;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
   var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __propIsEnum = Object.prototype.propertyIsEnumerable;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __spreadValues = (a, b) => {
+    for (var prop in b || (b = {}))
+      if (__hasOwnProp.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    if (__getOwnPropSymbols)
+      for (var prop of __getOwnPropSymbols(b)) {
+        if (__propIsEnum.call(b, prop))
+          __defNormalProp(a, prop, b[prop]);
+      }
+    return a;
+  };
+  var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -74,7 +91,7 @@ var CustomImportScript = (() => {
   var ORIGIN = "https://www.ustafoundation.com";
   function executeCleanup(hookName, element, payload) {
     try {
-      transform.call(null, hookName, element, { ...payload, template: PAGE_TEMPLATE });
+      transform.call(null, hookName, element, __spreadProps(__spreadValues({}, payload), { template: PAGE_TEMPLATE }));
     } catch (e) {
       console.error(`Cleanup transformer failed at ${hookName}:`, e);
     }
@@ -84,7 +101,7 @@ var CustomImportScript = (() => {
     if (!u) return u;
     try {
       return new URL(u, ORIGIN).href;
-    } catch {
+    } catch (e) {
       return u;
     }
   }
@@ -123,6 +140,7 @@ var CustomImportScript = (() => {
   }
   var import_ypi_v1_default = {
     transform: (payload) => {
+      var _a;
       const { document, url, params } = payload;
       const main = document.querySelector("#mainContent") || document.querySelector("main") || document.body;
       const emittedBlocks = [];
@@ -145,13 +163,13 @@ var CustomImportScript = (() => {
         heroBgEl = heroBgEl.parentElement;
       }
       const heroContainer = h1 && h1.closest(".container.responsivegrid") || null;
-      const heroSubhead = heroContainer ? norm(heroContainer.querySelector(".cmp-text p")?.textContent || "") : "";
+      const heroSubhead = heroContainer ? norm(((_a = heroContainer.querySelector(".cmp-text p")) == null ? void 0 : _a.textContent) || "") : "";
       const heroCta = ctaOf(heroContainer) || { href: "https://ustaf.tfaforms.net/67", text: "JOIN US" };
       const FUTURE_INTRO = "The Young Professional Initiative (YPI) is a community of emerging leaders who are passionate about creating opportunities for young people through the power of tennis, education and mentorship.";
       const WHATIS_BODY = [
         { p: "As an affiliate group of the USTA Foundation, YPI brings together young professionals who are passionate about making a difference." },
         { p: "This initiative connects you with peers who share a commitment to giving back while helping create opportunities for the next generation. Through networking events, mentorship, fundraising, and mission-driven experiences, YPI supports the USTA Foundation's work to help young people thrive both on and off the tennis court." },
-        { b: "As a part of The Young Professional Initiative, you can:" },
+        { h4: "As a part of The Young Professional Initiative, you can:" },
         { ul: [
           "Build meaningful professional and personal relationships",
           "Give back to local communities",
@@ -171,10 +189,13 @@ var CustomImportScript = (() => {
           "Access to welcoming tennis opportunities"
         ] }
       ];
-      const WAYS_PARAS = [
-        "Connect with fellow supporters through networking events, volunteer opportunities, mission-focused experiences, and special gatherings throughout the year, including during the US Open.",
-        "Support the USTA Foundation through annual giving, fundraising campaigns, and other initiatives that help create opportunities for young people.",
-        "Join a growing network of young professionals committed to leadership, service, and making a lasting impact."
+      const WAYS_BODY = [
+        { h6: "Attend Events" },
+        { p: "Connect with fellow supporters through networking events, volunteer opportunities, mission-focused experiences, and special gatherings throughout the year, including during the US Open." },
+        { h6: "Fuel the Mission" },
+        { p: "Support the USTA Foundation through annual giving, fundraising campaigns, and other initiatives that help create opportunities for young people." },
+        { h6: "Build Your Community" },
+        { p: "Join a growing network of young professionals committed to leadership, service, and making a lasting impact." }
       ];
       const QUOTE_TEXT = `"Young leaders can play a key role in championing the next generation. The Young Professional Initiative is vital in the USTA Foundation's future & growing its impact."`;
       const QUOTE_ATTR = "Greg Labanowski, Young Professional Initiative";
@@ -183,11 +204,9 @@ var CustomImportScript = (() => {
         el.textContent = text;
         return el;
       };
-      const boldP = (text) => {
-        const el = document.createElement("p");
-        const s = document.createElement("strong");
-        s.textContent = text;
-        el.append(s);
+      const headingEl = (tag, text) => {
+        const el = document.createElement(tag);
+        el.textContent = text;
         return el;
       };
       const bulletList = (items) => {
@@ -200,7 +219,8 @@ var CustomImportScript = (() => {
         return ul;
       };
       const bodyNodes = (body) => body.map((item) => {
-        if (item.b) return boldP(item.b);
+        if (item.h4) return headingEl("h4", item.h4);
+        if (item.h6) return headingEl("h6", item.h6);
         if (item.ul) return bulletList(item.ul);
         return p(item.p);
       });
@@ -209,17 +229,17 @@ var CustomImportScript = (() => {
       if (heroBgUrl) {
         const bg = document.createElement("img");
         bg.setAttribute("src", absUrl(heroBgUrl));
-        bg.setAttribute("alt", "");
+        bg.setAttribute("alt", "Two USTA Foundation Young Professional Initiative supporters together at an event");
         heroCells.push([bg]);
       }
       const heroContentCell = [];
       const heroHeading = document.createElement("h1");
-      heroHeading.textContent = "Young Professional Initiative";
+      heroHeading.textContent = "Young Professional\xA0Initiative";
       heroContentCell.push(heroHeading);
       if (heroSubhead) heroContentCell.push(p(heroSubhead));
       if (heroCta) heroContentCell.push(ctaParagraph(document, heroCta.href, heroCta.text));
       heroCells.push([heroContentCell]);
-      main.append(WebImporter.Blocks.createBlock(document, { name: "Hero (text-up, tall)", cells: heroCells }));
+      main.append(WebImporter.Blocks.createBlock(document, { name: "Hero (text-up, medium)", cells: heroCells }));
       emittedBlocks.push("hero-text-up-tall");
       const columnsSection = ({
         heading,
@@ -304,7 +324,7 @@ var CustomImportScript = (() => {
       }
       columnsSection({
         heading: "Ways to Get Involved",
-        paras: WAYS_PARAS,
+        body: WAYS_BODY,
         img: "/content/dam/usta-foundation/get-involved/ypi-4.png",
         alt: "USTA Foundation YPI members",
         imageSide: "left",
@@ -323,8 +343,12 @@ var CustomImportScript = (() => {
         const first = t.querySelector("th, td");
         return first && /^\s*metadata\s*$/i.test(first.textContent || "");
       });
-      const hasRow = (key) => !!metaTable && [...metaTable.querySelectorAll("tr")].some((tr) => (tr.firstElementChild?.textContent || "").trim().toLowerCase() === key.toLowerCase());
+      const hasRow = (key) => !!metaTable && [...metaTable.querySelectorAll("tr")].some((tr) => {
+        var _a2;
+        return (((_a2 = tr.firstElementChild) == null ? void 0 : _a2.textContent) || "").trim().toLowerCase() === key.toLowerCase();
+      });
       const addMetaRow = (key, value) => {
+        var _a2;
         if (!metaTable || !value || hasRow(key)) return;
         const tr = document.createElement("tr");
         const k = document.createElement("td");
@@ -332,7 +356,7 @@ var CustomImportScript = (() => {
         const v = document.createElement("td");
         v.textContent = value;
         tr.append(k, v);
-        metaTable.querySelector("tbody")?.append(tr) || metaTable.append(tr);
+        ((_a2 = metaTable.querySelector("tbody")) == null ? void 0 : _a2.append(tr)) || metaTable.append(tr);
       };
       addMetaRow("Theme", "general");
       WebImporter.rules.transformBackgroundImages(main, document);
