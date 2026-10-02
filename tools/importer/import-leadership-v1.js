@@ -153,7 +153,16 @@ function buildStaffList(document, panel) {
       const text = normalizeLine(holder.textContent);
       if (!text) return;
       const line = document.createElement('p');
-      line.textContent = text;
+      // keep the source's italic role (`<b>Name</b>, <i>Role</i>`) → `Name, <em>Role</em>`
+      const role = normalizeLine([...holder.querySelectorAll('i, em')].map((i) => i.textContent).join(' '));
+      const name = normalizeLine([...holder.querySelectorAll('b, strong')].map((b) => b.textContent).join(' '));
+      if (name && role) {
+        const em = document.createElement('em');
+        em.textContent = role;
+        line.append(`${name}, `, em);
+      } else {
+        line.textContent = text;
+      }
       out.push(line);
     });
   });

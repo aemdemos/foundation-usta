@@ -141,28 +141,39 @@
 }
 
 /* ==================================================================
-   Variant: directory — multi-column name directory (source: Board of
-   Directors "Officers and Directors / Advisory Board / Honorary Board").
-   Measured on the live source at 1200: 3 columns (each ~330px), separated by a
-   thin vertical divider; headings 28px/30.8 Graphik Semibold black, 10px below;
-   names 18/24 Graphik Regular black — name bold (<b>), role italic (<i>).
-   Mobile: columns stack, dividers become a top border between them.
+   Variant: directory — name directory columns (source: Leadership & Staff,
+   Board of Directors tab — "Advisory Board" / "Honorary Board").
+   Measured on the live source at 390/768/992/1200/1440:
+   - columns stack on mobile; from 768 each column is an equal share of the
+     content column (2 cols = 354 / 481 / 585 at 768 / 992 / ≥1200);
+   - column padding 16px vertical (8 container + 8 text) and 8px (<768) /
+     12px (768–991) / 30px (≥992) horizontal, so the text area is inset by that;
+   - heading Graphik Semibold 22/24.2 → 28/30.8 @768, weight 500, black,
+     CENTRED, margin 10px top + bottom; names 16/24 → 18/24, black, CENTRED;
+     bold names / italic roles as authored;
+   - a 2px solid #979797 divider on the RIGHT edge of every column but the last
+     (source `border-solid-divider_right` ::after), as tall as that column —
+     only from 768;
+   - spacing: 40px above the first column, 48px (<768) / 128px (≥768) below the
+     last (source 48/96 container padding + the tab panel's 32px from 768).
    ================================================================== */
 
 .table.directory {
   display: grid;
   grid-template-columns: 1fr; /* mobile: stacked */
-  gap: 40px 0;
+  align-items: start; /* each column keeps its own height (divider = column height) */
+  padding: 40px 0 48px;
 }
 
 .table.directory .table-directory-col {
+  position: relative;
   min-width: 0;
+  padding: 16px 8px;
+  text-align: center;
 }
 
-/* heading — source h4 (Graphik Semibold, w500, black, 10px bottom margin).
-   RESPONSIVE: 22/24.2 on mobile → 28/30.8 from 768 (measured on the source). */
 .table.directory .table-directory-col h4 {
-  margin: 0 0 10px;
+  margin: 10px 0;
   font-family: var(--heading-semibold-font-family);
   font-size: 22px;
   line-height: 24.2px;
@@ -171,50 +182,62 @@
   text-transform: none;
 }
 
-@media (width >= 768px) {
-  .table.directory .table-directory-col h4 {
-    font-size: 28px;
-    line-height: 30.8px;
-  }
-}
-
-/* name/role lines — 18/24 body, black; name bold, role italic (as authored). */
 .table.directory .table-directory-col p {
   margin: 0;
   font-family: var(--body-font-family);
-  font-size: var(--body-font-size-m); /* 16 mobile → 18 at 768 (matches source) */
+  font-size: 16px;
   line-height: 24px;
   color: #000;
 }
 
-.table.directory .table-directory-col b {
+.table.directory .table-directory-col :is(b, strong) {
   font-weight: 700;
 }
 
-.table.directory .table-directory-col i {
+.table.directory .table-directory-col :is(i, em) {
   font-style: italic;
 }
 
-/* From 768: lay the columns side by side with a divider between them. The source
-   columns are ~330px wide with ~60px gaps; equal 1fr columns + a 60px gap and a
-   left border (drawn in the gap) reproduce the divider look at the content width. */
 @media (width >= 768px) {
+  .table.directory {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    padding-bottom: 128px;
+  }
+
   .table.directory.table-directory-2-cols {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0 60px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .table.directory.table-directory-3-cols {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0 60px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  /* vertical divider before every column except the first — a 1px line centered
-     in the 60px gap (30px of negative offset via padding on the column). */
-  .table.directory .table-directory-col + .table-directory-col {
-    padding-left: 30px;
-    border-left: 1px solid #d8d8d8;
-    margin-left: -30px; /* pull the border into the middle of the 60px gap */
+  .table.directory .table-directory-col {
+    padding: 16px 12px;
+  }
+
+  .table.directory .table-directory-col:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-left: 2px solid #979797;
+  }
+
+  .table.directory .table-directory-col h4 {
+    font-size: 28px;
+    line-height: 30.8px;
+  }
+
+  .table.directory .table-directory-col p {
+    font-size: 18px;
+  }
+}
+
+@media (width >= 992px) {
+  .table.directory .table-directory-col {
+    padding: 16px 30px;
   }
 }
 

@@ -4189,3 +4189,40 @@ on an open page did nothing.
   tab, unrelated hashes are ignored; the indicator settles under the active tab (x78, w224 for Board).
 - Gates: lint 0 errors (7 pre-existing warnings) · breakpoint ✓ · check:overflow ✓ · test:a11y ✓ (Board deep link
   + default). Code-only; deploys via git push.
+
+### 2026-10-02 — table `(directory)`: Advisory / Honorary Board matched to source (centred 2-col + 2px divider)
+The source Board tab now has TWO name columns (Advisory Board / Honorary Board — the Officers moved to
+`columns (profile)`), laid out on the AEM grid; ours was the old 3-col look (left-aligned, 60px gaps, 1px #d8d8d8
+divider in the gap). Measured live at 390/768/992/1200/1440:
+- Columns stack <768; from 768 each is an equal share of the content column (354/481/585). Column padding 16px
+  vertical, 8px (<768) / 12px (768–991) / 30px (≥992) horizontal (= container + text-column insets).
+- Heading Graphik Semibold 22/24.2 → 28/30.8 @768, w500, black, CENTRED, `margin: 10px 0`; names 16/24 → 18/24,
+  black, CENTRED; bold names / italic roles as authored.
+- Divider = source `border-solid-divider_right::after`: absolute top/right/bottom 0, `border-left: 2px solid
+  #979797`, as tall as its own column (columns keep natural heights → `align-items: start`), only ≥768.
+- Spacing: 40px block top padding (+16 column pad + 10 heading margin = the source's extra 66px above, text-to-text
+  161/186/209 at 390/768/≥992); bottom padding 48px (<768) / 128px (≥768) → last name → footer 104/184 (source).
+- `blocks/table/table.css` directory section rewritten (generic N columns; 2/3-col classes kept). No JS change.
+- **Result:** 0 differences vs source at all 5 widths (column boxes, heading/name offsets, first/last line
+  x-extents, every line break, divider position/size/colour, gaps above/below, bold/italic). 3-col block sample
+  still renders (3 × 390 @1200, no overflow).
+- Gates: lint 0 errors · stylelint ✓ · breakpoint ✓ · check:overflow ✓ (page + table-directory sample) ·
+  test:a11y ✓ (both) · check:typography: only the open label-bar items (Board `<h3>` ×12 + the 18px "Officers and
+  Directors" label @390) — none from the directory.
+
+### 2026-10-02 — Leadership staff list: italic roles restored (`Name, <em>Role</em>`)
+Source staff list lines (under the Staff profile cards) are `<b>Name</b>, <i>Role</i>`; the first import flattened
+them to plain "Name, Role", so EDS lost the italic role. Per direction (and as the source reads in the reviewer's
+browser), only the ROLE is italic — the name stays regular weight.
+- **Content (targeted, source-driven — no full re-import):** new `tools/content/staff-list-format.mjs
+  [--dry-run] <page>…` reads the 18 name/role pairs from the live source (Playwright) and rewrites each exact plain
+  line to `<p>Name, <em>Role</em></p>`. Idempotent, touches nothing else, backups in
+  `migration-work/staff-list-format/`. Applied to `en/home/who-we-are/leadership-and-staff` +
+  `drafts/block-samples/cards-profile` + `drafts/block-samples/toc-profile` — 18 lines each, verified that undoing
+  the 18 formats reproduces the backup byte-for-byte. (A full re-run of the leadership importer was NOT used: it
+  predates the bio cards / new Board layout and would overwrite them.)
+- **Importer:** `import-leadership-v1.js` `buildStaffList()` now emits `Name, <em>Role</em>` from the source
+  `<b>`/`<i>` (plain-text fallback); re-bundled.
+- Verified: em italic w400, p Graphik Regular 16/24 → 18/24, list height unchanged (768 @390, 432 @1200).
+- Gates: lint 0 errors · check:overflow ✓ · test:a11y ✓ · check:typography ✓ (Staff tab).
+- **Deploy:** content change → re-upload/publish the page (and the 2 samples) to DA; importer is git.
