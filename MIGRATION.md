@@ -4226,3 +4226,28 @@ browser), only the ROLE is italic — the name stays regular weight.
 - Verified: em italic w400, p Graphik Regular 16/24 → 18/24, list height unchanged (768 @390, 432 @1200).
 - Gates: lint 0 errors · check:overflow ✓ · test:a11y ✓ · check:typography ✓ (Staff tab).
 - **Deploy:** content change → re-upload/publish the page (and the 2 samples) to DA; importer is git.
+
+### 2026-10-02 — Footer rebuilt on the source's AEM float grid (exact positions at 390–1920)
+Reported: footer shorter than source, logo too small and not aligned with KEEP UP, items drifting. Measured every
+footer leaf on the live source at 390/768/992/1200/1440/1728/1920. The source is an AEM responsive grid of FLOATS,
+not fixed sizes — the old CSS (vw logo, fixed 237px button, flex/grid rows, 40px padding) could never line up.
+- **Container** = 10/12 of the viewport, centred; top padding 32 (<768) / 48 (≥768), bottom 16; + 17px black strip.
+- **Columns** (each `padding: 8px 0`), widths brand/nav/social/legal: <768 all 100% · 768+ 100/60/40/100 ·
+  992+ 20/60/20/100 (legal max 336/720/1200). Legal = float + `left:50%; translateX(-50%)` (source), so at ≥~1800
+  it floats up beside the taller brand column — reproduced by using real floats.
+- **Gutter** m = 4 / 6 / 15px. **Logo** width = column−8 (<768) / 20%−12 (768–991) / column−30 (≥992) → 317 / 116 /
+  135@992 · 170@1200 · 210@1440 · 258@1728 · 290@1920. **KEEP UP**: full (<768) / 6-of-12 offset 3 (768) /
+  10-of-12 offset 1 (≥992), `min-width: max-content` (=150), 40px, 1px transparent border, `padding: 0 14px`, 14/20
+  Semibold, letter-spacing NORMAL (source sets 1px on the <a> but the visible label <span> is normal).
+- **Nav** li floats 50% (<992) / 25%, `padding: 16px m`, 16 → 18px w700 underline. **Social** inner left pad
+  8/12/30, icons inline in a centred <p> with the source's `&nbsp; ` / `&nbsp;&nbsp;` separators,
+  `vertical-align: middle`. **Legal** links w700 (source <p> is bold), separated by inline " | " text (JS) instead of
+  CSS pseudo-pipes.
+- `footer.js`: tags the logo / button top-level wrappers (`.footer-logo`, `.footer-keepup-wrap`), builds the icon
+  <p> with separators, writes " | " between legal links. `footer.css` rewritten (file-level
+  no-descending-specificity disable — cross-element false positives, as before).
+- **Result:** band height = source at every width (816 / 595 / 533 / 461 / 439 / 460 / 389, ±0.4 sub-pixel); logo,
+  button, label glyphs, 4 nav links, 3 icons (±0.2), both social paragraphs (+ line breaks), copyright and the
+  4 legal links all at the source x/y/size. Side-by-side renders at 1728 + 390 identical.
+- Gates: lint 0 errors · stylelint ✓ · breakpoint ✓ · check:overflow ✓ (home, leadership, a news article) ·
+  check:typography ✓ · test:a11y ✓ (all three).

@@ -48,8 +48,16 @@ export default async function decorate(block) {
   const brand = footer.querySelector('.footer-brand');
   if (brand) {
     const links = brand.querySelectorAll('a');
-    if (links[0]) links[0].classList.add('footer-logo-link');
-    if (links[1]) links[1].classList.add('footer-keepup');
+    // tag the TOP-LEVEL wrapper of each (the bare <a>, or the <p> production wraps it in)
+    const topLevel = (el) => [...brand.children].find((c) => c === el || c.contains(el));
+    if (links[0]) {
+      links[0].classList.add('footer-logo-link');
+      topLevel(links[0])?.classList.add('footer-logo');
+    }
+    if (links[1]) {
+      links[1].classList.add('footer-keepup');
+      topLevel(links[1])?.classList.add('footer-keepup-wrap');
+    }
   }
 
   // Social: group the icon links into a single row wrapper so they lay out as
@@ -74,15 +82,34 @@ export default async function decorate(block) {
       return false;
     });
     if (iconNodes.length) {
-      const row = document.createElement('div');
+      // one centred paragraph of inline icons, separated like the source
+      // ("&nbsp; " then "&nbsp;&nbsp;") so the icon spacing matches exactly
+      const row = document.createElement('p');
       row.className = 'footer-social-icons';
       iconNodes[0].before(row);
-      iconNodes.forEach((node) => {
+      const separators = ['\u00a0 ', '\u00a0\u00a0'];
+      iconNodes.forEach((node, i) => {
         const link = node.tagName === 'A' ? node : node.querySelector(':scope > a');
+        if (i) row.append(separators[Math.min(i - 1, separators.length - 1)]);
         row.append(link);
         if (node.tagName === 'P') node.remove();
       });
     }
+  }
+
+  // Legal links: separate them with an inline " | " text (source markup), so the
+  // pipes wrap and space exactly like the source instead of being drawn by CSS.
+  const legalLinks = footer.querySelector('.footer-legal p:last-child');
+  if (legalLinks) {
+    const anchors = [...legalLinks.querySelectorAll(':scope > a')];
+    anchors.slice(0, -1).forEach((a) => {
+      const next = a.nextSibling;
+      if (next && next.nodeType === Node.TEXT_NODE && !next.textContent.trim()) {
+        next.textContent = ' | ';
+      } else if (!(next && next.nodeType === Node.TEXT_NODE && next.textContent.includes('|'))) {
+        a.after(' | ');
+      }
+    });
   }
 
   // Append the section divs directly to the block so they are the direct
