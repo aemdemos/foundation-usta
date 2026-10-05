@@ -124,8 +124,11 @@
   gap: 24px; /* the blank-line gap between the header and each bracket group */
 }
 
+/* Column header ("Winners" / "NJTL Chapter") — source authors it in <b>, so it
+   computes to 700 (on the Graphik Regular face, which renders the same glyph
+   widths as 400 — measured 70/114px @1200 on both). */
 .table-grouped .table-col-head {
-  font-weight: 400;
+  font-weight: 700;
 }
 
 .table-grouped .table-col p {

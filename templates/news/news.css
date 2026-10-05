@@ -93,6 +93,13 @@ body.news main .default-content-wrapper p:has(> picture) + p {
   color: #333;
 }
 
+/* ---- Tables in articles (e.g. the 2023 NJTL Essay Contest winners) ---------
+   20px between the intro text and the table, at every width (the global
+   block rhythm would give 32px mobile / 40px from 768). */
+body.news main .section > .default-content-wrapper + div.table-wrapper {
+  margin-top: 20px;
+}
+
 /* Related Articles feed (news.js) — card look comes from `.cards.news` in
    blocks/cards/cards.css; only the link deltas live here (the feed wraps image +
    title in <a>; keep them looking like the plain image/heading). */
