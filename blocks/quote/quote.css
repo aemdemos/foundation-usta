@@ -142,18 +142,6 @@
   text-align: left;
 }
 
-/* Source separates the tweet's sentences with a double <br> (one BLANK line);
-   our body is authored as separate <p>, so reproduce that blank line as a
-   one-line-height gap BETWEEN body paragraphs (not after the last one). */
-.quote.tweet .quote-tweet-body p + p {
-  margin-top: 22.857px;
-}
-
-/* blank line between the tweet body and the handle/date line (source rhythm) */
-.quote.tweet .quote-tweet-footer {
-  margin-top: 22.857px;
-}
-
 /* Links: @mentions, #hashtags, pic.twitter, handle + date — blue, weight 400. */
 .quote.tweet a:any-link {
   color: var(--link-color); /* #0357b8 */
@@ -171,11 +159,6 @@
   .quote.tweet .quote-tweet-footer p {
     font-size: 18px;
     line-height: 25.714px;
-  }
-
-  .quote.tweet .quote-tweet-body p + p,
-  .quote.tweet .quote-tweet-footer {
-    margin-top: 25.714px;
   }
 }
 
