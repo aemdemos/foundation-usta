@@ -106,6 +106,10 @@ body.news .cards.news .cards-news-card-title a {
   text-decoration: none;
 }
 
+body.news div.section.columns-container .columns-wrapper, body.news div.section.columns-container div.default-content-wrapper {
+  margin-top: 16px;
+}
+
 body.news div.section.columns-container .columns-wrapper .columns.block > div > div > p:nth-child(1) {
   margin-top: 0;
 }
