@@ -23,6 +23,21 @@ body.news main > .section:first-of-type {
   padding-top: 24px; /* → ~24px breadcrumb→H1 gap, matching the source (mobile + desktop both ~25px) */
 }
 
+/* Articles whose H1 is followed DIRECTLY by body text (e.g. the 2026 Opening
+   Night Gala) are built differently on the source: H1 + body share ONE padded
+   container (64px top padding), so the headline sits LOWER (breadcrumb→H1 40px
+   mobile / 72px from 768) and the body follows TIGHT (H1→text 26px), instead of
+   the default H1 / separator / body-container stack (24px above, 89/105 below). */
+body.news main > .section:first-of-type:has(> .default-content-wrapper > h1 + p) {
+  padding-top: 40px;
+}
+
+@media (width >= 768px) {
+  body.news main > .section:first-of-type:has(> .default-content-wrapper > h1 + p) {
+    padding-top: 72px;
+  }
+}
+
 /* ---- Article headline (H1) ------------------------------------------------
    SIZE is intentionally NOT set here — the H1 inherits the GLOBAL scale
    (54/59.4 mobile → 100/110 @768) so the headline is identical site-wide and the
@@ -55,6 +70,12 @@ body.news main h1 {
    `main .default-content-wrapper :is(h1..)` rule (0,1,2). */
 body.news main .default-content-wrapper h1 {
   color: #333;
+}
+
+/* H1 directly followed by body text (single source container, see above): the
+   text starts 26px below the headline at every width. */
+body.news main .default-content-wrapper > h1:has(+ p) {
+  margin-bottom: 26px;
 }
 
 /* ---- Article body copy ---------------------------------------------------- */
