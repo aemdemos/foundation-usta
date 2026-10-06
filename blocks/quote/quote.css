@@ -162,6 +162,19 @@
   }
 }
 
+/* --- tweet beside article text in a `split-left` section ---
+   The source starts the text column level with the tweet column (both AEM grid
+   columns top-aligned, text <p> margin 0), so the body text's first line sits
+   10px ABOVE the tweet's (the blockquote's 10px top padding). Drop the global
+   40px block→next-wrapper margin (styles.css) on the text column beside the
+   tweet, and its first paragraph's top margin (matching sibling selector). */
+@media (width >= 768px) {
+  main > .section.split-left:has(.quote.tweet) > div[class$='-wrapper'] + div.default-content-wrapper,
+  main > .section.split-left:has(.quote.tweet) > div[class$='-wrapper'] + div.default-content-wrapper > :first-child {
+    margin-top: 0;
+  }
+}
+
 /* Quote in a `split-even` section (Chris Evert campaign page) — source widths:
    the source <blockquote> sits in an AEM grid column with a 4px (<768) / 6px
    (768–991) side margin → 328 / 708 wide when stacked; from 992 it fills its
