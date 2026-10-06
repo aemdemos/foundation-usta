@@ -451,6 +451,12 @@
   border-radius: 0;
 }
 
+/* Card with no image: reserve a blank area the size of the source's 400×200
+   (2:1) card image so the body lines up below its siblings' image row. */
+.cards.news .cards-news-card-image-empty {
+  aspect-ratio: 2 / 1;
+}
+
 /* Title — Graphik Semibold, uppercase, black. Source uses 28px/36px here (its
    own scale, smaller than the global h3 token) with -0.7px tracking; drop to
    22px/32px from 992. Not the h3 token, so set explicitly and comment why. */
