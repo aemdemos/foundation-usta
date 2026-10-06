@@ -10,6 +10,7 @@ import {
   loadSections,
   loadCSS,
   buildBlock,
+  createOptimizedPicture,
   readBlockConfig,
   toClassName,
   toCamelCase,
@@ -107,12 +108,54 @@ function buildWidgetAutoBlocks(main) {
   });
 }
 
+/** EDS media-bus image (`…/media_<hash>.<ext>`) — the only images the CDN can resize. */
+const EDS_MEDIA_PATH = /\/media_[0-9a-f]{10,}\.(jpe?g|png|gif|webp)$/i;
+const EDS_HOSTS = /\.(aem|hlx)\.(page|live)$/i;
+
+/**
+ * Turns a pasted EDS image URL into an optimized, responsive <picture>, so authors can
+ * drop an asset link (e.g. https://main--…aem.live/assets/media/media_<hash>.jpg) into
+ * any page or block cell and get a rendered image (webp + width renditions) instead of
+ * a text link. Only STANDALONE links whose label is the URL itself are converted;
+ * labelled links ("Download photo") and links inside a sentence stay links. Runs before
+ * block decoration, so blocks (hero, cards, columns…) receive a normal <picture>.
+ * Alt text comes from the link's title (empty = decorative).
+ * @param {Element} main The container element
+ */
+function buildImageLinks(main) {
+  main.querySelectorAll('a[href]').forEach((a) => {
+    const text = a.textContent.trim();
+    if (text && !/^(https?:\/\/|\.{0,2}\/)/i.test(text)) return;
+    let url;
+    try {
+      url = new URL(a.getAttribute('href'), window.location.href);
+    } catch {
+      return;
+    }
+    const knownHost = url.origin === window.location.origin || EDS_HOSTS.test(url.hostname);
+    if (!knownHost || !EDS_MEDIA_PATH.test(url.pathname)) return;
+
+    const container = a.closest('p') || a.parentElement;
+    if (container.textContent.trim() !== text || container.querySelectorAll('a').length > 1) return;
+
+    const picture = createOptimizedPicture(url.href, a.title || '', false, [
+      { media: '(min-width: 768px)', width: '2000' },
+      { width: '750' },
+    ]);
+    // replace the link together with any bold/italic wrapper inside its paragraph
+    let outer = a;
+    while (outer.parentElement !== container && outer.parentElement) outer = outer.parentElement;
+    outer.replaceWith(picture);
+  });
+}
+
 /**
  * Builds all synthetic blocks in a container element.
  * @param {Element} main The container element
  */
 function buildAutoBlocks(main) {
   try {
+    buildImageLinks(main);
     // auto load `*/fragments/*` references
     const fragments = [...main.querySelectorAll('a[href*="/fragments/"]')].filter((f) => !f.closest('.fragment'));
     if (fragments.length > 0) {

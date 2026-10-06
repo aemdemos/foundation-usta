@@ -4472,3 +4472,29 @@ Page: `/en/home/get-involved/young-professional-initiative` (importer `import-yp
 - Gates: lint 0 errors · breakpoint ✓ · axe WCAG A/AA via the preview browser on 5 news pages: card images
   clean (only existing `.nav-donate` / `.footer-keepup` contrast + tweet link-in-text-block). `npm run
   test:a11y` could not run (Playwright browser binary missing here).
+
+### 2026-10-06 — Pasted EDS image links render as optimized images (site-wide)
+Reported on `/drafts/meet/test`: an author pasted an asset URL
+(`https://main--foundation-usta--aemdemos.aem.live/assets/media/media_17f9…ed.jpg`) and it showed as a text link. The
+URL itself was fine (200, 2.2 MB JPEG; the CDN serves `?width=750&format=webply` at 75 KB). Nothing turned a pasted
+image link into an image. Note: on publish, the pipeline rewrites same-project media URLs to RELATIVE
+(`./media_<hash>.jpg`), while the link TEXT keeps the absolute URL. The media bus serves the hash under any path.
+- **`scripts/scripts.js` `buildImageLinks()`** (first step of `buildAutoBlocks`, so before block decoration): an
+  `<a>` becomes `createOptimizedPicture()` (webp + jpg fallback, 2000 ≥768 / 750 below, lazy; the LCP candidate in
+  section 1 is still made eager by `waitForFirstImage`) when ALL of these hold:
+  - its href path is an EDS media file `…/media_<hex>.(jpg|jpeg|png|gif|webp)`;
+  - the host is this origin, a relative path, or `*.aem|hlx.page|live` (the origin is kept, so a pasted aem.live URL
+    still resolves);
+  - its label is a URL (or empty);
+  - it is the only content of its paragraph / block cell (any bold/italic wrapper is replaced too).
+- **Stays a link:** labelled links ("Download photo"), URLs inside a sentence, and non-EDS images (source DAM,
+  content.da.live). Those can't be resized by the CDN; they must be imported or localized.
+- **Blocks get a normal `<picture>`**, e.g. a URL pasted into a hero row-1 cell becomes the hero background (viewport-sized
+  rendition, 40% overlay), verified on `hero (banner)`.
+- **Alt:** taken from the link's `title`; otherwise `alt=""` (decorative). Use a real inserted image when the picture
+  needs descriptive alt text.
+- **Verified:** test page @1440 → 2000w webp in the 720 column; @390 → 750w webp in the 336 column; injected cases
+  (hero cell, bold link, relative path, labelled link, inline link, external DAM link) all behave as above.
+- Gates: lint 0 errors (7 pre-existing warnings) · breakpoint ✓ · check:overflow ✓ · test:a11y ✓ (`/drafts/meet/test`).
+  Env: reinstalled headless-shell 1187 (gates) then 1208 (importer/preview) per the 2026-10-01 gotcha; this removed
+  build 1205. JS-only; deploys via git push. No content change needed.
