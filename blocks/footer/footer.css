@@ -156,7 +156,10 @@ footer .footer-social-icons {
   padding: 8px 0;
 }
 
-footer .footer-social-icons a {
+/* :any-link to outrank `footer .footer a:any-link { underline }` — the <picture>
+   whitespace inside each icon link otherwise renders a stray underline (the
+   source shows none) */
+footer .footer-social-icons a:any-link {
   text-decoration: none;
 }
 
