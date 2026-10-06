@@ -4429,3 +4429,46 @@ Page: `/en/home/get-involved/young-professional-initiative` (importer `import-yp
   `/drafts/block-samples/cards-news`.
 - Gates: lint 0 errors · breakpoint ✓ · check:overflow / test:a11y could not run (Playwright browser
   binary missing in this environment).
+
+### 2026-10-06 — Alt-text audit: all 73 news articles vs source (no fixes needed)
+- Scope: every `/en/home/news/*` page, rendered DOM on the preview (after decoration) compared with the
+  live source HTML (all 73 source URLs from the sitemap).
+- **Article images:** source 87, migrated 87, all with descriptive alt matching the source word-for-word
+  (2 differ only in whitespace/entity encoding: kathleen-wu, mississippi-njtl). 0 missing, 0 empty.
+- **Related Articles thumbnails (230):** `alt=""` inside an `aria-hidden` + `tabindex=-1` image link, set
+  on purpose in `templates/news/news.js` (the title link right next to it names the card). Source uses a
+  redundant "Visit the … page" alt; kept the decorative pattern. *(Superseded by the next entry: now matches
+  the source.)*
+- **Page metadata `Image` (share/index thumbnail):** 4 pages author it with `alt=""` (2023-njtl-essay-contest-
+  winners, njtl-essay-contest-winners-2024-open, usta-foundation-and-reginald-f-lewis-foundation-partner-to-empo,
+  women-s-history-month-2026-…). Not shown on the page, so no a11y impact. The two NJTL essay pages use a
+  checkmark SVG as their share image.
+- axe-core (`image-alt`, `role-img-alt`, `svg-img-alt`, `image-redundant-alt`, `link-name`, …) on all 73
+  rendered pages: 0 violations. No content changed, nothing previewed or published.
+
+### 2026-10-06 — Related Articles thumbnails: source alt + hover tooltip
+- Source card `<img>`: `alt="Visit the <card title> page"` + `title="<image description>"` (hover tooltip).
+  EDS had `alt=""` in an `aria-hidden` link and no title.
+- `templates/news/news.js` `newsRow()`: alt = `Visit the ${cardTitle(entry)} page`; `title` = the index's
+  new `imagealt`; the image link is a normal link again (no `aria-hidden` / `tabindex=-1`), like the source.
+- `helix-query.yaml` (news index): new `imagealt` = `head > meta[property="og:image:alt"]`. **Gotcha:** EDS
+  fills `og:image:alt` from the Metadata **"Image Alt"** row, else the FIRST CONTENT image alt. It does
+  NOT use the Metadata Image `<img alt>`, so to control a card tooltip author an "Image Alt" row.
+- Content (DA, previewed + published 2026-10-06): added "Image Alt" to
+  `usta-foundation-and-reginald-f-lewis-foundation-partner-to-empo` ("Two men walking off tennis court.") and
+  `usta-foundation-celebrates-24-outstanding-students-through-caree` ("Group of kids pose for a photo on a
+  tennis court."). Also filled the empty Metadata Image alt on WHM 2026 + RFLF and set the career-week one to
+  the same text. Edited the live DA source in place (one attribute/row per page; images untouched).
+- Exact wording vs source: the source shows 11 of our articles as cards. Card alt matches for all 11 (only
+  diff: source "Visit the 2026 Game Changer Award  page" has a stray double space). Tooltip (og:image:alt on
+  aem.live) matches the source for 11/11 (scholarship-…-2025 differs only by a trailing space, which EDS
+  trims). Articles the source never shows as a card have no source tooltip; they show their og:image:alt.
+- **Card selection differs from the source** on most pages (e.g. Aerie: source = Realize the Dream + BHM,
+  EDS = Yonex + Chase; the source also links 9 cards to usta.com `stay-current` pages that aren't in our
+  index). Not changed here; follow-up.
+- **Deploy:** tooltips need the code pushed AND the news articles re-previewed or re-published so the index
+  picks up `imagealt`. Alt text works as soon as the JS deploys. Verified locally by stubbing
+  `/news-index.json` with `imagealt` (all cards: alt + title present).
+- Gates: lint 0 errors · breakpoint ✓ · axe WCAG A/AA via the preview browser on 5 news pages: card images
+  clean (only existing `.nav-donate` / `.footer-keepup` contrast + tweet link-in-text-block). `npm run
+  test:a11y` could not run (Playwright browser binary missing here).

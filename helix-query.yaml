@@ -77,6 +77,11 @@ indices:
       image:
         select: head > meta[property="og:image"]
         value: attribute(el, "content")
+      # Card thumbnail hover tooltip (the source's <img title>). EDS fills
+      # og:image:alt from Metadata "Image Alt", else the first content image alt.
+      imagealt:
+        select: head > meta[property="og:image:alt"]
+        value: attribute(el, "content")
       publicationdate:
         select: head > meta[name="publication-date"]
         value: attribute(el, "content")
