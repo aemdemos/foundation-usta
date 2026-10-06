@@ -100,6 +100,20 @@ body.news main .section > .default-content-wrapper + div.table-wrapper {
   margin-top: 20px;
 }
 
+/* ---- Section style: compact-headings -----------------------------------------
+   Some source articles end a paragraph with a bold+underlined "heading" line
+   (e.g. Kimmelman: "About the Kimmelman Family Foundation") and the source has
+   0 paragraph margin, so its text sits directly below (~2–4px). Drop the
+   paragraph gap after such a heading line. Opt-in per section via
+   section-metadata `Style | compact-headings` — other news pages are unaffected. */
+body.news main .section.compact-headings p:has(> :is(strong, b):last-child > u) {
+  margin-bottom: 0;
+}
+
+body.news main .section.compact-headings p:has(> :is(strong, b):last-child > u) + p {
+  margin-top: 0;
+}
+
 /* Related Articles feed (news.js) — card look comes from `.cards.news` in
    blocks/cards/cards.css; only the link deltas live here (the feed wraps image +
    title in <a>; keep them looking like the plain image/heading). */
