@@ -4402,3 +4402,12 @@ Page: `/en/home/get-involved/young-professional-initiative` (importer `import-yp
   h1, subhead, button x/y/w/h); 0 overflow.
 - Added to `tests/a11y/a11y.config.js`.
 - Gates: lint 0 errors · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓ (1 passed).
+
+### 2026-10-06 — Fix: `custom-content-related-articles` card with no image
+- Bug: a card authored with an **empty image cell** rendered its title/date/link at the top of the card, in
+  the image row, instead of below it like its sibling cards. `decorate()` was deleting the empty cell.
+- Fix: the empty cell is kept as `.custom-content-related-articles-card-image-empty`, a blank 2:1 area the
+  same size as a card image. If no image cell is authored at all, a placeholder is added. The body now starts
+  at the same y as the other cards (verified at 1228 and 390).
+- Gates: lint 0 errors · breakpoint ✓ · check:overflow / test:a11y could not run (Playwright browser
+  binary missing in this environment).

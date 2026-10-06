@@ -39,12 +39,20 @@ export default function decorate(block) {
       if (cell.children.length === 1 && cell.querySelector('picture')) {
         cell.className = 'custom-content-related-articles-card-image';
       } else if (!cell.textContent.trim() && !cell.querySelector('picture')) {
-        // empty image cell (the current-article card) — drop it
-        cell.remove();
+        // empty image cell — keep it as a blank image-sized placeholder so the
+        // body stays aligned below the image row like the other cards
+        cell.className = 'custom-content-related-articles-card-image custom-content-related-articles-card-image-empty';
       } else {
         cell.className = 'custom-content-related-articles-card-body';
       }
     });
+
+    // no image cell authored at all — add the placeholder so the body sits below it
+    if (!li.querySelector('.custom-content-related-articles-card-image')) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'custom-content-related-articles-card-image custom-content-related-articles-card-image-empty';
+      li.prepend(placeholder);
+    }
 
     const body = li.querySelector('.custom-content-related-articles-card-body');
     if (body) {
