@@ -110,12 +110,20 @@ function decorateNews(block) {
       if (cell.children.length === 1 && cell.querySelector('picture')) {
         cell.className = 'cards-news-card-image';
       } else if (!cell.textContent.trim() && !cell.querySelector('picture')) {
-        // empty image cell (e.g. the current-article card) — drop it
-        cell.remove();
+        // empty image cell (e.g. the current-article card) — keep it as a blank
+        // image-sized placeholder so the body stays below the image row
+        cell.className = 'cards-news-card-image cards-news-card-image-empty';
       } else {
         cell.className = 'cards-news-card-body';
       }
     });
+
+    // no image cell authored at all — add the placeholder so the body sits below it
+    if (!li.querySelector('.cards-news-card-image')) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'cards-news-card-image cards-news-card-image-empty';
+      li.prepend(placeholder);
+    }
 
     const body = li.querySelector('.cards-news-card-body');
     if (body) {
