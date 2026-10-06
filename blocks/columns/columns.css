@@ -570,12 +570,13 @@ main > .section.hero-container:has(.hero.banner) + .section.columns-container:ha
   text-align: center;
 }
 
-/* The content authors numbers + labels in <strong> (default 700), but the
-   SOURCE computes weight 400 (Graphik Regular) for BOTH the figures and the
-   labels — measured at every viewport. Override the <strong> default to 400 to
-   match; the size difference alone distinguishes the number from its label. */
+/* Numbers + labels are authored in <strong>; the source wraps them in <b> and
+   computes font-weight 700 on the Graphik Regular face for BOTH the figures and
+   the labels (EDS-78, measured at 375/768/1200). The face renders the same glyph
+   widths at 700 as at 400, so this matches the source's computed weight without
+   changing the layout. */
 .columns.stats > div > div p strong {
-  font-weight: 400;
+  font-weight: 700;
 }
 
 /* big number: first paragraph of each item (source: 38px / line-height 57 = 1.5) */
