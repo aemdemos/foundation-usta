@@ -79,16 +79,15 @@ function selectCandidates(mode, entries, { tags, pages }) {
 // One cards-news row: [ image | h3 title, date, desc, Read More ]. Cells passed
 // as `{ elems }` so cards.js `decorateNews` sees the <p>s as direct children.
 function newsRow(entry) {
-  // Image links to the article but is decorative for AT (the title link names
-  // it): empty alt + aria-hidden + tabindex=-1 avoids a redundant stop.
+  // Image links to the article, as on the source: alt names the link
+  // ("Visit the <title> page"); the image's own alt is the hover tooltip.
   let imageLink = null;
   if (entry.image) {
     // Cards render ~230px; serve a right-sized <picture> (500 ≈ the slot at 2×).
-    const picture = createOptimizedPicture(entry.image, '', false, [{ width: '500' }]);
+    const picture = createOptimizedPicture(entry.image, `Visit the ${cardTitle(entry)} page`, false, [{ width: '500' }]);
+    if (entry.imagealt) picture.querySelector('img').title = entry.imagealt;
     imageLink = document.createElement('a');
     imageLink.href = entry.path;
-    imageLink.setAttribute('tabindex', '-1');
-    imageLink.setAttribute('aria-hidden', 'true');
     imageLink.append(picture);
   }
 
