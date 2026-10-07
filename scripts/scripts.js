@@ -421,6 +421,14 @@ async function loadEager(doc) {
   document.documentElement.lang = 'en';
   preloadDisplayFont();
   decorateTemplateAndTheme();
+  // Same casing gap as `template` (see getMetadataNormalized): the preview pane
+  // serves `<meta name="Theme">`, which aem.js misses, so body.general (inner-page
+  // styles) was absent there. Add the theme class(es) from the normalized key.
+  getMetadataNormalized('theme')
+    .split(',')
+    .map((t) => toClassName(t.trim()))
+    .filter(Boolean)
+    .forEach((t) => document.body.classList.add(t));
   // Kick off template CSS but DON'T block the eager render on it — the LCP H1's
   // size lives in global styles.css, so the template stylesheet (news color/
   // spacing) isn't LCP-critical. Awaiting it added a full CSS round-trip to the

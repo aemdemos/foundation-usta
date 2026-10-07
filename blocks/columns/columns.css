@@ -28,6 +28,34 @@
   margin-top: 24px;
 }
 
+/* Stacked layout (<992), every page EXCEPT news articles (body.news, the news
+   template): the source CENTERS the text cell (who-we-are "Our History",
+   what-we-do, get-involved, our-impact) and puts the first paragraph straight under
+   the heading (0px; 24px from 992). News articles stay left-aligned. */
+body:not(.news) .columns:not(.feature, .stats, .statement) > div > div {
+  text-align: center;
+}
+
+body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1, h2, h3, h4, h5, h6) + p {
+  margin-top: 0;
+}
+
+/* heading's own 0.25em bottom margin (11px @390) would keep a gap; from 992 the
+   paragraph's 24px top margin alone sets heading→p, so 0 is safe at every width. */
+body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1, h2, h3, h4, h5, h6):has(+ p) {
+  margin-bottom: 0;
+}
+
+@media (width >= 992px) {
+  body:not(.news) .columns:not(.feature, .stats, .statement) > div > div {
+    text-align: start;
+  }
+
+  body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1, h2, h3, h4, h5, h6) + p {
+    margin-top: 24px;
+  }
+}
+
 /* Bold-italic text (e.g. the "Chris Evert, Chairperson" attribution): the source
    uses the real Graphik Semibold face, not a synthetic bold of Graphik Regular. */
 .columns em strong {

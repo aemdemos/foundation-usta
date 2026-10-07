@@ -4605,3 +4605,17 @@ paragraph with an authored empty `<p>&nbsp;</p>` = one 24px body line. EDS used 
   padding-bottom 108 (≥992). Attribution: `.columns em strong` → Graphik Semibold (source face; was synthetic bold of
   Regular). Simple selector by user direction — its gap stays on the 24px rhythm (29px text-to-text vs 13 on source). Band = source @1440.
   Still open: band bottom → "Our Supporters" h2 60.8 vs 65 (4px). Gates re-run: all ✓.
+- Follow-up: "Our History" on phone/tablet (<992) — source CENTERS the columns text cell on the inner pages
+  (who-we-are/what-we-do/get-involved/our-impact; news stays left) and heading→p is 0 there (24 from 992).
+  `columns.css`: `body.general .columns:not(.feature,.stats,.statement) > div > div` text-align center <992 (start ≥992),
+  heading→p 0 <992 (24 ≥992), heading margin-bottom 0. Verified: 390/768 center, 0 / 24 / 24; 1440 left, 24 / 24 / 24 = source.
+- Fix: inner-page styles missing in the PREVIEW PANE. It loads `/content/en/home/<page>`, where the raw metadata is
+  `<meta name="Theme">` (capital T); aem.js `getMetadata('theme')` is case-sensitive, so `body.general` was never
+  added (no mobile centring, black LEARN MORE, etc.). `scripts.js` loadEager now also adds theme classes via
+  `getMetadataNormalized('theme')` (same fix as `template`, 2026-09-23). Verified: body="general" on both URLs.
+- Change (user direction): the mobile columns centring no longer depends on `Theme: general`. Scoped to
+  `body:not(.news)` instead — every plain columns block (not feature/stats/statement) centres its text cell <992
+  with heading→p 0, EXCEPT news articles (body.news = news template), which stay left-aligned. Verified @390:
+  who-we-are / get-involved (both URLs) centre; 3 news articles with columns stay `start`.
+  Note: `body.general` is NOT new — 15 pre-existing rules in styles.css (LEARN MORE blue CTA, section spacing) and
+  hero.css (`body.general .hero.banner`) depend on it; removing the theme means moving those (separate task).
