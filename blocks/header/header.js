@@ -82,12 +82,18 @@ async function buildBreadcrumb() {
   allSegments.forEach((seg, i) => {
     href += `/${seg}`;
     if (seg === 'home') {
-      // collapse locale+home into a single "Home" crumb
+      // collapse locale+home into a single "Home" crumb; on the home page itself
+      // it is the current page, so plain text (source: active crumb, no link)
       const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = '/en/home';
-      a.textContent = 'Home';
-      li.append(a);
+      if (i === isLastVisibleIndex) {
+        li.textContent = 'Home';
+        li.setAttribute('aria-current', 'page');
+      } else {
+        const a = document.createElement('a');
+        a.href = '/en/home';
+        a.textContent = 'Home';
+        li.append(a);
+      }
       ol.append(li);
       return;
     }

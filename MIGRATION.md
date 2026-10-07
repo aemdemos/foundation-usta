@@ -4557,3 +4557,53 @@ Source authors TWO titles for home support card 1 — "Make a donation to us" <7
   `Make a donation to us`, other rows empty. Verified by injecting exactly that cell in-browser: 375/767 →
   "Make a donation to us", 768/1440 → "Make a donation", other cards unchanged.
 - Gates: lint 0 errors · breakpoint ✓.
+### 2026-10-06 — Breadcrumb: "Home" not linked on the homepage
+- Source `/en/home.html`: the only breadcrumb item is `li.cmp-breadcrumb__navigation-item--active` "Home", shown
+  as plain text (#383838, no underline, 900, 10px, uppercase). EDS always made the collapsed locale+`home` crumb
+  a link (blue, underlined).
+- Fix (`blocks/header/header.js` `buildBreadcrumb`): the `seg === 'home'` branch now checks
+  `i === isLastVisibleIndex`. When Home is the current page, it renders as a plain `<li aria-current="page">Home</li>`.
+  On subpages it is still the `/en/home` link. (An earlier draft of this entry described removing the branch
+  entirely, but that change never landed in the code. This smaller check is the fix that shipped.) No CSS change:
+  the existing grey `.nav-breadcrumb li` style is applied, and the computed style matches the source exactly. Checked:
+  `/en/home` (plain grey text) and `/en/home/who-we-are` (Home still linked).
+- Gates: lint 0 errors (7 existing warnings in other files) · breakpoint ✓ · `npm run test:a11y` could not run
+  (Playwright browser binary missing).
+
+### 2026-10-06 — Footer: stray underline under the social icons
+- Symptom (e.g. `/en/home/news/kimmelman-sport-education-complex-los-angeles`): a short blue underline under or between
+  the Facebook / Instagram / LinkedIn icons. Source: the icon links contain only an `<img>` and the `&nbsp;` spacing
+  sits outside the `<a>`, so nothing visible is underlined.
+- Cause: in EDS each icon is wrapped in a `<picture>` with whitespace text nodes inside the `<a>`. The
+  `footer .footer a:any-link { text-decoration: underline }` rule (0,2,2) outranked
+  `footer .footer-social-icons a { text-decoration: none }` (0,1,2), so that whitespace was underlined.
+- Fix (`blocks/footer/footer.css`): changed the selector to `footer .footer-social-icons a:any-link` (0,2,2), which
+  comes later in the file and now wins. Footer menu and legal links stay underlined, matching the source (both are
+  underlined there).
+- Gates: lint 0 errors · breakpoint ✓ · `check:overflow` / `test:a11y` could not run (Playwright headless binary
+  missing). Verified in the preview browser instead: social `a` = `none`, nav and legal `a` = `underline`.
+### 2026-10-06 — Pasted EDS image links render as optimized images (site-wide)
+Reported on `/drafts/meet/test`: an author pasted an asset URL
+(`https://main--foundation-usta--aemdemos.aem.live/assets/media/media_17f9…ed.jpg`) and it showed as a text link. The
+URL itself was fine (200, 2.2 MB JPEG; the CDN serves `?width=750&format=webply` at 75 KB). Nothing turned a pasted
+image link into an image. Note: on publish, the pipeline rewrites same-project media URLs to RELATIVE
+(`./media_<hash>.jpg`), while the link TEXT keeps the absolute URL. The media bus serves the hash under any path.
+- **`scripts/scripts.js` `buildImageLinks()`** (first step of `buildAutoBlocks`, so before block decoration): an
+  `<a>` becomes `createOptimizedPicture()` (webp + jpg fallback, 2000 ≥768 / 750 below, lazy; the LCP candidate in
+  section 1 is still made eager by `waitForFirstImage`) when ALL of these hold:
+  - its href path is an EDS media file `…/media_<hex>.(jpg|jpeg|png|gif|webp)`;
+  - the host is this origin, a relative path, or `*.aem|hlx.page|live` (the origin is kept, so a pasted aem.live URL
+    still resolves);
+  - its label is a URL (or empty);
+  - it is the only content of its paragraph / block cell (any bold/italic wrapper is replaced too).
+- **Stays a link:** labelled links ("Download photo"), URLs inside a sentence, and non-EDS images (source DAM,
+  content.da.live). Those can't be resized by the CDN; they must be imported or localized.
+- **Blocks get a normal `<picture>`**, e.g. a URL pasted into a hero row-1 cell becomes the hero background (viewport-sized
+  rendition, 40% overlay), verified on `hero (banner)`.
+- **Alt:** taken from the link's `title`; otherwise `alt=""` (decorative). Use a real inserted image when the picture
+  needs descriptive alt text.
+- **Verified:** test page @1440 → 2000w webp in the 720 column; @390 → 750w webp in the 336 column; injected cases
+  (hero cell, bold link, relative path, labelled link, inline link, external DAM link) all behave as above.
+- Gates: lint 0 errors (7 pre-existing warnings) · breakpoint ✓ · check:overflow ✓ · test:a11y ✓ (`/drafts/meet/test`).
+  Env: reinstalled headless-shell 1187 (gates) then 1208 (importer/preview) per the 2026-10-01 gotcha; this removed
+  build 1205. JS-only; deploys via git push. No content change needed.
