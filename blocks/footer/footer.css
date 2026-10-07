@@ -34,6 +34,10 @@ footer .footer {
   box-sizing: border-box;
   display: flow-root; /* contain the floated columns */
   width: calc(100% * 10 / 12);
+
+  /* source: content sits in the 1920 page limit (the sage band stays full-bleed),
+     so the 10/12 container stops growing at 1600 */
+  max-width: calc(var(--page-max-width) * 10 / 12);
   margin: 0 auto;
   padding: 32px 0 16px;
   font-size: 16px;

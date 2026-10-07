@@ -31,19 +31,21 @@ header nav {
      whose `auto` min floors at the logo's intrinsic width and, together with the
      fixed hamburger + Donate tools, pushed the nav wider than very narrow phones
      (< ~355px), causing horizontal page scroll. minmax(0, …) lets the track
-     shrink so the nav never exceeds the viewport. */
+     shrink so the nav never exceeds the viewport. The row is a FIXED 60px: the
+     64px logo overflows it 2px top and bottom (source) instead of growing it. */
   grid-template:
-    'hamburger brand tools' auto / auto minmax(0, 1fr) auto;
+    'hamburger brand tools' 60px / auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0 10px;
   margin: 0 auto;
   max-width: 1280px;
 
-  /* source mobile nav row is ~60px tall (logo 64px + minimal padding); total
-     header = 5px blue bar + 60px nav + 40px breadcrumb ≈ 105px (matches source,
-     was 128px which sat too tall). */
+  /* source mobile nav row is EXACTLY 60px (the 64px logo overflows it by 2px top
+     and bottom); total header = 5px blue bar + 60px nav + 40px breadcrumb = 105px.
+     A fixed height (not just a floor) — the logo line box had grown it to 71px. */
+  height: 60px;
   min-height: 60px;
-  padding: 0 16px; /* source mobile gutter is 16px */
+  padding: 0 15px; /* source mobile gutter (top-navigation__content) is 15px */
   font-family: var(--body-font-family);
 }
 
@@ -63,6 +65,13 @@ header nav .nav-brand {
   align-items: center;
 }
 
+/* keep the whole logo chain block-level so the brand box is exactly the 64px
+   image (no inline line-box gap under it) */
+header nav .nav-brand picture,
+header nav .nav-brand img {
+  display: block;
+}
+
 header nav .nav-brand img {
   width: auto;
   height: 64px; /* source mobile logo ≈150x64 */
@@ -70,8 +79,10 @@ header nav .nav-brand img {
                       brand track can shrink and the nav never overflows */
 }
 
+/* block-level flex (not inline-flex): an inline link sits on the <p>'s 24px line
+   box and pushed the logo 3px off the source position (p grew to 71px) */
 header nav .nav-brand-link {
-  display: inline-flex;
+  display: flex;
   text-decoration: none;
   border: 0;
 }
@@ -81,15 +92,17 @@ header nav .nav-hamburger {
   grid-area: hamburger;
   display: flex;
   align-items: center;
-  height: 22px;
+  height: 24px;
 }
 
+/* source: a 25×24 button holding Hamburger-Menu-Black.svg (three 24×4 bars,
+   8px apart) — ours was 28×22 with 3px bars, so it read smaller and lighter */
 header nav .nav-hamburger button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 22px;
+  width: 25px;
+  height: 24px;
   margin: 0;
   border: 0;
   border-radius: 0;
@@ -108,8 +121,7 @@ header nav .nav-hamburger-icon::after {
   display: block;
   position: relative;
   width: 24px;
-  height: 3px;
-  border-radius: 2px;
+  height: 4px;
   background: currentcolor;
 }
 
@@ -120,8 +132,8 @@ header nav .nav-hamburger-icon::after {
   left: 0;
 }
 
-header nav .nav-hamburger-icon::before { top: -7px; }
-header nav .nav-hamburger-icon::after { top: 7px; }
+header nav .nav-hamburger-icon::before { top: -8px; }
+header nav .nav-hamburger-icon::after { top: 8px; }
 
 /* hamburger morphs to × when the menu is open */
 header nav[aria-expanded='true'] .nav-hamburger-icon {
@@ -275,12 +287,17 @@ header nav .nav-tools {
   align-items: center;
 }
 
+/* source DONATE NOW is a fixed 110×40 box at EVERY width (label centred, no
+   padding) — content-width + 14px padding made it 124px on mobile */
 header nav .nav-donate {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  width: 110px;
   height: 40px;
-  padding: 0 14px;
+  padding: 0;
   background-color: var(--brand-blue);
   color: #fff;
   font-family: var(--heading-semibold-font-family);
@@ -453,21 +470,17 @@ header .nav-breadcrumb li + li::before {
     display: none;
   }
 
+  /* desktop keeps the inline-flex logo link (its line-box offset is part of the
+     tuned desktop logo position; the block-level fix is for the 60px phone row) */
+  header nav .nav-brand-link {
+    display: inline-flex;
+  }
+
   header nav .nav-brand img {
     width: 294px;
     height: auto;
     max-height: 125px; /* source logo renders 294×125 */
     object-fit: contain;
-  }
-
-  /* Lock DONATE to 110px so nav-sections stays 616px and item positions match
-     the source exactly (right edge stays at 1160, 40px from the viewport). */
-  header nav .nav-donate {
-    width: 110px;
-    min-width: 110px;
-    flex-shrink: 0;
-    padding: 0;
-    justify-content: center;
   }
 
   /* sections: nav list starts ~100px after the logo, items left-packed with

@@ -259,10 +259,12 @@ main > .section.hero-container:has(.hero.banner) {
    Reproduce with a fixed WIDTH (label centered by the base flex rule) so the box
    tracks the source at every wide-desktop width. Fluid via calc() — no new
    breakpoint, only the approved 768/992/1200 queries. Scoped to :not(body.general)
-   so only the homepage banner is affected. */
+   so only the homepage banner is affected. Uses the capped `--vw` (styles.css):
+   the source homepage sits in a 1920 page limit, so the box freezes at 270
+   beyond 1920 (was 870 wide at 25% zoom). */
 @media (width >= 1200px) {
   body:not(.general) .hero.banner p:has(> a:only-child) > a:any-link {
-    width: calc(16.65vw - 50px);
+    width: calc(16.65 * var(--vw) - 50px);
     padding: 14px; /* label centers via flex; width drives the box */
   }
 }

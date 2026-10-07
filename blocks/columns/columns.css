@@ -100,8 +100,10 @@
   text-align: center;
 }
 
+/* source text rhythm (every width): the AEM text component separates paragraphs
+   with an empty 24px <p>, so paragraph → paragraph is 24px (was 1em = 16/18px) */
 .columns.feature p {
-  margin: 0 0 1em;
+  margin: 0 0 24px;
   color: #000;
   font-size: var(--body-font-size-m); /* 16px→18px at 768 (global token) */
   line-height: var(--body-line-height);
@@ -114,11 +116,30 @@
   height: auto;
 }
 
+/* text column heading → first paragraph: 24px (the source's empty <p>) until the
+   video feature goes two-column at 992, where the source drops it to 0 */
+.columns.feature .columns-feature-row > div:not(.columns-feature-media) > h3 {
+  margin-bottom: 24px;
+}
+
+/* last copy paragraph → first CTA = 16px (source). Mobile: collapses with the
+   CTA's 16px top margin; from 768 (inline-block CTAs, no collapse) 8 + 8. */
+.columns.feature p:not(:has(> a:only-child)):has(+ p > a:only-child) {
+  margin-bottom: 8px;
+}
+
 /* --- CTA links styled as buttons (authored as plain <p><a>) --- */
+
+/* Mobile: the source STACKS the CTAs (WHO WE ARE above WHAT WE DO), centred,
+   16px apart — inline-block let our narrower buttons sit side by side */
 .columns.feature .columns-feature-row p:has(> a:only-child) {
-  display: inline-block;
-  margin: 8px 8px 0 0;
-  vertical-align: top;
+  display: block;
+  margin: 16px 0 0;
+}
+
+/* collage LEARN MORE: 39px under the last paragraph on phones (source) */
+.columns.feature:has(.columns-feature-collage) .columns-feature-row p:has(> a:only-child) {
+  margin-top: 39px;
 }
 
 .columns.feature .columns-feature-row a:only-child {
@@ -130,9 +151,11 @@
   border: 1px solid transparent;
   border-radius: 3px;
 
-  /* source feature CTAs render ~167–188px wide; a little extra horizontal
-     padding brings ours (was ~166) up to match the source's fuller buttons */
-  padding: 4px 24px;
+  /* mobile: the source CTA boxes are FIXED grid widths — 148px (WHO WE ARE /
+     WHAT WE DO) and 211px (collage LEARN MORE, 4/6 of its 329px column − 8);
+     the desktop padding-driven widths are restored at 768 below */
+  width: 148px;
+  padding: 0;
   background-color: var(--brand-blue);
   color: #fff;
   font-family: var(--heading-semibold-font-family);
@@ -142,6 +165,56 @@
   line-height: 20px; /* source button line-height */
   text-transform: uppercase;
   text-decoration: none;
+}
+
+.columns.feature:has(.columns-feature-collage) .columns-feature-row a:only-child {
+  width: 211px;
+}
+
+/* Mobile text insets: the source text sits in a grid column with 4px gutters —
+   328px for the video feature copy (336 − 2×4), 321px for the collage copy. */
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
+  padding-inline: 4px;
+}
+
+.columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) {
+  padding-inline: 7.5px;
+}
+
+/* ≥768: CTAs go back inline (side by side) with the desktop-tuned sizes; text
+   insets are dropped (the tablet/desktop layouts own their column widths) */
+@media (width >= 768px) {
+  .columns.feature .columns-feature-row p:has(> a:only-child),
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row p:has(> a:only-child) {
+    display: inline-block;
+    margin: 8px 8px 0 0;
+    vertical-align: top;
+  }
+
+  /* source feature CTAs render ~167–188px wide on desktop; extra horizontal
+     padding brings ours up to match the source's fuller buttons */
+  .columns.feature .columns-feature-row a:only-child,
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row a:only-child {
+    width: auto;
+    padding: 4px 24px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media),
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) {
+    padding-inline: 0;
+  }
+}
+
+@media (width >= 992px) {
+  .columns.feature .columns-feature-row > div:not(.columns-feature-media) > h3 {
+    margin-bottom: 0;
+  }
+
+  /* collage LEARN MORE sits 39px under the copy again from 992 (source); the
+     >=1200 tier below bottom-aligns it with margin-top: auto */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row p:has(> a:only-child) {
+    margin-top: 31px; /* + the last paragraph's 8px */
+  }
 }
 
 .columns.feature .columns-feature-row a:only-child:hover,
@@ -221,8 +294,15 @@
    centering to the collage section's default-content heading. */
 .section.columns-container:has(.columns-feature-collage) .default-content-wrapper h2 {
   text-align: center;
-  margin: 0 0 24px;
+  margin: 0;
   color: #000; /* source heading is pure black (#000), not the #333 body text color */
+}
+
+/* heading → collage: the source photo top sits 21px (<992) / 23px (>=1200) under
+   the heading — not the generic 32/40px wrapper rhythm. 21px here + the collage's
+   own ~2px inner offset on desktop lands on both. */
+.section.columns-container:has(.columns-feature-collage) > .default-content-wrapper + .columns-wrapper {
+  margin-top: 21px;
 }
 
 /* Mobile: the SOURCE constrains this heading to the fixed ~336px centered column

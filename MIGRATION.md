@@ -4472,3 +4472,88 @@ Page: `/en/home/get-involved/young-professional-initiative` (importer `import-yp
 - Gates: lint 0 errors · breakpoint ✓ · axe WCAG A/AA via the preview browser on 5 news pages: card images
   clean (only existing `.nav-donate` / `.footer-keepup` contrast + tweet link-in-text-block). `npm run
   test:a11y` could not run (Playwright browser binary missing here).
+
+### 2026-10-07 — Wide screens / 25% zoom: 1920px page limit (homepage body + every footer) + homepage heading gaps
+Reported (home, browser zoom 25% ≈ a 5760px CSS viewport): hero full-bleed + photo over-cropped, hero text at
+the far-left viewport edge, LEARN MORE ~870px wide, footer logo ~930px and footer columns spread edge to edge.
+- **Root cause:** the source wraps content in an AEM `full-width-limit` container — `max-width: 1920px`, centred.
+  Measured @5760 the source renders exactly like @1920, offset by 1920px. Scope differs by template:
+  **homepage** — the WHOLE body (hero photo, stats band, cards band) is in it, white beyond; **footer** (every page)
+  — content in it, sage band stays full-bleed; **inner pages** (general/news/leadership) — heroes and bands stay
+  FULL-BLEED, only some sections are limited (what-we-do map: 1860 inside the 1920).
+- **Tokens (styles.css `:root`):** `--page-max-width: 1920px` and `--vw: min(1vw, 19.2px)` = viewport unit capped
+  at the limit (identical to `1vw` at ≤1920). Use `--vw` instead of raw `vw` for anything that lives in the limit.
+- **Homepage:** `body:not(.general) main:has(.hero.banner) { max-width: var(--page-max-width); margin-inline: auto }`
+  (homepage = banner hero without the `general` theme — same convention as the homepage hero rules; the homepage
+  has no template/theme metadata). Homepage LEARN MORE width `16.65vw − 50px` → `16.65 * var(--vw) − 50px` (270 max).
+  The hero text column was already `min()`-capped (870 / 205).
+- **Footer:** `footer .footer { max-width: calc(var(--page-max-width) * 10 / 12) }` (10/12 container stops at 1600).
+- **What-we-do `map-wide`:** `100vw − gutter` → `100 * var(--vw) − gutter`.
+- **Result @5760, source vs EDS:** hero 1920+1920 / h1 2125,870 / button 270 / footer logo 2095,290 / footer nav +
+  social + legal x identical; also identical @1920 and @1440 (nothing changes ≤1920). Inner pages @5760: hero stays
+  full-bleed like the source; footer identical.
+- **Item 11 — "Your support" cards slightly low / big gap under heading.** The cards band itself is identical to
+  the source (band→h2 65, h2→p 0, p→img 48, img 270, img→h4 16, btn→band end 82); it sat LOW because of two
+  oversized heading gaps above it: (a) "Ready on the court" h2→p 19px desktop / 13px mobile (generic h2 mb 0.25em +
+  p mt 0.8em collapse) vs source 0 → homepage-scoped `.default-content-wrapper > h2:has(+ p) { margin-bottom: 0 }`
+  + `h2 + p { margin-top: 0 }` (end of styles.css, after the generic rules — stylelint order); (b) "For decades"
+  h2→collage 40/32px (generic wrapper rhythm, h2 mb 24) vs source 21/23 → columns.css collage heading `margin: 0` +
+  `.default-content-wrapper + .columns-wrapper { margin-top: 21px }` (collage has a ~2px inner offset on desktop).
+  Now 0/0 and 21/21 (390, 768), 23/23 (≥1200), 65 vs 61 @992. Cards band offset vs source: +53→+15 @1920,
+  +29→−9 @1440, +19→−19 @1200.
+- **Known, NOT changed (pre-existing):** (1) the source sets h2→p = 0 SITE-WIDE (our-impact, what-we-do,
+  get-involved, who-we-are: every intro h2 is 0 vs our 19) — only the homepage was changed; a global fix is a
+  candidate follow-up. (2) Inner-page hero h1 caps at 1200 wide on ultra-wide screens (source ~50vw). (3) Remaining
+  homepage vertical drift comes from block heights, not gaps: header +8 @1440/1920, stats→"Ready" +11, and much
+  shorter mobile/tablet blocks (cards band −167 @390, −351 @768, −90 @992).
+- Gates: lint 0 errors · breakpoint ✓ · `check:overflow` / `check:typography` / `test:a11y` CLIs could not launch
+  (Playwright browser build 1187 missing; only 1205/1208 installed) → replicated their logic in the preview browser:
+  overflow OK @360/768/992/1200/1920/5760 on home, what-we-do, our-impact, a news article · typography 0 drifts on
+  home @390/768/992/1200 · axe WCAG 2.0–2.2 A/AA (repo config) 0 critical/serious on the same 4 pages.
+
+### 2026-10-07 — Home mobile parity (375 / 576): header, intro width, feature text + CTAs
+Reported at ≤375 and 576 (source vs EDS side by side). All measured live; mobile body metrics now identical.
+- **Header (mobile, <992):** nav row was 71px (logo `<a>` inline-flex on the `<p>`'s 24px line box) → fixed
+  `height: 60px` + grid row `60px` (64px logo overflows 2px each side, as source), gutter 16→15, logo link
+  `display: flex` (desktop keeps `inline-flex` — its tuned logo y). DONATE NOW: fixed **110×40, padding 0 at every
+  width** (was content-width 124). Hamburger: 28×22 / 3px bars → **25×24, 24×4 bars 8px apart, square** (source
+  Hamburger-Menu-Black.svg). Result @375/576: logo 50,3 · burger 15,23 25×24 · donate 250|451,15 110×40 · h1 217 = source.
+- **`center medium` sections (all pages, <768):** source text column has 4px gutters → 328 inside the 336 column
+  (who-we-are / get-involved / what-we-do / scholarships all 24+328 @375). `padding-inline: 4px` (border-box),
+  reset 0 @768, restored 15px @992.
+- **Homepage "Ready on the court." (<768):** source narrows it to 75% of the viewport − 8 (273 @375, 424 @576,
+  567 @767) → homepage-scoped `width: 75%; max-width: none`; ≥768 restates 708/772/970. Heading now wraps
+  "Ready on the / court. Ready for life." (L2) and the paragraph L9 @375 / L6 @576, like the source.
+- **columns `feature` (video + collage):** paragraph gap **24px at every width** (source empty `<p>`; was 1em);
+  last paragraph → CTA 16px; text-column h3 → first p 24px (<992) / 0 (≥992). Mobile (<768): CTAs STACK, 16px
+  apart, fixed **148px** (WHO WE ARE / WHAT WE DO) and **211px** (collage LEARN MORE, 39px below the copy); text
+  insets 4px (video copy → 328) / 7.5px (collage copy → 321). ≥768 keeps inline CTAs + desktop padding widths;
+  collage CTA 39px gap restored at 992–1199.
+- **Not changed:** card 1 title — the source AUTHORS two titles ("Make a donation to us" shown <768, "Make a donation"
+  ≥768); ours has one (content decision). Source copy edits in the impact text ("organizations **to** use",
+  "but **they** are surrounded") — content. Footer KEEP UP WITH US + year → bug EDS-94 (year already 2026 here).
+  Source shows its MOBILE header up to ~1199 (logo 150, hamburger @768/992); ours switches to desktop at 992 —
+  pre-existing, separate. Tablet/desktop "Ready" width and CTA widths still differ (pre-existing).
+- Gates: lint 0 errors · breakpoint ✓ · overflow (preview browser, CLI browser build missing) OK @320/360/768/992/
+  1200/1920 on home, who-we-are, get-involved, what-we-do, scholarships, a news article · typography 0 drifts ·
+  axe 0 critical/serious (home @375/@1440, who-we-are @375).
+
+### 2026-10-07 — Cards (support): optional "mobile title" 3rd cell (home card 1 "Make a donation to us")
+Source authors TWO titles for home support card 1 — "Make a donation to us" <768, "Make a donation" ≥768
+(verified switch at 767/768); the other three cards' copies match.
+- **Authoring contract (new, optional):** Cards (support) rows may carry a 3rd cell = mobile title (plain text).
+  Filled → `cards.js` inserts a same-level heading `.cards-support-title-mobile` before the card title (tagged
+  `.cards-support-title-desktop`) and drops the cell; `cards.css` shows the mobile title <768 and the regular
+  title ≥768. Empty / no 3rd cell → unchanged single title (all existing pages unaffected).
+- **Importer:** `parsers/cards-support.js` now reads the mobile text copy's title and, only when ANY card's
+  mobile title differs, emits the 3rd cell on every row (empty where equal). Re-bundled
+  `import-home-page.bundle.js` (esbuild IIFE + `/* eslint-disable */`).
+- **GOTCHA — do NOT re-import the homepage to apply this.** A `--force` re-import was tried and REVERTED (content
+  restored byte-identical from backup, reports reverted): the local home content had been edited in DA after the
+  original import (section style `center, medium` vs importer `center, narrow`; links rewritten without `.html`;
+  images localized) — a fresh import would clobber those author edits, add a stray `_hjSafeContext` link and
+  hotlink images. The source copy edits in the impact text would also come in.
+- **To apply (author step in DA):** in the home page's Cards (support) block, add a 3rd column; card 1 cell =
+  `Make a donation to us`, other rows empty. Verified by injecting exactly that cell in-browser: 375/767 →
+  "Make a donation to us", 768/1440 → "Make a donation", other cards unchanged.
+- Gates: lint 0 errors · breakpoint ✓.

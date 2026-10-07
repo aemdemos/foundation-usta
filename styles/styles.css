@@ -62,6 +62,15 @@
      docs/source-css-system.md §3. Blocks consume --grid-gap + .grid-* utilities. */
   --grid-gap: 30px;
 
+  /* page width limit — the source's `full-width-limit` container: 1920px, centred.
+     Measured @5760 (a 1440 window at 25% zoom): the footer content (every page),
+     the WHOLE homepage <main>, and some inner-page sections (what-we-do map) sit
+     in it; inner-page heroes/bands stay full-bleed. `--vw` is the viewport unit
+     CAPPED at that limit — use it instead of raw `vw` for content that lives in
+     the limit, so fluid sizes freeze at their 1920 values (= `1vw` at ≤1920). */
+  --page-max-width: 1920px;
+  --vw: min(1vw, calc(var(--page-max-width) / 100));
+
   /* nav height */
   --nav-height: 120px;
 }
@@ -229,6 +238,16 @@ pre {
 
 main > div {
   margin: 40px 16px;
+}
+
+/* HOMEPAGE: the source caps its whole body at 1920 (see --page-max-width): beyond
+   it the hero photo and the stats/cards bands stop at 1920 and the page sits
+   centred on white. Inner pages (general/news/leadership) do NOT — their heroes
+   and bands stay full-bleed. Homepage = the banner-hero page without the
+   `general` theme (same convention as the homepage hero rules). */
+body:not(.general) main:has(.hero.banner) {
+  max-width: var(--page-max-width);
+  margin-inline: auto;
 }
 
 input,
@@ -797,16 +816,29 @@ main .section.wide > div {
   margin-inline: auto;
 }
 
+/* phones: the source "medium" intro text sits in a grid column with 4px gutters
+   — 328px inside the 336 column (who-we-are, get-involved, what-we-do, … all
+   measured 328 @375), not the full 336 */
+main .section.medium > div {
+  box-sizing: border-box;
+  padding-inline: 4px;
+}
+
 @media (width >= 768px) {
   main .section.medium > div,
   main .section.wide > div {
     max-width: 708px;
+  }
+
+  main .section.medium > div {
+    padding-inline: 0;
   }
 }
 
 @media (width >= 992px) {
   main .section.medium > div {
     max-width: 772px;
+    padding-inline: 15px; /* restore the global desktop container gutter */
   }
 
   main .section.wide > div {
@@ -831,19 +863,19 @@ main .section.wide > div {
    WITH `center` so the heading above it stays centered on the normal measure. */
 main .section.center.map-wide > div {
   max-width: none;
-  width: calc(100vw - 16px);
+  width: calc(100 * var(--vw) - 16px);
   margin-inline: auto;
 }
 
 @media (width >= 768px) {
   main .section.center.map-wide > div {
-    width: calc(100vw - 24px);
+    width: calc(100 * var(--vw) - 24px);
   }
 }
 
 @media (width >= 992px) {
   main .section.center.map-wide > div {
-    width: calc(100vw - 60px);
+    width: calc(100 * var(--vw) - 60px);
   }
 }
 
@@ -1201,5 +1233,45 @@ footer {
 
   main > .section.spacer-container:has(.spacer[style*='section-yellow-bg']) {
     margin: 56px 0 17px;
+  }
+}
+
+/* Homepage headings sit FLUSH on the copy below them (source h2 → p gap = 0 at
+   every width, e.g. "Ready on the court."); the generic h2 bottom / p top margins
+   collapsed to a 19px (13px mobile) gap and pushed the page down. */
+body:not(.general) main:has(.hero.banner) .default-content-wrapper > h2:has(+ p) {
+  margin-bottom: 0;
+}
+
+body:not(.general) main:has(.hero.banner) .default-content-wrapper > h2 + p {
+  margin-top: 0;
+}
+
+/* Homepage "Ready on the court." intro: on phones the source narrows it to 9/12 of
+   the viewport (minus the 4px gutters) — 273px @375, 424 @576 — so the heading
+   wraps "Ready on the / court. Ready for life." like the source */
+body:not(.general) main:has(.hero.banner) .section.center.medium > div {
+  width: 75%;
+  max-width: none; /* grows past the 336 phone column with the viewport (source) */
+}
+
+/* from 768 back to the generic medium widths (restated: this selector outranks
+   the generic `main .section.medium > div` tiers) */
+@media (width >= 768px) {
+  body:not(.general) main:has(.hero.banner) .section.center.medium > div {
+    width: auto;
+    max-width: 708px;
+  }
+}
+
+@media (width >= 992px) {
+  body:not(.general) main:has(.hero.banner) .section.center.medium > div {
+    max-width: 772px;
+  }
+}
+
+@media (width >= 1200px) {
+  body:not(.general) main:has(.hero.banner) .section.center.medium > div {
+    max-width: 970px;
   }
 }
