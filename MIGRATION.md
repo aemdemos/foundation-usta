@@ -4573,3 +4573,35 @@ optional mobile-title cell + importer parser. Full patch saved locally at `/tmp/
 - Follow-up (user direction, same day): 2nd button `margin-left` 25 → **30px** (≥768). The containers are
   inline-block, so the ~5px whitespace between them adds on top: visible gap is now **35px** (was 30 = source
   measurement in headless Chromium; customer reported the source gap looks slightly larger).
+
+### 2026-10-07 — Site-wide 24px text rhythm + who-we-are spacing fixes (customer feedback)
+**Text rhythm (site-wide, user decision — no opt-in section style).** The source separates a heading and each
+paragraph with an authored empty `<p>&nbsp;</p>` = one 24px body line. EDS used the boilerplate 0.8em (14.4 /
+12.8px; heading→p 19px). Now:
+- `styles.css`: `main .default-content-wrapper > :where(h1…h6, p) + p:not(.button-wrapper) { margin-top: 24px }`.
+- `columns.css`: same rhythm in text cells of default columns (`:not(.feature, .stats, .statement)`).
+- Base `p, ul, …` rule left at 0.8em on purpose (blocks/header/footer were matched on top of it).
+- Impact (86 pages, 391 default-content gaps): 336 changed on 75 pages (312× 14.4→24, 24× 19→24), mostly news
+  articles (source news also uses 24px blank lines). Page-specific rules keep their own values (news H1 gap,
+  staff list, kimmelman article). **Known deviation:** get-involved / what-we-do intros and the college-scholarships
+  heading→p are 0px on the source (no blank line) → now 24px. Not yet source-checked: home, our-impact, financials,
+  YPI, 404. The Evert attribution is 24px below the quote vs 10px on source.
+- The opt-in `spaced` section style tried first was REMOVED (and its importer change reverted).
+
+**who-we-are fixes (measured @1440; source = EDS now):**
+- Our History (columns): heading→p 24, p→p 24 (was 19 / 14.4).
+- History text → yellow strip 121px (was 56): yellow spacer-section margin-top 56 → 121 (≥992).
+- Yellow strip: source is 32px yellow + 17px white; ours is an authored Spacer `desktop: 17px`. Importer now emits
+  `32px` (`import-general-v1(.bundle).js`). **Content step pending (DA):** set the spacer's desktop value to 32px.
+- Leadership band (`section-yellow.center-intro`): band top → heading 48 (h2 margin-top 16), heading→description
+  0 (source has no blank line here), description→LEARN MORE 16, LEARN MORE→Evert photo 56 (were 92.8 / 24 / 12 / 40).
+- LEARN MORE (all `body.general` CTAs): label letter-spacing normal (source resets it on the inner span) +
+  min-width 170 → 170×40 (was 158 with spaced-out text).
+- Supporters tiles → black strip 86 (was 52): tiles section margin-bottom 74 (≥992).
+- Chris Evert photo: 570×413 on both at 1440 — no difference found at this width.
+- Mobile/tablet not yet re-measured for the band/strip/tiles gaps (strip + tiles rules are ≥992; band rules all widths).
+- Gates: lint 0 errors · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓ (who-we-are).
+- Follow-up (same day): yellow band bottom — Evert photo → band bottom 108px (was 32): `section-yellow.center-intro`
+  padding-bottom 108 (≥992). Attribution: `.columns em strong` → Graphik Semibold (source face; was synthetic bold of
+  Regular). Simple selector by user direction — its gap stays on the 24px rhythm (29px text-to-text vs 13 on source). Band = source @1440.
+  Still open: band bottom → "Our Supporters" h2 60.8 vs 65 (4px). Gates re-run: all ✓.

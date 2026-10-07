@@ -196,6 +196,15 @@ blockquote {
   margin-bottom: 0.25em;
 }
 
+/* Default-content text rhythm: the source separates a heading and each following
+   paragraph with one blank line (an empty <p>&nbsp;</p> = one 24px body line), e.g.
+   who-we-are "We transform lives…" (24px heading→p and p→p at every viewport).
+   Applied site-wide to authored text paragraphs (CTA button paragraphs keep their
+   own spacing; blocks keep theirs). */
+main .default-content-wrapper > :where(h1, h2, h3, h4, h5, h6, p) + p:not(.button-wrapper) {
+  margin-top: 24px;
+}
+
 /* Default-content lists (e.g. the financials PDF-link list) — the source renders
    a disc bullet with a 40px indent; links inside stay plain underlined text links
    (EDS only button-decorates standalone <p><a>, never <li><a>). Placed AFTER the
@@ -694,10 +703,12 @@ body.general main a.button:any-link,
 body.general main a.button.primary,
 body.general main a.button.secondary,
 body.general main a.button.accent {
-  /* source CTA box: border-box, 40px tall, 14px horizontal padding, 1px border.
-     The explicit height + flex centering (from the base .button rule) reproduces
-     the source's fixed 40px pill; horizontal padding + 1px letter-spacing brings
-     the width to the source's ~170px naturally (no fixed width). */
+  /* source CTA box: border-box, 40px tall, 14px horizontal padding, 1px border,
+     at least 170px wide (LEARN MORE: 118px label + padding = 148 → 170). The
+     source sets 1px letter-spacing on the <a> but resets it to normal on the inner
+     label span, so the label has no extra tracking (was 128px wide, now 118). */
+  box-sizing: border-box;
+  min-width: 170px;
   height: 40px;
   border: 1px solid transparent;
   border-radius: 3px;
@@ -710,7 +721,7 @@ body.general main a.button.accent {
      is baked into the font file, so weight 600 synthetically over-bolds it. */
   font-weight: 400;
   line-height: 20px;
-  letter-spacing: 1px;
+  letter-spacing: normal;
 }
 
 body.general main a.button:hover,
@@ -1178,6 +1189,27 @@ main > .section.section-blue {
   margin-bottom: 0;
 }
 
+/* Yellow center-intro band (who-we-are "Our Leadership and Staff"), measured on the
+   source @1440: band top → heading 48px (32px band padding + 16), heading →
+   description 0 (no blank line here), description → LEARN MORE 16px, LEARN MORE →
+   the columns row (Chris Evert photo) 56px. */
+main .section.section-yellow.center-intro > .default-content-wrapper:first-child > :is(h1, h2, h3):first-child {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+main .section.section-yellow.center-intro > .default-content-wrapper:first-child > :is(h1, h2, h3) + p {
+  margin-top: 0;
+}
+
+main .section.section-yellow.center-intro > .default-content-wrapper:first-child > p.button-wrapper {
+  margin-top: 16px;
+}
+
+main .section.section-yellow.center-intro > .default-content-wrapper:first-child + .columns-wrapper {
+  margin-top: 56px;
+}
+
 /* footer butts the black spacer above it (no gap) */
 footer {
   margin-top: 0;
@@ -1199,7 +1231,20 @@ footer {
     margin-top: 56px;
   }
 
+  /* source @1440: History text bottom → yellow strip 121px (was 56). */
   main > .section.spacer-container:has(.spacer[style*='section-yellow-bg']) {
-    margin: 56px 0 17px;
+    margin: 121px 0 17px;
+  }
+
+  /* source @1440: Chris Evert photo bottom → yellow band bottom 108px (was 32, the
+     bare section-yellow padding). */
+  main > .section.section-yellow.center-intro {
+    padding-bottom: 108px;
+  }
+
+  /* source @1440: last supporter tile label → black strip above the footer 86px
+     (was 52): tiles section bottom margin 40 → 74. */
+  main > .section.cards-container:has(.cards.tiles) {
+    margin-bottom: 74px;
   }
 }

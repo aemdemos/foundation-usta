@@ -20,6 +20,20 @@
   margin-top: 0;
 }
 
+/* Text-cell rhythm = the site-wide default-content rhythm (styles.css): one 24px
+   blank line after a heading and between paragraphs, as on the source (who-we-are
+   "Our History" + the Chris Evert quote: 24px heading→p and p→p @1440). The
+   feature / stats / statement variants keep their own measured spacing. */
+.columns:not(.feature, .stats, .statement) > div > div > :where(h1, h2, h3, h4, h5, h6, p) + p:where(:not(.button-wrapper)) {
+  margin-top: 24px;
+}
+
+/* Bold-italic text (e.g. the "Chris Evert, Chairperson" attribution): the source
+   uses the real Graphik Semibold face, not a synthetic bold of Graphik Regular. */
+.columns em strong {
+  font-family: var(--heading-semibold-font-family);
+}
+
 /* Image column: a <figure> wraps the image (+ optional caption) — see columns.js.
    The image side follows the AUTHORED cell order (image cell first = left,
    second = right); no per-side class, no order overrides, so it just works. */

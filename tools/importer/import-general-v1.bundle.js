@@ -262,7 +262,7 @@ var CustomImportScript = (() => {
       main.append(document.createElement("hr"));
       main.append(WebImporter.Blocks.createBlock(document, {
         name: "Spacer",
-        cells: { color: "section-yellow-bg", desktop: "17px" }
+        cells: { color: "section-yellow-bg", desktop: "32px" }
       }));
       emittedBlocks.push("spacer(leading-yellow-strip)");
       main.append(document.createElement("hr"));
