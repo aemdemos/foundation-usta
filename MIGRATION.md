@@ -4607,3 +4607,19 @@ image link into an image. Note: on publish, the pipeline rewrites same-project m
 - Gates: lint 0 errors (7 pre-existing warnings) · breakpoint ✓ · check:overflow ✓ · test:a11y ✓ (`/drafts/meet/test`).
   Env: reinstalled headless-shell 1187 (gates) then 1208 (importer/preview) per the 2026-10-01 gotcha; this removed
   build 1205. JS-only; deploys via git push. No content change needed.
+
+### 2026-10-07 — Header: compact (hamburger) header through 1199px + accent-bar hairline + crumb inset
+Reported: header not pixel-perfect; tablet header too tall. Measured source at 375/768/991/992/1024/1100/1199/1200:
+the source keeps its PHONE header (hamburger 25×24, logo 150×64 @50,3, 60px row, DONATE 110×40 @y15, 105px total)
+up to **1199px** and switches to the desktop bar (294px logo, 128px row) only at **1200**. Ours switched at 992, so
+992–1199 (iPad landscape etc.) showed a 166px desktop header instead of 105.
+- `header.css` desktop tier `@media (width >= 992px)` → **`(width >= 1200px)`**; `header.js` `isDesktop` matchMedia
+  992 → **1200** (keeps menu/dropdown/escape/resize logic on the same switch).
+- Accent bar: source `.top-navigation__line` = **1px #707070 hairline + blue** (5px phone / 8px desktop) → added
+  `.nav-wrapper::before` 1px #707070 over the first pixel of the blue border (top −5 / −8 @1200).
+- Breadcrumb `<ol>` gutter 20 → **15px** (source crumb inset; desktop tier keeps its 40px).
+- Result: logo / hamburger / DONATE / h1 identical to source at 375, 768, 992, 1024, 1199 (logo 151 vs 150 rounding;
+  crumb text box 2px — same 38px row). Mobile menu opens at 1024 (full-width panel under the 105px header) and resets
+  when resized past 1200. Gates: lint 0 errors · breakpoint ✓ · axe 0 critical/serious @1024/1199 · no overflow
+  (home, who-we-are, news) @360/992/1100/1200.
+- Still open (not header): hero h1 at 768–991 sits 88px higher than source (225 vs 313) — hero tablet padding.

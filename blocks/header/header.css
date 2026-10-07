@@ -23,6 +23,19 @@ header .nav-wrapper {
   box-shadow: none;
 }
 
+/* the source accent bar is a 1px grey (#707070) hairline on top of the blue
+   (1 + 4px phone / 1 + 7px desktop), not solid blue — paint the hairline over
+   the first pixel of the border */
+header .nav-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #707070;
+}
+
 header nav {
   box-sizing: border-box;
   display: grid;
@@ -59,8 +72,13 @@ header nav p {
 }
 
 /* ---------- brand / logo ---------- */
+
+/* the brand box hugs the logo (source .top-navigation__logo is logo-sized, not
+   the whole free track). It is 64px tall like the source: the 64px logo
+   overflows the 60px nav row by 2px top and bottom. */
 header nav .nav-brand {
   grid-area: brand;
+  justify-self: start;
   display: flex;
   align-items: center;
 }
@@ -350,8 +368,8 @@ header .nav-breadcrumb ol {
   -webkit-overflow-scrolling: touch;
 
   /* horizontal gutter only — row height comes from the crumb line-height so it
-     matches the source's 38px/28px (no vertical padding) */
-  padding: 0 20px;
+     matches the source's 38px/28px (no vertical padding); 15px = source inset */
+  padding: 0 15px;
   list-style: none;
 }
 
@@ -398,12 +416,19 @@ header .nav-breadcrumb li + li::before {
 }
 
 /* ============================================================
-   Desktop (>= 992px): single row, centered nav, hover dropdowns
+   Desktop (>= 1200px): single row, centered nav, hover dropdowns.
+   The source keeps the compact phone header (hamburger, 150px logo, 60px row,
+   105px total) through 1199px — tablets/iPad landscape included — so the
+   desktop header starts at 1200, not 992.
    ============================================================ */
-@media (width >= 992px) {
+@media (width >= 1200px) {
   /* desktop tier: the top blue accent bar thickens to 8px (source) */
   header .nav-wrapper {
     border-top-width: 8px;
+  }
+
+  header .nav-wrapper::before {
+    top: -8px;
   }
 
   /* Centered max-width:1440px container (matches the source + the hero). The
