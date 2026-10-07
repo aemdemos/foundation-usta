@@ -4556,3 +4556,20 @@ limit for the homepage `main` + `--page-max-width`/`--vw` tokens, homepage hero 
 inset + homepage "Ready" 75% width, homepage heading gaps, columns `feature` paragraph/CTA spacing, cards (support)
 optional mobile-title cell + importer parser. Full patch saved locally at `/tmp/pr-full-before-scope.patch`
 (re-apply in a separate PR).
+
+### 2026-10-07 — hero `text-up`: CTA button width + label tracking (customer feedback, who-we-are)
+- Feedback: WHAT WE DO / OUR IMPACT ~287px on source vs ~276 on EDS; EDS label text larger / wider spaced.
+- **Width:** source button = a 2/6 column of the 50vw panel minus the 30px gutter (`50vw / 3 − 30px`), never
+  narrower than its label; the 2nd button starts one column over even when the 1st overflows (992). EDS used
+  `14.5vw` (276 @1903). Now ≥992: `.button-container` width `calc(50vw * 2 / 6 - 30px)`, button `width: 100%;
+  min-width: max-content`. Measured = source at 992/1100/1280/1440/1903 (148/153.3/183.3/210/287.2; 2nd x identical).
+- **Label:** source sets `letter-spacing: 1px` on the `<a>` but the inner `.button-core__text-content` span resets it
+  to `normal`. EDS applied 1px to the text ("WHAT WE DO" 128 vs 118px). Now `letter-spacing: normal` → 118/112.
+- **Vertical:** h1 / subhead / buttons / label glyphs are at identical y on source and EDS (local + aem.live) at
+  390–1920; no change needed. (Only 1200–1369 differs by 10px, from the known crumb-row line-height item.)
+- 768–991 left as is: the source's 2nd button overlaps the 1st there (198 < 70+148); EDS keeps a 30px gap.
+- Also verified what-we-do, get-involved, YPI (`medium`) heroes match the source at 1440/1903.
+- Gates: lint ✓ · breakpoint ✓ · check:overflow ✓ (360–1920) · test:a11y ✓ (who-we-are).
+- Follow-up (user direction, same day): 2nd button `margin-left` 25 → **30px** (≥768). The containers are
+  inline-block, so the ~5px whitespace between them adds on top: visible gap is now **35px** (was 30 = source
+  measurement in headless Chromium; customer reported the source gap looks slightly larger).
