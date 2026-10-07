@@ -91,6 +91,15 @@ export default async function decorate(block) {
       const separators = ['\u00a0 ', '\u00a0\u00a0'];
       iconNodes.forEach((node, i) => {
         const link = node.tagName === 'A' ? node : node.querySelector(':scope > a');
+        // drop the whitespace text inside the link (between the <picture>'s
+        // <source>s): it rendered as a ~4px space per icon and pushed the icons
+        // apart (source markup is a tight <a><img></a>)
+        const walker = document.createTreeWalker(link, NodeFilter.SHOW_TEXT);
+        const blanks = [];
+        while (walker.nextNode()) {
+          if (!walker.currentNode.textContent.trim()) blanks.push(walker.currentNode);
+        }
+        blanks.forEach((n) => n.remove());
         if (i) row.append(separators[Math.min(i - 1, separators.length - 1)]);
         row.append(link);
         if (node.tagName === 'P') node.remove();

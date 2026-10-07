@@ -1,7 +1,8 @@
 import { getMetadata } from '../../scripts/aem.js';
 
 // media query match that indicates desktop width (matches the CSS breakpoint)
-const isDesktop = window.matchMedia('(min-width: 992px)');
+// the source keeps its compact (hamburger) header up to 1199px — desktop from 1200
+const isDesktop = window.matchMedia('(min-width: 1200px)');
 
 // Segments that never appear as their own crumb. The DA/EDS mount prefix and the
 // locale are infrastructure; `home` collapses into the single "Home" crumb; and
@@ -321,7 +322,7 @@ export default async function decorate(block) {
     nav.setAttribute('aria-expanded', 'false');
     if (navSections) {
       // Prevent off-canvas transform animation from firing on breakpoint
-      // changes (991px <-> 992px). Keep transition disabled after resize;
+      // changes (1199px <-> 1200px). Keep transition disabled after resize;
       // toggleMenu() restores it when the user intentionally opens the menu.
       navSections.style.transition = 'none';
       closeAllDropdowns(navSections);

@@ -4523,3 +4523,36 @@ image link into an image. Note: on publish, the pipeline rewrites same-project m
 - Gates: lint 0 errors (7 pre-existing warnings) · breakpoint ✓ · check:overflow ✓ · test:a11y ✓ (`/drafts/meet/test`).
   Env: reinstalled headless-shell 1187 (gates) then 1208 (importer/preview) per the 2026-10-01 gotcha; this removed
   build 1205. JS-only; deploys via git push. No content change needed.
+
+### 2026-10-07 — Header + footer: pixel parity at every breakpoint (scope of this PR: header & footer blocks only)
+Measured every header/footer element (box + glyph rect + computed type) on source vs EDS at 17 widths
+(320/360/375/390/414/576/767/768/991/992/1024/1199/1200/1280/1440/1600/1920), reporting ≥1px.
+**Header (`header.css`, `header.js`)**
+- **Compact (hamburger) header through 1199px** — the source keeps its phone header (60px row, 150×64 logo, 105px
+  total) up to 1199 and switches to the desktop bar at **1200** (was 992). CSS desktop tier + `isDesktop` matchMedia
+  → 1200.
+- Phone row: fixed **60px** grid row `hamburger brand . tools` / `auto auto 1fr auto`; 15px gutter; hamburger
+  **24×24** at x16,y23 (bars = source SVG: 24×4 @ y2/10/18), 10px to the logo; logo fixed **150×64** (64px logo
+  overflows the 60px row 2px each side, as source); logo chain block-level (inline link had grown the row to 71px);
+  brand box hugs the logo; DONATE NOW fixed **110×40**, `line-height: normal`, no text-transform (authored uppercase).
+  @320 logo 150 / DONATE x200 like source; no page overflow down to 310px.
+- Accent bar = **1px #707070 hairline + blue** (5px phone / 8px desktop) via `.nav-wrapper::before`.
+- Desktop: nav row **120px** (was 128); logo `flex-shrink: 0` (294 @1200).
+- Breadcrumb: 15px phone inset; text +2px (`top: 2px` on the <ol>, source inline-flex offset); desktop <ol> gutter 0
+  (source "HOME" at x0 up to 1440, then (vw − 1440) / 2).
+**Footer (`footer.css`, `footer.js`)**
+- Content container capped at **1600px** (10/12 of the source's 1920 page limit; sage band stays full-bleed) — fixes
+  the 25%-zoom / ultra-wide footer (logo ~930px, columns spread edge to edge).
+- Social icons: footer.js strips whitespace text inside each icon link (the `<picture>` source list added ~4px per
+  icon) → x within 0.2px of source (were −7 / −2.5 / +7).
+- Nav <768: `<ul>` max-width 336, centred (source WHO WE ARE x124 @576).
+**Result:** header identical (<1px) at all 17 widths except the crumb row 1200–1369; footer identical except the
+KEEP UP knock-on (both below). Gates: lint 0 errors · breakpoint ✓ · axe 0 critical/serious @375/@1440 · no overflow.
+**Kept as is (user decision 2026-10-07):** (1) source crumb line-height 38 → 28 switches at **1370px** (not in
+breakpoints.json) — our crumb row is 30 vs 40 at 1200–1369. (2) **KEEP UP WITH US** (bug EDS-94) is not on the source
+homepage footer: rows below it sit +55.7px <992, +1.8 @1440, +37.1 @1600 — left to EDS-94.
+**Pulled out of this PR (scope = header/footer only):** homepage body work done in the same session — 1920px page
+limit for the homepage `main` + `--page-max-width`/`--vw` tokens, homepage hero CTA cap, `center medium` 4px phone
+inset + homepage "Ready" 75% width, homepage heading gaps, columns `feature` paragraph/CTA spacing, cards (support)
+optional mobile-title cell + importer parser. Full patch saved locally at `/tmp/pr-full-before-scope.patch`
+(re-apply in a separate PR).
