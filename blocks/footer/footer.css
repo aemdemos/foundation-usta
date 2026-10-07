@@ -35,9 +35,9 @@ footer .footer {
   display: flow-root; /* contain the floated columns */
   width: calc(100% * 10 / 12);
 
-  /* source: content sits in the 1920 page limit (the sage band stays full-bleed),
-     so the 10/12 container stops growing at 1600 */
-  max-width: calc(var(--page-max-width) * 10 / 12);
+  /* source: footer content sits in a 1920px page limit (the sage band stays
+     full-bleed), so the 10/12 container stops growing at 1920 × 10/12 = 1600 */
+  max-width: 1600px;
   margin: 0 auto;
   padding: 32px 0 16px;
   font-size: 16px;
@@ -132,9 +132,12 @@ footer .footer-nav {
   padding: 16px 0; /* 8 column + 8 inner container */
 }
 
+/* phones: the source 2×2 link grid sits in the 336px column, centred (WHO WE ARE
+   x 124 @576 = (576 − 336) / 2 + 4) — not across the 10/12 container */
 footer .footer-nav ul {
   display: flow-root;
-  margin: 0;
+  max-width: 336px;
+  margin: 0 auto;
   padding: 0;
   list-style: none;
 }
@@ -235,6 +238,10 @@ footer .footer-legal p:last-child {
 
   footer .footer-nav {
     width: 60%;
+  }
+
+  footer .footer-nav ul {
+    max-width: none;
   }
 
   footer .footer-nav li {

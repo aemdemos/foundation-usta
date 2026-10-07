@@ -199,28 +199,10 @@ function decorateStats(block) {
   block.append(ul);
 }
 
-/**
- * Support cards. Authored rows: [image] [text: title + copy + CTA] and an
- * OPTIONAL 3rd cell "mobile title" — when filled, that title replaces the card
- * title below 768px (the source authors e.g. "Make a donation to us" for phones
- * and "Make a donation" from 768). Empty / missing 3rd cell = one title.
- * @param {Element} block
- */
 function decorateSupport(block) {
   /* change to ul, li */
   const ul = document.createElement('ul');
   [...block.children].forEach((row) => {
-    const mobileCell = row.children[2];
-    const mobileTitle = mobileCell ? mobileCell.textContent.trim() : '';
-    if (mobileCell) mobileCell.remove();
-    const title = row.children[1]?.querySelector('h1, h2, h3, h4, h5, h6');
-    if (mobileTitle && title) {
-      const mobileHeading = document.createElement(title.tagName);
-      mobileHeading.className = 'cards-support-title-mobile';
-      mobileHeading.textContent = mobileTitle;
-      title.classList.add('cards-support-title-desktop');
-      title.before(mobileHeading);
-    }
     const li = document.createElement('li');
     while (row.firstElementChild) li.append(row.firstElementChild);
     [...li.children].forEach((div) => {

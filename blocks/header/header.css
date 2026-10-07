@@ -40,16 +40,15 @@ header nav {
   box-sizing: border-box;
   display: grid;
 
-  /* brand track is minmax(0, 1fr) — NOT the default `1fr` (= minmax(auto, 1fr)),
-     whose `auto` min floors at the logo's intrinsic width and, together with the
-     fixed hamburger + Donate tools, pushed the nav wider than very narrow phones
-     (< ~355px), causing horizontal page scroll. minmax(0, …) lets the track
-     shrink so the nav never exceeds the viewport. The row is a FIXED 60px: the
-     64px logo overflows it 2px top and bottom (source) instead of growing it. */
+  /* source row: hamburger, 10px, a FIXED 150px logo, then DONATE pushed right —
+     no gap between logo and DONATE (at 320 they touch: logo 50–200, DONATE
+     200–310, overflowing the 15px right padding by 5px exactly like the source;
+     still inside the viewport down to 310px). The row is a FIXED 60px: the 64px
+     logo overflows it 2px top and bottom (source) instead of growing it. */
   grid-template:
-    'hamburger brand tools' 60px / auto minmax(0, 1fr) auto;
+    'hamburger brand . tools' 60px / auto auto 1fr auto;
   align-items: center;
-  gap: 0 10px;
+  gap: 0;
   margin: 0 auto;
   max-width: 1280px;
 
@@ -91,10 +90,9 @@ header nav .nav-brand img {
 }
 
 header nav .nav-brand img {
-  width: auto;
-  height: 64px; /* source mobile logo ≈150x64 */
-  max-width: 100%; /* allow the logo to scale down on very narrow phones so the
-                      brand track can shrink and the nav never overflows */
+  width: 150px;
+  height: 64px; /* source mobile logo 150×64 */
+  object-fit: contain;
 }
 
 /* block-level flex (not inline-flex): an inline link sits on the <p>'s 24px line
@@ -113,15 +111,16 @@ header nav .nav-hamburger {
   height: 24px;
 }
 
-/* source: a 25×24 button holding Hamburger-Menu-Black.svg (three 24×4 bars,
-   8px apart) — ours was 28×22 with 3px bars, so it read smaller and lighter */
+/* source: Hamburger-Menu-Black.svg rendered 24×24 at x16 (1px inside its 25px
+   button) — three 24×4 bars at y 2 / 10 / 18. Ours: a 24×24 box, 1px left
+   margin so it lands on the same x; the bars below reproduce the SVG. */
 header nav .nav-hamburger button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 25px;
+  width: 24px;
   height: 24px;
-  margin: 0;
+  margin: 0 10px 0 1px; /* 10px = source hamburger → logo gap */
   border: 0;
   border-radius: 0;
   padding: 0;
@@ -321,7 +320,7 @@ header nav .nav-donate {
   font-family: var(--heading-semibold-font-family);
   font-size: 14px;
   font-weight: 400;
-  text-transform: uppercase;
+  line-height: normal; /* source button: normal (label is authored uppercase) */
   text-decoration: none;
   white-space: nowrap;
 }
@@ -371,6 +370,11 @@ header .nav-breadcrumb ol {
      matches the source's 38px/28px (no vertical padding); 15px = source inset */
   padding: 0 15px;
   list-style: none;
+
+  /* the source crumb list (inline-flex on a 16px line) sits 2px below the row
+     top — shift the text the same 2px without changing the row height */
+  position: relative;
+  top: 2px;
 }
 
 /* crumbs never shrink/wrap; the last (title) crumb can be long → it just extends
@@ -439,19 +443,18 @@ header .nav-breadcrumb li + li::before {
     align-items: center;
     justify-content: flex-start;
     gap: 0;
-    height: 128px; /* source nav bar is 128px tall */
-    min-height: 128px;
+    height: 120px; /* source nav bar (top-navigation__content) is 120px */
+    min-height: 120px;
     max-width: 1440px;
     margin: 0 auto;
     overflow: visible;
     padding: 0 40px;
   }
 
-  /* breadcrumb: reset the generic `header nav { height:120px, max-width:1440px }`
-     (this row is a <nav>). The border runs edge-to-edge, so the row itself is FULL
-     WIDTH; the inner <ol> is centered to the SAME 1440 container + 40px gutter as
-     the nav/logo, so the first crumb ("HOME") lines up under the LOGO — matching
-     the source (breadcrumb aligns to the logo, not the narrower content column). */
+  /* breadcrumb: reset the generic `header nav` height / max-width (this row is a
+     <nav>). The border runs edge-to-edge; the inner <ol> is centred in a 1440
+     container with NO gutter — the source desktop crumb sits flush at x0 up to
+     1440, then at (viewport − 1440) / 2 (measured 0 @1200–1440, 80 @1600). */
   header .nav-breadcrumb {
     height: auto;
     max-width: none;
@@ -462,9 +465,7 @@ header .nav-breadcrumb li + li::before {
     width: 100%;
     max-width: 1440px;
     margin: 0 auto;
-
-    /* 40px gutter = logo gutter, so crumb-left == logo-left at every width */
-    padding: 0 40px;
+    padding: 0;
 
     /* desktop has room — no sideways scroll; the long title crumb ellipsizes
        instead (rule below). (base sets flex-wrap:nowrap + overflow-x:auto.) */
@@ -495,10 +496,9 @@ header .nav-breadcrumb li + li::before {
     display: none;
   }
 
-  /* desktop keeps the inline-flex logo link (its line-box offset is part of the
-     tuned desktop logo position; the block-level fix is for the 60px phone row) */
-  header nav .nav-brand-link {
-    display: inline-flex;
+  /* logo never shrinks (was 292 @1200 — pushed the nav items 2px left) */
+  header nav .nav-brand {
+    flex-shrink: 0;
   }
 
   header nav .nav-brand img {
