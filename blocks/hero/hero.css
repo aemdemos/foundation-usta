@@ -459,7 +459,10 @@ main > .section.hero-container:has(.hero.text-up) {
   font-family: var(--heading-semibold-font-family);
   font-weight: 400;
   font-size: 18px;
-  letter-spacing: 1px;
+
+  /* The source puts the 1px letter-spacing on the <a> but resets it to normal on the
+     inner label span, so the label has no extra tracking ("WHAT WE DO" 118px, not 128). */
+  letter-spacing: normal;
   line-height: 20px;
   text-transform: uppercase;
   text-decoration: none;
@@ -528,9 +531,8 @@ main > .section.hero-container:has(.hero.text-up) {
   .hero.text-up .button-container + .button-container {
     margin-top: 0;
 
-    /* 30px source gutter minus the ~5px inline-block whitespace between the two
-       containers (they're inline-block, so the HTML newline renders as a space). */
-    margin-left: 25px;
+    /* 30px source gutter between the two buttons. */
+    margin-left: 30px;
   }
 
   /* 768–991: source buttons are CONTENT-width (~148/142px — the label + 14px
@@ -544,13 +546,18 @@ main > .section.hero-container:has(.hero.text-up) {
 }
 
 @media (width >= 992px) {
-  /* From 992 the source buttons become FLUID — each grows with the panel (~29%
-     of the 50vw panel: 148@992, 183@1280, 210@1440, 237@1600, 290@1920), NOT a
-     fixed width. ≈14.5vw tracks that growth (our earlier fixed ~178px stayed the
-     same on wide screens while the source kept growing). Label centered via the
-     base flex rule. */
+  /* From 992 each source button sits in a 2/6 column of the 50vw panel:
+     column = 50vw / 3, button = column − 30px gutter (153@1100, 183@1280, 210@1440,
+     287@1903, 290@1920), never narrower than its label (148/142 @992 overflow the
+     column, so the 2nd button still starts one column over). The old 14.5vw
+     approximation was 11px narrow on wide screens (276 vs 287 @1903). */
+  .hero.text-up .button-container {
+    width: calc(50vw * 2 / 6 - 30px);
+  }
+
   .hero.text-up a.button:any-link {
-    width: 14.5vw;
+    width: 100%;
+    min-width: max-content;
     padding: 14px;
   }
 

@@ -4489,3 +4489,149 @@ Page: `/en/home/get-involved/young-professional-initiative` (importer `import-yp
   is unchanged.
 - **Caveat:** at 768–991 the copy (522px) is only 1px shorter than the collage (523px). If the text ever
   wraps an extra line, the button will drop below the image there. That's also how the source behaves.
+### 2026-10-06 — Breadcrumb: "Home" not linked on the homepage
+- Source `/en/home.html`: the only breadcrumb item is `li.cmp-breadcrumb__navigation-item--active` "Home", shown
+  as plain text (#383838, no underline, 900, 10px, uppercase). EDS always made the collapsed locale+`home` crumb
+  a link (blue, underlined).
+- Fix (`blocks/header/header.js` `buildBreadcrumb`): the `seg === 'home'` branch now checks
+  `i === isLastVisibleIndex`. When Home is the current page, it renders as a plain `<li aria-current="page">Home</li>`.
+  On subpages it is still the `/en/home` link. (An earlier draft of this entry described removing the branch
+  entirely, but that change never landed in the code. This smaller check is the fix that shipped.) No CSS change:
+  the existing grey `.nav-breadcrumb li` style is applied, and the computed style matches the source exactly. Checked:
+  `/en/home` (plain grey text) and `/en/home/who-we-are` (Home still linked).
+- Gates: lint 0 errors (7 existing warnings in other files) · breakpoint ✓ · `npm run test:a11y` could not run
+  (Playwright browser binary missing).
+
+### 2026-10-06 — Footer: stray underline under the social icons
+- Symptom (e.g. `/en/home/news/kimmelman-sport-education-complex-los-angeles`): a short blue underline under or between
+  the Facebook / Instagram / LinkedIn icons. Source: the icon links contain only an `<img>` and the `&nbsp;` spacing
+  sits outside the `<a>`, so nothing visible is underlined.
+- Cause: in EDS each icon is wrapped in a `<picture>` with whitespace text nodes inside the `<a>`. The
+  `footer .footer a:any-link { text-decoration: underline }` rule (0,2,2) outranked
+  `footer .footer-social-icons a { text-decoration: none }` (0,1,2), so that whitespace was underlined.
+- Fix (`blocks/footer/footer.css`): changed the selector to `footer .footer-social-icons a:any-link` (0,2,2), which
+  comes later in the file and now wins. Footer menu and legal links stay underlined, matching the source (both are
+  underlined there).
+- Gates: lint 0 errors · breakpoint ✓ · `check:overflow` / `test:a11y` could not run (Playwright headless binary
+  missing). Verified in the preview browser instead: social `a` = `none`, nav and legal `a` = `underline`.
+### 2026-10-06 — Pasted EDS image links render as optimized images (site-wide)
+Reported on `/drafts/meet/test`: an author pasted an asset URL
+(`https://main--foundation-usta--aemdemos.aem.live/assets/media/media_17f9…ed.jpg`) and it showed as a text link. The
+URL itself was fine (200, 2.2 MB JPEG; the CDN serves `?width=750&format=webply` at 75 KB). Nothing turned a pasted
+image link into an image. Note: on publish, the pipeline rewrites same-project media URLs to RELATIVE
+(`./media_<hash>.jpg`), while the link TEXT keeps the absolute URL. The media bus serves the hash under any path.
+- **`scripts/scripts.js` `buildImageLinks()`** (first step of `buildAutoBlocks`, so before block decoration): an
+  `<a>` becomes `createOptimizedPicture()` (webp + jpg fallback, 2000 ≥768 / 750 below, lazy; the LCP candidate in
+  section 1 is still made eager by `waitForFirstImage`) when ALL of these hold:
+  - its href path is an EDS media file `…/media_<hex>.(jpg|jpeg|png|gif|webp)`;
+  - the host is this origin, a relative path, or `*.aem|hlx.page|live` (the origin is kept, so a pasted aem.live URL
+    still resolves);
+  - its label is a URL (or empty);
+  - it is the only content of its paragraph / block cell (any bold/italic wrapper is replaced too).
+- **Stays a link:** labelled links ("Download photo"), URLs inside a sentence, and non-EDS images (source DAM,
+  content.da.live). Those can't be resized by the CDN; they must be imported or localized.
+- **Blocks get a normal `<picture>`**, e.g. a URL pasted into a hero row-1 cell becomes the hero background (viewport-sized
+  rendition, 40% overlay), verified on `hero (banner)`.
+- **Alt:** taken from the link's `title`; otherwise `alt=""` (decorative). Use a real inserted image when the picture
+  needs descriptive alt text.
+- **Verified:** test page @1440 → 2000w webp in the 720 column; @390 → 750w webp in the 336 column; injected cases
+  (hero cell, bold link, relative path, labelled link, inline link, external DAM link) all behave as above.
+- Gates: lint 0 errors (7 pre-existing warnings) · breakpoint ✓ · check:overflow ✓ · test:a11y ✓ (`/drafts/meet/test`).
+  Env: reinstalled headless-shell 1187 (gates) then 1208 (importer/preview) per the 2026-10-01 gotcha; this removed
+  build 1205. JS-only; deploys via git push. No content change needed.
+
+### 2026-10-07 — Header + footer: pixel parity at every breakpoint (scope of this PR: header & footer blocks only)
+Measured every header/footer element (box + glyph rect + computed type) on source vs EDS at 17 widths
+(320/360/375/390/414/576/767/768/991/992/1024/1199/1200/1280/1440/1600/1920), reporting ≥1px.
+**Header (`header.css`, `header.js`)**
+- **Compact (hamburger) header through 1199px** — the source keeps its phone header (60px row, 150×64 logo, 105px
+  total) up to 1199 and switches to the desktop bar at **1200** (was 992). CSS desktop tier + `isDesktop` matchMedia
+  → 1200.
+- Phone row: fixed **60px** grid row `hamburger brand . tools` / `auto auto 1fr auto`; 15px gutter; hamburger
+  **24×24** at x16,y23 (bars = source SVG: 24×4 @ y2/10/18), 10px to the logo; logo fixed **150×64** (64px logo
+  overflows the 60px row 2px each side, as source); logo chain block-level (inline link had grown the row to 71px);
+  brand box hugs the logo; DONATE NOW fixed **110×40**, `line-height: normal`, no text-transform (authored uppercase).
+  @320 logo 150 / DONATE x200 like source; no page overflow down to 310px.
+- Accent bar = **1px #707070 hairline + blue** (5px phone / 8px desktop) via `.nav-wrapper::before`.
+- Desktop: nav row **120px** (was 128); logo `flex-shrink: 0` (294 @1200).
+- Breadcrumb: 15px phone inset; text +2px (`top: 2px` on the <ol>, source inline-flex offset); desktop <ol> gutter 0
+  (source "HOME" at x0 up to 1440, then (vw − 1440) / 2).
+**Footer (`footer.css`, `footer.js`)**
+- Content container capped at **1600px** (10/12 of the source's 1920 page limit; sage band stays full-bleed) — fixes
+  the 25%-zoom / ultra-wide footer (logo ~930px, columns spread edge to edge).
+- Social icons: footer.js strips whitespace text inside each icon link (the `<picture>` source list added ~4px per
+  icon) → x within 0.2px of source (were −7 / −2.5 / +7).
+- Nav <768: `<ul>` max-width 336, centred (source WHO WE ARE x124 @576).
+**Result:** header identical (<1px) at all 17 widths except the crumb row 1200–1369; footer identical except the
+KEEP UP knock-on (both below). Gates: lint 0 errors · breakpoint ✓ · axe 0 critical/serious @375/@1440 · no overflow.
+**Kept as is (user decision 2026-10-07):** (1) source crumb line-height 38 → 28 switches at **1370px** (not in
+breakpoints.json) — our crumb row is 30 vs 40 at 1200–1369. (2) **KEEP UP WITH US** (bug EDS-94) is not on the source
+homepage footer: rows below it sit +55.7px <992, +1.8 @1440, +37.1 @1600 — left to EDS-94.
+**Pulled out of this PR (scope = header/footer only):** homepage body work done in the same session — 1920px page
+limit for the homepage `main` + `--page-max-width`/`--vw` tokens, homepage hero CTA cap, `center medium` 4px phone
+inset + homepage "Ready" 75% width, homepage heading gaps, columns `feature` paragraph/CTA spacing, cards (support)
+optional mobile-title cell + importer parser. Full patch saved locally at `/tmp/pr-full-before-scope.patch`
+(re-apply in a separate PR).
+
+### 2026-10-07 — hero `text-up`: CTA button width + label tracking (customer feedback, who-we-are)
+- Feedback: WHAT WE DO / OUR IMPACT ~287px on source vs ~276 on EDS; EDS label text larger / wider spaced.
+- **Width:** source button = a 2/6 column of the 50vw panel minus the 30px gutter (`50vw / 3 − 30px`), never
+  narrower than its label; the 2nd button starts one column over even when the 1st overflows (992). EDS used
+  `14.5vw` (276 @1903). Now ≥992: `.button-container` width `calc(50vw * 2 / 6 - 30px)`, button `width: 100%;
+  min-width: max-content`. Measured = source at 992/1100/1280/1440/1903 (148/153.3/183.3/210/287.2; 2nd x identical).
+- **Label:** source sets `letter-spacing: 1px` on the `<a>` but the inner `.button-core__text-content` span resets it
+  to `normal`. EDS applied 1px to the text ("WHAT WE DO" 128 vs 118px). Now `letter-spacing: normal` → 118/112.
+- **Vertical:** h1 / subhead / buttons / label glyphs are at identical y on source and EDS (local + aem.live) at
+  390–1920; no change needed. (Only 1200–1369 differs by 10px, from the known crumb-row line-height item.)
+- 768–991 left as is: the source's 2nd button overlaps the 1st there (198 < 70+148); EDS keeps a 30px gap.
+- Also verified what-we-do, get-involved, YPI (`medium`) heroes match the source at 1440/1903.
+- Gates: lint ✓ · breakpoint ✓ · check:overflow ✓ (360–1920) · test:a11y ✓ (who-we-are).
+- Follow-up (user direction, same day): 2nd button `margin-left` 25 → **30px** (≥768). The containers are
+  inline-block, so the ~5px whitespace between them adds on top: visible gap is now **35px** (was 30 = source
+  measurement in headless Chromium; customer reported the source gap looks slightly larger).
+
+### 2026-10-07 — Site-wide 24px text rhythm + who-we-are spacing fixes (customer feedback)
+**Text rhythm (site-wide, user decision — no opt-in section style).** The source separates a heading and each
+paragraph with an authored empty `<p>&nbsp;</p>` = one 24px body line. EDS used the boilerplate 0.8em (14.4 /
+12.8px; heading→p 19px). Now:
+- `styles.css`: `main .default-content-wrapper > :where(h1…h6, p) + p:not(.button-wrapper) { margin-top: 24px }`.
+- `columns.css`: same rhythm in text cells of default columns (`:not(.feature, .stats, .statement)`).
+- Base `p, ul, …` rule left at 0.8em on purpose (blocks/header/footer were matched on top of it).
+- Impact (86 pages, 391 default-content gaps): 336 changed on 75 pages (312× 14.4→24, 24× 19→24), mostly news
+  articles (source news also uses 24px blank lines). Page-specific rules keep their own values (news H1 gap,
+  staff list, kimmelman article). **Known deviation:** get-involved / what-we-do intros and the college-scholarships
+  heading→p are 0px on the source (no blank line) → now 24px. Not yet source-checked: home, our-impact, financials,
+  YPI, 404. The Evert attribution is 24px below the quote vs 10px on source.
+- The opt-in `spaced` section style tried first was REMOVED (and its importer change reverted).
+
+**who-we-are fixes (measured @1440; source = EDS now):**
+- Our History (columns): heading→p 24, p→p 24 (was 19 / 14.4).
+- History text → yellow strip 121px (was 56): yellow spacer-section margin-top 56 → 121 (≥992).
+- Yellow strip: source is 32px yellow + 17px white; ours is an authored Spacer `desktop: 17px`. Importer now emits
+  `32px` (`import-general-v1(.bundle).js`). **Content step pending (DA):** set the spacer's desktop value to 32px.
+- Leadership band (`section-yellow.center-intro`): band top → heading 48 (h2 margin-top 16), heading→description
+  0 (source has no blank line here), description→LEARN MORE 16, LEARN MORE→Evert photo 56 (were 92.8 / 24 / 12 / 40).
+- LEARN MORE (all `body.general` CTAs): label letter-spacing normal (source resets it on the inner span) +
+  min-width 170 → 170×40 (was 158 with spaced-out text).
+- Supporters tiles → black strip 86 (was 52): tiles section margin-bottom 74 (≥992).
+- Chris Evert photo: 570×413 on both at 1440 — no difference found at this width.
+- Mobile/tablet not yet re-measured for the band/strip/tiles gaps (strip + tiles rules are ≥992; band rules all widths).
+- Gates: lint 0 errors · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓ (who-we-are).
+- Follow-up (same day): yellow band bottom — Evert photo → band bottom 108px (was 32): `section-yellow.center-intro`
+  padding-bottom 108 (≥992). Attribution: `.columns em strong` → Graphik Semibold (source face; was synthetic bold of
+  Regular). Simple selector by user direction — its gap stays on the 24px rhythm (29px text-to-text vs 13 on source). Band = source @1440.
+  Still open: band bottom → "Our Supporters" h2 60.8 vs 65 (4px). Gates re-run: all ✓.
+- Follow-up: "Our History" on phone/tablet (<992) — source CENTERS the columns text cell on the inner pages
+  (who-we-are/what-we-do/get-involved/our-impact; news stays left) and heading→p is 0 there (24 from 992).
+  `columns.css`: `body.general .columns:not(.feature,.stats,.statement) > div > div` text-align center <992 (start ≥992),
+  heading→p 0 <992 (24 ≥992), heading margin-bottom 0. Verified: 390/768 center, 0 / 24 / 24; 1440 left, 24 / 24 / 24 = source.
+- Fix: inner-page styles missing in the PREVIEW PANE. It loads `/content/en/home/<page>`, where the raw metadata is
+  `<meta name="Theme">` (capital T); aem.js `getMetadata('theme')` is case-sensitive, so `body.general` was never
+  added (no mobile centring, black LEARN MORE, etc.). `scripts.js` loadEager now also adds theme classes via
+  `getMetadataNormalized('theme')` (same fix as `template`, 2026-09-23). Verified: body="general" on both URLs.
+- Change (user direction): the mobile columns centring no longer depends on `Theme: general`. Scoped to
+  `body:not(.news)` instead — every plain columns block (not feature/stats/statement) centres its text cell <992
+  with heading→p 0, EXCEPT news articles (body.news = news template), which stay left-aligned. Verified @390:
+  who-we-are / get-involved (both URLs) centre; 3 news articles with columns stay `start`.
+  Note: `body.general` is NOT new — 15 pre-existing rules in styles.css (LEARN MORE blue CTA, section spacing) and
+  hero.css (`body.general .hero.banner`) depend on it; removing the theme means moving those (separate task).
