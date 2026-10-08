@@ -692,19 +692,16 @@ body.leadership main h1 {
   margin-top: 0;
 }
 
-/* Site-wide CTA button = the source's SOLID BLUE pill (every page; it was scoped
-   to the `general` theme until 2026-10-07): brand-blue bg, white, 3px radius, 18px
-   Graphik Semibold uppercase, 40px tall. decorateButtons() marks <strong>/<em>
-   links as .primary/.secondary, so every variant is listed to replace the
-   boilerplate black/outline looks. Blocks with their own CTA style (hero, cards
-   support/news/expand, columns feature) use higher-specificity selectors.
-   no-descending-specificity is disabled for this block: it deliberately sits after
-   (and overrides) the boilerplate `a.button.*:hover` defaults above. */
+/* Site-wide plain CTA button (`.button` with no variant) = the source's SOLID BLUE
+   pill: brand-blue bg, white, 3px radius, 18px Graphik Semibold uppercase, 40px
+   tall. The boilerplate authoring variants are EXCLUDED and keep their own looks:
+   bold → .primary (dark), italic → .secondary (outline), bold+italic → .accent.
+   (The blue for those was a `general`-theme override until 2026-10-07.) Blocks
+   with their own CTA style (hero, cards support/news/expand, columns feature) use
+   higher-specificity selectors. no-descending-specificity is disabled for this
+   block: it sits after the boilerplate `a.button.*:hover` defaults above. */
 /* stylelint-disable no-descending-specificity */
-main a.button:any-link,
-main a.button.primary,
-main a.button.secondary,
-main a.button.accent {
+main a.button:not(.primary, .secondary, .accent):any-link {
   /* source CTA box: border-box, 40px tall, 14px horizontal padding, 1px border,
      at least 170px wide (LEARN MORE: 118px label + padding = 148 → 170). The
      source sets 1px letter-spacing on the <a> but resets it to normal on the inner
@@ -726,14 +723,8 @@ main a.button.accent {
   letter-spacing: normal;
 }
 
-main a.button:hover,
-main a.button:focus-visible,
-main a.button.primary:hover,
-main a.button.primary:focus-visible,
-main a.button.secondary:hover,
-main a.button.secondary:focus-visible,
-main a.button.accent:hover,
-main a.button.accent:focus-visible {
+main a.button:not(.primary, .secondary, .accent):hover,
+main a.button:not(.primary, .secondary, .accent):focus-visible {
   border-color: transparent;
   background-color: var(--link-hover-color);
   color: var(--background-color);
