@@ -440,6 +440,38 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   }
 }
 
+/* Collage LEARN MORE: the source button fills a grid column but never gets
+   narrower than its label (min-width: max-content). Its label is an inner <span>
+   with NORMAL letter-spacing (118px; the 1px sits on the link only) + 14px side
+   padding. Column = 8/12 of the 321px mobile text column (211px), 4/12 of the
+   text column's grid from 768 (gutter 6px / 15px from 992): 148 (label wins) @768
+   and @992 → 151 @1100 → 167 @1200+. The paragraph is a block so the % resolves
+   against the text column; its top margin keeps the old inline-block gap. */
+.columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p:has(> a:only-child) {
+  display: block;
+  margin-top: calc(1em + 8px);
+  margin-right: 0;
+}
+
+.columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p:has(> a:only-child) > a:only-child {
+  width: 211px;
+  min-width: max-content;
+  padding: 4px 14px;
+  letter-spacing: normal;
+}
+
+@media (width >= 768px) {
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p:has(> a:only-child) > a:only-child {
+    width: calc((100% + 12px) / 3 - 12px);
+  }
+}
+
+@media (width >= 992px) {
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p:has(> a:only-child) > a:only-child {
+    width: calc((100% + 30px) / 3 - 30px);
+  }
+}
+
 /* FULL DESKTOP (>=1200): the source lays this out at a FIXED size, not stretched
    to the container — collage 577, gap 23, text column a constant 563px, centered
    (≈1163 total). Mine had let the text flex to fill 1170 (579 wide), so it wrapped
