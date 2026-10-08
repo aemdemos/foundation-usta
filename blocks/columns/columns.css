@@ -143,7 +143,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 }
 
 .columns.feature p {
-  margin: 0 0 1em;
+  margin: 0 0 24px;
   color: #000;
   font-size: var(--body-font-size-m); /* 16px→18px at 768 (global token) */
   line-height: var(--body-line-height);
@@ -174,7 +174,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 
   /* source feature CTAs render ~167–188px wide; a little extra horizontal
      padding brings ours (was ~166) up to match the source's fuller buttons */
-  padding: 4px 24px;
+  padding: 4px 40.8px;
   background-color: var(--brand-blue);
   color: #fff;
   font-family: var(--heading-semibold-font-family);
@@ -280,6 +280,10 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   .section.columns-container:has(.columns-feature-collage) .default-content-wrapper {
     max-width: none;
     margin-inline: 0;
+  }
+
+  .columns.feature .columns-feature-row a:only-child {
+     padding: 4px 19px;
   }
 }
 
