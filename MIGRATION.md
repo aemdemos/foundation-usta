@@ -4645,3 +4645,11 @@ User decision: inner pages get the site DEFAULT styling; only same-layout page s
 - Side effect: the boilerplate 404 page (404.html) "Go home" link is now the blue CTA (was the outline secondary).
 - Gates: lint 0 errors · breakpoint ✓ · check:overflow / check:typography / test:a11y ✓ on home, our-impact,
   who-we-are.
+
+### 2026-10-08 — Site-wide CTA rule keeps `.primary` / `.secondary` / `.accent` (user decision)
+- Briefly tried (`c41e321`) excluding the boilerplate variants from the site-wide blue CTA rule
+  (`main a.button:not(.primary, .secondary, .accent)`), which brought back dark / outline / link-blue for bold /
+  italic / bold+italic links but turned the 11 bold inner-page CTAs dark. Reverted (`dda0064`) at the user's request:
+  `main a.button:any-link, main a.button.primary, main a.button.secondary, main a.button.accent` = blue CTA on every
+  page again. So bold, italic and bold+italic standalone links all render as the source blue CTA; the inner-page CTAs
+  need no re-authoring. `cta-blue` / `cta-black` (bold+italic+sub/sup) are unaffected.
