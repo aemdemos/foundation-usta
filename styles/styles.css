@@ -1051,6 +1051,53 @@ main .section.split-5-6 .columns > div > .columns-img-col {
   }
 }
 
+/* Statement band directly after the home stats bar ("Ready on the court. Ready
+   for life."). The source centres it on a FLUID column (no 336 / tier caps):
+   75vw − 8px (<768: 262 @360 → 442 @600), 7/12 of (100vw − 20px) (768–991:
+   436 @768 → 566 @991), 58.333vw − 30px (≥992: 549 @992 → 670 @1200 → 1090
+   @1920). Spacing (text-line to text-line): stats bar → heading 58 / 64px,
+   heading → copy 12 / 18px, copy → next heading 66 (<768) / 84px. Only the home
+   page has a stats bar, so other `center, medium` bands are unaffected. */
+main > .section.columns-container:has(.columns.stats) + .section.center {
+  margin-top: 50px;
+  margin-bottom: 56px;
+}
+
+main > .section.columns-container:has(.columns.stats) + .section.center > div {
+  width: calc(75vw - 8px);
+  max-width: none;
+}
+
+main > .section.columns-container:has(.columns.stats) + .section.center h2 {
+  margin: 0;
+}
+
+main > .section.columns-container:has(.columns.stats) + .section.center h2 + p {
+  margin-top: 0;
+}
+
+@media (width >= 768px) {
+  main > .section.columns-container:has(.columns.stats) + .section.center {
+    margin-bottom: 72px;
+  }
+
+  main > .section.columns-container:has(.columns.stats) + .section.center > div {
+    width: calc((100vw - 20px) * 7 / 12);
+  }
+}
+
+@media (width >= 992px) {
+  main > .section.columns-container:has(.columns.stats) + .section.center {
+    margin-top: 50px;
+    margin-bottom: 56px;
+  }
+
+  main > .section.columns-container:has(.columns.stats) + .section.center > div {
+    width: min(calc(58.333vw - 30px), 1090px);
+    padding-inline: 0; /* the global ≥992 wrapper gutter would narrow it by 30 */
+  }
+}
+
 /* split-even — a symmetric, block-agnostic TWO-COLUMN section for TWO blocks
    side by side (e.g. a Quote block left + a donation form block right, as on the
    source's Chris Evert campaign page). Each direct wrapper flows into its own
