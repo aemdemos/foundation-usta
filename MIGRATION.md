@@ -4642,3 +4642,5 @@ paragraph with an authored empty `<p>&nbsp;</p>` = one 24px body line. EDS used 
   row (non-CTA children `flex: 0 0 100%`) so the gap is exact — inline-block whitespace had added ~5px. Scoped to
   the video variant only: collage LEARN MORE + all other CTAs verified unchanged (before/after diff, 7 widths).
   Verified = source to ±1px at every width. Gates: lint/breakpoint/overflow/a11y ✓.
+- Change (user direction, 2026-10-08): video feature text-cell heading ("We go beyond wins and losses.")
+  `margin-bottom: 0` at all widths (was the block-wide 0.25em). Scoped to the video variant's text cell only.

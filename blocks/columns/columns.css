@@ -541,6 +541,11 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   flex: 0 0 100%;
 }
 
+/* video feature heading sits flush on its copy at every width (no 0.25em gap) */
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) h3 {
+  margin-bottom: 0;
+}
+
 .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) {
   margin: 8px 0 0;
 }
