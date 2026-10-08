@@ -64,10 +64,13 @@ footer .footer-legal {
   padding: 8px 0;
 }
 
-/* ---------- brand: logo, then KEEP UP WITH US ---------- */
+/* ---------- brand: logo ---------- */
 footer .footer-brand {
   display: flow-root;
-  padding-bottom: 24px; /* 8 column + 16 inner container (32 from 768) */
+
+  /* 8 column + 16 inner container (32 from 768) + 16 for the source's now-empty
+     CTA container, which it kept under the logo when the button was removed */
+  padding-bottom: 40px;
 }
 
 footer .footer-brand .footer-logo {
@@ -87,44 +90,6 @@ footer .footer-brand img {
   display: block;
   width: 100%;
   height: auto;
-}
-
-footer .footer-brand .footer-keepup-wrap {
-  clear: both;
-  padding: 16px 0; /* 8 container + 8 button block */
-}
-
-footer .footer-brand .footer-keepup:any-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: calc(100% - 8px);
-  min-width: max-content;
-  height: 40px;
-  margin: 0 4px;
-  padding: 0 14px; /* 40px box, label centred 10px from the top (as source) */
-  background-color: var(--brand-blue);
-  border: 1px solid transparent;
-  border-radius: 3px;
-  color: #fff;
-  font-family: var(--heading-semibold-font-family);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 20px;
-
-  /* the source sets 1px on the link, but its visible label <span> is `normal` */
-  letter-spacing: normal;
-  text-align: center;
-  text-decoration: none;
-  text-transform: uppercase;
-}
-
-footer .footer-brand .footer-keepup:hover,
-footer .footer-brand .footer-keepup:focus-visible {
-  background-color: var(--link-hover-color);
-  color: #fff;
-  text-decoration: none;
 }
 
 /* ---------- nav: 2 × 2 (<992) → 4 across ---------- */
@@ -222,18 +187,12 @@ footer .footer-legal p:last-child {
   }
 
   footer .footer-brand {
-    padding-bottom: 40px;
+    padding-bottom: 56px;
   }
 
   footer .footer-brand .footer-logo {
     width: calc(20% - 12px);
     margin: 0 6px 20px;
-  }
-
-  /* button = 6 of 12 columns, offset 3 (centred) */
-  footer .footer-brand .footer-keepup:any-link {
-    width: calc(50% - 12px);
-    margin: 0 0 0 calc(25% + 6px);
   }
 
   footer .footer-nav {
@@ -280,12 +239,6 @@ footer .footer-legal p:last-child {
   footer .footer-brand .footer-logo {
     width: calc(100% - 30px);
     margin: 0 15px 20px;
-  }
-
-  /* button = 10 of 12 columns, offset 1; never narrower than its label */
-  footer .footer-brand .footer-keepup:any-link {
-    width: calc(100% * 10 / 12 - 30px);
-    margin: 0 0 0 calc(100% / 12 + 15px);
   }
 
   footer .footer-nav li {
