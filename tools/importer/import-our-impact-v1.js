@@ -290,7 +290,7 @@ export default {
     }
     if (heroCta) heroContentCell.push(ctaParagraph(document, heroCta.href, heroCta.text));
     heroCells.push([heroContentCell]);
-    main.append(WebImporter.Blocks.createBlock(document, { name: 'Hero (banner)', cells: heroCells }));
+    main.append(WebImporter.Blocks.createBlock(document, { name: 'Hero (banner, medium)', cells: heroCells }));
     emittedBlocks.push('hero-banner');
 
     // SECTION 2 — "Young people aren't ready." centered intro + Columns (stat list

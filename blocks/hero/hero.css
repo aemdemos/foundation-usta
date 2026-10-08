@@ -158,17 +158,21 @@ main > .section.hero-container:has(.hero.banner) {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  min-width: 0; /* opt out of the site-wide 170px CTA minimum (styles.css) */
   height: 40px;
   margin: 0;
   border: 1px solid transparent;
   border-radius: 3px;
-  padding: 14px 10px;
+  padding: 14px;
   background-color: var(--brand-blue);
   color: var(--background-color);
   font-family: var(--heading-semibold-font-family);
   font-weight: 400;
   font-size: 18px;
-  letter-spacing: 1px;
+
+  /* source resets the <a>'s 1px tracking to normal on the inner label span
+     ("LEARN MORE" / "WHAT WE DO" 118px wide, not 128) → 148px content-width box */
+  letter-spacing: normal;
   line-height: 20px; /* source button line-height */
   text-transform: uppercase;
   text-decoration: none;
@@ -259,31 +263,32 @@ main > .section.hero-container:has(.hero.banner) {
    150@1200 → 190@1440 → 238@1728 → 270@1920, i.e. width ≈ 0.1665·vw − 50px.
    Reproduce with a fixed WIDTH (label centered by the base flex rule) so the box
    tracks the source at every wide-desktop width. Fluid via calc() — no new
-   breakpoint, only the approved 768/992/1200 queries. Scoped to :not(body.general)
-   so only the homepage banner is affected. */
+   breakpoint, only the approved 768/992/1200 queries. Scoped to :not(.medium)
+   so only the homepage (default) banner is affected. */
 @media (width >= 1200px) {
-  body:not(.general) .hero.banner p:has(> a:only-child) > a:any-link {
+  .hero.banner:not(.medium) p:has(> a:only-child) > a:any-link {
     width: calc(16.65vw - 50px);
     padding: 14px; /* label centers via flex; width drives the box */
   }
 }
 
 /* ------------------------------------------------------------------
-   Theme override: body.general banner (e.g. our-impact). The homepage banner
-   above is tuned to the HOMEPAGE hero; the general-template banner pages use the
-   SAME panel geometry as the text-up hero (panel at 8.333vw left, 50vw wide, a
-   15px inner gutter) but keep the BANNER vertical framing (text pushed down, not
-   top-anchored). Source-measured (our-impact): h1 left 9.4vw (34@360 → 122@1280 →
-   135@1440), h1 top 72px mobile / 136px desktop, button-bottom→hero-bottom 104px
-   mobile / 200px desktop; panel width 50vw (172@360 → 610@1280 → 690@1440).
-   Scoped to body.general so the homepage banner is untouched. */
-body.general .hero.banner.block {
+   Variant: banner, medium — `Hero (banner, medium)`, the shorter interior-page
+   banner (our-impact). The default banner above is tuned to the HOMEPAGE hero;
+   `medium` uses the SAME panel geometry as the text-up hero (panel at 8.333vw
+   left, 50vw wide, a 15px inner gutter) but keeps the BANNER vertical framing (text
+   pushed down, not top-anchored). Source-measured (our-impact): h1 left 9.4vw
+   (34@360 → 122@1280 → 135@1440), h1 top 72px mobile / 136px desktop,
+   button-bottom→hero-bottom 104px mobile / 200px desktop; panel width 50vw
+   (172@360 → 610@1280 → 690@1440). (Was scoped to the `general` theme until
+   2026-10-07.) */
+.hero.banner.medium.block {
   /* mobile: text pushed down 72px from top, ~104px band below the button; the
      panel is inset ~8.333vw from the left (source h1 left 34@360 → 40@430). */
   padding: 72px 12px 104px 8.333vw;
 }
 
-body.general .hero.banner.block > div {
+.hero.banner.medium.block > div {
   /* source mobile text panel is a narrow 50vw column (180@360 → 215@430) so the
      subhead wraps to 6 lines exactly like the source (56vw wrapped to 5, too short). */
   max-width: 50vw;
@@ -292,29 +297,27 @@ body.general .hero.banner.block > div {
   padding: 0;
 }
 
-body.general .hero.banner.block > div > div {
+.hero.banner.medium.block > div > div {
   width: auto;
   max-width: none;
   margin-left: 0;
   padding: 0;
 }
 
-/* The homepage banner CTA is a fixed 238px pill (its "LEARN MORE"); the general-
-   template banner buttons are CONTENT-width with generous horizontal padding
-   (source "WHAT WE DO" = 183px: ~118px label + ~32px each side). Drop the fixed
-   238px width and use 24px side padding so it sizes to the label like the source. */
-body.general .hero.banner p:has(> a:only-child) > a:any-link {
+/* medium CTA: content-width below 992 (source "WHAT WE DO" 148px @390); from 992
+   a 2/6 column of the 50vw panel minus the 30px gutter, never narrower than its
+   label (210 @1440) — the same model as the text-up hero buttons. */
+.hero.banner.medium p:has(> a:only-child) > a:any-link {
   width: auto;
-  padding: 14px 24px;
 }
 
 @media (width >= 768px) {
-  body.general .hero.banner.block {
+  .hero.banner.medium.block {
     /* desktop: 136px above the h1, 200px below the button (banner framing). */
     padding: 136px 0 200px;
   }
 
-  body.general .hero.banner.block > div {
+  .hero.banner.medium.block > div {
     box-sizing: border-box;
     width: 50vw;
     max-width: none;
@@ -324,11 +327,18 @@ body.general .hero.banner p:has(> a:only-child) > a:any-link {
 
   /* 15px inner gutter → h1 sits 15px in from the panel edge (matches source and
      the text-up hero), so the h1 content width is panel − 30. */
-  body.general .hero.banner.block > div > div {
+  .hero.banner.medium.block > div > div {
     width: auto;
     max-width: none;
     margin-left: 0;
     padding: 0 15px;
+  }
+}
+
+@media (width >= 992px) {
+  .hero.banner.medium p:has(> a:only-child) > a:any-link {
+    width: calc(50vw * 2 / 6 - 30px);
+    min-width: max-content;
   }
 }
 
@@ -450,6 +460,7 @@ main > .section.hero-container:has(.hero.text-up) {
   justify-content: center;
   box-sizing: border-box;
   width: 48vw;
+  min-width: 0; /* opt out of the site-wide 170px CTA minimum (styles.css) */
   height: 40px;
   margin: 0;
   border: 1px solid transparent;
