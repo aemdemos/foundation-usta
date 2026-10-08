@@ -4644,3 +4644,23 @@ paragraph with an authored empty `<p>&nbsp;</p>` = one 24px body line. EDS used 
   Verified = source to ±1px at every width. Gates: lint/breakpoint/overflow/a11y ✓.
 - Change (user direction, 2026-10-08): video feature text-cell heading ("We go beyond wins and losses.")
   `margin-bottom: 0` at all widths (was the block-wide 0.25em). Scoped to the video variant's text cell only.
+
+### 2026-10-08 — Link targets: internal same tab, external + files new tab, `#_blank` override (replaces "every link")
+Customer revised the 2026-09-28 "every link opens in a new tab" requirement:
+- **Internal → same tab:** relative links, this origin, `ustafoundation.com` / `www.ustafoundation.com` (the
+  production domain; 86 content links still point there absolutely) and `*--foundation-usta--aemdemos.aem.page|live`.
+- **External → new tab** (`target="_blank"` + `rel="noopener"`): any other http(s) host.
+- **File downloads → new tab:** path ends in .pdf / .doc(x) / .xls(x) / .ppt(x) / .csv / .zip / .txt / .rtf (any host,
+  e.g. `aem.live/assets/docs/…pdf`).
+- **Author override:** append `#_blank` to any URL (e.g. `/en/home/our-impact#_blank`, `…/who-we-are#history#_blank`)
+  → new tab; the code strips the marker from the href.
+- **Unchanged skips:** `#` anchors, `javascript:` / `mailto:` / `tel:`, `?form=` donate links (FundraiseUp overlay),
+  links that already set a target (social share, Instagram fallback).
+- **Code (`scripts/scripts.js`):** `openLinksInNewTab()` → `decorateLinkTarget(a)` (exported) +
+  `decorateLinkTargets()`: one up-front pass over `main` links (clean href, right target on hover / right-click) and
+  the same delegated capture-phase click listener for links built later (header, footer, blocks, related feed).
+- **Verified (local, real clicks, 14 cases):** header nav / LEARN MORE / related card / relative + absolute-production
+  internal / donate / mailto → same tab; PDF / footer Facebook / atptour body link / usta.com / .docx / `#_blank`
+  (incl. with an anchor) → new tab with the marker stripped. Lint 0 errors · test:a11y ✓.
+- **No reverse override:** an external link can't be forced into the same tab (there is no `#_self`); add one if
+  authors need it.

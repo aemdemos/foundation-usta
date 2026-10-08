@@ -488,28 +488,62 @@ function loadDelayed() {
   // load anything that can be postponed to the latest here
 }
 
+/* Link targets: internal links open in the same tab; external links and file
+   downloads open in a new tab. Authors can force a new tab for any link by
+   appending `#_blank` to its URL (the marker is stripped from the href). */
+const LINK_NEW_TAB_MARKER = '#_blank';
+// hosts that are this site: the production domain + this project's aem.page/live
+const INTERNAL_HOSTS = /^(?:www\.)?ustafoundation\.com$|--foundation-usta--aemdemos\.aem\.(?:page|live)$/i;
+const FILE_EXTENSIONS = /\.(?:pdf|docx?|xlsx?|pptx?|csv|zip|txt|rtf)$/i;
+
+function openInNewTab(a) {
+  a.target = '_blank';
+  a.relList.add('noopener');
+}
+
 /**
- * Open every link on the site in a new tab (site-wide requirement). A single
- * delegated, capture-phase click listener sets the target just before the
- * browser navigates, so it covers links created at any time (header, footer,
- * blocks, the related-articles feed) without touching any block. Skipped:
- * in-page `#` anchors, `javascript:`/`mailto:`/`tel:` links, and `?form=` donate
- * links (they open the FundraiseUp overlay on this page), plus any link that
- * already declares a target.
+ * Sets the target of one link per the rules above. Skipped: in-page `#` anchors,
+ * `javascript:`/`mailto:`/`tel:` links, `?form=` donate links (they open the
+ * FundraiseUp overlay on this page) and links that already declare a target.
+ * @param {HTMLAnchorElement} a the link
  */
-function openLinksInNewTab() {
+export function decorateLinkTarget(a) {
+  const href = a.getAttribute('href');
+  if (!href) return;
+  if (href.endsWith(LINK_NEW_TAB_MARKER)) {
+    a.setAttribute('href', href.slice(0, -LINK_NEW_TAB_MARKER.length));
+    openInNewTab(a);
+    return;
+  }
+  if (a.target || /^(#|javascript:|mailto:|tel:)/i.test(href) || /[?&]form=/.test(href)) return;
+  let url;
+  try {
+    url = new URL(href, window.location.href);
+  } catch {
+    return;
+  }
+  const isFile = FILE_EXTENSIONS.test(url.pathname);
+  const isExternal = /^https?:$/.test(url.protocol)
+    && url.hostname !== window.location.hostname && !INTERNAL_HOSTS.test(url.hostname);
+  if (isFile || isExternal) openInNewTab(a);
+}
+
+/**
+ * Applies decorateLinkTarget to links in `main` up front (clean hrefs, correct
+ * hover/right-click), and to every other link at click time via one delegated,
+ * capture-phase listener — so links built later (header, footer, blocks, the
+ * related-articles feed) follow the same rules without per-block changes.
+ */
+function decorateLinkTargets() {
+  document.querySelectorAll('main a[href]').forEach(decorateLinkTarget);
   document.addEventListener('click', (e) => {
     const a = e.target.closest?.('a[href]');
-    if (!a || a.target) return;
-    const href = a.getAttribute('href');
-    if (/^(#|javascript:|mailto:|tel:)/i.test(href) || /[?&]form=/.test(href)) return;
-    a.target = '_blank';
-    a.relList.add('noopener');
+    if (a) decorateLinkTarget(a);
   }, true);
 }
 
 async function loadPage() {
-  openLinksInNewTab();
+  decorateLinkTargets();
   await loadEager(document);
   await loadLazy(document);
   // Defer the delayed phase ~3s (EDS convention) so non-critical third parties
