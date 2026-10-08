@@ -524,6 +524,65 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   }
 }
 
+/* Video feature CTA pair (WHO WE ARE / WHAT WE DO) — source measured at
+   390/768/874/992/1200/1440: mobile 148px stacked (16px apart, centered);
+   768–991 184px side by side, 78px gap, centered; ≥992 a 2-of-12 column
+   (≈36.5% of the text column, never below 148px) with a 30px gap, left-aligned.
+   The text cell becomes a wrapping flex row so the gap is exact (no inline-block
+   whitespace); every non-CTA child spans the full row. Scoped to the video
+   variant so the collage LEARN MORE button is untouched. */
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) > * {
+  flex: 0 0 100%;
+}
+
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) {
+  margin: 8px 0 0;
+}
+
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) + p:has(> a:only-child) {
+  margin-top: 16px;
+}
+
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p > a:only-child {
+  width: 148px;
+  padding-inline: 0;
+}
+
+@media (width >= 768px) {
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
+    column-gap: 78px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) {
+    flex: 0 0 184px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) + p:has(> a:only-child) {
+    margin-top: 8px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p > a:only-child {
+    width: 100%;
+  }
+}
+
+@media (width >= 992px) {
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
+    justify-content: flex-start;
+    column-gap: 30px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) {
+    flex: 0 0 max(148px, 36.5%);
+  }
+}
+
 /* NOTE: the "Ready on the court. Ready for life." Mission Statement is NOT a
    block — it is plain centered DEFAULT CONTENT carried by the generic,
    composable section styles `center` + `narrow` in styles.css (see

@@ -4635,3 +4635,10 @@ paragraph with an authored empty `<p>&nbsp;</p>` = one 24px body line. EDS used 
   who-we-are / get-involved (both URLs) centre; 3 news articles with columns stay `start`.
   Note: `body.general` is NOT new — 15 pre-existing rules in styles.css (LEARN MORE blue CTA, section spacing) and
   hero.css (`body.general .hero.banner`) depend on it; removing the theme means moving those (separate task).
+- Fix (2026-10-08): video feature CTA pair (WHO WE ARE / WHAT WE DO) narrower + closer than source. Source measured
+  390/768/874/992/1200/1440: mobile 148px stacked (56px pitch, centred); 768–991 184px side by side, 78px gap,
+  centred; ≥992 a 2-of-12 col ≈ 36.5% of the text column (min 148) with a 30px gap, left. `columns.css`: the video
+  variant's text cell (`:has(.columns-feature-media) … > div:not(.columns-feature-media)`) is now a wrapping flex
+  row (non-CTA children `flex: 0 0 100%`) so the gap is exact — inline-block whitespace had added ~5px. Scoped to
+  the video variant only: collage LEARN MORE + all other CTAs verified unchanged (before/after diff, 7 widths).
+  Verified = source to ±1px at every width. Gates: lint/breakpoint/overflow/a11y ✓.
