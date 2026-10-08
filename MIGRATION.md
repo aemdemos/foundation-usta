@@ -4472,3 +4472,20 @@ Page: `/en/home/get-involved/young-professional-initiative` (importer `import-yp
 - Gates: lint 0 errors · breakpoint ✓ · axe WCAG A/AA via the preview browser on 5 news pages: card images
   clean (only existing `.nav-donate` / `.footer-keepup` contrast + tweet link-in-text-block). `npm run
   test:a11y` could not run (Playwright browser binary missing here).
+
+## 2026-10-08 — Homepage collage feature: LEARN MORE aligned with the image bottom (768+)
+
+- **Issue:** on the homepage "For decades…" collage feature, the LEARN MORE button didn't line up with the
+  bottom of the image collage at tablet/desktop widths. It sat below the portrait at ~778px and 25px above it
+  at 1024px. The CTA just followed the copy, so how the text wrapped decided where the button landed.
+- **Source (measured 778 / 1024):** LEARN MORE bottom == collage bottom (±1px) at every two-column width.
+  Spacing: 24px between paragraphs (spacer `<p>`s), 16px from the last paragraph to the button, and the text
+  starts 10px below the collage top.
+- **Fix (`blocks/columns/columns.css`, ≥768):** row `align-items: stretch`; the text cell is a flex column;
+  paragraphs `margin: 0 0 24px`, the paragraph before the CTA is 16px (`p:has(+ p > a:only-child)`), and the
+  CTA paragraph is `margin: auto 0 0`. That moves the pin-to-bottom rule that used to start at 1200 down to
+  768. The 1200 tier now only sets the fixed 577/563 widths and the 23px gap.
+- **Verified:** button bottom − collage bottom = 0px at 768/778/900/992/1024/1199/1200/1440. Mobile (stacked)
+  is unchanged.
+- **Caveat:** at 768–991 the copy (522px) is only 1px shorter than the collage (523px). If the text ever
+  wraps an extra line, the button will drop below the image there. That's also how the source behaves.
