@@ -4619,3 +4619,29 @@ paragraph with an authored empty `<p>&nbsp;</p>` = one 24px body line. EDS used 
   who-we-are / get-involved (both URLs) centre; 3 news articles with columns stay `start`.
   Note: `body.general` is NOT new — 15 pre-existing rules in styles.css (LEARN MORE blue CTA, section spacing) and
   hero.css (`body.general .hero.banner`) depend on it; removing the theme means moving those (separate task).
+
+### 2026-10-07 — `general` theme removed from CSS: site-wide CTA default + `Hero (banner, medium)`
+User decision: inner pages get the site DEFAULT styling; only same-layout page sets get a template (news). The
+`Theme: general` metadata stays on pages (harmless) and the scripts.js theme-casing fix stays.
+- **CTA buttons (styles.css):** `body.general main a.button…` → `main a.button…` = the site-wide default (source
+  blue pill: 40px tall, min-width 170, 3px radius, label letter-spacing normal, + hover). Replaces the boilerplate
+  black/outline variants. Blocks with their own CTA style keep it (higher specificity): hero, cards support / news /
+  expand, columns feature. Block disabled for `no-descending-specificity` (it deliberately overrides the
+  boilerplate `a.button.*:hover` rules above it).
+- **Button-ending section padding (styles.css):** `body.general` dropped → applies on every page.
+- **Hero `banner, medium`** (hero.css): the inner-page banner rules (`body.general .hero.banner…`) are now the
+  `.hero.banner.medium` variant (shorter, text-up panel geometry); the homepage width rule is `:not(.medium)`.
+  hero.js: the last-two-words NBSP bind is now `text-up, medium` only (not `banner, medium`).
+  Medium CTA = source: content-width <992 (148 @390), `50vw × 2/6 − 30px` from 992 (210 @1440); was 178 at all widths.
+- **Hero CTA label tracking:** banner CTA letter-spacing 1px → normal (source resets it on the label span):
+  homepage LEARN MORE 150 → 148 @390/768 (= source); 1440 unchanged (189.8).
+- **Fix of an earlier same-day regression:** the 170px CTA minimum leaked into hero buttons (text-up @768 was 170
+  instead of 148/142; hero 40px taller). Hero CTAs now set `min-width: 0`.
+- **Verified** (15 pages × 390/768/1440, before/after snapshot of every button, hero and section): no change on
+  any inner page except the intended hero-button fixes above; homepage + news unchanged except the LEARN MORE
+  label. Our Impact simulated with `medium`: hero height identical to before (614 / 928 / 770).
+- **Content step pending (DA):** Our Impact hero block → `Hero (banner, medium)`. Until then that hero falls back to
+  the homepage banner layout (850 vs 770px tall @1440). Importer `import-our-impact-v1(.bundle).js` updated.
+- Side effect: the boilerplate 404 page (404.html) "Go home" link is now the blue CTA (was the outline secondary).
+- Gates: lint 0 errors · breakpoint ✓ · check:overflow / check:typography / test:a11y ✓ on home, our-impact,
+  who-we-are.
