@@ -118,7 +118,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 .columns.feature .columns-feature-row {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 17px;
 }
 
 /* Mobile: source centers the feature text, CTA buttons (WHO WE ARE /
