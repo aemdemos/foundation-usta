@@ -143,7 +143,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 }
 
 .columns.feature p {
-  margin: 0 0 1em;
+  margin: 0 0 24px;
   color: #000;
   font-size: var(--body-font-size-m); /* 16px→18px at 768 (global token) */
   line-height: var(--body-line-height);
@@ -174,7 +174,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 
   /* source feature CTAs render ~167–188px wide; a little extra horizontal
      padding brings ours (was ~166) up to match the source's fuller buttons */
-  padding: 4px 24px;
+  padding: 4px 40.8px;
   background-color: var(--brand-blue);
   color: #fff;
   font-family: var(--heading-semibold-font-family);
@@ -281,6 +281,10 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
     max-width: none;
     margin-inline: 0;
   }
+
+  .columns.feature .columns-feature-row a:only-child {
+     padding: 4px 19px;
+  }
 }
 
 /* Widen the collage section's content container in the 992–1199 tier: the shared
@@ -357,7 +361,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 @media (width >= 768px) {
   .columns.feature:has(.columns-feature-collage) .columns-feature-row {
     flex-direction: row;
-    align-items: flex-start;
+    align-items: stretch; /* text column stretches to the collage height */
     gap: 14px; /* source tablet gap between collage column and text (~13px) */
   }
 
@@ -367,16 +371,32 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 
   /* the base `.columns.feature p` centers text for the mobile layout; from 768 the
      collage goes two-column and the SOURCE left-aligns the body copy in the text
-     column, so override the inherited center here (buttons stay inline-block). */
+     column, so override the inherited center here (buttons stay inline-block).
+     Source spacing: 24px between paragraphs, 16px above the LEARN MORE button. */
   .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p {
+    margin: 0 0 24px;
     text-align: left;
+  }
+
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p:has(+ p > a:only-child) {
+    margin-bottom: 16px;
   }
 
   /* the source nudges the text column ~10px below the top of the collage images
      (its first line sits 10px lower than the collage top) — match that so the
-     text isn't flush with the image top and the CTA gap below reads naturally. */
+     text isn't flush with the image top. The column is a flex column so the
+     LEARN MORE button can be pushed to its bottom (below). */
   .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) {
+    display: flex;
+    flex-direction: column;
     padding-top: 10px;
+  }
+
+  /* source: the LEARN MORE bottom lines up with the collage bottom at every
+     two-column width (768+). Push the CTA to the bottom of the stretched text
+     column instead of leaving it wherever the copy happens to end. */
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p:has(> a:only-child) {
+    margin: auto 0 0;
   }
 
   /* image column: thumbnail ROW on top, wide portrait BELOW (touching). In the
@@ -475,13 +495,11 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 /* FULL DESKTOP (>=1200): the source lays this out at a FIXED size, not stretched
    to the container — collage 577, gap 23, text column a constant 563px, centered
    (≈1163 total). Mine had let the text flex to fill 1170 (579 wide), so it wrapped
-   in fewer lines → shorter text block → LEARN MORE floated ~59px above the collage
-   bottom. Pin the source dimensions and push the CTA to the bottom so its baseline
-   aligns with the collage bottom (source: LEARN MORE bottom == collage bottom). */
+   in fewer lines. Pin the source dimensions (the CTA stays pinned to the collage
+   bottom via the 768+ rules above). */
 @media (width >= 1200px) {
   .columns.feature:has(.columns-feature-collage) .columns-feature-row {
     gap: 23px; /* source desktop gap between collage and text */
-    align-items: stretch; /* text column stretches to the collage's 401 height */
     justify-content: center; /* center the fixed-width content (even side gutters) */
   }
 
@@ -492,14 +510,6 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   /* the text cell (the row child that ISN'T the collage) */
   .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) {
     flex: 0 0 563px; /* source constant desktop text-column width */
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* push the LEARN MORE button to the bottom of the (stretched) text column so it
-     aligns with the collage bottom, keeping the paragraphs condensed at the top. */
-  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p:has(> a:only-child) {
-    margin-top: auto;
   }
 }
 
@@ -543,6 +553,70 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   .columns.feature:has(.columns-feature-media) h3,
   .columns.feature:has(.columns-feature-media) p {
     text-align: left;
+  }
+}
+
+/* Video feature CTA pair (WHO WE ARE / WHAT WE DO) — source measured at
+   390/768/874/992/1200/1440: mobile 148px stacked (16px apart, centered);
+   768–991 184px side by side, 78px gap, centered; ≥992 a 2-of-12 column
+   (≈36.5% of the text column, never below 148px) with a 30px gap, left-aligned.
+   The text cell becomes a wrapping flex row so the gap is exact (no inline-block
+   whitespace); every non-CTA child spans the full row. Scoped to the video
+   variant so the collage LEARN MORE button is untouched. */
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) > * {
+  flex: 0 0 100%;
+}
+
+/* video feature heading sits flush on its copy at every width (no 0.25em gap) */
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) h3 {
+  margin-bottom: 0;
+}
+
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) {
+  margin: 8px 0 0;
+}
+
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) + p:has(> a:only-child) {
+  margin-top: 16px;
+}
+
+.columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p > a:only-child {
+  width: 148px;
+  padding-inline: 0;
+}
+
+@media (width >= 768px) {
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
+    column-gap: 78px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) {
+    flex: 0 0 184px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) + p:has(> a:only-child) {
+    margin-top: 8px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p > a:only-child {
+    width: 100%;
+  }
+}
+
+@media (width >= 992px) {
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
+    justify-content: flex-start;
+    column-gap: 30px;
+  }
+
+  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) {
+    flex: 0 0 max(148px, 36.5%);
   }
 }
 

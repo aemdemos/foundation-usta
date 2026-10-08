@@ -4473,6 +4473,22 @@ Page: `/en/home/get-involved/young-professional-initiative` (importer `import-yp
   clean (only existing `.nav-donate` / `.footer-keepup` contrast + tweet link-in-text-block). `npm run
   test:a11y` could not run (Playwright browser binary missing here).
 
+## 2026-10-08 — Homepage collage feature: LEARN MORE aligned with the image bottom (768+)
+
+- **Issue:** on the homepage "For decades…" collage feature, the LEARN MORE button didn't line up with the
+  bottom of the image collage at tablet/desktop widths. It sat below the portrait at ~778px and 25px above it
+  at 1024px. The CTA just followed the copy, so how the text wrapped decided where the button landed.
+- **Source (measured 778 / 1024):** LEARN MORE bottom == collage bottom (±1px) at every two-column width.
+  Spacing: 24px between paragraphs (spacer `<p>`s), 16px from the last paragraph to the button, and the text
+  starts 10px below the collage top.
+- **Fix (`blocks/columns/columns.css`, ≥768):** row `align-items: stretch`; the text cell is a flex column;
+  paragraphs `margin: 0 0 24px`, the paragraph before the CTA is 16px (`p:has(+ p > a:only-child)`), and the
+  CTA paragraph is `margin: auto 0 0`. That moves the pin-to-bottom rule that used to start at 1200 down to
+  768. The 1200 tier now only sets the fixed 577/563 widths and the 23px gap.
+- **Verified:** button bottom − collage bottom = 0px at 768/778/900/992/1024/1199/1200/1440. Mobile (stacked)
+  is unchanged.
+- **Caveat:** at 768–991 the copy (522px) is only 1px shorter than the collage (523px). If the text ever
+  wraps an extra line, the button will drop below the image there. That's also how the source behaves.
 ### 2026-10-06 — Breadcrumb: "Home" not linked on the homepage
 - Source `/en/home.html`: the only breadcrumb item is `li.cmp-breadcrumb__navigation-item--active` "Home", shown
   as plain text (#383838, no underline, 900, 10px, uppercase). EDS always made the collapsed locale+`home` crumb
@@ -4619,3 +4635,12 @@ paragraph with an authored empty `<p>&nbsp;</p>` = one 24px body line. EDS used 
   who-we-are / get-involved (both URLs) centre; 3 news articles with columns stay `start`.
   Note: `body.general` is NOT new — 15 pre-existing rules in styles.css (LEARN MORE blue CTA, section spacing) and
   hero.css (`body.general .hero.banner`) depend on it; removing the theme means moving those (separate task).
+- Fix (2026-10-08): video feature CTA pair (WHO WE ARE / WHAT WE DO) narrower + closer than source. Source measured
+  390/768/874/992/1200/1440: mobile 148px stacked (56px pitch, centred); 768–991 184px side by side, 78px gap,
+  centred; ≥992 a 2-of-12 col ≈ 36.5% of the text column (min 148) with a 30px gap, left. `columns.css`: the video
+  variant's text cell (`:has(.columns-feature-media) … > div:not(.columns-feature-media)`) is now a wrapping flex
+  row (non-CTA children `flex: 0 0 100%`) so the gap is exact — inline-block whitespace had added ~5px. Scoped to
+  the video variant only: collage LEARN MORE + all other CTAs verified unchanged (before/after diff, 7 widths).
+  Verified = source to ±1px at every width. Gates: lint/breakpoint/overflow/a11y ✓.
+- Change (user direction, 2026-10-08): video feature text-cell heading ("We go beyond wins and losses.")
+  `margin-bottom: 0` at all widths (was the block-wide 0.25em). Scoped to the video variant's text cell only.
