@@ -70,3 +70,21 @@
   font-display: swap;
   src: url('../fonts/anton-regular.ttf') format('truetype');
 }
+
+/* --- IBM Plex Sans (SIL OFL) — the Fundraise Up widget face used by the source
+   special-funds cards (cards-expand). Latin subset, the two weights it renders. --- */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-sans-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-sans-semibold.woff2') format('woff2');
+}
