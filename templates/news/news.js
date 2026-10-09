@@ -18,10 +18,11 @@ function readMeta(key) {
 // → children):
 //   list-from   children | tags | static   (default: children)
 //   sort-order  asc | desc                  (default: desc)
-//   max-items   integer                     (default: 3)
+//   max-items   integer 1..3                (default: 3; larger values capped at 3)
 //   news-tags   comma-separated tag(s)      (list-from=tags)
 //   pages       comma-separated page paths  (list-from=static)
 const DEFAULT_LIMIT = 3;
+const MAX_LIMIT = 3;
 const NEWS_INDEX_PATH = '/news-index.json';
 
 // Normalize a path for comparison: drop trailing `.html` and the source AEM
@@ -128,7 +129,8 @@ export default async function decorate(main) {
   // Author-facing configuration from page metadata (see the constants above).
   const mode = (readMeta('list-from') || 'children').trim().toLowerCase();
   const order = (readMeta('sort-order') || 'desc').trim().toLowerCase();
-  const limit = parseInt(readMeta('max-items'), 10) || DEFAULT_LIMIT;
+  const requested = parseInt(readMeta('max-items'), 10);
+  const limit = requested > 0 ? Math.min(requested, MAX_LIMIT) : DEFAULT_LIMIT;
   const tags = splitList(readMeta('news-tags'));
   const pages = splitList(readMeta('pages'));
 

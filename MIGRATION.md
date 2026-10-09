@@ -4677,3 +4677,9 @@ the full 336 → 336×321. Fix: `.cards.tiles .cards-tiles-card-image { padding-
 - Gates: lint 0 errors · breakpoint ✓ · overflow ✓ · a11y ✓. (Local checkers expect a Playwright 1187 browser; run
   them with `PLAYWRIGHT_BROWSERS_PATH` pointing at a dir that links `chromium_headless_shell-1187/chrome-linux/headless_shell`
   to the installed 1208 build.)
+### 2026-10-09 — Related Articles: `max-items` capped at 3
+Authors could set any `max-items` (23 news pages author `4`), so the feed was unbounded. `templates/news/news.js` now
+clamps it: `MAX_LIMIT = 3` — values > 3 render 3; 1–2 are honoured; empty / 0 / negative / non-numeric fall back to
+`DEFAULT_LIMIT` (3). (Negative values previously reached `slice(0, n)` and silently dropped cards from the end.)
+No content edits — existing `Max Items: 4` metadata is left as authored and is simply capped at runtime.
+Verified on `/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised` (max-items 4 → 3 cards).
