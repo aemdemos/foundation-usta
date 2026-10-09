@@ -1371,9 +1371,12 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
 }
 
 /* Square-ish photo — plain width-constrained image at the source's natural
-   ratio, no crop, no rounding. */
+   ratio, no crop, no rounding. Mobile: the source image column sits 4px inside
+   the 336px tile column (image 328 wide → 328×313.5 for the 295×282 photos);
+   without the inset the image renders 336 wide and ~8px taller. */
 .cards.tiles .cards-tiles-card-image {
   line-height: 0;
+  padding-inline: 4px;
 }
 
 .cards.tiles .cards-tiles-card-image img {
@@ -1402,6 +1405,10 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
     max-width: min(708px, calc(100vw - 60px));
     grid-template-columns: repeat(4, 1fr);
     gap: 0 12px;
+    padding-inline: 0;
+  }
+
+  .cards.tiles .cards-tiles-card-image {
     padding-inline: 0;
   }
 }

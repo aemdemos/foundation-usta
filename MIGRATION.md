@@ -4664,3 +4664,16 @@ Customer revised the 2026-09-28 "every link opens in a new tab" requirement:
   (incl. with an anchor) → new tab with the marker stripped. Lint 0 errors · test:a11y ✓.
 - **No reverse override:** an external link can't be forced into the same tab (there is no `#_self`); add one if
   authors need it.
+
+### 2026-10-09 — cards (tiles): mobile image inset 4px (card height parity at 576 / 375)
+QA: at 576 and 375 the EDS tile was 8px taller than the source (321 vs 313). Source mobile tile column is 336px,
+but the AEM image column sits 4px inside it, so the image is **328** wide (295×282 photos → 328×313.5). Ours filled
+the full 336 → 336×321. Fix: `.cards.tiles .cards-tiles-card-image { padding-inline: 4px }` on mobile, reset to 0 at
+768 (tablet/desktop geometry unchanged: 168/203/255). Verified to the pixel at 375 and 576 (x24 / x124, 328×313.5).
+- **"Signature Events" is taller on the source too.** Its photo is natively square (300×300), so the source renders it
+  328×328 and the other three 328×313.5. We keep each photo's own ratio (`align-self: start`, no crop), so it now
+  matches the source exactly (was 336×336). Forcing equal heights would need a crop (`aspect-ratio` + `object-fit`),
+  which the source doesn't do.
+- Gates: lint 0 errors · breakpoint ✓ · overflow ✓ · a11y ✓. (Local checkers expect a Playwright 1187 browser; run
+  them with `PLAYWRIGHT_BROWSERS_PATH` pointing at a dir that links `chromium_headless_shell-1187/chrome-linux/headless_shell`
+  to the installed 1208 build.)
