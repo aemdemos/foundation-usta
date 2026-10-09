@@ -754,21 +754,14 @@
     gap: 40px 30px; /* source opens the column gap to 30px from 992 */
   }
 
-  /* Desktop title sizing reproduces the source's AEM `cmp-teaser__title_scalable`
-     result: the FIRST card (the CEO — short name + a single-line role) keeps the
-     full 22/32, while every other card's title renders at 18/24 (the longer
-     names/roles cause the scalable script to step them down). Match that exactly:
-     base all names to 18/24, then bump only the first card back to 22/32. */
+  /* Desktop name size: 18/24 on EVERY card (user decision, Staff tab). The
+     source's `cmp-teaser__title_scalable` script sizes titles at runtime — all 22/32
+     on a fresh load, a resize-dependent 22/18 mix after resizing — so a static size
+     can't track it; the first card is no longer singled out at 22/32. */
   .cards.profile .cards-profile-card-body h4 {
     font-size: 18px;
     line-height: 24px;
   }
-
-  .cards.profile > ul > li:first-child .cards-profile-card-body h4 {
-    font-size: 22px;
-    line-height: 32px;
-  }
-
 }
 
 /* Desktop (≥992): source content-wrapper adds 20px top padding, so the image→name
@@ -1257,8 +1250,10 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   color: #000;
 }
 
-/* LEARN MORE — a plain bold-authored link; source renders it as a regular-weight
-   underlined blue link (not a filled button). Reset EDS button decoration. */
+/* LEARN MORE — a plain bold-authored link; source renders it as a BOLD (700)
+   underlined blue link (not a filled button): its label is wrapped in <b>, on the
+   Graphik Regular face (same glyph widths as 400 — 112px @768+ on both).
+   Reset EDS button decoration. */
 .cards.support .cards-support-card-body p.button-container,
 .cards.support .cards-support-card-body p:last-child {
   margin-top: 24px;
@@ -1276,7 +1271,7 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   color: var(--link-color);
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-m); /* source LEARN MORE: 16px mobile → 18px at 768 */
-  font-weight: 400;
+  font-weight: 700;
   line-height: 24px;
   letter-spacing: normal;
   text-transform: none;
@@ -1285,12 +1280,11 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   white-space: normal;
 }
 
-/* Source LEARN MORE is regular weight. Authors sometimes wrap it in <strong>
-   (bold, undecorated), which would override the link — normalize the inner
-   emphasis back to regular weight + inherit the link's underline. */
+/* Authors may wrap the label in <strong>/<b> (as the source does): keep it at the
+   link's 700 (not the browser's `bolder` 900) and inherit the link's underline. */
 .cards.support .cards-support-card-body a strong,
 .cards.support .cards-support-card-body a b {
-  font-weight: 400;
+  font-weight: 700;
   text-decoration: inherit;
 }
 

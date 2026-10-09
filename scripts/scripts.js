@@ -458,7 +458,7 @@ async function loadEager(doc) {
  * @param {Element} doc The container element
  */
 async function loadLazy(doc) {
-  loadHeader(doc.querySelector('body > header'));
+  const headerLoaded = loadHeader(doc.querySelector('body > header'));
 
   const main = doc.querySelector('main');
   await loadTemplateJS(templateName, main);
@@ -467,11 +467,21 @@ async function loadLazy(doc) {
   // options sheet is already cached
   await applySectionBackgrounds();
 
-  const { hash } = window.location;
-  const element = hash ? doc.getElementById(hash.substring(1)) : false;
-  if (hash && element) element.scrollIntoView();
+  const footerLoaded = loadFooter(doc.querySelector('body > footer'));
 
-  loadFooter(doc.querySelector('body > footer'));
+  // Jump to a `#hash` target once the page has its full height: the header's
+  // breadcrumb row and the footer change it, and without the footer a target
+  // near the page end can't reach the top (the scroll stops at the old bottom).
+  let id = window.location.hash.substring(1);
+  try {
+    id = decodeURIComponent(id);
+  } catch {
+    // malformed escape (e.g. #%E0) — fall back to the raw id
+  }
+  const element = id ? doc.getElementById(id) : null;
+  if (element) {
+    Promise.all([headerLoaded, footerLoaded]).then(() => element.scrollIntoView());
+  }
 
   loadCSS(`${window.hlx.codeBasePath}/styles/lazy-styles.css`);
   loadFonts();
