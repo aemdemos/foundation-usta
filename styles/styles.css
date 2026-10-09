@@ -850,6 +850,14 @@ main .section.center.map-wide > div {
   margin-inline: auto;
 }
 
+/* The map fills its band. An explicit width lets its width/height attributes
+   reserve the box BEFORE the lazy image loads — the global `main img { width:
+   auto }` left it 0×0 until then, so it popped open by ~675px and pushed every
+   later section down (e.g. a what-we-do#sustained-… link landed 722px low). */
+main .section.center.map-wide img {
+  width: 100%;
+}
+
 @media (width >= 768px) {
   main .section.center.map-wide > div {
     width: calc(100vw - 24px);

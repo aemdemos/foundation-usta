@@ -1257,8 +1257,10 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   color: #000;
 }
 
-/* LEARN MORE — a plain bold-authored link; source renders it as a regular-weight
-   underlined blue link (not a filled button). Reset EDS button decoration. */
+/* LEARN MORE — a plain bold-authored link; source renders it as a BOLD (700)
+   underlined blue link (not a filled button): its label is wrapped in <b>, on the
+   Graphik Regular face (same glyph widths as 400 — 112px @768+ on both).
+   Reset EDS button decoration. */
 .cards.support .cards-support-card-body p.button-container,
 .cards.support .cards-support-card-body p:last-child {
   margin-top: 24px;
@@ -1276,7 +1278,7 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   color: var(--link-color);
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-m); /* source LEARN MORE: 16px mobile → 18px at 768 */
-  font-weight: 400;
+  font-weight: 700;
   line-height: 24px;
   letter-spacing: normal;
   text-transform: none;
@@ -1285,12 +1287,11 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   white-space: normal;
 }
 
-/* Source LEARN MORE is regular weight. Authors sometimes wrap it in <strong>
-   (bold, undecorated), which would override the link — normalize the inner
-   emphasis back to regular weight + inherit the link's underline. */
+/* Authors may wrap the label in <strong>/<b> (as the source does): keep it at the
+   link's 700 (not the browser's `bolder` 900) and inherit the link's underline. */
 .cards.support .cards-support-card-body a strong,
 .cards.support .cards-support-card-body a b {
-  font-weight: 400;
+  font-weight: 700;
   text-decoration: inherit;
 }
 
