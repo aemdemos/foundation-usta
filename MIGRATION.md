@@ -4664,3 +4664,10 @@ Customer revised the 2026-09-28 "every link opens in a new tab" requirement:
   (incl. with an anchor) → new tab with the marker stripped. Lint 0 errors · test:a11y ✓.
 - **No reverse override:** an external link can't be forced into the same tab (there is no `#_self`); add one if
   authors need it.
+
+### 2026-10-09 — Related Articles: `max-items` capped at 3
+Authors could set any `max-items` (23 news pages author `4`), so the feed was unbounded. `templates/news/news.js` now
+clamps it: `MAX_LIMIT = 3` — values > 3 render 3; 1–2 are honoured; empty / 0 / negative / non-numeric fall back to
+`DEFAULT_LIMIT` (3). (Negative values previously reached `slice(0, n)` and silently dropped cards from the end.)
+No content edits — existing `Max Items: 4` metadata is left as authored and is simply capped at runtime.
+Verified on `/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised` (max-items 4 → 3 cards).
