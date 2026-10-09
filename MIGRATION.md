@@ -4665,6 +4665,27 @@ Customer revised the 2026-09-28 "every link opens in a new tab" requirement:
 - **No reverse override:** an external link can't be forced into the same tab (there is no `#_self`); add one if
   authors need it.
 
+### 2026-10-09 — cards-expand: parity fixes vs the live special-funds widget (8 issues)
+Re-measured the source Fundraise Up cards (each card is its own `about:blank` iframe, `display:inline-block`
+250x328 with 4px inner padding → visible card **242x320**, inside a `<center>` container).
+- **Layout/breakpoints:** source container = **328** (<768, 1-up) → **708** (768–991, 2-up) →
+  `min(1170, 100vw-60)` (≥992, 3-up → 4-up from ~1073). We previously used the ≥992 formula at all widths
+  (2-up at 600–767, 3-up from ~830). Now tiered on 768/992; card x positions match the source at 360–1440.
+- **Spacing:** cards are 12px apart horizontally / 8px vertically (4px frame padding + ~4px inline whitespace) —
+  reproduced as card `margin: 4px` + ul `column-gap: 4px` (was a 20px gap on 250x328 cards).
+- **Title:** left-aligned (the `center` section style targets `h3`/`p` directly, so `text-align: left` is set on the
+  title and description), row `align-items: center` so the chevron sits at the middle of a 2-line title; toggle
+  margin `0 -6px 0 0` → title width 174 as on source.
+- **Font:** the widget uses **IBM Plex Sans** (400 title/desc, 600 DONATE). Self-hosted latin woff2 (SIL OFL) in
+  `fonts/ibm-plex-sans-{regular,semibold}.woff2`, `@font-face` in `styles/fonts.css`, token `--widget-font-family`.
+- **Hover:** source has NO hover change on the card or DONATE — removed the card shadow-deepen and pinned DONATE's
+  hover bg to `--brand-blue` (keyboard focus keeps a white inset outline).
+- **Click anywhere:** a click anywhere on the card (image/title/arrow) forwards to the card's DONATE link
+  (`donateLink.click()`), which opens the Fundraise Up overlay.
+- **Alt text:** source alt is `Image supporting donation call-to-action.` on every card image (with
+  `aria-hidden`). Importer updated (+ backup/SHA); the existing page content still carries the old descriptive
+  alts until it is re-imported or edited in DA.
+- Gates: lint 0 errors · breakpoint ✓ · overflow ✓ · typography ✓ · a11y ✓ (special-funds).
 ### 2026-10-09 — Related Articles: `max-items` capped at 3
 Authors could set any `max-items` (23 news pages author `4`), so the feed was unbounded. `templates/news/news.js` now
 clamps it: `MAX_LIMIT = 3` — values > 3 render 3; 1–2 are honoured; empty / 0 / negative / non-numeric fall back to

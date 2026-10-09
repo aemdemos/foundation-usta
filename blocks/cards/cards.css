@@ -145,28 +145,44 @@
      .cards-expand-desc    (description, revealed in the freed space)
      .cards-expand-donate  (full-width DONATE, PINNED to the bottom — never moves)
    Expanding does NOT grow the card: the title translates up over the image and
-   the description shows in place, so DONATE stays put. The whole card lifts on
-   hover (source `.card.hoverable`). DONATE opens the site-wide Fundraise Up
-   overlay for that fund (?form=<code>, kept on-origin by scripts/donate.js).
-   Source values: card 250w fixed / radius 6 / shadow; title 16/24 w400 #212830;
-   DONATE 16/44 w600 #0373f3 white uppercase. */
+   the description shows in place, so DONATE stays put. Clicking ANYWHERE on the
+   card opens the site-wide Fundraise Up overlay for that fund (?form=<code>,
+   kept on-origin by scripts/donate.js).
+   Source values: card 242x320 fixed / radius 6 / shadow; IBM Plex Sans; title
+   16/24 w400 #212830 left-aligned; DONATE 16/44 w600 #0373f3 white uppercase. */
 
 /* The hover/focus-within/open state groups share equal specificity with their
    base rules but are authored after them for readability (reveal states grouped
    together); disable the descending-specificity check for this file. */
 /* stylelint-disable no-descending-specificity */
 
-/* The funds widget is WIDER than the section content column: the source spans
-   viewport − 60px (30px gutters, ~1070 @1130, capped ~1170) so FOUR 250px cards
-   fit per row. Break out of the section's 970/1170 max-width to that width so
-   the card count/positions match the source (our 970 wrapper only fit 3). */
+/* Widget container width per source tier (measured): fixed 328 below 768 (1-up),
+   708 at 768–991 (2-up), then viewport − 60px capped at 1170 from 992 (3-up →
+   4-up from ~1073). Above 992 it is WIDER than the section content column, so it
+   breaks out of the section's max-width. */
 .cards.expand {
-  width: min(1170px, calc(100vw - 60px));
-  margin-inline: calc(50% - min(585px, 50vw - 30px));
+  width: 328px;
+  max-width: 100%;
+  margin-inline: auto;
 }
 
-/* FIXED 250px cards, left-packed with a small 4px gap, wrapping (4-up desktop →
-   3 → 2 → 1), centered as a group. */
+@media (width >= 768px) {
+  .cards.expand {
+    width: 708px;
+  }
+}
+
+@media (width >= 992px) {
+  .cards.expand {
+    width: min(1170px, calc(100vw - 60px));
+    max-width: none;
+    margin-inline: calc(50% - min(585px, 50vw - 30px));
+  }
+}
+
+/* Source: each 242x320 card sits in a 250x328 inline-block frame (4px padding)
+   separated by ~4px of inline whitespace, centered — so cards are 12px apart
+   horizontally and 8px vertically. Reproduced as 4px card margin + 4px column gap. */
 .cards.expand > ul {
   list-style: none;
   margin: 0;
@@ -174,10 +190,10 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 20px; /* source shows a clear ~20px gutter between cards (4×250 + 3×20 = 1060 ≤ 1070 ul, still 4-across) */
+  gap: 0 4px;
 }
 
-/* Fixed 250x328 card. A flex column: a content area (image + sliding title/desc
+/* Fixed 242x320 card. A flex column: a content area (image + sliding title/desc
    panel) that flexes, and the DONATE footer pinned below it. overflow:hidden
    clips the sliding panel; DONATE is never covered and never moves. */
 .cards.expand .cards-expand-card {
@@ -185,22 +201,15 @@
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
-  width: 250px;
+  width: 242px;
   max-width: 100%;
-  height: 328px;
+  height: 320px;
+  margin: 4px;
   background-color: #fff;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 50%);
   overflow: hidden;
   cursor: pointer;
-  transition: translate 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-/* Hover: the card stays put — only the panel slides up. The source card does
-   NOT lift; a subtle shadow deepen is the only whole-card change. */
-.cards.expand .cards-expand-card:hover,
-.cards.expand .cards-expand-card:focus-within {
-  box-shadow: 0 8px 18px rgb(0 0 0 / 25%);
 }
 
 /* Image — fills the card content area (behind the sliding panel). */
@@ -257,7 +266,7 @@
 /* Title bar: heading + chevron. */
 .cards.expand .cards-expand-title {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 20px;
@@ -273,12 +282,13 @@
 
 .cards.expand .cards-expand-title h3 {
   margin: 0;
-  font-family: var(--body-font-family);
+  font-family: var(--widget-font-family);
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
   letter-spacing: normal;
   color: #212830;
+  text-align: left; /* source is left-aligned, even inside a `center` section */
   text-transform: none;
 }
 
@@ -287,7 +297,7 @@
   flex: 0 0 auto;
   width: 24px;
   height: 24px;
-  margin: 0 -4px 0 0;
+  margin: 0 -6px 0 0;
   padding: 4px;
   border: 0;
   border-radius: 4px;
@@ -329,11 +339,12 @@
 
 .cards.expand .cards-expand-desc p {
   margin: 0;
-  font-family: var(--body-font-family);
+  font-family: var(--widget-font-family);
   font-size: 14px;
   line-height: 20px;
   font-weight: 400;
   color: #212830;
+  text-align: left;
 }
 
 /* Donate — full-width footer button, absolutely PINNED to the card bottom so it
@@ -368,7 +379,7 @@
   border-radius: 0 0 6px 6px; /* source donate has rounded bottom corners */
   background-color: var(--brand-blue);
   color: #fff;
-  font-family: var(--body-font-family);
+  font-family: var(--widget-font-family);
   font-size: 16px;
   font-weight: 600;
   line-height: 44px;
@@ -381,14 +392,22 @@
   overflow: hidden;
 }
 
+/* Source DONATE has no hover change — pin the base look against the global
+   link/button hover rules. Keyboard focus still gets a visible ring. */
 .cards.expand .cards-expand-donate a:hover,
 .cards.expand .cards-expand-donate a:focus-visible,
 .cards.expand .cards-expand-donate a.button:hover,
 .cards.expand .cards-expand-donate a.button.primary:hover {
-  background-color: var(--link-color);
+  background-color: var(--brand-blue);
   color: #fff;
   border: 0;
+  box-shadow: none;
   text-decoration: none;
+}
+
+.cards.expand .cards-expand-donate a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
 }
 
 /* Wrapping (fixed 250px cards, centered) naturally gives 1-up mobile → 2-up →
