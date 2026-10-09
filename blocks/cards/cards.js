@@ -78,6 +78,14 @@ function decorateExpand(block) {
       li.classList.toggle('cards-expand-open', !expanded);
     });
 
+    // As on the source, a click anywhere on the card opens the donate overlay.
+    const donateLink = donate.querySelector('a');
+    if (donateLink) {
+      li.addEventListener('click', (e) => {
+        if (!e.target.closest('a')) donateLink.click();
+      });
+    }
+
     li.append(image, panel, donate);
     ul.append(li);
   });

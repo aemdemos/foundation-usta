@@ -26,6 +26,7 @@
   --body-font-family: "Graphik Regular", roboto-fallback, tahoma, sans-serif;
   --heading-font-family: "Graphik XXCond Bold", graphik-xxcond-fallback, "Arial Narrow", tahoma, sans-serif;
   --heading-semibold-font-family: "Graphik Semibold", tahoma, sans-serif;
+  --widget-font-family: "IBM Plex Sans", -apple-system, "Segoe UI", roboto, arial, sans-serif;
 
   /* brand palette + section-band backgrounds (formerly styles/brand.css — inlined
      here to drop the render-blocking `@import url('brand.css')` chain, which cost
