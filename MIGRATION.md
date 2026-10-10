@@ -5097,3 +5097,19 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
   panel from scratch in another project (files, scripts.js wiring, DA registration, config sheet, Layout fixes,
   testing, troubleshooting). Linked from §3 Buttons (CTA), item 8.
 
+
+### 2026-10-11 — Buttons panel: Adobe Spectrum 2 redesign (branch `buttons-panel-spectrum`)
+- **Scope:** panel UI only (`tools/plugins/buttons/buttons.html` + `buttons.css`). The inserted HTML and the
+  page CSS are unchanged; JS only got a JSDoc tweak.
+- **Look:** Spectrum 2 tokens (`--bp-*`: gray-25…900, accent `#3b63fb`, Adobe Clean stack, 8px field radius,
+  16px card radius, 24px side padding). Light grey panel, white cards; previews still use the site font.
+- **Editor:** white header (back button, "DESIGN" eyebrow, name, description); sticky preview card with a
+  "Preview on" action group; three white cards (text + link / colours / new tab); pill submit in a white footer.
+- **Side labels:** `@container bp-editor (min-width: 360px)` puts each label on the same line as its control
+  (104px label column); narrower drawers stack labels on top. Colour groups are `div role="group"` (a
+  `fieldset`/`legend` can't join the grid).
+- **No placeholders** (Spectrum guidance): the link example moved to the help text.
+- **Gotcha:** stylelint `no-descending-specificity` — the switch `:checked` rules must come before the
+  `:hover input:not(:checked)` rules. Stylelint's default globs don't cover `tools/`; run
+  `npx stylelint tools/plugins/buttons/buttons.css` by hand.
+- **Verified:** screenshots at 520px and 340px; lint, stylelint on the panel, breakpoint check and `test:a11y` passed.

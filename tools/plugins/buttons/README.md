@@ -29,9 +29,9 @@ No new block, no DA customisation beyond registering the plugin.
 
 | File | Copy as-is? | What it does |
 |---|---|---|
-| `tools/plugins/buttons/buttons.html` | Adapt texts / placeholder | The panel page DA opens in an iframe |
+| `tools/plugins/buttons/buttons.html` | Adapt texts / link example | The panel page DA opens in an iframe |
 | `tools/plugins/buttons/buttons.js` | Adapt defaults (§4) | Gallery, form, preview, insert/update via the DA SDK |
-| `tools/plugins/buttons/buttons.css` | Yes | Panel UI only (uses site tokens) |
+| `tools/plugins/buttons/buttons.css` | Yes | Panel UI only, Adobe Spectrum 2 look (own `--bp-*` tokens; site tokens only in the previews) |
 | `styles/buttons.css` | Adapt tokens (§3) | The `cta-button` styles + the Layout-editor rules |
 | `scripts/scripts.js` | Merge the functions (§2) | `decorateButtons()`, options, link targets, `previewEditingCtas()` |
 | `tools/da-library-preview/*` | Optional | Cleans up `/.da/library/…` block-library previews |
@@ -132,8 +132,12 @@ Copy the three files, then adapt:
     add it in both places and in buttons.css.
   - `contrastText()` / `applyColors()` duplicate the scripts.js logic for the preview (scripts.js can't be
     imported: it runs `loadPage()` on import). **Keep them in sync.**
-- `buttons.html` — the URL placeholder (`/en/home/get-involved`) and any texts (all are in the HTML, in
-  `data-*` attributes, so they can be localised).
+- `buttons.html` — the example path in the Link help text (`/en/home/get-involved`) and any texts (all are in
+  the HTML, in `data-*` attributes, so they can be localised). Following Spectrum, the fields have no
+  placeholder: hints go in the help text under the field.
+- `buttons.css` — the panel follows Adobe Spectrum 2 (Adobe Clean stack, Spectrum grays and accent blue,
+  light-grey panel with white field cards, side labels when the drawer is ≥ 360px wide, pill accent button).
+  It needs no change per site.
 - `buttons.html` links `/styles/styles.css`, `/styles/fonts.css`, `/styles/buttons.css`, so previews are the real
   buttons. If the site's global CSS styles bare elements (e.g. `header { min-height }`), reset them under
   `.btn-plugin` in `buttons.css`.
