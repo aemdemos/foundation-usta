@@ -153,7 +153,7 @@ main > .section.hero-container:has(.hero.banner) {
    never matches in the editor (the link shows unstyled). Matching the raw
    `p:has(> a:only-child) > a` works in BOTH the EDS runtime AND the DA canvas —
    the same approach columns.feature uses for its CTAs. */
-.hero.banner p:has(> a:only-child) > a:any-link {
+.hero.banner p:has(> a:only-child) > a:not(.cta-button):any-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -178,8 +178,8 @@ main > .section.hero-container:has(.hero.banner) {
   text-decoration: none;
 }
 
-.hero.banner p:has(> a:only-child) > a:hover,
-.hero.banner p:has(> a:only-child) > a:focus-visible {
+.hero.banner p:has(> a:only-child) > a:not(.cta-button):hover,
+.hero.banner p:has(> a:only-child) > a:not(.cta-button):focus-visible {
   border-color: transparent;
   background-color: var(--link-hover-color);
   color: var(--background-color);
@@ -266,7 +266,7 @@ main > .section.hero-container:has(.hero.banner) {
    breakpoint, only the approved 768/992/1200 queries. Scoped to :not(.medium)
    so only the homepage (default) banner is affected. */
 @media (width >= 1200px) {
-  .hero.banner:not(.medium) p:has(> a:only-child) > a:any-link {
+  .hero.banner:not(.medium) p:has(> a:only-child) > a:not(.cta-button):any-link {
     width: calc(16.65vw - 50px);
     padding: 14px; /* label centers via flex; width drives the box */
   }
@@ -307,7 +307,7 @@ main > .section.hero-container:has(.hero.banner) {
 /* medium CTA: content-width below 992 (source "WHAT WE DO" 148px @390); from 992
    a 2/6 column of the 50vw panel minus the 30px gutter, never narrower than its
    label (210 @1440) — the same model as the text-up hero buttons. */
-.hero.banner.medium p:has(> a:only-child) > a:any-link {
+.hero.banner.medium p:has(> a:only-child) > a:not(.cta-button):any-link {
   width: auto;
 }
 
@@ -336,7 +336,7 @@ main > .section.hero-container:has(.hero.banner) {
 }
 
 @media (width >= 992px) {
-  .hero.banner.medium p:has(> a:only-child) > a:any-link {
+  .hero.banner.medium p:has(> a:only-child) > a:not(.cta-button):any-link {
     width: calc(50vw * 2 / 6 - 30px);
     min-width: max-content;
   }
@@ -565,6 +565,12 @@ main > .section.hero-container:has(.hero.text-up) {
      approximation was 11px narrow on wide screens (276 vs 287 @1903). */
   .hero.text-up .button-container {
     width: calc(50vw * 2 / 6 - 30px);
+  }
+
+  /* an authored cta-button (buttons.css) sizes itself — don't squeeze its label
+     into the source button column */
+  .hero.text-up .button-container:has(> .cta-button) {
+    width: auto;
   }
 
   .hero.text-up a.button:any-link {

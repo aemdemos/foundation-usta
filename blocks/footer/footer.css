@@ -48,7 +48,9 @@ footer .footer p {
   margin: 0;
 }
 
-footer .footer a:any-link {
+/* `:where()` keeps the specificity (0,2,2) the later footer rules rely on, while
+   letting an authored cta-button (styles/buttons.css) keep its own colors. */
+footer .footer a:where(:not(.cta-button)):any-link {
   color: var(--link-color);
   text-decoration: underline;
 }

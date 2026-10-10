@@ -388,63 +388,8 @@ button.button.accent:disabled:focus-visible {
   color: var(--dark-color);
 }
 
-/* cta-button — the source site's own CTA styles for DEFAULT CONTENT. Authored as
-   a standalone link formatted bold + italic + ONE extra mark (decorateButtons):
-     subscript → .cta-blue  · superscript → .cta-black
-   A separate class from `.button`, so the bold / italic / bold+italic buttons
-   above (and every theme/block override of them) are unchanged. */
-a.cta-button:any-link {
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 100%;
-  min-height: 40px;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  padding: 9px 14px;
-  background-color: var(--brand-blue);
-  color: var(--background-color);
-  font-family: var(--heading-semibold-font-family);
-  font-size: 18px;
-
-  /* the semibold face is baked into the font file; weight 600 would
-     synthetically over-bold it (source renders it at 400). */
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: 1px;
-  text-align: center;
-  text-transform: uppercase;
-  text-decoration: none;
-}
-
-a.cta-button:hover,
-a.cta-button:focus-visible {
-  background-color: var(--link-hover-color);
-  color: var(--background-color);
-  text-decoration: none;
-}
-
-a.cta-button:focus-visible {
-  outline: 2px solid var(--link-hover-color);
-  outline-offset: 2px;
-}
-
-/* cta-blue — solid blue CTA (source LEARN MORE on hero / columns / general
-   pages): the base rule above. */
-
-/* cta-black — black, fully rounded 56px CTA (source 404 BACK TO HOMEPAGE). */
-a.cta-button.cta-black:any-link {
-  min-height: 56px;
-  border-radius: 9999px;
-  padding: 17px 24px;
-  background-color: var(--dark-color);
-}
-
-a.cta-button.cta-black:hover,
-a.cta-button.cta-black:focus-visible {
-  background-color: var(--link-hover-color);
-}
+/* cta-button (authorable CTA styles: blue / black / dark / outline + authored
+   colors) lives in styles/buttons.css, loaded early by scripts.js loadEager(). */
 
 main img {
   max-width: 100%;
