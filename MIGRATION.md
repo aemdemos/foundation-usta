@@ -4704,3 +4704,112 @@ clamps it: `MAX_LIMIT = 3` — values > 3 render 3; 1–2 are honoured; empty / 
 `DEFAULT_LIMIT` (3). (Negative values previously reached `slice(0, n)` and silently dropped cards from the end.)
 No content edits — existing `Max Items: 4` metadata is left as authored and is simply capped at runtime.
 Verified on `/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised` (max-items 4 → 3 cards).
+
+### 2026-10-10 — Buttons: own stylesheet, 2 new styles (dark / outline), authored `[options]`
+- **`styles/buttons.css` (new):** all `cta-button` styles moved out of styles.css (the customer has 20+ button
+  looks). Loaded by `loadEager()` right away (non-blocking; awaited only when the first section contains a
+  cta-button, so no flash of an unstyled LCP button). Every style is driven by custom properties
+  (`--cta-bg / --cta-color / --cta-border` + `-hover`), so a variant or an authored colour only overrides tokens.
+  The boilerplate `.button` / `.primary` / `.secondary` / `.accent` rules + the site-wide blue CTA stay in styles.css.
+- **Authoring contract** (standalone link alone in its paragraph):
+  | Authored | Class | Look |
+  |---|---|---|
+  | bold + italic + subscript | `cta-button cta-blue` | solid brand blue, 3px radius, 40px |
+  | bold + italic + superscript | `cta-button cta-black` | black, fully rounded, 56px |
+  | bold + italic + **strikethrough** (new) | `cta-button cta-dark` | #333, white text, 2px border, square, 46px |
+  | bold + italic + **underline** (new) | `cta-button cta-outline` | transparent, #333 text + 2px border, square, 46px; light grey on hover |
+- **Authored options** — append to the link (inside the label or right after it, same paragraph):
+  `Make a gift [style="outline", color="#e87722", text-color="#fff", new-tab="true"]`
+  - `style` = blue | black | dark | outline (wins over the formatting mark; default blue).
+  - `color` = button colour (for `outline`: border + text, filled on hover). Any CSS colour (hex, rgb(), named) or a
+    design-token name like the Spacer block (`brand-orange`). Invalid values are ignored (validated with
+    `CSS.supports`; set via `style.setProperty`, never innerHTML).
+  - `text-color` = label colour. If omitted with `color`, black or white is picked by WCAG contrast.
+  - `new-tab` = true → `target=_blank` + noopener; false → `_self` (overrides the external-link rule).
+  - Straight or curly quotes, or unquoted values. Options make ANY standalone link a cta-button (no bold/italic
+    needed). Brackets in a normal sentence are never touched. Custom-coloured buttons darken slightly on hover.
+- **scripts.js:** `CTA_BUTTON_STYLES` += del/s → cta-dark, u → cta-outline; new `takeCtaOptions` /
+  `applyCtaOptions` / `ctaColor` / `contrastText` / `makeCtaButton`; `decorateButtons` reads options first.
+- **news.css fix (pre-existing bug):** the article inline-link colour rule also hit `.button` links → blue text on a
+  blue button (seen on /drafts/nasvit/testpage, which uses the news template). Now skips `.cta-button, .button`.
+- **Test page:** `content/drafts/buttons-test` — written by a one-off page script (kept in /tmp, not in
+  tools/importer) run through run-bulk-import. Local preview: `localhost:3000/content/drafts/buttons-test` (the dev
+  server serves `/drafts/…` from aem.page, so the local file is only reachable under `/content/`). Note: the
+  converter writes strikethrough OUTSIDE the link (`<del><em><strong><a>`), which decorateButtons handles. 15
+  cases incl. curly quotes, unquoted values, a token, new-tab true/false, an invalid colour, prose with brackets.
+- **Verified:** all cases render as specified, labels cleaned, 0 JS errors; existing cta-blue / cta-black unchanged
+  (158×40 / 251×56) on /drafts/block-samples/buttons; lint 0 errors · breakpoint ✓ · check:overflow ✓ · test:a11y ✓.
+- **To confirm in DA:** that strikethrough and underline survive preview on a real authored link (strikethrough
+  did before 2026-09-29; underline not yet tried in DA).
+- **Follow-up (same day): CTA buttons inside blocks + footer.** `decorateButtons()` runs over the whole page
+  (block cells and the header/footer fragments too) before blocks decorate, so the marks and `[options]` work in
+  any block. Test page section 4 (Columns, Cards, Columns (feature), Quote, Table, Hero (banner), Hero (text-up)),
+  incl. a cell holding only an options link (the pipeline wraps it in a <p>). Columns / Cards / Quote / Table worked
+  as-is. Three blocks' own CTA rules out-ranked buttons.css and forced their blue button:
+  - `hero.js`: no hero `.button` class on a link that's already a `cta-button` (text-up / error `a.button` rules).
+  - `hero.css`: banner structural CTA selectors `p:has(> a:only-child) > a` → `…> a:not(.cta-button)`; text-up
+    `.button-container:has(> .cta-button) { width: auto }` (≥992) so the label isn't squeezed into the source
+    column. The `.button-container` wrapper is kept: the hero's "has a CTA" layout depends on it.
+  - `columns.css`: feature `a:only-child` → `a:only-child:not(.cta-button)`.
+  - `footer.css`: `footer .footer a:any-link` → `a:where(:not(.cta-button)):any-link` (same 0,2,2 specificity,
+    which the social-icon rule relies on); a footer CTA had blue underlined text on its button.
+  Verified: every block case = authored style; 70 block/button links on 8 real pages identical old vs new at
+  390/1440; footer links unchanged. Gates: lint 0 errors · breakpoint ✓ · check:overflow ✓ (test page) ·
+  test:a11y ✓ (test page, home, who-we-are, our-impact).
+  Not covered: links in list items or alongside other text in a paragraph never become buttons (boilerplate rule);
+  authored colour pairs are not contrast-checked when both `color` and `text-color` are given.
+- **Follow-up: CTA buttons tested in EVERY block variant.** `/content/drafts/buttons-blocks-test` (one-off page
+  script, /tmp only) = the real block markup of all 23 block samples + `hero (banner, medium)` (no sample yet), each
+  with a Dark (strikethrough), Outline (underline) and Orange (`[color=…]`) CTA in its main text cell. Skipped:
+  spacer, donate-embed, embed-instagram, video-embed, social (no author CTA), retired custom-*, toc-profile (a tab
+  container; its child blocks are covered). Result after fixes: **24/24 variants render all 3 CTAs as authored, at
+  390 and 1440**. Extra fixes (same `:where(:not(.cta-button))` pattern, specificity unchanged):
+  - `cards.css`: `.cards.news .cards-news-card-link a` (+ its 992 tier), `.cards.support .cards-support-card-body a`,
+    `.cards.expand .cards-expand-donate a` (+ hover/focus) — they restyled every link as a text link / donate bar.
+  - `quote.css`: `.quote.tweet a:any-link` forced link-blue text.
+  Block behaviour to know (by design, not changed): Cards (expand) turns its 4th cell into the pinned DONATE bar, and
+  Columns' image cell keeps only image + caption — put CTAs in the description / text cell.
+  Regression: 160 links on all 31 block samples + 6 real pages identical old (main) vs new at 390/1440.
+- **Buttons block sample updated** (`/drafts/block-samples/buttons`, regenerated through run-bulk-import, same
+  scaffold): + Dark Button, Outline Button and Custom Button (options syntax, 3 examples) sections. Blue / Black
+  unchanged (158×40 / 251×56). LOCAL copy only — upload to DA + preview to publish it to authors.
+  a11y: the only violation is an empty <title> at the local `/content/…` address (the Metadata `Title` is applied
+  by aem.page — confirmed "Buttons — Block Sample" there); overflow ✓.
+- **Final regression (all 86 pages, old main vs new, 390 + 1440):** 3,962 button / block / footer links → 0
+  differences; 98 body-text links (49 visible × 2 widths) → 0 differences. Gates on home, who-we-are, get-involved
+  and a news article: lint 0 errors · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓.
+- **DA fix (2026-10-10): Dark CTA showed "<del>" as text** on `/drafts/buttons-blocks-test` (aem.live). Its DA source
+  held the strikethrough as literal escaped text (`<p>&lt;del&gt;<em><strong><a>…`), so no `<del>` reached
+  decorateButtons. Rewrote all 24 to `<p><em><strong><a …><del>Label</del></a></strong></em></p>`, uploaded + previewed
+  (originals backed up in /tmp). Finding: the aem.page pipeline normalises strikethrough to OUTSIDE the link
+  (`<p><del><em><strong><a>`) — a real tag, which decorateButtons handles (`a.closest('del, s')`). So
+  `/drafts/buttons-test` and `/drafts/block-samples/buttons` were already correct (source had a real `<del>`); the
+  sample was re-uploaded in the inside-link form, buttons-test only re-previewed. Verified on the issue67 preview:
+  buttons-blocks-test 24/24 variants ✓, buttons-test + buttons sample: every Dark CTA = #333 square. Not published.
+  Gotcha: the import converter (run-bulk-import) also always hoists <del> outside the link; that is fine for the
+  pipeline — the breakage only happens when the markup is pasted into DA as text.
+
+### 2026-10-10 — Dark CTA = bold + superscript (strikethrough dropped); other marks unchanged
+DA can't keep strikethrough: the editor stores a `<del>` as literal "<del>" text, so the dark CTA broke after a
+save. A full flip of the marks was tried and reverted (user: keep the change small). Final contract — standalone
+link, alone in its paragraph:
+| Authored | Class | Look |
+|---|---|---|
+| bold + italic + subscript (default) | `cta-button cta-blue` | solid brand blue, 3px radius, 40px |
+| bold + italic + superscript | `cta-button cta-black` | black, fully rounded, 56px |
+| bold + italic + underline | `cta-button cta-outline` | transparent, #333 text + 2px border, square, 46px |
+| **bold (no italic) + superscript** | `cta-button cta-dark` | #333, white text, square, 46px |
+- `scripts.js`: `del` / `s` removed from `CTA_BUTTON_STYLES`; new `CTA_BOLD_ONLY_STYLES = { sup: 'cta-dark' }`, used
+  when the link is bold but not italic. `[options]` unchanged.
+- DA content (uploaded + previewed, not published; pre-change copies in /tmp/m/da-backup2): `/drafts/buttons-test`
+  (9 dark), `/drafts/block-samples/buttons` (1 dark + label), `/drafts/buttons-blocks-test` (24 dark), library
+  `/.da/library/blocks/buttons` (Blue/Black unchanged + new Dark Button and Outline Button entries).
+- Gotcha: until this code is pushed, the branch (still on `f7dcd6e`, strikethrough mapping) renders bold +
+  superscript as the default blue `.button.primary` (170px min-width) — that is the "dark CTA looks like the
+  default / wider" report. Verified with the local code: buttons-blocks-test 24/24 variants ✓.
+- Gotcha (same day): the in-tool **preview window** renders the LOCAL content copy (`/content/drafts/…`), not DA. The
+  local copies of buttons-test / buttons-blocks-test / block-samples/buttons still had the old `<del>` markup, so the
+  Dark CTA fell back to `.button.accent` there. Regenerated all three through run-bulk-import with dark = bold +
+  superscript (local now = DA: 9 / 24 / 1 dark, 0 strikethrough). Verified at the `/content/drafts/…` URLs:
+  blocks-test 24/24, every Dark CTA = #333 square. Also: never pipe the bundler into `tail -0` — it kills the
+  bundler before it writes the bundle, and the runner then silently reuses the stale one.

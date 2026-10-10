@@ -367,7 +367,7 @@
   line-height: 0;
 }
 
-.cards.expand .cards-expand-donate a,
+.cards.expand .cards-expand-donate a:where(:not(.cta-button)),
 .cards.expand .cards-expand-donate a.button,
 .cards.expand .cards-expand-donate a.button.primary {
   display: block;
@@ -394,8 +394,8 @@
 
 /* Source DONATE has no hover change — pin the base look against the global
    link/button hover rules. Keyboard focus still gets a visible ring. */
-.cards.expand .cards-expand-donate a:hover,
-.cards.expand .cards-expand-donate a:focus-visible,
+.cards.expand .cards-expand-donate a:where(:not(.cta-button)):hover,
+.cards.expand .cards-expand-donate a:where(:not(.cta-button)):focus-visible,
 .cards.expand .cards-expand-donate a.button:hover,
 .cards.expand .cards-expand-donate a.button.primary:hover {
   background-color: var(--brand-blue);
@@ -529,7 +529,7 @@
   margin-top: 25px;
 }
 
-.cards.news .cards-news-card-link a,
+.cards.news .cards-news-card-link a:where(:not(.cta-button)),
 .cards.news .cards-news-card-link a.button,
 .cards.news .cards-news-card-link a.button.primary {
   display: inline;
@@ -588,7 +588,7 @@
     letter-spacing: normal;
   }
 
-  .cards.news .cards-news-card-link a,
+  .cards.news .cards-news-card-link a:where(:not(.cta-button)),
   .cards.news .cards-news-card-link a.button,
   .cards.news .cards-news-card-link a.button.primary {
     font-size: 16px;
@@ -1264,7 +1264,7 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   margin-top: 24px;
 }
 
-.cards.support .cards-support-card-body a,
+.cards.support .cards-support-card-body a:where(:not(.cta-button)),
 .cards.support .cards-support-card-body a.button,
 .cards.support .cards-support-card-body a.button.primary {
   display: inline;

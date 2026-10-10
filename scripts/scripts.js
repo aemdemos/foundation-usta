@@ -181,12 +181,178 @@ function buildAutoBlocks(main) {
 }
 
 /**
- * Extra mark on a bold + italic standalone link → cta-button style class.
+ * Extra mark on a bold + italic standalone link → cta-button style class
+ * (styles/buttons.css).
  */
 const CTA_BUTTON_STYLES = {
   sub: 'cta-blue',
   sup: 'cta-black',
+  u: 'cta-outline', // underline
 };
+
+// Bold ONLY (no italic) + superscript → the dark CTA. (Not strikethrough: the DA
+// editor stores a pasted <del> as literal "<del>" text.)
+const CTA_BOLD_ONLY_STYLES = {
+  sup: 'cta-dark',
+};
+
+/** `style=` values of the authored link options → cta-button style class. */
+const CTA_OPTION_STYLES = {
+  blue: 'cta-blue',
+  black: 'cta-black',
+  dark: 'cta-dark',
+  outline: 'cta-outline',
+};
+
+// trailing `[key=value, …]` on a link label or after the link; values may be
+// unquoted or in straight / curly quotes (the editor may convert quotes)
+const CTA_OPTIONS_SUFFIX = /\[([^[\]]*=[^[\]]*)\]\s*$/;
+const CTA_OPTION_PAIR = /([a-z-]+)\s*=\s*(?:["“”'‘’]([^"“”'‘’]*)["“”'‘’]|([^,\s]+))/gi;
+
+/**
+ * Removes the authored `[key=value, …]` options from a standalone link (either
+ * the end of its label or the text after it in the same paragraph) and returns
+ * them, or null when there are none.
+ * @param {HTMLAnchorElement} a the link
+ * @param {HTMLParagraphElement} p its paragraph
+ * @returns {Object|null} lower-cased keys → values
+ */
+function takeCtaOptions(a, p) {
+  let outer = a;
+  while (outer.parentElement !== p) outer = outer.parentElement;
+  // only a standalone link can carry options (never strip brackets from prose)
+  let beforeText = '';
+  for (let n = outer.previousSibling; n; n = n.previousSibling) beforeText += n.textContent;
+  if (beforeText.trim()) return null;
+  const after = [];
+  for (let n = outer.nextSibling; n; n = n.nextSibling) after.push(n);
+  const afterText = after.map((n) => n.textContent).join('').trim();
+  let match;
+  if (afterText) {
+    match = afterText.match(CTA_OPTIONS_SUFFIX);
+    if (!match || match.index !== 0) return null; // other text after the link
+    after.forEach((n) => n.remove());
+  } else {
+    match = a.textContent.match(CTA_OPTIONS_SUFFIX);
+    if (!match) return null;
+    // trim the options off the end of the label, across text nodes
+    let left = a.textContent.length - match.index;
+    const walker = document.createTreeWalker(a, NodeFilter.SHOW_TEXT);
+    const texts = [];
+    while (walker.nextNode()) texts.push(walker.currentNode);
+    for (let i = texts.length - 1; i >= 0 && left > 0; i -= 1) {
+      const t = texts[i];
+      const cut = Math.min(left, t.textContent.length);
+      t.textContent = t.textContent.slice(0, t.textContent.length - cut);
+      left -= cut;
+    }
+    const last = texts.at(-1);
+    if (last) last.textContent = last.textContent.trimEnd();
+  }
+  const options = {};
+  [...match[1].matchAll(CTA_OPTION_PAIR)].forEach(([, key, quoted, bare]) => {
+    options[key.toLowerCase()] = (quoted ?? bare ?? '').trim();
+  });
+  return Object.keys(options).length ? options : null;
+}
+
+/**
+ * Validates an authored color: any CSS color (hex, rgb(), named, …) or a design
+ * token name (e.g. `brand-orange` / `--brand-orange`, like the Spacer block).
+ * @param {string} value authored color
+ * @returns {string} a safe CSS color value, or '' when invalid
+ */
+function ctaColor(value) {
+  const v = (value || '').trim();
+  if (!v) return '';
+  if (CSS.supports('color', v)) return v;
+  const token = v.replace(/^-+/, '');
+  if (/^[a-z][a-z0-9-]*$/i.test(token)
+    && getComputedStyle(document.documentElement).getPropertyValue(`--${token}`).trim()) {
+    return `var(--${token})`;
+  }
+  return '';
+}
+
+/**
+ * Black or white, whichever contrasts more with the given color (WCAG relative
+ * luminance), for buttons whose author set a color but no text color.
+ * @param {string} color a valid CSS color
+ * @returns {string} '#000' or '#fff'
+ */
+function contrastText(color) {
+  const probe = document.createElement('span');
+  probe.style.color = color;
+  document.body.append(probe);
+  const rgb = getComputedStyle(probe).color.match(/^rgba?\(([^)]+)\)/);
+  probe.remove();
+  if (!rgb) return '#fff';
+  const [r, g, b] = rgb[1].split(/[\s,/]+/).slice(0, 3).map((c) => {
+    const s = Number(c) / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return (lum + 0.05) / 0.05 > 1.05 / (lum + 0.05) ? '#000' : '#fff';
+}
+
+/**
+ * Applies authored link options to a cta-button: `color` (button color; the
+ * border + text color for `outline`), `text-color`, `new-tab` (true / false).
+ * Colors are set as the custom properties styles/buttons.css reads.
+ * @param {HTMLAnchorElement} a the cta-button
+ * @param {Object} options from takeCtaOptions
+ */
+function applyCtaOptions(a, options) {
+  const bg = ctaColor(options.color);
+  const fg = ctaColor(options['text-color']);
+  const set = (prop, value) => a.style.setProperty(prop, value);
+  if (bg && a.classList.contains('cta-outline')) {
+    set('--cta-color', fg || bg);
+    set('--cta-border', bg);
+    set('--cta-bg-hover', bg);
+    set('--cta-border-hover', bg);
+    set('--cta-color-hover', contrastText(bg));
+  } else if (bg) {
+    const text = fg || contrastText(bg);
+    ['--cta-bg', '--cta-border', '--cta-bg-hover', '--cta-border-hover'].forEach((prop) => set(prop, bg));
+    set('--cta-color', text);
+    set('--cta-color-hover', text);
+    a.classList.add('cta-custom');
+  } else if (fg) {
+    // text color only: keep the style's own background on hover (not the default
+    // hover blue, which may clash with the authored text color)
+    set('--cta-color', fg);
+    set('--cta-color-hover', fg);
+    set('--cta-bg-hover', 'var(--cta-bg)');
+    set('--cta-border-hover', 'var(--cta-border)');
+    a.classList.add('cta-custom');
+  }
+  const newTab = (options['new-tab'] || '').toLowerCase();
+  if (['true', 'yes', '1'].includes(newTab)) {
+    a.target = '_blank';
+    a.relList.add('noopener');
+  } else if (['false', 'no', '0'].includes(newTab)) {
+    a.target = '_self'; // also stops decorateLinkTarget() from opening it in a new tab
+    a.relList.remove('noopener');
+  }
+}
+
+/**
+ * Turns a standalone link into a cta-button: sets the class, drops CTA marks
+ * inside the link (so the label isn't shrunk/raised) and unwraps every
+ * formatting element (any nesting order) between the <p> and the <a>.
+ * @param {HTMLAnchorElement} a the link
+ * @param {HTMLParagraphElement} p its paragraph
+ * @param {string} style cta style class
+ */
+function makeCtaButton(a, p, style) {
+  p.className = 'button-wrapper';
+  a.className = `cta-button ${style}`;
+  a.querySelectorAll(Object.keys(CTA_BUTTON_STYLES).join(', ')).forEach((m) => m.replaceWith(...m.childNodes));
+  let outer = a;
+  while (outer.parentElement !== p) outer = outer.parentElement;
+  if (outer !== a) outer.replaceWith(a);
+}
 
 /**
  * Decorates formatted links to style them as buttons.
@@ -194,41 +360,49 @@ const CTA_BUTTON_STYLES = {
  *   bold → .button.primary · italic → .button.secondary · bold+italic → .button.accent
  *   bold+italic+subscript → .cta-button.cta-blue (solid blue site CTA)
  *   bold+italic+superscript → .cta-button.cta-black (black rounded CTA)
+ *   bold (no italic)+superscript → .cta-button.cta-dark (dark #333, square)
+ *   bold+italic+underline → .cta-button.cta-outline (#333 outline, square)
+ * Any standalone link followed by options, e.g.
+ *   Donate [style="outline", color="#e87722", text-color="#fff", new-tab="true"]
+ * becomes a cta-button (style= wins over the mark; default blue) with those
+ * overrides applied inline.
  * @param {HTMLElement} main The main container element
  */
 function decorateButtons(main) {
   main.querySelectorAll('p a[href]').forEach((a) => {
     const p = a.closest('p');
+    if (a.querySelector('img')) return;
+    const options = takeCtaOptions(a, p);
     const text = a.textContent.trim();
 
-    // quick structural checks
-    if (a.querySelector('img') || p.textContent.trim() !== text) return;
+    // quick structural check: the link is the whole paragraph
+    if (p.textContent.trim() !== text) return;
 
-    // skip URL display links
+    // skip URL display links (unless the author asked for a button)
     try {
-      if (new URL(a.href).href === new URL(text, window.location).href) return;
+      if (!options && new URL(a.href).href === new URL(text, window.location).href) return;
     } catch { /* continue */ }
 
-    // require authored formatting for buttonization
+    // require authored formatting (or options) for buttonization
     const strong = a.closest('strong');
     const em = a.closest('em');
-    if (!strong && !em) return;
+    if (!strong && !em && !options) return;
 
-    // bold + italic + one extra mark → the site's own CTA styles (cta-button).
+    // bold + italic + one extra mark, or authored options → cta-button.
     // Checked first so plain bold / italic / bold+italic keep their behaviour.
-    // aem.page emits sub/sup INSIDE the link (<a><sub>…</sub></a>); other
+    // aem.page emits the marks INSIDE the link (<a><sub>…</sub></a>); other
     // sources may put them outside it, so look both ways.
-    const marks = Object.keys(CTA_BUTTON_STYLES).join(', ');
-    const mark = strong && em && (a.closest(marks) || a.querySelector(marks));
-    if (mark && p.contains(mark)) {
-      p.className = 'button-wrapper';
-      a.className = `cta-button ${CTA_BUTTON_STYLES[mark.tagName.toLowerCase()]}`;
-      // drop marks inside the link so the label isn't shrunk/raised
-      a.querySelectorAll(marks).forEach((m) => m.replaceWith(...m.childNodes));
-      // unwrap every formatting element (any nesting order) between <p> and <a>
-      let outer = a;
-      while (outer.parentElement !== p) outer = outer.parentElement;
-      outer.replaceWith(a);
+    // bold + italic → CTA_BUTTON_STYLES; bold only → CTA_BOLD_ONLY_STYLES
+    let styles = null;
+    if (strong && em) styles = CTA_BUTTON_STYLES;
+    else if (strong) styles = CTA_BOLD_ONLY_STYLES;
+    const marks = styles && Object.keys(styles).join(', ');
+    const mark = marks && (a.closest(marks) || a.querySelector(marks));
+    const markStyle = mark && p.contains(mark) ? styles[mark.tagName.toLowerCase()] : '';
+    if (markStyle || options) {
+      const optionStyle = CTA_OPTION_STYLES[(options?.style || '').toLowerCase()];
+      makeCtaButton(a, p, optionStyle || markStyle || 'cta-blue');
+      if (options) applyCtaOptions(a, options);
       return;
     }
 
@@ -434,9 +608,13 @@ async function loadEager(doc) {
   // spacing) isn't LCP-critical. Awaiting it added a full CSS round-trip to the
   // H1 render delay on slow mobile. Resolve `templateName` for loadLazy's JS.
   const templateCssPromise = loadTemplateCSS();
+  // CTA buttons (styles/buttons.css): start loading now; only block the first
+  // section on it when that section actually contains a cta-button.
+  const buttonsCssPromise = loadCSS(`${window.hlx.codeBasePath}/styles/buttons.css`);
   const main = doc.querySelector('main');
   if (main) {
     decorateMain(main);
+    if (main.querySelector('.section:first-of-type .cta-button')) await buttonsCssPromise;
     applySectionBackgrounds(main); // not awaited: the options fetch must not block LCP
     document.body.classList.add('appear');
     await loadSection(main.querySelector('.section'), waitForFirstImage);

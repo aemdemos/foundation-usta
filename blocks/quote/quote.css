@@ -143,7 +143,7 @@
 }
 
 /* Links: @mentions, #hashtags, pic.twitter, handle + date — blue, weight 400. */
-.quote.tweet a:any-link {
+.quote.tweet a:where(:not(.cta-button)):any-link {
   color: var(--link-color); /* #0357b8 */
   font-weight: 400;
   text-decoration: none;
