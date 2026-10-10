@@ -2,9 +2,9 @@
  * CTA buttons — the site's authorable call-to-action styles for any content
  * (default content and block cells). decorateButtons() (scripts.js) turns a
  * standalone link formatted bold + italic + ONE extra mark into
- * `a.cta-button.\3c style>`:
+ * `a.cta-button.{style}`:
  *   subscript → .cta-blue      superscript   → .cta-black
- *   strikethrough → .cta-dark  underline     → .cta-outline
+ *   underline → .cta-outline   and BOLD ONLY (no italic) + superscript → .cta-dark
  * Authors can also append options to the link, e.g.
  *   Donate [style="outline", color="#e87722", text-color="#fff", new-tab="true"]
  * which decorateButtons() turns into the inline custom properties below.

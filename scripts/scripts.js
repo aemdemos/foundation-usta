@@ -187,9 +187,13 @@ function buildAutoBlocks(main) {
 const CTA_BUTTON_STYLES = {
   sub: 'cta-blue',
   sup: 'cta-black',
-  del: 'cta-dark', // strikethrough (aem.page emits <del>; <s> from other sources)
-  s: 'cta-dark',
   u: 'cta-outline', // underline
+};
+
+// Bold ONLY (no italic) + superscript → the dark CTA. (Not strikethrough: the DA
+// editor stores a pasted <del> as literal "<del>" text.)
+const CTA_BOLD_ONLY_STYLES = {
+  sup: 'cta-dark',
 };
 
 /** `style=` values of the authored link options → cta-button style class. */
@@ -356,7 +360,7 @@ function makeCtaButton(a, p, style) {
  *   bold → .button.primary · italic → .button.secondary · bold+italic → .button.accent
  *   bold+italic+subscript → .cta-button.cta-blue (solid blue site CTA)
  *   bold+italic+superscript → .cta-button.cta-black (black rounded CTA)
- *   bold+italic+strikethrough → .cta-button.cta-dark (dark #333, square)
+ *   bold (no italic)+superscript → .cta-button.cta-dark (dark #333, square)
  *   bold+italic+underline → .cta-button.cta-outline (#333 outline, square)
  * Any standalone link followed by options, e.g.
  *   Donate [style="outline", color="#e87722", text-color="#fff", new-tab="true"]
@@ -388,9 +392,13 @@ function decorateButtons(main) {
     // Checked first so plain bold / italic / bold+italic keep their behaviour.
     // aem.page emits the marks INSIDE the link (<a><sub>…</sub></a>); other
     // sources may put them outside it, so look both ways.
-    const marks = Object.keys(CTA_BUTTON_STYLES).join(', ');
-    const mark = strong && em && (a.closest(marks) || a.querySelector(marks));
-    const markStyle = mark && p.contains(mark) ? CTA_BUTTON_STYLES[mark.tagName.toLowerCase()] : '';
+    // bold + italic → CTA_BUTTON_STYLES; bold only → CTA_BOLD_ONLY_STYLES
+    let styles = null;
+    if (strong && em) styles = CTA_BUTTON_STYLES;
+    else if (strong) styles = CTA_BOLD_ONLY_STYLES;
+    const marks = styles && Object.keys(styles).join(', ');
+    const mark = marks && (a.closest(marks) || a.querySelector(marks));
+    const markStyle = mark && p.contains(mark) ? styles[mark.tagName.toLowerCase()] : '';
     if (markStyle || options) {
       const optionStyle = CTA_OPTION_STYLES[(options?.style || '').toLowerCase()];
       makeCtaButton(a, p, optionStyle || markStyle || 'cta-blue');

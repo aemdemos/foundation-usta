@@ -4778,3 +4778,38 @@ Verified on `/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised` (max-
 - **Final regression (all 86 pages, old main vs new, 390 + 1440):** 3,962 button / block / footer links → 0
   differences; 98 body-text links (49 visible × 2 widths) → 0 differences. Gates on home, who-we-are, get-involved
   and a news article: lint 0 errors · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓.
+- **DA fix (2026-10-10): Dark CTA showed "<del>" as text** on `/drafts/buttons-blocks-test` (aem.live). Its DA source
+  held the strikethrough as literal escaped text (`<p>&lt;del&gt;<em><strong><a>…`), so no `<del>` reached
+  decorateButtons. Rewrote all 24 to `<p><em><strong><a …><del>Label</del></a></strong></em></p>`, uploaded + previewed
+  (originals backed up in /tmp). Finding: the aem.page pipeline normalises strikethrough to OUTSIDE the link
+  (`<p><del><em><strong><a>`) — a real tag, which decorateButtons handles (`a.closest('del, s')`). So
+  `/drafts/buttons-test` and `/drafts/block-samples/buttons` were already correct (source had a real `<del>`); the
+  sample was re-uploaded in the inside-link form, buttons-test only re-previewed. Verified on the issue67 preview:
+  buttons-blocks-test 24/24 variants ✓, buttons-test + buttons sample: every Dark CTA = #333 square. Not published.
+  Gotcha: the import converter (run-bulk-import) also always hoists <del> outside the link; that is fine for the
+  pipeline — the breakage only happens when the markup is pasted into DA as text.
+
+### 2026-10-10 — Dark CTA = bold + superscript (strikethrough dropped); other marks unchanged
+DA can't keep strikethrough: the editor stores a `<del>` as literal "<del>" text, so the dark CTA broke after a
+save. A full flip of the marks was tried and reverted (user: keep the change small). Final contract — standalone
+link, alone in its paragraph:
+| Authored | Class | Look |
+|---|---|---|
+| bold + italic + subscript (default) | `cta-button cta-blue` | solid brand blue, 3px radius, 40px |
+| bold + italic + superscript | `cta-button cta-black` | black, fully rounded, 56px |
+| bold + italic + underline | `cta-button cta-outline` | transparent, #333 text + 2px border, square, 46px |
+| **bold (no italic) + superscript** | `cta-button cta-dark` | #333, white text, square, 46px |
+- `scripts.js`: `del` / `s` removed from `CTA_BUTTON_STYLES`; new `CTA_BOLD_ONLY_STYLES = { sup: 'cta-dark' }`, used
+  when the link is bold but not italic. `[options]` unchanged.
+- DA content (uploaded + previewed, not published; pre-change copies in /tmp/m/da-backup2): `/drafts/buttons-test`
+  (9 dark), `/drafts/block-samples/buttons` (1 dark + label), `/drafts/buttons-blocks-test` (24 dark), library
+  `/.da/library/blocks/buttons` (Blue/Black unchanged + new Dark Button and Outline Button entries).
+- Gotcha: until this code is pushed, the branch (still on `f7dcd6e`, strikethrough mapping) renders bold +
+  superscript as the default blue `.button.primary` (170px min-width) — that is the "dark CTA looks like the
+  default / wider" report. Verified with the local code: buttons-blocks-test 24/24 variants ✓.
+- Gotcha (same day): the in-tool **preview window** renders the LOCAL content copy (`/content/drafts/…`), not DA. The
+  local copies of buttons-test / buttons-blocks-test / block-samples/buttons still had the old `<del>` markup, so the
+  Dark CTA fell back to `.button.accent` there. Regenerated all three through run-bulk-import with dark = bold +
+  superscript (local now = DA: 9 / 24 / 1 dark, 0 strikethrough). Verified at the `/content/drafts/…` URLs:
+  blocks-test 24/24, every Dark CTA = #333 square. Also: never pipe the bundler into `tail -0` — it kills the
+  bundler before it writes the bundle, and the runner then silently reuses the stale one.
