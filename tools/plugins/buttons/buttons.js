@@ -336,7 +336,7 @@ const same = (a, b) => (a || '').toLowerCase() === (b || '').toLowerCase();
 /**
  * Fills a colour fieldset with swatch radios: "Design default" first, then the
  * sheet's choices, then the current colour when it isn't one of them.
- * @param {HTMLFieldSetElement} fieldset `.btn-plugin-colors` (data-name, data-default)
+ * @param {HTMLElement} fieldset `.btn-plugin-colors` group (data-name, data-default)
  * @param {{label: string, value: string}[]} choices from the sheet
  * @param {string} [selected] the colour to check
  */
