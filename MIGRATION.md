@@ -5018,4 +5018,21 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
   Times font). Test Layout with a pushed branch: `?ref=<branch>`.
 - **Verified:** harness screenshot (edited buttons keep their style); lint clean; breakpoint check passed;
   `test:a11y /` passed.
+- **Follow-up (same day): options text and colours while editing.**
+  - **Problem:** authors still saw `[color="#e87722"]` attached to the button, with the default colour, until a refresh.
+  - **Fix:** `previewEditingCtas()` in `scripts.js` runs only with `?quick-edit`.
+    - A MutationObserver (batched per animation frame) finds each `.prosemirror-editor` and parses the raw
+      button's options text (`parseCtaOptions`).
+    - It writes the colours as `--cta-edit-*` custom properties on the **wrapper**. The wrapper sits outside the
+      ProseMirror `contenteditable`, so these changes are never sent back as edits.
+    - It adds `.cta-edit-custom` (apply the colours) and `.cta-edit-options` (standalone button: hide the
+      options text) to the wrapper.
+    - `buttons.css` hides the options text with `font-size: 0` on the paragraph; the link keeps its own 18px.
+      It also restores the `p.button-wrapper` 12px margins, which would otherwise collapse to 0 (they are em-based).
+  - **Refactor:** the colour logic moved from `applyCtaOptions()` into `ctaOptionVars()`, shared by the page and
+    the editor. Output on the page is unchanged.
+  - **Limits:** while editing, `style=` doesn't change the look (the mark decides it), and an editor wrapping
+    several buttons gets no colours.
+  - **Verified:** the harness with the real `quick-edit.js` shows LEARN MORE in orange and the outline button with an orange
+    border and text, with the options text hidden. lint, breakpoint check and `test:a11y` passed.
 

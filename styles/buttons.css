@@ -20,9 +20,8 @@
  * button for da.live's inline text editor (`.prosemirror-editor`), which shows
  * the raw marks (<em><strong><a><sub|sup|u>) until the next full re-render.
  * The `.prosemirror-editor …` selectors give those raw links the same look so
- * the button doesn't turn into a plain link while it's being edited. Authored
- * `[color=…]` options stay visible there (they are the editable text) and
- * apply on the next re-render.
+ * the button doesn't turn into a plain link while it's being edited, and
+ * previewEditingCtas() (scripts.js) applies its `[color=…]` options there too.
  */
 
 a.cta-button:any-link,
@@ -133,4 +132,23 @@ a.cta-button.cta-custom:focus-visible {
   line-height: inherit;
   vertical-align: baseline;
   text-decoration: none;
+}
+
+/* EW inline editor: authored `[color=…]` options. previewEditingCtas()
+   (scripts.js) parses them and sets `--cta-edit-*` on the editor wrapper, and
+   adds `.cta-edit-options` when the paragraph is a standalone button, which
+   hides the options text (font-size 0; the link sets its own size) so the
+   button looks as it will on the page. */
+.prosemirror-editor.cta-edit-custom :is(
+  em > strong > a:has(> :is(sub, sup, u)),
+  p > strong > a:has(> sup)
+) {
+  border-color: var(--cta-edit-border, var(--cta-border));
+  background-color: var(--cta-edit-bg, var(--cta-bg));
+  color: var(--cta-edit-color, var(--cta-color));
+}
+
+.prosemirror-editor.cta-edit-options p:has(> em > strong > a > :is(sub, sup, u), > strong > a > sup) {
+  margin: 12px 0; /* as p.button-wrapper (em margins would collapse at size 0) */
+  font-size: 0;
 }

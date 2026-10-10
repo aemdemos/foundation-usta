@@ -210,6 +210,19 @@ const CTA_OPTIONS_SUFFIX = /\[([^[\]]*=[^[\]]*)\]\s*$/;
 const CTA_OPTION_PAIR = /([a-z-]+)\s*=\s*(?:["“”'‘’]([^"“”'‘’]*)["“”'‘’]|([^,\s]+))/gi;
 
 /**
+ * Parses the inside of an authored `[key=value, …]` options suffix.
+ * @param {string} text the text between the brackets
+ * @returns {Object|null} lower-cased keys → values
+ */
+function parseCtaOptions(text) {
+  const options = {};
+  [...text.matchAll(CTA_OPTION_PAIR)].forEach(([, key, quoted, bare]) => {
+    options[key.toLowerCase()] = (quoted ?? bare ?? '').trim();
+  });
+  return Object.keys(options).length ? options : null;
+}
+
+/**
  * Removes the authored `[key=value, …]` options from a standalone link (either
  * the end of its label or the text after it in the same paragraph) and returns
  * them, or null when there are none.
@@ -249,11 +262,7 @@ function takeCtaOptions(a, p) {
     const last = texts.at(-1);
     if (last) last.textContent = last.textContent.trimEnd();
   }
-  const options = {};
-  [...match[1].matchAll(CTA_OPTION_PAIR)].forEach(([, key, quoted, bare]) => {
-    options[key.toLowerCase()] = (quoted ?? bare ?? '').trim();
-  });
-  return Object.keys(options).length ? options : null;
+  return parseCtaOptions(match[1]);
 }
 
 /**
@@ -296,37 +305,68 @@ function contrastText(color) {
 }
 
 /**
- * Applies authored link options to a cta-button: `color` (button color; the
- * border + text color for `outline`), `text-color`, `new-tab` (true / false).
- * Colors are set as the custom properties styles/buttons.css reads.
+ * The custom properties (styles/buttons.css) for authored `color` (button color;
+ * the border + text color for `outline`) and `text-color` options.
+ * @param {Object} options from takeCtaOptions
+ * @param {boolean} outline whether the button is the outline style
+ * @returns {{vars: Object, custom: boolean}} property → value, and whether the
+ *   button needs `.cta-custom` (authored hover)
+ */
+function ctaOptionVars(options, outline) {
+  const bg = ctaColor(options.color);
+  const fg = ctaColor(options['text-color']);
+  if (bg && outline) {
+    return {
+      vars: {
+        '--cta-color': fg || bg,
+        '--cta-border': bg,
+        '--cta-bg-hover': bg,
+        '--cta-border-hover': bg,
+        '--cta-color-hover': contrastText(bg),
+      },
+      custom: false,
+    };
+  }
+  if (bg) {
+    const text = fg || contrastText(bg);
+    return {
+      vars: {
+        '--cta-bg': bg,
+        '--cta-border': bg,
+        '--cta-bg-hover': bg,
+        '--cta-border-hover': bg,
+        '--cta-color': text,
+        '--cta-color-hover': text,
+      },
+      custom: true,
+    };
+  }
+  if (fg) {
+    // text color only: keep the style's own background on hover (not the default
+    // hover blue, which may clash with the authored text color)
+    return {
+      vars: {
+        '--cta-color': fg,
+        '--cta-color-hover': fg,
+        '--cta-bg-hover': 'var(--cta-bg)',
+        '--cta-border-hover': 'var(--cta-border)',
+      },
+      custom: true,
+    };
+  }
+  return { vars: {}, custom: false };
+}
+
+/**
+ * Applies authored link options to a cta-button: `color` / `text-color` (see
+ * ctaOptionVars) and `new-tab` (true / false).
  * @param {HTMLAnchorElement} a the cta-button
  * @param {Object} options from takeCtaOptions
  */
 function applyCtaOptions(a, options) {
-  const bg = ctaColor(options.color);
-  const fg = ctaColor(options['text-color']);
-  const set = (prop, value) => a.style.setProperty(prop, value);
-  if (bg && a.classList.contains('cta-outline')) {
-    set('--cta-color', fg || bg);
-    set('--cta-border', bg);
-    set('--cta-bg-hover', bg);
-    set('--cta-border-hover', bg);
-    set('--cta-color-hover', contrastText(bg));
-  } else if (bg) {
-    const text = fg || contrastText(bg);
-    ['--cta-bg', '--cta-border', '--cta-bg-hover', '--cta-border-hover'].forEach((prop) => set(prop, bg));
-    set('--cta-color', text);
-    set('--cta-color-hover', text);
-    a.classList.add('cta-custom');
-  } else if (fg) {
-    // text color only: keep the style's own background on hover (not the default
-    // hover blue, which may clash with the authored text color)
-    set('--cta-color', fg);
-    set('--cta-color-hover', fg);
-    set('--cta-bg-hover', 'var(--cta-bg)');
-    set('--cta-border-hover', 'var(--cta-border)');
-    a.classList.add('cta-custom');
-  }
+  const { vars, custom } = ctaOptionVars(options, a.classList.contains('cta-outline'));
+  Object.entries(vars).forEach(([prop, value]) => a.style.setProperty(prop, value));
+  if (custom) a.classList.add('cta-custom');
   const newTab = (options['new-tab'] || '').toLowerCase();
   if (['true', 'yes', '1'].includes(newTab)) {
     a.target = '_blank';
@@ -420,6 +460,61 @@ function decorateButtons(main) {
       em.replaceWith(a);
     }
   });
+}
+
+// a raw button link inside da.live's inline editor (marks as authored)
+const EDITING_CTA = 'p > em > strong > a:has(> :is(sub, sup, u)), p > strong > a:has(> sup)';
+
+/**
+ * Experience Workspace (Layout view, `?quick-edit`): while a paragraph is being
+ * edited, da.live swaps it for an inline ProseMirror editor showing the raw
+ * button link plus its `[color=…]` options text. The editor's contents must not
+ * be touched (changes become document edits), so the authored colors are set
+ * as `--cta-edit-*` properties on its `.prosemirror-editor` wrapper and the
+ * wrapper gets classes that buttons.css uses to color the button and hide the
+ * options text — so it looks like the published button.
+ */
+function previewEditingCtas() {
+  if (!new URL(window.location.href).searchParams.has('quick-edit')) return;
+  const seen = new WeakMap();
+  const update = (editor) => {
+    const key = editor.innerHTML;
+    if (seen.get(editor) === key) return;
+    seen.set(editor, key);
+    const found = [...editor.querySelectorAll(EDITING_CTA)].map((a) => {
+      const p = a.closest('p');
+      let outer = a;
+      while (outer.parentElement !== p) outer = outer.parentElement;
+      const text = (dir) => {
+        let s = '';
+        for (let n = outer[dir]; n; n = n[dir]) s += n.textContent;
+        return s.trim();
+      };
+      const after = text('nextSibling');
+      const match = after.match(CTA_OPTIONS_SUFFIX);
+      const standalone = !text('previousSibling') && (!after || match?.index === 0);
+      return { a, standalone, options: standalone && match ? parseCtaOptions(match[1]) : null };
+    });
+    [...editor.style].filter((prop) => prop.startsWith('--cta-edit-'))
+      .forEach((prop) => editor.style.removeProperty(prop));
+    // one button per editor (a paragraph, or a block cell holding one button)
+    const { a, options } = found.length === 1 ? found[0] : {};
+    const { vars } = options ? ctaOptionVars(options, !!a.querySelector(':scope > u')) : { vars: {} };
+    Object.entries(vars).forEach(([prop, value]) => {
+      editor.style.setProperty(prop.replace('--cta-', '--cta-edit-'), value);
+    });
+    editor.classList.toggle('cta-edit-custom', Object.keys(vars).length > 0);
+    editor.classList.toggle('cta-edit-options', found.length > 0 && found.every((f) => f.standalone));
+  };
+  let queued = false;
+  new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      document.querySelectorAll('.prosemirror-editor').forEach(update);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
 }
 
 /**
@@ -737,6 +832,7 @@ async function loadPage() {
 }
 
 loadPage();
+previewEditingCtas();
 
 (async function loadDa() {
   if (!new URL(window.location.href).searchParams.get('dapreview')) return;
