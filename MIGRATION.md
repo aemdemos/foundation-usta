@@ -118,8 +118,9 @@ link or right after it, same paragraph); they are removed from the label:
 **3. Code — where it lives.**
 - `scripts/scripts.js` → `decorateButtons()` (runs over all of `main` and the header/footer fragments, before blocks
   decorate, so it works in every block): `CTA_BUTTON_STYLES` (bold+italic: `sub` blue · `sup` black · `u` outline),
-  `CTA_BOLD_ONLY_STYLES` (`sup` dark), `CTA_OPTION_STYLES`, `takeCtaOptions()` / `applyCtaOptions()` /
-  `ctaColor()` / `contrastText()` / `makeCtaButton()`. The marks are stripped from the label.
+  `CTA_BOLD_ONLY_STYLES` (`sup` dark), `CTA_OPTION_STYLES`, `takeCtaOptions()` / `parseCtaOptions()` /
+  `applyCtaOptions()` / `ctaOptionVars()` / `ctaColor()` / `contrastText()` / `makeCtaButton()`. The marks are
+  stripped from the label. `previewEditingCtas()` handles the da.live Layout editor (see 7.).
 - `styles/buttons.css` → every `cta-button` style, driven by custom properties (`--cta-bg / --cta-color /
   --cta-border` + `-hover`); authored colours are set inline on the same properties (`.cta-custom` darkens on
   hover). Loaded by `loadEager()`; awaited only when the first section contains a cta-button.
@@ -155,6 +156,40 @@ only the image + caption.
 - The local dev server serves `/drafts/…` from aem.page; a local content file is only reachable under `/content/…`.
 - Never pipe the import bundler into `tail -0` — it stops the bundler before it writes, and the runner silently
   reuses the stale bundle.
+
+**7. Experience Workspace (da.live canvas, Layout view) — buttons while editing.**
+- **What happens:**
+  - Layout loads `https://{ref}--foundation-usta--aemdemos.preview.da.live/{path}?quick-edit=on`.
+  - Every content change re-runs our `loadPage()`, so buttons are decorated.
+  - **Clicking or editing a paragraph** swaps it for da.live's inline editor (`div.prosemirror-editor >
+    .ProseMirror > p`). The editor shows the raw marks (`<em><strong><a><sub|sup|u>`) plus the `[options]`
+    text until the next re-render or a refresh. This also happens inside blocks.
+- **What we do (central — NO per-block changes needed):**
+  - `styles/buttons.css`: the `.prosemirror-editor …` selectors give the raw link the button look.
+  - `scripts/scripts.js` → `previewEditingCtas()` (only with `?quick-edit`) parses the options. It sets
+    `--cta-edit-*` and the `.cta-edit-custom` / `.cta-edit-options` classes **on the editor wrapper only**.
+    The ProseMirror content must never be modified: changes there are saved back to the document as edits.
+  - The buttons.css rules then apply the colours and hide the options text (`font-size: 0` on the paragraph).
+  - The colour and hide rules carry `:not(#cta-edit)` (ID-level specificity). Block paragraph rules such as
+    `.cards.content .cards-content-card-body p` (0,3,1) would otherwise win and leave the options text visible.
+  - The 12px paragraph margin is deliberately NOT boosted, so a block's own button-paragraph margin still wins,
+    as it does on the page.
+- **What needs to be done:**
+  - **New or changed block:** nothing, as long as its CSS doesn't use an ID selector or `!important` on `p` /
+    `a` font-size or colours.
+  - To check a block, add a button with options to one of its text cells in Layout, then click it. The button
+    must keep its style and colour and the `[…]` text must be hidden.
+  - If a block still shows the options, check its paragraph/link rules in DevTools against the
+    `.prosemirror-editor` rules. Raise the buttons.css rule; don't add per-block overrides.
+  - **New button style or mark:** add it to the `.prosemirror-editor` selectors in buttons.css and to
+    `EDITING_CTA` in scripts.js, next to `CTA_BUTTON_STYLES`.
+  - **Testing Layout:** use a pushed branch, `da.live/canvas?ref=<branch>#/…`. `ref=local` points at a branch
+    called `local`, which doesn't exist, so the page renders unstyled.
+- **Limits while editing:** `style=` doesn't change the look (the mark decides it), and an editor holding several
+  buttons gets no authored colours. Both are correct after re-render or refresh.
+- **Dependency:** `.prosemirror-editor` and the mark nesting are da.live internals, not an API. If DA changes them,
+  only the Layout editing preview regresses (raw link until refresh). The published site is unaffected.
+  Update the selectors in `buttons.css` and `EDITING_CTA` in `scripts.js`.
 
 ## 6. Open items / TODO
 
@@ -5035,4 +5070,13 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
     several buttons gets no colours.
   - **Verified:** the harness with the real `quick-edit.js` shows LEARN MORE in orange and the outline button with an orange
     border and text, with the options text hidden. lint, breakpoint check and `test:a11y` passed.
+- **Follow-up 2 (2026-10-11): options still visible inside blocks.**
+  - **Problem:** in a Cards (content) cell, the colours applied but `[color=…]` stayed visible.
+  - **Cause** (CDP `getMatchedStylesForNode`): `.cards.content .cards-content-card-body p` at (0,3,1) beat the
+    hide rule at (0,2,5).
+  - **Fix:** `:not(#cta-edit)` on the colour and hide rules, so they win over any block's class-based rules.
+    It's a central fix with no `!important`, and blocks need no changes.
+  - **Verified:** a harness cards cell shows the options paragraph at font-size 0 with DONATETEST1 black and white.
+    Default content is still correct. lint, breakpoint check and `test:a11y` passed.
+  - The "what needs to be done" checklist is in §3 Buttons (CTA), item 7.
 

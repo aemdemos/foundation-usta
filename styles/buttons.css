@@ -138,8 +138,12 @@ a.cta-button.cta-custom:focus-visible {
    (scripts.js) parses them and sets `--cta-edit-*` on the editor wrapper, and
    adds `.cta-edit-options` when the paragraph is a standalone button, which
    hides the options text (font-size 0; the link sets its own size) so the
-   button looks as it will on the page. */
-.prosemirror-editor.cta-edit-custom :is(
+   button looks as it will on the page.
+   `:not(#cta-edit)` adds ID-level specificity so these editor-only rules beat
+   any block's own paragraph/link styles (e.g. `.cards.content
+   .cards-content-card-body p` is 0,3,1) — one central fix instead of per-block
+   overrides, without !important. They never match on the published page. */
+.prosemirror-editor.cta-edit-custom:not(#cta-edit) :is(
   em > strong > a:has(> :is(sub, sup, u)),
   p > strong > a:has(> sup)
 ) {
@@ -148,7 +152,13 @@ a.cta-button.cta-custom:focus-visible {
   color: var(--cta-edit-color, var(--cta-color));
 }
 
+/* margin as p.button-wrapper (em margins would collapse at size 0); not
+   boosted, so a block that resets its button paragraph margin still wins,
+   as it does on the page. */
 .prosemirror-editor.cta-edit-options p:has(> em > strong > a > :is(sub, sup, u), > strong > a > sup) {
-  margin: 12px 0; /* as p.button-wrapper (em margins would collapse at size 0) */
+  margin: 12px 0;
+}
+
+.prosemirror-editor.cta-edit-options:not(#cta-edit) p:has(> em > strong > a > :is(sub, sup, u), > strong > a > sup) {
   font-size: 0;
 }
