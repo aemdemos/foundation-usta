@@ -191,6 +191,11 @@ only the image + caption.
   only the Layout editing preview regresses (raw link until refresh). The published site is unaffected.
   Update the selectors in `buttons.css` and `EDITING_CTA` in `scripts.js`.
 
+**8. Setting this up in another project:** follow
+[tools/plugins/buttons/README.md](tools/plugins/buttons/README.md). It covers the files to copy, the scripts.js
+wiring, DA plugin registration, the optional `/.da/library/buttons` sheet, the Layout (ProseMirror) fixes, testing
+with `?ref=<branch>` and troubleshooting. Keep it up to date when the buttons code changes.
+
 ## 6. Open items / TODO
 
 ### Standing
@@ -5080,4 +5085,15 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
   - **Verified:** a harness cards cell shows the options paragraph at font-size 0 with DONATETEST1 black and white.
     Default content is still correct. lint, breakpoint check and `test:a11y` passed.
   - The "what needs to be done" checklist is in §3 Buttons (CTA), item 7.
+
+### 2026-10-11 — Buttons panel: stays open after Insert + portable setup guide
+- **Panel stays open:** removed `actions.closeLibrary()` after `sendHTML` in `tools/plugins/buttons/buttons.js`.
+  The status line shows "Button inserted."; the author closes the panel from DA.
+- **Layout: name/title briefly missing after inserting a button in Cards (profile):** not our code. A harness
+  with buttons in three profile cards keeps every name and title, also with a button open in the editor. DA
+  reopens its inline editor on the wrong element after an insert shifts positions; the document is fine and a
+  refresh fixes it (confirmed by the author).
+- **New guide:** [tools/plugins/buttons/README.md](tools/plugins/buttons/README.md) — how to set up the Buttons
+  panel from scratch in another project (files, scripts.js wiring, DA registration, config sheet, Layout fixes,
+  testing, troubleshooting). Linked from §3 Buttons (CTA), item 8.
 
