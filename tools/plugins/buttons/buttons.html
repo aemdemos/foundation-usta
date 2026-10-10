@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Buttons</title>
+  <!-- site styles, so every preview is the real cta-button -->
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/styles/fonts.css">
+  <link rel="stylesheet" href="/styles/buttons.css">
+  <link rel="stylesheet" href="/tools/plugins/buttons/buttons.css">
+  <script type="module" src="/tools/plugins/buttons/buttons.js"></script>
+</head>
+<body class="appear">
+  <main class="btn-plugin">
+    <section class="btn-plugin-gallery" aria-labelledby="btn-plugin-title">
+      <header class="btn-plugin-intro">
+        <h1 id="btn-plugin-title">Buttons</h1>
+        <p>Pick a design, then add its text and link.</p>
+      </header>
+      <p class="btn-plugin-status" role="status"
+        data-loading="Loading button designs…"
+        data-defaults="Showing the built-in designs (no /.da/library/buttons sheet found)."
+        data-standalone="Open this panel from the Experience Workspace editor to insert buttons."
+        data-edit="Editing the selected button."
+        data-done="Button inserted."
+        data-failed="The button could not be inserted. Place the cursor on an empty line and try again.">Loading button designs…</p>
+      <ul class="btn-plugin-presets" aria-label="Button designs" data-current="Current"></ul>
+    </section>
+
+    <section class="btn-plugin-editor" aria-labelledby="btn-plugin-editor-heading" inert>
+      <header class="btn-plugin-editor-head">
+        <button type="button" class="btn-plugin-back" aria-label="Back to all designs" title="Back to all designs">
+          <span class="btn-plugin-back-icon" aria-hidden="true"></span>
+        </button>
+        <div class="btn-plugin-editor-title">
+          <p class="btn-plugin-eyebrow">Design</p>
+          <h2 id="btn-plugin-editor-heading"></h2>
+        </div>
+      </header>
+
+      <div class="btn-plugin-editor-body">
+        <div class="btn-plugin-stage">
+          <div class="btn-plugin-preview" data-canvas="white" inert></div>
+          <fieldset class="btn-plugin-canvas">
+            <legend>Preview on</legend>
+            <label><input type="radio" name="canvas" value="white" checked><span>White</span></label>
+            <label><input type="radio" name="canvas" value="light"><span>Grey</span></label>
+            <label><input type="radio" name="canvas" value="dark"><span>Dark</span></label>
+          </fieldset>
+        </div>
+        <p class="btn-plugin-description"></p>
+
+        <form class="btn-plugin-form" id="btn-plugin-form" novalidate>
+          <div class="btn-plugin-field">
+            <label for="btn-plugin-label">Button text</label>
+            <input id="btn-plugin-label" name="label" type="text" required autocomplete="off"
+              aria-describedby="btn-plugin-label-error">
+            <p class="btn-plugin-error" id="btn-plugin-label-error" data-message="Enter the button text."></p>
+          </div>
+
+          <div class="btn-plugin-field">
+            <label for="btn-plugin-url">Link</label>
+            <input id="btn-plugin-url" name="url" type="text" required autocomplete="off" spellcheck="false"
+              placeholder="/en/home/get-involved"
+              aria-describedby="btn-plugin-url-hint btn-plugin-url-error">
+            <p class="btn-plugin-hint" id="btn-plugin-url-hint">A page path, or a full https:// link.</p>
+            <p class="btn-plugin-error" id="btn-plugin-url-error"
+              data-message="Enter a page path starting with /, or a full link starting with https://, mailto: or tel:."></p>
+          </div>
+
+          <fieldset class="btn-plugin-field btn-plugin-colors" data-name="color" data-default="Design default">
+            <legend>Button colour <span class="btn-plugin-swatch-value" aria-hidden="true"></span></legend>
+            <div class="btn-plugin-swatches"></div>
+          </fieldset>
+
+          <fieldset class="btn-plugin-field btn-plugin-colors" data-name="text-color" data-default="Design default">
+            <legend>Text colour <span class="btn-plugin-swatch-value" aria-hidden="true"></span></legend>
+            <div class="btn-plugin-swatches"></div>
+          </fieldset>
+
+          <label class="btn-plugin-switch" for="btn-plugin-new-tab">
+            <span class="btn-plugin-switch-text">
+              <span class="btn-plugin-switch-label">Open in a new tab</span>
+              <span class="btn-plugin-hint">For links to other websites or documents.</span>
+            </span>
+            <input id="btn-plugin-new-tab" name="new-tab" type="checkbox" role="switch">
+          </label>
+        </form>
+      </div>
+
+      <footer class="btn-plugin-editor-foot">
+        <p class="btn-plugin-editor-status" role="status"></p>
+        <button type="submit" form="btn-plugin-form" class="btn-plugin-submit"
+          data-insert="Insert button" data-update="Update button">Insert button</button>
+      </footer>
+    </section>
+  </main>
+</body>
+</html>

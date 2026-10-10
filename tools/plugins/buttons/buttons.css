@@ -1,0 +1,660 @@
+/*
+ * Buttons plugin panel (Experience Workspace library). Site tokens and the real
+ * cta-button styles come from styles.css + buttons.css (linked in
+ * buttons.html); this file only styles the narrow panel UI:
+ *   gallery — one card per preset, the real button centred on a canvas
+ *   editor  — a drawer that slides in from the right over the gallery, with a
+ *             sticky live preview, colour swatches and a new-tab switch
+ */
+.btn-plugin {
+  --bp-ink: #1d1d1f;
+  --bp-muted: #595959;
+  --bp-line: #e3e3e6;
+  --bp-field: #8a8a8a;
+  --bp-accent: var(--link-color);
+  --bp-accent-hover: var(--link-hover-color);
+  --bp-error: #c00;
+  --bp-radius: 12px;
+  --bp-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --bp-slide: 320ms;
+  --bp-fast: 150ms;
+
+  min-height: 100vh;
+  color: var(--bp-ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.btn-plugin h1,
+.btn-plugin h2 {
+  margin: 0;
+  color: var(--bp-ink);
+  font-family: var(--heading-semibold-font-family);
+
+  /* the semibold face is baked into the font file */
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.btn-plugin p {
+  margin: 0;
+}
+
+/* styles.css reserves the site nav height on every <header> */
+.btn-plugin header {
+  min-height: 0;
+}
+
+.btn-plugin [hidden] {
+  display: none;
+}
+
+.btn-plugin :focus-visible {
+  outline: 2px solid var(--bp-accent);
+  outline-offset: 2px;
+}
+
+.btn-plugin fieldset {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.btn-plugin legend {
+  padding: 0;
+}
+
+.btn-plugin .btn-plugin-hint {
+  color: var(--bp-muted);
+  font-size: 13px;
+}
+
+/* ---- gallery ------------------------------------------------------------ */
+.btn-plugin .btn-plugin-gallery {
+  padding: 20px 16px 32px;
+  transition: transform var(--bp-slide) var(--bp-ease), opacity var(--bp-slide) var(--bp-ease);
+}
+
+.btn-plugin.is-editing .btn-plugin-gallery {
+  opacity: 0.35;
+  transform: translateX(-32px);
+}
+
+.btn-plugin .btn-plugin-intro h1 {
+  font-size: 22px;
+}
+
+.btn-plugin .btn-plugin-intro p {
+  margin-top: 4px;
+  color: var(--bp-muted);
+  font-size: 14px;
+}
+
+.btn-plugin .btn-plugin-status {
+  margin-top: 12px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background-color: var(--light-color);
+  color: var(--bp-muted);
+  font-size: 13px;
+}
+
+.btn-plugin .btn-plugin-status:empty {
+  display: none;
+}
+
+.btn-plugin .btn-plugin-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* every card: same canvas height, button centred → the column lines up */
+.btn-plugin .btn-plugin-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bp-line);
+  border-radius: var(--bp-radius);
+  background-color: var(--background-color);
+  overflow: hidden;
+  transition: border-color var(--bp-fast), box-shadow var(--bp-fast), transform var(--bp-fast) var(--bp-ease);
+}
+
+.btn-plugin .btn-plugin-card:hover {
+  border-color: var(--bp-accent);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 8%);
+  transform: translateY(-1px);
+}
+
+.btn-plugin .btn-plugin-card.is-current {
+  border-color: var(--bp-accent);
+  box-shadow: inset 0 0 0 1px var(--bp-accent);
+}
+
+.btn-plugin .btn-plugin-sample {
+  position: relative;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 140px;
+  border-bottom: 1px solid var(--bp-line);
+
+  /* equal top/bottom room so the "Current" badge (top-left) never touches the
+     button and every card's button stays vertically centred */
+  padding: 40px 16px;
+  background-color: #fafafb;
+}
+
+.btn-plugin .btn-plugin-sample p,
+.btn-plugin .btn-plugin-preview p {
+  max-width: 100%;
+  margin: 0;
+  text-align: center;
+}
+
+.btn-plugin .btn-plugin-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  background-color: var(--bp-accent);
+  color: var(--background-color);
+  font-family: var(--heading-semibold-font-family);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.btn-plugin .btn-plugin-pick {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 64px;
+  border: 0;
+  padding: 12px 14px 12px 16px;
+  background: none;
+  color: var(--bp-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* stretch the pick button's hit area over the whole card */
+.btn-plugin .btn-plugin-pick::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--bp-radius);
+}
+
+.btn-plugin .btn-plugin-pick:focus-visible {
+  outline: 0;
+}
+
+.btn-plugin .btn-plugin-pick:focus-visible::after {
+  outline: 2px solid var(--bp-accent);
+  outline-offset: -2px;
+}
+
+.btn-plugin .btn-plugin-name {
+  font-family: var(--heading-semibold-font-family);
+  font-weight: 400;
+}
+
+.btn-plugin .btn-plugin-card-description {
+  grid-column: 1;
+  color: var(--bp-muted);
+  font-size: 13px;
+}
+
+.btn-plugin .btn-plugin-go {
+  display: grid;
+  grid-area: 1 / 2 / span 2;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--light-color);
+  transition: background-color var(--bp-fast), transform var(--bp-fast) var(--bp-ease);
+}
+
+/* chevron drawn with two borders; colour follows currentcolor */
+.btn-plugin .btn-plugin-go::before,
+.btn-plugin .btn-plugin-back-icon::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid currentcolor;
+  border-right: 2px solid currentcolor;
+  transform: translateX(-1px) rotate(45deg);
+}
+
+.btn-plugin .btn-plugin-card:hover .btn-plugin-go {
+  background-color: var(--bp-accent);
+  color: var(--background-color);
+  transform: translateX(2px);
+}
+
+/* ---- editor drawer -------------------------------------------------------- */
+.btn-plugin .btn-plugin-editor {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 480px);
+  background-color: var(--background-color);
+  box-shadow: -16px 0 40px rgb(0 0 0 / 14%);
+  visibility: hidden;
+  transform: translateX(100%);
+  transition: transform var(--bp-slide) var(--bp-ease), visibility 0s linear var(--bp-slide);
+}
+
+.btn-plugin .btn-plugin-editor.is-open {
+  visibility: visible;
+  transform: none;
+  transition: transform var(--bp-slide) var(--bp-ease), visibility 0s;
+}
+
+.btn-plugin .btn-plugin-editor-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid var(--bp-line);
+  padding: 10px 16px;
+}
+
+.btn-plugin .btn-plugin-back {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--bp-line);
+  border-radius: 50%;
+  padding: 0;
+  background-color: var(--background-color);
+  color: var(--bp-ink);
+  cursor: pointer;
+  transition: background-color var(--bp-fast), border-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-back:hover {
+  border-color: var(--bp-ink);
+  background-color: var(--light-color);
+}
+
+.btn-plugin .btn-plugin-back-icon {
+  display: grid;
+  place-items: center;
+  transform: scaleX(-1);
+}
+
+.btn-plugin .btn-plugin-editor-title {
+  min-width: 0;
+}
+
+.btn-plugin .btn-plugin-eyebrow {
+  color: var(--bp-muted);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.btn-plugin .btn-plugin-editor-title h2 {
+  overflow: hidden;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-plugin .btn-plugin-editor-body {
+  flex: 1;
+  padding: 0 16px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* live preview stays in view while the fields scroll underneath */
+.btn-plugin .btn-plugin-stage {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 -16px;
+  border-bottom: 1px solid var(--bp-line);
+  padding: 16px 16px 4px;
+  background-color: var(--background-color);
+}
+
+.btn-plugin .btn-plugin-preview {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-height: 112px;
+  border: 1px solid var(--bp-line);
+  border-radius: var(--bp-radius);
+  padding: 20px 16px;
+  background-color: var(--background-color);
+}
+
+.btn-plugin .btn-plugin-preview[data-canvas="light"] {
+  background-color: var(--light-color);
+}
+
+.btn-plugin .btn-plugin-preview[data-canvas="dark"] {
+  border-color: #1d1d1f;
+  background-color: #1d1d1f;
+}
+
+/* "Preview on" segmented control */
+.btn-plugin .btn-plugin-canvas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.btn-plugin .btn-plugin-canvas legend {
+  float: left;
+  margin-right: 8px;
+  color: var(--bp-muted);
+  font-size: 13px;
+}
+
+.btn-plugin .btn-plugin-canvas label {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.btn-plugin .btn-plugin-canvas input,
+.btn-plugin .btn-plugin-swatch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.btn-plugin .btn-plugin-canvas span {
+  border: 1px solid var(--bp-line);
+  padding: 4px 12px;
+  color: var(--bp-ink);
+  font-size: 13px;
+  pointer-events: none;
+  transition: background-color var(--bp-fast), color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-canvas label + label span {
+  margin-left: -1px;
+}
+
+.btn-plugin .btn-plugin-canvas label:first-of-type span {
+  border-radius: 999px 0 0 999px;
+}
+
+.btn-plugin .btn-plugin-canvas label:last-of-type span {
+  border-radius: 0 999px 999px 0;
+}
+
+.btn-plugin .btn-plugin-canvas input:checked + span {
+  border-color: var(--bp-ink);
+  background-color: var(--bp-ink);
+  color: var(--background-color);
+}
+
+.btn-plugin .btn-plugin-canvas input:focus-visible + span {
+  outline: 2px solid var(--bp-accent);
+  outline-offset: 2px;
+}
+
+.btn-plugin .btn-plugin-description {
+  margin-top: 16px;
+  color: var(--bp-muted);
+  font-size: 14px;
+}
+
+.btn-plugin .btn-plugin-description:empty {
+  display: none;
+}
+
+/* ---- form ------------------------------------------------------------------ */
+.btn-plugin .btn-plugin-form {
+  display: grid;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.btn-plugin .btn-plugin-field > label,
+.btn-plugin .btn-plugin-field > legend,
+.btn-plugin .btn-plugin-switch-label {
+  display: block;
+  font-family: var(--heading-semibold-font-family);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.btn-plugin .btn-plugin-field > label,
+.btn-plugin .btn-plugin-field > legend {
+  margin-bottom: 6px;
+}
+
+.btn-plugin .btn-plugin-field input[type="text"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--bp-field);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background-color: var(--background-color);
+  color: var(--bp-ink);
+  transition: border-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-field input[type="text"]:hover {
+  border-color: var(--bp-ink);
+}
+
+.btn-plugin .btn-plugin-field input[type="text"]:focus-visible {
+  border-color: var(--bp-accent);
+  outline-offset: 0;
+}
+
+.btn-plugin .btn-plugin-field input::placeholder {
+  color: #767676;
+}
+
+.btn-plugin .btn-plugin-field input[aria-invalid="true"] {
+  border-color: var(--bp-error);
+}
+
+.btn-plugin .btn-plugin-field .btn-plugin-hint,
+.btn-plugin .btn-plugin-error {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.btn-plugin .btn-plugin-error {
+  color: var(--bp-error);
+}
+
+.btn-plugin .btn-plugin-error:empty {
+  display: none;
+}
+
+/* colour swatches: a radio group; the chip is drawn, the radio covers it */
+.btn-plugin .btn-plugin-swatch-value {
+  margin-left: 4px;
+  color: var(--bp-muted);
+  font-family: var(--body-font-family);
+}
+
+.btn-plugin .btn-plugin-swatch-value:not(:empty)::before {
+  content: "· ";
+}
+
+.btn-plugin .btn-plugin-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -6px;
+}
+
+.btn-plugin .btn-plugin-swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+
+.btn-plugin .btn-plugin-chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--swatch, var(--background-color));
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 20%);
+  pointer-events: none;
+  transition: box-shadow var(--bp-fast), transform var(--bp-fast) var(--bp-ease);
+}
+
+/* "Design default": a slashed chip, the usual "no override" swatch */
+.btn-plugin .btn-plugin-chip.is-default {
+  background:
+    linear-gradient(135deg, transparent calc(50% - 1px), var(--bp-muted) calc(50% - 1px)
+    calc(50% + 1px), transparent calc(50% + 1px)),
+    var(--background-color);
+}
+
+.btn-plugin .btn-plugin-swatch:hover .btn-plugin-chip {
+  transform: scale(1.08);
+}
+
+.btn-plugin .btn-plugin-swatch input:checked + .btn-plugin-chip {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 20%), 0 0 0 2px var(--background-color), 0 0 0 4px var(--bp-ink);
+}
+
+.btn-plugin .btn-plugin-swatch input:focus-visible + .btn-plugin-chip {
+  outline: 2px solid var(--bp-accent);
+  outline-offset: 5px;
+}
+
+/* a text link has no button colours */
+.btn-plugin .btn-plugin-editor.is-link .btn-plugin-colors {
+  display: none;
+}
+
+/* "Open in a new tab" switch */
+.btn-plugin .btn-plugin-switch {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  border: 1px solid var(--bp-line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.btn-plugin .btn-plugin-switch:hover {
+  border-color: var(--bp-field);
+}
+
+.btn-plugin .btn-plugin-switch-text {
+  display: grid;
+  gap: 2px;
+}
+
+.btn-plugin .btn-plugin-switch input {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border-radius: 13px;
+  background-color: var(--bp-field);
+  cursor: pointer;
+  appearance: none;
+  transition: background-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-switch input::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--background-color);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+  transition: transform var(--bp-fast) var(--bp-ease);
+}
+
+.btn-plugin .btn-plugin-switch input:checked {
+  background-color: var(--bp-accent);
+}
+
+.btn-plugin .btn-plugin-switch input:checked::before {
+  transform: translateX(18px);
+}
+
+/* ---- sticky footer ---------------------------------------------------------- */
+.btn-plugin .btn-plugin-editor-foot {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--bp-line);
+  padding: 12px 16px 16px;
+  background-color: var(--background-color);
+}
+
+.btn-plugin .btn-plugin-editor-status {
+  color: var(--bp-muted);
+  font-size: 13px;
+}
+
+.btn-plugin .btn-plugin-editor-status:empty {
+  display: none;
+}
+
+.btn-plugin .btn-plugin-submit {
+  min-height: 48px;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 20px;
+  background-color: var(--bp-accent);
+  color: var(--background-color);
+  font-family: var(--heading-semibold-font-family);
+  font-size: 16px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-submit:hover {
+  background-color: var(--bp-accent-hover);
+}
+
+.btn-plugin .btn-plugin-submit:disabled {
+  background-color: #767676;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-plugin {
+    --bp-slide: 0s;
+    --bp-fast: 0s;
+  }
+}

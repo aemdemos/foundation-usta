@@ -118,8 +118,9 @@ link or right after it, same paragraph); they are removed from the label:
 **3. Code — where it lives.**
 - `scripts/scripts.js` → `decorateButtons()` (runs over all of `main` and the header/footer fragments, before blocks
   decorate, so it works in every block): `CTA_BUTTON_STYLES` (bold+italic: `sub` blue · `sup` black · `u` outline),
-  `CTA_BOLD_ONLY_STYLES` (`sup` dark), `CTA_OPTION_STYLES`, `takeCtaOptions()` / `applyCtaOptions()` /
-  `ctaColor()` / `contrastText()` / `makeCtaButton()`. The marks are stripped from the label.
+  `CTA_BOLD_ONLY_STYLES` (`sup` dark), `CTA_OPTION_STYLES`, `takeCtaOptions()` / `parseCtaOptions()` /
+  `applyCtaOptions()` / `ctaOptionVars()` / `ctaColor()` / `contrastText()` / `makeCtaButton()`. The marks are
+  stripped from the label. `previewEditingCtas()` handles the da.live Layout editor (see 7.).
 - `styles/buttons.css` → every `cta-button` style, driven by custom properties (`--cta-bg / --cta-color /
   --cta-border` + `-hover`); authored colours are set inline on the same properties (`.cta-custom` darkens on
   hover). Loaded by `loadEager()`; awaited only when the first section contains a cta-button.
@@ -155,6 +156,45 @@ only the image + caption.
 - The local dev server serves `/drafts/…` from aem.page; a local content file is only reachable under `/content/…`.
 - Never pipe the import bundler into `tail -0` — it stops the bundler before it writes, and the runner silently
   reuses the stale bundle.
+
+**7. Experience Workspace (da.live canvas, Layout view) — buttons while editing.**
+- **What happens:**
+  - Layout loads `https://{ref}--foundation-usta--aemdemos.preview.da.live/{path}?quick-edit=on`.
+  - Every content change re-runs our `loadPage()`, so buttons are decorated.
+  - **Clicking or editing a paragraph** swaps it for da.live's inline editor (`div.prosemirror-editor >
+    .ProseMirror > p`). The editor shows the raw marks (`<em><strong><a><sub|sup|u>`) plus the `[options]`
+    text until the next re-render or a refresh. This also happens inside blocks.
+- **What we do (central — NO per-block changes needed):**
+  - `styles/buttons.css`: the `.prosemirror-editor …` selectors give the raw link the button look.
+  - `scripts/scripts.js` → `previewEditingCtas()` (only with `?quick-edit`) parses the options. It sets
+    `--cta-edit-*` and the `.cta-edit-custom` / `.cta-edit-options` classes **on the editor wrapper only**.
+    The ProseMirror content must never be modified: changes there are saved back to the document as edits.
+  - The buttons.css rules then apply the colours and hide the options text (`font-size: 0` on the paragraph).
+  - The colour and hide rules carry `:not(#cta-edit)` (ID-level specificity). Block paragraph rules such as
+    `.cards.content .cards-content-card-body p` (0,3,1) would otherwise win and leave the options text visible.
+  - The 12px paragraph margin is deliberately NOT boosted, so a block's own button-paragraph margin still wins,
+    as it does on the page.
+- **What needs to be done:**
+  - **New or changed block:** nothing, as long as its CSS doesn't use an ID selector or `!important` on `p` /
+    `a` font-size or colours.
+  - To check a block, add a button with options to one of its text cells in Layout, then click it. The button
+    must keep its style and colour and the `[…]` text must be hidden.
+  - If a block still shows the options, check its paragraph/link rules in DevTools against the
+    `.prosemirror-editor` rules. Raise the buttons.css rule; don't add per-block overrides.
+  - **New button style or mark:** add it to the `.prosemirror-editor` selectors in buttons.css and to
+    `EDITING_CTA` in scripts.js, next to `CTA_BUTTON_STYLES`.
+  - **Testing Layout:** use a pushed branch, `da.live/canvas?ref=<branch>#/…`. `ref=local` points at a branch
+    called `local`, which doesn't exist, so the page renders unstyled.
+- **Limits while editing:** `style=` doesn't change the look (the mark decides it), and an editor holding several
+  buttons gets no authored colours. Both are correct after re-render or refresh.
+- **Dependency:** `.prosemirror-editor` and the mark nesting are da.live internals, not an API. If DA changes them,
+  only the Layout editing preview regresses (raw link until refresh). The published site is unaffected.
+  Update the selectors in `buttons.css` and `EDITING_CTA` in `scripts.js`.
+
+**8. Setting this up in another project:** follow
+[tools/plugins/buttons/README.md](tools/plugins/buttons/README.md). It covers the files to copy, the scripts.js
+wiring, DA plugin registration, the optional `/.da/library/buttons` sheet, the Layout (ProseMirror) fixes, testing
+with `?ref=<branch>` and troubleshooting. Keep it up to date when the buttons code changes.
 
 ## 6. Open items / TODO
 
@@ -4913,3 +4953,147 @@ link, alone in its paragraph:
 - **Docs:** added the consolidated **§3 "Buttons (CTA)" reference** (authoring marks, options, code locations, block
   exclusions, test pages, gotchas) and a **§6 Buttons** open-items list; flagged the superseded strikethrough rows in
   the earlier 2026-10-10 entry.
+
+### 2026-10-10 — Experience Workspace: Buttons plugin + block-library preview cleanup (branch `buttons-plugin`)
+- **Buttons plugin** — `tools/plugins/buttons/buttons.{html,js,css}`, a DA library plugin. The author picks a
+  preset design from a gallery, then sees **only that design** (large live preview, description) and sets
+  text, link URL, button colour, text colour and **Open in a new tab**, then Insert. If a button is selected in the
+  editor (`actions.getSelection()`), the panel opens straight on it, pre-filled, and **Update** replaces it
+  (`actions.sendHTML` replaces the selection). After inserting, the panel **stays open** and shows "Button
+  inserted.". The author closes it from DA (we removed the `closeLibrary()` call, 2026-10-11).
+  - **Output = the existing authoring contract; `decorateButtons()` is unchanged.** Blue
+    `<strong><em><a><sub>`, Black `…<sup>`, Outline `…<u>`, Dark `<strong><a><sup>` (no italic), Text link =
+    plain `<a>`. Colours are added as a trailing ` [color="…", text-color="…"]` (only when set). New tab is
+    added as `#_blank` on the href (decorateLinkTarget). Rendered through the real `scripts.js` locally, these come out as
+    the expected `a.cta-button.cta-*` (+ `cta-custom`, `target=_blank`).
+  - **Security:** URLs can be a relative path / `#` / `?`, or http(s) / mailto / tel. `javascript:`, `data:` and
+    `//host` are rejected. Colours must pass `CSS.supports('color')` or be an existing `--token`, and are limited
+    to quote-free characters. All text is HTML-escaped. The selection is parsed with an inert `DOMParser`.
+  - **Previews are the real CSS.** The page links `styles.css`, `fonts.css` and `buttons.css` (same origin). The
+    preview colour logic duplicates `applyCtaOptions()` / `ctaColor()` / `contrastText()` from scripts.js,
+    because scripts.js runs `loadPage()` on import. **Keep the two in sync.**
+  - **Config sheet `/.da/library/buttons`** (DA, save only, no publish), read through
+    `actions.daFetch(admin.da.live/source/…/.da/library/buttons.json)`. Tabs:
+    - `presets`: name | style (blue/black/dark/outline/link) | color | text-color | label | description
+    - `options`: key (`color` / `text-color`) | values (`Brand blue=#0373f3 | Orange=#e87722`)
+
+    A single-sheet doc counts as `presets`. If the sheet is missing, the panel uses built-in defaults
+    (4 styles + Text link; blue/black/dark grey/orange; white/black) and shows a status note.
+  - **Registration (manual, outward-facing):** at `da.live/config#/aemdemos/foundation-usta/`, `library` tab, add
+    the row title `Buttons`, path `/tools/plugins/buttons/buttons.html`. DA lists plugins under **"Extensions"**. The
+    **Buttons** block-library entry stays for now (author choice: keep both).
+  - Outside DA the SDK never resolves; after 3 s the panel shows the defaults with Insert disabled. This
+    lets you review it at `localhost:3000/tools/plugins/buttons/buttons.html`.
+  - **Not possible:** the core DA "Edit link" dialog can't be extended (no new-tab checkbox there). There, type
+    `#_blank` at the end of the URL, or use this panel. Typing `#_blank` in the panel's URL field also ticks new tab.
+  - **To test in DA:** an Update on a partial selection inside a paragraph may split it. Select the whole button
+    line.
+- **Block-library preview cleanup** (port of aemdemos/patients-stryker#312) —
+  `tools/da-library-preview/da-library-preview.{js,css}`. It is loaded from `loadEager()` only when the path starts
+  with `/.da/library/`, and runs **before** `decorateMain()`. It:
+  - removes the `library-metadata` tables, the `library-container-start/end` marker tables and the group-name
+    heading right before a start marker;
+  - groups the sections into variants, frames each one, and adds a name tab (`data-library-label`, from the
+    metadata `name`);
+  - hides the header and footer.
+  - **Adaptations vs #312:**
+    - our tokens / px values instead of its missing ones;
+    - section backgrounds are kept, because for section-metadata styles the background IS the example;
+    - the variant margin is set **inline** from `--library-variant-margin`, because hero/spacer zero their
+      section margins with (0,4,1) selectors.
+  - `blocks/library-metadata` (the old name/description label) never loads now, since its tables are removed
+    first. Delete it once this is confirmed in EW. Verified locally: the buttons, hero, quote, spacer and
+    section-metadata library docs.
+  - **Limitation:** EW's Insert-block dialog loads the **`main`** preview, so this only shows there after merge.
+- **Verified:** lint 0 errors; stylelint on the new CSS OK; breakpoint check passed; axe passed on the plugin
+  (gallery + single-button view with errors shown) and the library previews (buttons, hero); overflow sweep OK at
+  360–1920 on all three. A mock-SDK run checked the sheet load, insert, validation and edit-mode prefill/update.
+
+### 2026-10-10 — Buttons plugin: panel UI redesign (branch `buttons-plugin`)
+Author feedback after testing in DA: the gallery cards didn't line up and the form felt plain. The output markup and
+the sheet format are unchanged; this is a UI-only change in `tools/plugins/buttons/`.
+- **Gallery:** each card has a **fixed-height plain canvas** (no dot pattern, per author) with the real button **centred**, so cards line up
+  whatever the button's size (the pill, outline and link used to sit left-aligned at different heights). Below it are
+  the name, the description and a chevron. The whole card is the pick button. The design last open in the editor gets a
+  **"Current"** badge and `aria-current` (badge text from `data-current` on the list, so it can be localised).
+- **Editor = a drawer that slides in from the right** (`transform` + delayed `visibility`, 320 ms; the gallery
+  dims and shifts left behind it). It is a fixed panel: full width in the narrow DA panel, 480 px max on wide screens.
+  - **Header:** back chevron and the design name.
+  - **Live preview:** sticky at the top while the fields scroll, with a **"Preview on: White / Grey / Dark"**
+    toggle, so authors can check a button against dark sections.
+  - **Colours are swatch radio groups** (not selects). The first swatch is "Design default" (a slashed chip), and
+    the chosen colour's name shows next to the legend.
+  - **New tab is a switch** (`role="switch"` checkbox) with a hint.
+  - **Footer:** sticky, with the Insert/Update button and a status line.
+  - **Keyboard:** Esc or back closes the drawer, and focus returns to that card. The gallery is `inert` while the drawer
+    is open, and the drawer is `inert` while closed.
+- **Changing design keeps the author's text (if edited), link and new tab.** Colours follow the new design.
+- **Gotchas:**
+  - Global `header { min-height: var(--nav-height) }` in styles.css hit the panel's `<header>`s. Reset under
+    `.btn-plugin`.
+  - The drawn swatch chips and segment pills need `pointer-events: none` so clicks reach the radio underneath.
+  - Reduced motion: the duration tokens `--bp-slide` / `--bp-fast` are set to 0s (no `!important`).
+- **Verified:** eslint + stylelint clean; mock-SDK flows (insert, validation, Esc/back, carry-over, edit-mode
+  prefill/update) all pass. Custom axe found 0 violations on the gallery, the drawer with errors, dark canvas + switch
+  on, and the gallery with the Current badge. `test:a11y` and the 360–1920 overflow sweep passed on the plugin page.
+
+### 2026-10-10 — EW Layout view: buttons turned into plain links while editing
+Symptom: in the da.live canvas **Layout** view, a button turns into a plain italic link with the raw
+`[color="…"]` text after you click it or insert one with the plugin. It only looks right after a page refresh.
+- **How Layout works** (da-live `ew-editor-wysiwyg.js`, da-nx `quick-edit.js`):
+  - The iframe is `https://{ref}--{site}--{org}.preview.da.live/{path}?quick-edit=on&controller=parent`.
+  - preview.da.live appends a bootstrap to `scripts.js` that loads quick-edit with our `loadPage`.
+  - Each content change sends `set-body`: the body is replaced and our `loadPage()` runs again, so blocks and buttons
+    **are** decorated. Checked with a local harness that runs the real `quick-edit.js`.
+  - **Clicking a paragraph** (and the refocus after a `set-body`) replaces that decorated element with
+    `div.prosemirror-editor > .ProseMirror > p`. That is a raw ProseMirror paragraph showing the marks as authored
+    (`<em><strong><a><sub|sup|u>`) plus the options text. It stays like that until the next full re-render.
+  - Our code must not touch that DOM: changes to it are sent back to the document as edits.
+- **Fix (CSS only, `styles/buttons.css`):** `.prosemirror-editor em > strong > a:has(> sub|sup|u)` and
+  `p > strong > a:has(> sup)` are added to the `.cta-button` / `.cta-black` / `.cta-dark` / `.cta-outline`
+  rules, and the inner mark is reset to normal text. The base rule gained `font-style: normal` (no-op on the live page).
+  The button keeps its style while it's being edited.
+- **Limitation:** authored `color=` / `text-color=` options are plain text inside the editor, so they show as text and
+  only apply on the next re-render (or a refresh).
+- **Gotcha:** `?ref=local` points the Layout iframe at a branch called `local`, which doesn't exist (no CSS/JS, so
+  Times font). Test Layout with a pushed branch: `?ref=<branch>`.
+- **Verified:** harness screenshot (edited buttons keep their style); lint clean; breakpoint check passed;
+  `test:a11y /` passed.
+- **Follow-up (same day): options text and colours while editing.**
+  - **Problem:** authors still saw `[color="#e87722"]` attached to the button, with the default colour, until a refresh.
+  - **Fix:** `previewEditingCtas()` in `scripts.js` runs only with `?quick-edit`.
+    - A MutationObserver (batched per animation frame) finds each `.prosemirror-editor` and parses the raw
+      button's options text (`parseCtaOptions`).
+    - It writes the colours as `--cta-edit-*` custom properties on the **wrapper**. The wrapper sits outside the
+      ProseMirror `contenteditable`, so these changes are never sent back as edits.
+    - It adds `.cta-edit-custom` (apply the colours) and `.cta-edit-options` (standalone button: hide the
+      options text) to the wrapper.
+    - `buttons.css` hides the options text with `font-size: 0` on the paragraph; the link keeps its own 18px.
+      It also restores the `p.button-wrapper` 12px margins, which would otherwise collapse to 0 (they are em-based).
+  - **Refactor:** the colour logic moved from `applyCtaOptions()` into `ctaOptionVars()`, shared by the page and
+    the editor. Output on the page is unchanged.
+  - **Limits:** while editing, `style=` doesn't change the look (the mark decides it), and an editor wrapping
+    several buttons gets no colours.
+  - **Verified:** the harness with the real `quick-edit.js` shows LEARN MORE in orange and the outline button with an orange
+    border and text, with the options text hidden. lint, breakpoint check and `test:a11y` passed.
+- **Follow-up 2 (2026-10-11): options still visible inside blocks.**
+  - **Problem:** in a Cards (content) cell, the colours applied but `[color=…]` stayed visible.
+  - **Cause** (CDP `getMatchedStylesForNode`): `.cards.content .cards-content-card-body p` at (0,3,1) beat the
+    hide rule at (0,2,5).
+  - **Fix:** `:not(#cta-edit)` on the colour and hide rules, so they win over any block's class-based rules.
+    It's a central fix with no `!important`, and blocks need no changes.
+  - **Verified:** a harness cards cell shows the options paragraph at font-size 0 with DONATETEST1 black and white.
+    Default content is still correct. lint, breakpoint check and `test:a11y` passed.
+  - The "what needs to be done" checklist is in §3 Buttons (CTA), item 7.
+
+### 2026-10-11 — Buttons panel: stays open after Insert + portable setup guide
+- **Panel stays open:** removed `actions.closeLibrary()` after `sendHTML` in `tools/plugins/buttons/buttons.js`.
+  The status line shows "Button inserted."; the author closes the panel from DA.
+- **Layout: name/title briefly missing after inserting a button in Cards (profile):** not our code. A harness
+  with buttons in three profile cards keeps every name and title, also with a button open in the editor. DA
+  reopens its inline editor on the wrong element after an insert shifts positions; the document is fine and a
+  refresh fixes it (confirmed by the author).
+- **New guide:** [tools/plugins/buttons/README.md](tools/plugins/buttons/README.md) — how to set up the Buttons
+  panel from scratch in another project (files, scripts.js wiring, DA registration, config sheet, Layout fixes,
+  testing, troubleshooting). Linked from §3 Buttons (CTA), item 8.
+
