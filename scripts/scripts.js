@@ -613,6 +613,12 @@ async function loadEager(doc) {
   const buttonsCssPromise = loadCSS(`${window.hlx.codeBasePath}/styles/buttons.css`);
   const main = doc.querySelector('main');
   if (main) {
+    // Experience Workspace block-library pages: strip the DA authoring artifacts
+    // and frame each variant before decoration (only loaded on those pages)
+    if (window.location.pathname.startsWith('/.da/library/')) {
+      const { default: decorateLibraryPreview } = await import('../tools/da-library-preview/da-library-preview.js');
+      decorateLibraryPreview(main);
+    }
     decorateMain(main);
     if (main.querySelector('.section:first-of-type .cta-button')) await buttonsCssPromise;
     applySectionBackgrounds(main); // not awaited: the options fetch must not block LCP

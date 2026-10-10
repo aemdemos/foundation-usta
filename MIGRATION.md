@@ -4913,3 +4913,86 @@ link, alone in its paragraph:
 - **Docs:** added the consolidated **§3 "Buttons (CTA)" reference** (authoring marks, options, code locations, block
   exclusions, test pages, gotchas) and a **§6 Buttons** open-items list; flagged the superseded strikethrough rows in
   the earlier 2026-10-10 entry.
+
+### 2026-10-10 — Experience Workspace: Buttons plugin + block-library preview cleanup (branch `buttons-plugin`)
+- **Buttons plugin** — `tools/plugins/buttons/buttons.{html,js,css}`, a DA library plugin. The author picks a
+  preset design from a gallery, then sees **only that design** (large live preview, description) and sets
+  text, link URL, button colour, text colour and **Open in a new tab**, then Insert. If a button is selected in the
+  editor (`actions.getSelection()`), the panel opens straight on it, pre-filled, and **Update** replaces it
+  (`actions.sendHTML` replaces the selection). After inserting, `closeLibrary()`.
+  - **Output = the existing authoring contract; `decorateButtons()` is unchanged.** Blue
+    `<strong><em><a><sub>`, Black `…<sup>`, Outline `…<u>`, Dark `<strong><a><sup>` (no italic), Text link =
+    plain `<a>`. Colours are added as a trailing ` [color="…", text-color="…"]` (only when set). New tab is
+    added as `#_blank` on the href (decorateLinkTarget). Rendered through the real `scripts.js` locally, these come out as
+    the expected `a.cta-button.cta-*` (+ `cta-custom`, `target=_blank`).
+  - **Security:** URLs can be a relative path / `#` / `?`, or http(s) / mailto / tel. `javascript:`, `data:` and
+    `//host` are rejected. Colours must pass `CSS.supports('color')` or be an existing `--token`, and are limited
+    to quote-free characters. All text is HTML-escaped. The selection is parsed with an inert `DOMParser`.
+  - **Previews are the real CSS.** The page links `styles.css`, `fonts.css` and `buttons.css` (same origin). The
+    preview colour logic duplicates `applyCtaOptions()` / `ctaColor()` / `contrastText()` from scripts.js,
+    because scripts.js runs `loadPage()` on import. **Keep the two in sync.**
+  - **Config sheet `/.da/library/buttons`** (DA, save only, no publish), read through
+    `actions.daFetch(admin.da.live/source/…/.da/library/buttons.json)`. Tabs:
+    - `presets`: name | style (blue/black/dark/outline/link) | color | text-color | label | description
+    - `options`: key (`color` / `text-color`) | values (`Brand blue=#0373f3 | Orange=#e87722`)
+
+    A single-sheet doc counts as `presets`. If the sheet is missing, the panel uses built-in defaults
+    (4 styles + Text link; blue/black/dark grey/orange; white/black) and shows a status note.
+  - **Registration (manual, outward-facing):** at `da.live/config#/aemdemos/foundation-usta/`, `library` tab, add
+    the row title `Buttons`, path `/tools/plugins/buttons/buttons.html`. DA lists plugins under **"Extensions"**. The
+    **Buttons** block-library entry stays for now (author choice: keep both).
+  - Outside DA the SDK never resolves; after 3 s the panel shows the defaults with Insert disabled. This
+    lets you review it at `localhost:3000/tools/plugins/buttons/buttons.html`.
+  - **Not possible:** the core DA "Edit link" dialog can't be extended (no new-tab checkbox there). There, type
+    `#_blank` at the end of the URL, or use this panel. Typing `#_blank` in the panel's URL field also ticks new tab.
+  - **To test in DA:** an Update on a partial selection inside a paragraph may split it. Select the whole button
+    line.
+- **Block-library preview cleanup** (port of aemdemos/patients-stryker#312) —
+  `tools/da-library-preview/da-library-preview.{js,css}`. It is loaded from `loadEager()` only when the path starts
+  with `/.da/library/`, and runs **before** `decorateMain()`. It:
+  - removes the `library-metadata` tables, the `library-container-start/end` marker tables and the group-name
+    heading right before a start marker;
+  - groups the sections into variants, frames each one, and adds a name tab (`data-library-label`, from the
+    metadata `name`);
+  - hides the header and footer.
+  - **Adaptations vs #312:**
+    - our tokens / px values instead of its missing ones;
+    - section backgrounds are kept, because for section-metadata styles the background IS the example;
+    - the variant margin is set **inline** from `--library-variant-margin`, because hero/spacer zero their
+      section margins with (0,4,1) selectors.
+  - `blocks/library-metadata` (the old name/description label) never loads now, since its tables are removed
+    first. Delete it once this is confirmed in EW. Verified locally: the buttons, hero, quote, spacer and
+    section-metadata library docs.
+  - **Limitation:** EW's Insert-block dialog loads the **`main`** preview, so this only shows there after merge.
+- **Verified:** lint 0 errors; stylelint on the new CSS OK; breakpoint check passed; axe passed on the plugin
+  (gallery + single-button view with errors shown) and the library previews (buttons, hero); overflow sweep OK at
+  360–1920 on all three. A mock-SDK run checked the sheet load, insert, validation and edit-mode prefill/update.
+
+### 2026-10-10 — Buttons plugin: panel UI redesign (branch `buttons-plugin`)
+Author feedback after testing in DA: the gallery cards didn't line up and the form felt plain. The output markup and
+the sheet format are unchanged; this is a UI-only change in `tools/plugins/buttons/`.
+- **Gallery:** each card has a **fixed-height plain canvas** (no dot pattern, per author) with the real button **centred**, so cards line up
+  whatever the button's size (the pill, outline and link used to sit left-aligned at different heights). Below it are
+  the name, the description and a chevron. The whole card is the pick button. The design last open in the editor gets a
+  **"Current"** badge and `aria-current` (badge text from `data-current` on the list, so it can be localised).
+- **Editor = a drawer that slides in from the right** (`transform` + delayed `visibility`, 320 ms; the gallery
+  dims and shifts left behind it). It is a fixed panel: full width in the narrow DA panel, 480 px max on wide screens.
+  - **Header:** back chevron and the design name.
+  - **Live preview:** sticky at the top while the fields scroll, with a **"Preview on: White / Grey / Dark"**
+    toggle, so authors can check a button against dark sections.
+  - **Colours are swatch radio groups** (not selects). The first swatch is "Design default" (a slashed chip), and
+    the chosen colour's name shows next to the legend.
+  - **New tab is a switch** (`role="switch"` checkbox) with a hint.
+  - **Footer:** sticky, with the Insert/Update button and a status line.
+  - **Keyboard:** Esc or back closes the drawer, and focus returns to that card. The gallery is `inert` while the drawer
+    is open, and the drawer is `inert` while closed.
+- **Changing design keeps the author's text (if edited), link and new tab.** Colours follow the new design.
+- **Gotchas:**
+  - Global `header { min-height: var(--nav-height) }` in styles.css hit the panel's `<header>`s. Reset under
+    `.btn-plugin`.
+  - The drawn swatch chips and segment pills need `pointer-events: none` so clicks reach the radio underneath.
+  - Reduced motion: the duration tokens `--bp-slide` / `--bp-fast` are set to 0s (no `!important`).
+- **Verified:** eslint + stylelint clean; mock-SDK flows (insert, validation, Esc/back, carry-over, edit-mode
+  prefill/update) all pass. Custom axe found 0 violations on the gallery, the drawer with errors, dark canvas + switch
+  on, and the gallery with the Current badge. `test:a11y` and the 360–1920 overflow sweep passed on the plugin page.
+
