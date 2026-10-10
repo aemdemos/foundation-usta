@@ -4954,7 +4954,8 @@ link, alone in its paragraph:
   preset design from a gallery, then sees **only that design** (large live preview, description) and sets
   text, link URL, button colour, text colour and **Open in a new tab**, then Insert. If a button is selected in the
   editor (`actions.getSelection()`), the panel opens straight on it, pre-filled, and **Update** replaces it
-  (`actions.sendHTML` replaces the selection). After inserting, `closeLibrary()`.
+  (`actions.sendHTML` replaces the selection). After inserting, the panel **stays open** and shows "Button
+  inserted.". The author closes it from DA (we removed the `closeLibrary()` call, 2026-10-11).
   - **Output = the existing authoring contract; `decorateButtons()` is unchanged.** Blue
     `<strong><em><a><sub>`, Black `…<sup>`, Outline `…<u>`, Dark `<strong><a><sup>` (no italic), Text link =
     plain `<a>`. Colours are added as a trailing ` [color="…", text-color="…"]` (only when set). New tab is

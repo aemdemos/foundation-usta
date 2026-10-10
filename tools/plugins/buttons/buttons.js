@@ -538,8 +538,8 @@ form.addEventListener('submit', async (e) => {
   if (!state.actions?.sendHTML) { say('standalone'); return; }
   try {
     await state.actions.sendHTML(buildHtml({ ...values, url }));
+    // the panel stays open; the author closes it from DA when done
     say('done');
-    state.actions.closeLibrary?.();
   } catch {
     say('failed');
   }
