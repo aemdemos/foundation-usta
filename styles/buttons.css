@@ -15,9 +15,19 @@
  *   --cta-bg-hover / --cta-color-hover / --cta-border-hover   hover + focus
  * A separate class from the boilerplate `.button` (.primary/.secondary/.accent),
  * so none of those rules, block resets or overrides interact with it.
+ *
+ * Experience Workspace (Layout view): clicking a paragraph swaps the decorated
+ * button for da.live's inline text editor (`.prosemirror-editor`), which shows
+ * the raw marks (<em><strong><a><sub|sup|u>) until the next full re-render.
+ * The `.prosemirror-editor …` selectors give those raw links the same look so
+ * the button doesn't turn into a plain link while it's being edited. Authored
+ * `[color=…]` options stay visible there (they are the editable text) and
+ * apply on the next re-render.
  */
 
-a.cta-button:any-link {
+a.cta-button:any-link,
+.prosemirror-editor em > strong > a:has(> :is(sub, sup, u)),
+.prosemirror-editor p > strong > a:has(> sup) {
   --cta-bg: var(--brand-blue);
   --cta-color: var(--background-color);
   --cta-border: transparent;
@@ -38,6 +48,7 @@ a.cta-button:any-link {
   color: var(--cta-color);
   font-family: var(--heading-semibold-font-family);
   font-size: 18px;
+  font-style: normal;
 
   /* the semibold face is baked into the font file; weight 600 would
      synthetically over-bold it (source renders it at 400). */
@@ -66,7 +77,8 @@ a.cta-button:focus-visible {
    pages): the base rule above. */
 
 /* cta-black — black, fully rounded 56px CTA (source 404 BACK TO HOMEPAGE). */
-a.cta-button.cta-black:any-link {
+a.cta-button.cta-black:any-link,
+.prosemirror-editor em > strong > a:has(> sup) {
   --cta-bg: var(--dark-color);
 
   min-height: 56px;
@@ -75,7 +87,8 @@ a.cta-button.cta-black:any-link {
 }
 
 /* cta-dark — dark #333, square, 2px border (the boilerplate primary look). */
-a.cta-button.cta-dark:any-link {
+a.cta-button.cta-dark:any-link,
+.prosemirror-editor p > strong > a:has(> sup) {
   --cta-bg: var(--text-color);
   --cta-border: var(--text-color);
   --cta-bg-hover: var(--dark-color);
@@ -89,7 +102,8 @@ a.cta-button.cta-dark:any-link {
 
 /* cta-outline — transparent, #333 text + 2px #333 border, square (the
    boilerplate secondary look); fills light grey on hover. */
-a.cta-button.cta-outline:any-link {
+a.cta-button.cta-outline:any-link,
+.prosemirror-editor em > strong > a:has(> u) {
   --cta-bg: transparent;
   --cta-color: var(--text-color);
   --cta-border: var(--text-color);
@@ -110,4 +124,13 @@ a.cta-button.cta-outline:any-link {
 a.cta-button.cta-custom:hover,
 a.cta-button.cta-custom:focus-visible {
   filter: brightness(0.88);
+}
+
+/* EW inline editor: the style mark inside the raw button link renders as
+   normal button text (decorateButtons() unwraps it on the live page). */
+.prosemirror-editor strong > a > :is(sub, sup, u) {
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: baseline;
+  text-decoration: none;
 }

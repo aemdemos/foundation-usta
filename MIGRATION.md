@@ -4996,3 +4996,26 @@ the sheet format are unchanged; this is a UI-only change in `tools/plugins/butto
   prefill/update) all pass. Custom axe found 0 violations on the gallery, the drawer with errors, dark canvas + switch
   on, and the gallery with the Current badge. `test:a11y` and the 360–1920 overflow sweep passed on the plugin page.
 
+### 2026-10-10 — EW Layout view: buttons turned into plain links while editing
+Symptom: in the da.live canvas **Layout** view, a button turns into a plain italic link with the raw
+`[color="…"]` text after you click it or insert one with the plugin. It only looks right after a page refresh.
+- **How Layout works** (da-live `ew-editor-wysiwyg.js`, da-nx `quick-edit.js`):
+  - The iframe is `https://{ref}--{site}--{org}.preview.da.live/{path}?quick-edit=on&controller=parent`.
+  - preview.da.live appends a bootstrap to `scripts.js` that loads quick-edit with our `loadPage`.
+  - Each content change sends `set-body`: the body is replaced and our `loadPage()` runs again, so blocks and buttons
+    **are** decorated. Checked with a local harness that runs the real `quick-edit.js`.
+  - **Clicking a paragraph** (and the refocus after a `set-body`) replaces that decorated element with
+    `div.prosemirror-editor > .ProseMirror > p`. That is a raw ProseMirror paragraph showing the marks as authored
+    (`<em><strong><a><sub|sup|u>`) plus the options text. It stays like that until the next full re-render.
+  - Our code must not touch that DOM: changes to it are sent back to the document as edits.
+- **Fix (CSS only, `styles/buttons.css`):** `.prosemirror-editor em > strong > a:has(> sub|sup|u)` and
+  `p > strong > a:has(> sup)` are added to the `.cta-button` / `.cta-black` / `.cta-dark` / `.cta-outline`
+  rules, and the inner mark is reset to normal text. The base rule gained `font-style: normal` (no-op on the live page).
+  The button keeps its style while it's being edited.
+- **Limitation:** authored `color=` / `text-color=` options are plain text inside the editor, so they show as text and
+  only apply on the next re-render (or a refresh).
+- **Gotcha:** `?ref=local` points the Layout iframe at a branch called `local`, which doesn't exist (no CSS/JS, so
+  Times font). Test Layout with a pushed branch: `?ref=<branch>`.
+- **Verified:** harness screenshot (edited buttons keep their style); lint clean; breakpoint check passed;
+  `test:a11y /` passed.
+
