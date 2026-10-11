@@ -138,8 +138,11 @@ Copy the three files, then adapt:
       **Keep them in sync.**
     - A preset can fix colours in `extra` (keys in `EXTRA_KEYS`: `border-color`, the hover colours) and an
       `icon` (+ `iconBefore`). They are written after the colours and kept when a button is edited.
-    - **Icons are for the usta button-core designs only** (the Icon picker shows only for them). The panel
+    - **Icons are for the usta button-core designs only** (the Icon dropdown shows only for them). The panel
       writes `icon="…"` (+ `icon-position="before"`); `USTA_ICONS` / `USTA_ICON_ALIASES` mirror scripts.js.
+    - The Icon dropdown is a native `<select>` (type-ahead, keyboard, screen readers) built from `USTA_ICONS`,
+      labelled by `iconLabel()` ("Arrow down (download)"), with a preview tile of the chosen icon. "Icon
+      before the text" is disabled while no icon is chosen.
     - The site CSS for these lives in its own file (`styles/usta-buttons.css`), linked from `buttons.html`.
   - `contrastText()` / `applyColors()` duplicate the scripts.js logic for the preview (scripts.js can't be
     imported: it runs `loadPage()` on import). **Keep them in sync.**
@@ -183,6 +186,11 @@ The panel appears in the library under **Extensions**.
 A DA sheet (save it; it doesn't need publishing). Without it the panel uses `DEFAULT_PRESETS` / `DEFAULT_OPTIONS`
 and shows a note.
 
+- The `presets` tab **replaces** the foundation default designs, but the usta designs from `DEFAULT_PRESETS` are
+  **appended** unless the sheet has at least one `usta-…` row (then the sheet's list is used as is).
+- The `options` tab **replaces** `DEFAULT_OPTIONS` — list every colour authors should see, usta colours
+  included (lime `#cfff05`, dark green `#19462e`, light green `#a4ee90`, cream `#ffefbe`, white `#ffffff`).
+
 Tab `presets`:
 
 | name | style | color | text-color | label | description |
@@ -206,8 +214,8 @@ Tab `options`:
 
 | key | values |
 |---|---|
-| color | `Brand blue=#0373f3 \| Orange=#e87722` |
-| text-color | `White=#ffffff \| Black=#000000` |
+| color | `Brand blue=#0373f3 \| Orange=#e87722 \| USTA lime=#cfff05 \| USTA dark green=#19462e` |
+| text-color | `White=#ffffff \| Black=#000000 \| USTA dark green=#19462e` |
 
 A sheet with a single tab is read as `presets`.
 

@@ -83,7 +83,7 @@ landscape + target order is in §2a above (full report: `docs/MIGRATION-SCOPE.md
 
 ### Buttons (CTA) — authoring & code reference
 _Current state as of 2026-10-11. Foundation buttons: merged to main (PR #68). Buttons panel: merged (PR #69, #70).
-USTA buttons: branch `usta-buttons`, staged for the user to push. This is the single place to read the button
+USTA buttons: branch `usta-buttons`, pushed (not yet merged). This is the single place to read the button
 rules; the dated Log entries (2026-09-29 → 2026-10-11) hold the history and are partly superseded._
 
 **0. Overview — what we have done and what we are enabling**
@@ -96,8 +96,8 @@ rules; the dated Log entries (2026-09-29 → 2026-10-11) hold the history and ar
 | Buttons in every block | `decorateButtons()` runs before blocks; block CSS skips `.cta-button` (items 3–4) | ✅ live on main |
 | Buttons panel (DA / Experience Workspace) | a library plugin: pick a design, set text / link / colours / new tab / icon, Insert or Update (item 8) | ✅ on main; USTA presets + icon picker on `usta-buttons` |
 | Layout (canvas) editing preview | a button keeps its look while being edited in da.live Layout (item 7) | ✅ foundation on main; USTA untested in DA |
-| USTA (www.usta.com) buttons | 28 styles / 68 designs + 85 icons, own stylesheet, loaded only where used (item 9) | 🟡 built + verified locally; branch not pushed |
-| Sample / test pages | foundation: 4 DA pages (item 5); USTA: `/drafts/usta-buttons` (item 9) | 🟡 foundation previewed, not published; USTA local only |
+| USTA (www.usta.com) buttons | 28 styles / 68 designs + 85 icons, own stylesheet, loaded only where used (item 9) | 🟡 built + validated; branch pushed, PR to `main` pending |
+| Sample / test pages | foundation: 4 DA pages (item 5); USTA: `/drafts/usta-buttons` (item 9) | 🟡 all previewed in DA, not published |
 
 - **Counts:** a *style* is the look named in `style="…"`; a *design* is a style + the options usta.com authors
   combine with it (colours, border, hover, icon). Foundation 5 styles / 5 designs; USTA 28 styles / 68 designs;
@@ -107,10 +107,10 @@ rules; the dated Log entries (2026-09-29 → 2026-10-11) hold the history and ar
 - **Icons** are a USTA feature only (`icon="…"` or `:name:` on the usta button-core designs). A foundation link
   with an icon stays a normal link.
 - **Enablement still to do** (outward-facing → the user's steps, see §6 Buttons):
-  1. Push `usta-buttons` (all changes are staged), open a PR to `main`.
+  1. ~~Push `usta-buttons`~~ (done); open a PR to `main`.
   2. Test in DA with `?ref=usta-buttons`: the panel's `USTA — …` designs and icon picker, Insert / Update, and a
      USTA button in Layout view (default content and inside a block).
-  3. After merge: upload + preview `/drafts/usta-buttons` in DA; publish the foundation sample pages.
+  3. Publish the sample pages (`/drafts/usta-buttons` is already previewed; fix its `:download:` text, see §6).
   4. Optional: add USTA rows to the panel sheet `/.da/library/buttons` (`options` column for colours / icon) and
      USTA entries to the block library `/.da/library/blocks/buttons`.
   5. The panel registration (`da.live/config` → library → `Buttons`, `/tools/plugins/buttons/buttons.html`) is
@@ -295,7 +295,7 @@ can use them on this site. They are separate from the foundation buttons above, 
   - Panel `tools/plugins/buttons/buttons.js`: `styleInfo()` + `USTA_WORDS` (mirror scripts.js), 21 `USTA — …`
     presets, an Icon picker for usta designs (writes `icon="…"`), sheet column `options` (colours, icon).
 - **Sample:** `/drafts/usta-buttons` — all 68 designs grouped, each with the options to type and its source page;
-  white / white-border buttons sit in a `dark` section. Local only for now; upload it to DA after the merge.
+  white / white-border buttons sit in a `dark` section. Previewed in DA (2026-10-11), not published.
 - **Catalogue + screenshots:** `migration-work/usta-buttons/index.html` (local, not committed): usta.com vs EDS
   element screenshots (rest + hover) at 390 / 768 / 1440 and `catalogue.json`.
 - **Parity:** computed styles at rest and forced `:hover`, source vs sample, 68 designs × 390 / 768 / 1440.
@@ -331,11 +331,14 @@ can use them on this site. They are separate from the foundation buttons above, 
 - [ ] Optional: same size for all CTA styles (dark/outline are 25px padding / 46px tall vs blue 14px / 40px) — kept
   as is by user decision 2026-10-10.
 - [ ] **USTA buttons (§3 items 0 + 9):**
-  - [ ] push branch `usta-buttons` (all changes staged) and open a PR to `main` — user's step;
+  - [x] push branch `usta-buttons`; [ ] open a PR to `main` — user's step;
   - [ ] in DA with `?ref=usta-buttons`: test the panel's `USTA — …` designs, the icon picker, Insert / Update,
     and the Layout editing preview of a USTA button (`cta-edit-usta*`, not yet tested in DA) in default content
     and inside a block;
-  - [ ] after merge: upload + preview `/drafts/usta-buttons` in DA (local only today);
+  - [x] upload + preview `/drafts/usta-buttons` in DA;
+  - [ ] in DA, `/drafts/usta-buttons` intro paragraph: put the typed `:download:` in code formatting. As plain
+    text the pipeline turns it into `span.icon-download`, and `decorateIcons()` then requests
+    `/icons/download.svg` (404 in the console). Content only, no code change;
   - [ ] optional: USTA rows in the `/.da/library/buttons` sheet (`options` column) and USTA entries in
     `/.da/library/blocks/buttons`;
   - [ ] optional: confirm in DA that `:download:` typed inside a link survives save + preview (supported both as
@@ -5340,3 +5343,34 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
   - lint, breakpoint check, check:overflow (sample + home), check:typography (home) and test:a11y (sample + home)
     passed;
   - 86-page link regression (main vs this branch, 390 + 1440): 3,962 links, 0 differences.
+
+### 2026-10-11 — Buttons: validation of branch `usta-buttons` (§3 Buttons (CTA) vs the code)
+- **Mirrors (panel ↔ scripts.js):** `USTA_WORDS` (13 words), `USTA_ICONS` (85) and `USTA_ICON_ALIASES` are
+  identical. The 85 icon names match the 85 files in `icons/usta/`, and every `cta-usta*` class used in JS has a
+  rule in `usta-buttons.css`. No references to the old `styles/buttons.css` remain.
+- **Panel:** 26 designs (5 foundation + 21 `USTA — …`), as documented. The Icon picker shows for a USTA design.
+- **`/drafts/usta-buttons`** (390 / 768 / 1440): 68 usta buttons (42 distinct class sets), 18 with icons, all icons
+  rendered, no option text left in a label, no horizontal overflow; `usta-buttons.css` is loaded.
+- **Foundation isolation:** `/drafts/buttons-test` (37 foundation buttons) and `/` load only
+  `foundation-buttons.css`.
+- **One content issue:** a 404 for `/icons/download.svg` on the sample, from the `:download:` typed as plain text
+  in its intro paragraph (see §6). Not a code bug.
+- **Docs:** the status lines in §3 / §6 were stale (branch "not pushed", sample "local only") and are updated.
+- **Gate:** lint 0 errors; stylelint on the panel OK; breakpoint check passed; check:svg passed; check:overflow
+  passed on `/drafts/usta-buttons` (360–1920); test:a11y passed on `/drafts/usta-buttons`, `/drafts/buttons-test`
+  and the panel.
+- **Not covered:** the DA steps (panel Insert / Update and the USTA Layout editing preview with
+  `?ref=usta-buttons`). They need a signed-in DA session.
+
+### 2026-10-11 — Buttons panel: Icon dropdown + config-sheet merge
+- **Icon dropdown:** the 85-chip icon grid is replaced by a native `<select>` (`#btn-plugin-icon`, "No icon" + 85
+  icons, labelled e.g. "Arrow down (download)", type-ahead), styled as a Spectrum picker with a preview tile of
+  the chosen icon (grey tile: some usta icons are white). Still shown only for USTA designs (foundation buttons
+  ignore icons by design). "Icon before the text" is disabled while no icon is chosen. Output unchanged:
+  `icon="…"` (+ `icon-position="before"`).
+- **Sheet merge (why the USTA designs were missing in DA):** the `/.da/library/buttons` `presets` tab replaced all
+  defaults. Now the USTA designs from `DEFAULT_PRESETS` are appended unless the sheet has its own `usta-…` rows.
+  The `options` tab still replaces `DEFAULT_OPTIONS`: the USTA colours must be listed there to show as swatches.
+- **Gate:** eslint + stylelint on the panel OK; `npm run lint` OK; breakpoint check passed; test:a11y passed on the
+  panel. Playwright: 86 options, preset icon pre-selected, change → preview icon updates, "before" puts the icon
+  first, "No icon" removes it and disables the switch, the group is hidden for a foundation design; no JS errors.

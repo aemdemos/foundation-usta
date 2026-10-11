@@ -188,7 +188,8 @@ const form = $('.btn-plugin-form');
 const preview = $('.btn-plugin-preview');
 const submit = $('.btn-plugin-submit');
 const swatchSets = [...form.querySelectorAll('.btn-plugin-colors')];
-const iconSet = form.querySelector('.btn-plugin-icons');
+const iconSelect = form.elements.icon;
+const iconPreview = form.querySelector('.btn-plugin-select-icon');
 
 const state = {
   actions: null,
@@ -329,7 +330,13 @@ async function loadSheet(context, actions) {
     const json = await resp.json();
     const presets = parsePresets(sheetRows(json, 'presets'));
     const options = parseOptions(sheetRows(json, 'options'));
-    if (presets) state.presets = presets;
+    // the sheet replaces the built-in designs; the usta.com ones are kept unless
+    // the sheet lists its own usta rows
+    if (presets) {
+      state.presets = presets.some((p) => p.style.startsWith('usta-'))
+        ? presets
+        : [...presets, ...DEFAULT_PRESETS.filter((p) => p.style.startsWith('usta-'))];
+    }
     if (options) state.options = options;
     return Boolean(presets);
   } catch {
@@ -583,32 +590,27 @@ function fillSwatches(fieldset, choices, selected) {
   }));
 }
 
+// `arrow-down` → `Arrow down (download)`: the name plus the alias authors may type
+const iconLabel = (icon) => {
+  const words = (name) => name.replace(/-/g, ' ');
+  const alias = Object.keys(USTA_ICON_ALIASES).find((a) => USTA_ICON_ALIASES[a] === icon);
+  const label = words(icon).replace(/^./, (c) => c.toUpperCase());
+  return alias ? `${label} (${words(alias)})` : label;
+};
+
 /**
- * Fills the icon group: "No icon" first, then every usta.com icon as a chip.
- * @param {string} [selected] the icon to check
+ * Selects an icon in the dropdown ("No icon" first, then every usta.com icon,
+ * A–Z); the options are built once.
+ * @param {string} [selected] the icon to select
  */
 function fillIcons(selected) {
-  const choices = [{ label: iconSet.dataset.default, value: '' }, ...USTA_ICONS.map((i) => ({ label: i, value: i }))];
-  const current = choices.find((c) => c.value === ustaIcon(selected)) || choices[0];
-  iconSet.querySelector('.btn-plugin-swatches').replaceChildren(...choices.map((choice) => {
-    const swatch = document.createElement('label');
-    swatch.className = 'btn-plugin-swatch';
-    swatch.title = choice.label;
-    const input = document.createElement('input');
-    input.type = 'radio';
-    input.name = 'icon';
-    input.value = choice.value;
-    input.checked = choice === current;
-    input.setAttribute('aria-label', choice.label);
-    const chip = document.createElement('span');
-    chip.className = 'btn-plugin-chip';
-    if (choice.value) {
-      chip.classList.add('is-icon');
-      chip.style.setProperty('--icon', `url("/icons/usta/${choice.value}.svg")`);
-    } else chip.classList.add('is-default');
-    swatch.append(input, chip);
-    return swatch;
-  }));
+  if (!iconSelect.options.length) {
+    iconSelect.append(
+      new Option(iconSelect.dataset.default, ''),
+      ...USTA_ICONS.map((icon) => new Option(iconLabel(icon), icon)),
+    );
+  }
+  iconSelect.value = ustaIcon(selected);
 }
 
 function readForm() {
@@ -632,10 +634,12 @@ function updatePreview() {
   const values = readForm();
   preview.replaceChildren(renderButton({ ...values, label: values.label || state.preset.label }));
   // the chosen colour's name next to each swatch group's legend
-  [...swatchSets, iconSet].forEach((fieldset) => {
+  swatchSets.forEach((fieldset) => {
     const checked = fieldset.querySelector('input:checked');
     fieldset.querySelector('.btn-plugin-swatch-value').textContent = checked?.closest('label').title || '';
   });
+  iconPreview.style.setProperty('--icon', values.icon ? `url("/icons/usta/${values.icon}.svg")` : 'none');
+  form.elements['icon-before'].disabled = !values.icon;
 }
 
 function setError(input, show) {

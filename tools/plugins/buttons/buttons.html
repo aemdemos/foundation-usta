@@ -98,13 +98,16 @@
           </div>
 
           <div class="btn-plugin-group btn-plugin-icon-group">
-            <div class="btn-plugin-field btn-plugin-icons" role="group" aria-labelledby="btn-plugin-icon-label"
-              data-default="No icon">
-              <p class="btn-plugin-field-label">
-                <span id="btn-plugin-icon-label">Icon</span>
-                <span class="btn-plugin-swatch-value" aria-hidden="true"></span>
-              </p>
-              <div class="btn-plugin-field-control btn-plugin-swatches"></div>
+            <div class="btn-plugin-field">
+              <label class="btn-plugin-field-label" for="btn-plugin-icon">Icon</label>
+              <div class="btn-plugin-field-control">
+                <div class="btn-plugin-select">
+                  <span class="btn-plugin-select-icon" aria-hidden="true"></span>
+                  <select id="btn-plugin-icon" name="icon" data-default="No icon"
+                    aria-describedby="btn-plugin-icon-hint"></select>
+                </div>
+                <p class="btn-plugin-hint" id="btn-plugin-icon-hint">Any usta.com icon. Type a letter to jump in the list.</p>
+              </div>
             </div>
 
             <label class="btn-plugin-switch" for="btn-plugin-icon-before">

@@ -618,13 +618,60 @@
   display: none;
 }
 
-.btn-plugin .btn-plugin-icons .btn-plugin-swatches {
-  max-height: 176px;
-  overflow-y: auto;
+/* Spectrum picker: a native select (type-ahead, keyboard, screen readers) with
+   a preview of the chosen icon on its left and a chevron on its right */
+.btn-plugin .btn-plugin-select {
+  position: relative;
 }
 
-.btn-plugin .btn-plugin-chip.is-icon {
-  background: var(--bp-gray-200) var(--icon) center / 18px no-repeat;
+.btn-plugin .btn-plugin-select select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--bp-gray-500);
+  border-radius: var(--bp-radius-field);
+  padding: 10px 36px 10px 48px;
+  background-color: var(--bp-gray-25);
+  color: var(--bp-gray-900);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-select select:hover {
+  border-color: var(--bp-gray-800);
+}
+
+.btn-plugin .btn-plugin-select select:focus-visible {
+  border-color: var(--bp-accent);
+}
+
+/* grey tile: some usta.com icons are white */
+.btn-plugin .btn-plugin-select-icon {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--bp-gray-200) var(--icon, none) center / 18px no-repeat;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.btn-plugin .btn-plugin-select::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--bp-gray-800);
+  border-bottom: 2px solid var(--bp-gray-800);
+  pointer-events: none;
+  transform: translateY(-75%) rotate(45deg);
 }
 
 /* "Open in a new tab": Spectrum switch, emphasized (accent when on) */
@@ -657,6 +704,10 @@
   transition: background-color var(--bp-fast), border-color var(--bp-fast);
 }
 
+.btn-plugin .btn-plugin-switch input:disabled {
+  cursor: default;
+}
+
 .btn-plugin .btn-plugin-switch input::before {
   content: "";
   position: absolute;
@@ -685,6 +736,12 @@
 
 .btn-plugin .btn-plugin-switch:hover input:not(:checked)::before {
   background-color: var(--bp-gray-900);
+}
+
+/* "Icon before the text" while no icon is chosen */
+.btn-plugin .btn-plugin-switch:has(input:disabled) {
+  cursor: default;
+  opacity: 0.5;
 }
 
 /* side labels: label and field on one line when the drawer has the room */
