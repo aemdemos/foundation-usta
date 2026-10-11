@@ -241,6 +241,16 @@ a.cta-button.cta-usta.cta-usta-icon-left .cta-usta-icon {
   }
 }
 
+/* usta-square-small-column (the card button: DOWNLOAD PDF, LEARN MORE, GET STARTED …) sits in narrow
+   card columns on usta.com, so it is always just its label's width there (measured: 6 of 6 on desktop,
+   5 of 6 on tablet / phones, e.g. DOWNLOAD PDF 194px at every width). Inside a block it still fills a
+   cell that is wider than the label. */
+.default-content-wrapper a.cta-button.cta-usta.cta-usta-rect.cta-usta-h40.cta-usta-fs-small.cta-usta-w-full:any-link {
+  width: max-content;
+  min-width: max-content;
+  max-width: none;
+}
+
 @media (width >= 768px) {
   a.cta-button.cta-usta:any-link {
     width: max-content;
