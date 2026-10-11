@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Log Out</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M15.6666667,9.54166667 L15.6666667,6.375 L22,11.9166667 L15.6666667,17.4583333 L15.6666667,14.2916667 L9.33333333,14.2916667 L9.33333333,9.54166667 L15.6666667,9.54166667 Z M3,4 L3,19.8333333 L14.0833333,19.8333333 L14.0833333,18.25 L4.58333333,18.25 L4.58333333,5.58333333 L14.0833333,5.58333333 L14.0833333,4 L3,4 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Log-Out" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Log-out" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

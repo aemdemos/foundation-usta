@@ -7,7 +7,8 @@
   <!-- site styles, so every preview is the real cta-button -->
   <link rel="stylesheet" href="/styles/styles.css">
   <link rel="stylesheet" href="/styles/fonts.css">
-  <link rel="stylesheet" href="/styles/buttons.css">
+  <link rel="stylesheet" href="/styles/foundation-buttons.css">
+  <link rel="stylesheet" href="/styles/usta-buttons.css">
   <link rel="stylesheet" href="/tools/plugins/buttons/buttons.css">
   <script type="module" src="/tools/plugins/buttons/buttons.js"></script>
 </head>
@@ -94,6 +95,25 @@
               </p>
               <div class="btn-plugin-field-control btn-plugin-swatches"></div>
             </div>
+          </div>
+
+          <div class="btn-plugin-group btn-plugin-icon-group">
+            <div class="btn-plugin-field btn-plugin-icons" role="group" aria-labelledby="btn-plugin-icon-label"
+              data-default="No icon">
+              <p class="btn-plugin-field-label">
+                <span id="btn-plugin-icon-label">Icon</span>
+                <span class="btn-plugin-swatch-value" aria-hidden="true"></span>
+              </p>
+              <div class="btn-plugin-field-control btn-plugin-swatches"></div>
+            </div>
+
+            <label class="btn-plugin-switch" for="btn-plugin-icon-before">
+              <span class="btn-plugin-switch-text">
+                <span class="btn-plugin-switch-label">Icon before the text</span>
+                <span class="btn-plugin-hint">Written as icon="…" in the options. Authors can also type :name: in the button text.</span>
+              </span>
+              <input id="btn-plugin-icon-before" name="icon-before" type="checkbox" role="switch">
+            </label>
           </div>
 
           <div class="btn-plugin-group">

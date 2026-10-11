@@ -3,7 +3,7 @@
  * Spectrum 2 so it sits naturally inside the DA editor: the Adobe Clean type
  * stack, the Spectrum gray scale and accent blue, 8px field corners, 16px
  * cards, pill call-to-action, side labels. The site's tokens and the real
- * cta-button styles (styles.css + buttons.css, linked in buttons.html) are
+ * cta-button styles (styles.css + foundation-buttons.css + usta-buttons.css, linked in buttons.html) are
  * used ONLY inside the button previews.
  *   gallery — one card per preset, the real button centred on a canvas
  *   editor  — a drawer that slides in from the right over the gallery: header,
@@ -611,6 +611,20 @@
 /* a text link has no button colours */
 .btn-plugin .btn-plugin-editor.is-link .btn-plugin-group:has(.btn-plugin-colors) {
   display: none;
+}
+
+/* icons: only for the designs that take one (usta.com button-core) */
+.btn-plugin .btn-plugin-editor:not(.has-icons) .btn-plugin-icon-group {
+  display: none;
+}
+
+.btn-plugin .btn-plugin-icons .btn-plugin-swatches {
+  max-height: 176px;
+  overflow-y: auto;
+}
+
+.btn-plugin .btn-plugin-chip.is-icon {
+  background: var(--bp-gray-200) var(--icon) center / 18px no-repeat;
 }
 
 /* "Open in a new tab": Spectrum switch, emphasized (accent when on) */

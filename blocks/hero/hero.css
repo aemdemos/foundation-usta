@@ -567,7 +567,7 @@ main > .section.hero-container:has(.hero.text-up) {
     width: calc(50vw * 2 / 6 - 30px);
   }
 
-  /* an authored cta-button (buttons.css) sizes itself — don't squeeze its label
+  /* an authored cta-button (foundation-buttons.css) sizes itself — don't squeeze its label
      into the source button column */
   .hero.text-up .button-container:has(> .cta-button) {
     width: auto;

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Edit</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M20.70505,7.0424 C21.09505,6.6529 21.09505,6.0174 20.70505,5.6274 L18.37005,3.2924 C17.98005,2.9029 17.34505,2.9029 16.95505,3.2924 L15.12505,5.1224 L18.87505,8.8724 L20.70505,7.0424 Z M3.00005,17.2474 L3.00005,20.9974 L6.75005,20.9974 L17.81505,9.9324 L14.06505,6.1824 L3.00005,17.2474 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Edit" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

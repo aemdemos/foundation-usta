@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Clock</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M12.50005,12.2501 L17.00005,14.9201 L16.24505,16.1501 L11.00005,13.0001 L11.00005,7.0001 L12.50005,7.0001 L12.50005,12.2501 Z M12.00005,20.0001 C7.58005,20.0001 4.00005,16.4201 4.00005,12.0001 C4.00005,7.5801 7.58005,4.0001 12.00005,4.0001 C16.42005,4.0001 20.00005,7.5801 20.00005,12.0001 C20.00005,16.4201 16.42005,20.0001 12.00005,20.0001 L12.00005,20.0001 Z M11.99505,2.0001 C6.47005,2.0001 2.00005,6.4751 2.00005,12.0001 C2.00005,17.5251 6.47005,22.0001 11.99505,22.0001 C17.52005,22.0001 22.00005,17.5251 22.00005,12.0001 C22.00005,6.4751 17.52005,2.0001 11.99505,2.0001 L11.99505,2.0001 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Clock" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

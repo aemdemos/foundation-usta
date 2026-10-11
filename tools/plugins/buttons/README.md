@@ -32,7 +32,7 @@ No new block, no DA customisation beyond registering the plugin.
 | `tools/plugins/buttons/buttons.html` | Adapt texts / link example | The panel page DA opens in an iframe |
 | `tools/plugins/buttons/buttons.js` | Adapt defaults (§4) | Gallery, form, preview, insert/update via the DA SDK |
 | `tools/plugins/buttons/buttons.css` | Yes | Panel UI only, Adobe Spectrum 2 look (own `--bp-*` tokens; site tokens only in the previews) |
-| `styles/buttons.css` | Adapt tokens (§3) | The `cta-button` styles + the Layout-editor rules |
+| `styles/foundation-buttons.css` | Adapt tokens (§3) | The `cta-button` styles + the Layout-editor rules |
 | `scripts/scripts.js` | Merge the functions (§2) | `decorateButtons()`, options, link targets, `previewEditingCtas()` |
 | `tools/da-library-preview/*` | Optional | Cleans up `/.da/library/…` block-library previews |
 
@@ -85,11 +85,11 @@ export function decorateMain(main) {
 
 async function loadEager(doc) {
   // …
-  const buttonsCssPromise = loadCSS(`${window.hlx.codeBasePath}/styles/buttons.css`);
+  const buttonsCssPromise = loadCSS(`${window.hlx.codeBasePath}/styles/foundation-buttons.css`);
   const main = doc.querySelector('main');
   if (main) {
     decorateMain(main);
-    // block LCP on buttons.css only when the first section has a button
+    // block LCP on foundation-buttons.css only when the first section has a button
     if (main.querySelector('.section:first-of-type .cta-button')) await buttonsCssPromise;
     // …
   }
@@ -110,7 +110,7 @@ previewEditingCtas(); // no-op unless the URL has ?quick-edit (the DA Layout vie
 If a block styles every link in a cell (e.g. `.hero p > a`), exclude authored buttons so they keep their look:
 `a:not(.cta-button)` or `a:where(:not(.cta-button))` (the `:where` form keeps the old specificity).
 
-## 3. Site CSS — `styles/buttons.css`
+## 3. Site CSS — `styles/foundation-buttons.css`
 
 Copy the file. Every style is driven by custom properties, so each variant only overrides what changes:
 `--cta-bg / --cta-color / --cta-border` and their `-hover` versions.
@@ -129,7 +129,18 @@ Copy the three files, then adapt:
   - `DEFAULT_PRESETS` — the designs shown when there is no config sheet (name, style, label, description).
   - `DEFAULT_OPTIONS` — the colour swatches (`color`, `text-color`).
   - `STYLES` — must match `CTA_BUTTON_STYLES` / `CTA_BOLD_ONLY_STYLES` in scripts.js. If you add a style,
-    add it in both places and in buttons.css.
+    add it in both places and in foundation-buttons.css.
+  - **Option styles** (`option: true`): no marks, the panel writes the style as `[style="…", …]`.
+    - Fixed ones are in `STYLES` and must exist in `CTA_OPTION_STYLES` (scripts.js): `usta-classic`,
+      `usta-classic-outline`, `usta-header-join`, `usta-header-signin`.
+    - The usta.com button-core designs are **named from words** (`usta-pill-wide`, `usta-square-small-column`):
+      `styleInfo()` + `USTA_WORDS` here mirror `ctaStyleClasses()` + `USTA_WORDS` in scripts.js.
+      **Keep them in sync.**
+    - A preset can fix colours in `extra` (keys in `EXTRA_KEYS`: `border-color`, the hover colours) and an
+      `icon` (+ `iconBefore`). They are written after the colours and kept when a button is edited.
+    - **Icons are for the usta button-core designs only** (the Icon picker shows only for them). The panel
+      writes `icon="…"` (+ `icon-position="before"`); `USTA_ICONS` / `USTA_ICON_ALIASES` mirror scripts.js.
+    - The site CSS for these lives in its own file (`styles/usta-buttons.css`), linked from `buttons.html`.
   - `contrastText()` / `applyColors()` duplicate the scripts.js logic for the preview (scripts.js can't be
     imported: it runs `loadPage()` on import). **Keep them in sync.**
 - `buttons.html` — the example path in the Link help text (`/en/home/get-involved`) and any texts (all are in
@@ -138,8 +149,8 @@ Copy the three files, then adapt:
 - `buttons.css` — the panel follows Adobe Spectrum 2 (Adobe Clean stack, Spectrum grays and accent blue,
   light-grey panel with white field cards, side labels when the drawer is ≥ 360px wide, pill accent button).
   It needs no change per site.
-- `buttons.html` links `/styles/styles.css`, `/styles/fonts.css`, `/styles/buttons.css`, so previews are the real
-  buttons. If the site's global CSS styles bare elements (e.g. `header { min-height }`), reset them under
+- `buttons.html` links `/styles/styles.css`, `/styles/fonts.css`, `/styles/foundation-buttons.css` and
+  `/styles/usta-buttons.css`, so previews are the real buttons. If the site's global CSS styles bare elements (e.g. `header { min-height }`), reset them under
   `.btn-plugin` in `buttons.css`.
 
 What the panel does with the DA SDK (`import('https://da.live/nx/utils/sdk.js')`):
@@ -179,7 +190,17 @@ Tab `presets`:
 | Blue Button | blue | | | LEARN MORE | Standard solid blue call-to-action. |
 | Orange Outline | outline | #e87722 | | DONATE | Outline in brand orange. |
 
-`style` = `blue | black | dark | outline | link`.
+`style` = `blue | black | dark | outline | link`, a fixed usta style (`usta-classic | usta-classic-outline |
+usta-header-join | usta-header-signin`) or a usta design named from words (`usta-pill-wide`, …).
+
+Optional column `options`, as typed in a button: fixed colours (`border-color`, `hover-color`,
+`hover-text-color`, `hover-border-color`) and, for usta designs, `icon="…"` + `icon-position="before"`.
+Colour values are validated.
+
+| name | style | color | text-color | label | description | options |
+|---|---|---|---|---|---|---|
+| USTA Lime | usta-pill-wide | #cfff05 | #000000 | REGISTER NOW | usta.com lime pill | |
+| USTA Download | usta-square-small-column | | | DOWNLOAD PDF | Card button | `icon="download"` |
 
 Tab `options`:
 
@@ -209,7 +230,7 @@ A sheet with a single tab is read as `presets`.
 **Without the fix:** the button turns into a small italic link with `[color="…"]` after it, in the default colour.
 
 **The fix (central — no per-block changes):**
-1. `styles/buttons.css`: each style rule also targets the raw editor link, e.g.
+1. `styles/foundation-buttons.css`: each style rule also targets the raw editor link, e.g.
    `.prosemirror-editor em > strong > a:has(> sub)`; the inner mark is reset to normal text
    (`.prosemirror-editor strong > a > :is(sub, sup, u)`); the base rule has `font-style: normal`.
 2. `previewEditingCtas()` (only with `?quick-edit`):
@@ -220,7 +241,7 @@ A sheet with a single tab is read as `presets`.
      `parseCtaOptions()` / `ctaOptionVars()` as the page.
    - It writes the colours as `--cta-edit-*` properties and the classes `.cta-edit-custom` /
      `.cta-edit-options` **on the `.prosemirror-editor` wrapper only**.
-3. `buttons.css` then colours the link from `--cta-edit-*` and hides the options text with `font-size: 0` on the
+3. `foundation-buttons.css` then colours the link from `--cta-edit-*` and hides the options text with `font-size: 0` on the
    paragraph (the link keeps its own 18px), and restores the 12px paragraph margin.
 
 **Rules — learned the hard way:**
@@ -236,7 +257,7 @@ A sheet with a single tab is read as `presets`.
 - **Limits while editing:** `style=` in the options doesn't change the look (the mark decides it), and an editor
   holding several buttons gets no authored colours. Both are right after a re-render or refresh.
 - **Dependency:** `.prosemirror-editor` and the mark order are DA internals, not an API. If DA changes them, only
-  the editing preview regresses (raw link until refresh); update the selectors in `buttons.css` and `EDITING_CTA`.
+  the editing preview regresses (raw link until refresh); update the selectors in `foundation-buttons.css` and `EDITING_CTA`.
 
 ## 7. Test
 

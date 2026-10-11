@@ -182,7 +182,7 @@ function buildAutoBlocks(main) {
 
 /**
  * Extra mark on a bold + italic standalone link → cta-button style class
- * (styles/buttons.css).
+ * (styles/foundation-buttons.css).
  */
 const CTA_BUTTON_STYLES = {
   sub: 'cta-blue',
@@ -202,7 +202,77 @@ const CTA_OPTION_STYLES = {
   black: 'cta-black',
   dark: 'cta-dark',
   outline: 'cta-outline',
+  // www.usta.com fixed designs (styles/usta-buttons.css, loaded only when used);
+  // the usta.com button-core designs are named from words, see ustaStyleClasses()
+  'usta-classic': 'cta-usta-classic',
+  'usta-classic-outline': 'cta-usta-classic cta-usta-classic-ghost',
+  'usta-header-join': 'cta-usta-join',
+  'usta-header-signin': 'cta-usta-signin',
 };
+
+// usta.com button-core: `style="usta-<words>"` says how the button looks, e.g.
+// usta-pill, usta-pill-wide, usta-outline-medium-wide, usta-square-small-column.
+// Each word → the usta.com modifier class(es); any order, each word at most once.
+const USTA_WORDS = {
+  // look (pill = the default black rounded button)
+  pill: [],
+  outline: ['cta-usta-ghost'],
+  square: ['cta-usta-rect'],
+  app: ['cta-usta-app'],
+  // size: default 56px tall + 18px text
+  medium: ['cta-usta-h40'], // 40px, 18px text
+  small: ['cta-usta-h40', 'cta-usta-fs-small'], // 40px, 14px text
+  mini: ['cta-usta-h24', 'cta-usta-fs-small'], // 24px, 14px text
+  compact: ['cta-usta-fs-small'], // 56px, 14px text
+  // width: default = fits the label (min 120px; full width up to 280px on phones)
+  wide: ['cta-usta-w-large'], // min 280px
+  narrow: ['cta-usta-w-small'], // max 170px
+  column: ['cta-usta-w-full'], // fills its column (usta.com's 3-of-12 grid column in default content)
+  padded: ['cta-usta-pad-50'], // 50px side padding
+  disabled: ['cta-usta-disabled'],
+};
+
+/**
+ * The classes for a `style=` value: a fixed style (CTA_OPTION_STYLES) or a
+ * usta.com button-core design named from USTA_WORDS (`usta-pill-wide`).
+ * @param {string} style the authored style
+ * @returns {string} the cta style classes, or '' when unknown
+ */
+function ctaStyleClasses(style) {
+  const s = (style || '').trim().toLowerCase();
+  if (CTA_OPTION_STYLES[s]) return CTA_OPTION_STYLES[s];
+  const words = s.startsWith('usta-') ? s.slice(5).split('-') : [];
+  if (!words.length || !words.every((w) => USTA_WORDS[w]) || new Set(words).size !== words.length) return '';
+  return ['cta-usta', ...words.flatMap((w) => USTA_WORDS[w])].join(' ');
+}
+
+// the usta.com button-core icons self-hosted in /icons/usta/ (icon="<name>" or `:name:`)
+const USTA_ICONS = new Set(['add', 'alarm', 'arrow-down', 'arrow-left', 'arrow-right', 'arrow-up', 'attachment',
+  'award', 'bookmark', 'calendar', 'cancel', 'check', 'chevron-back', 'chevron-down', 'chevron-forward',
+  'chevron-up', 'clock', 'cloud', 'comment', 'computer', 'edit', 'envelope', 'facebook', 'flag', 'folder', 'globe',
+  'globe-primary', 'globe-primary-cut', 'google-plus', 'hamburger', 'home', 'info', 'instagram', 'invite', 'like',
+  'link', 'linkedin', 'live-chat', 'location', 'location-search', 'lock', 'logout', 'megaphone', 'mic', 'mobile',
+  'more-info', 'more-options', 'navigation', 'notification', 'overflow', 'pagination-left', 'pagination-right',
+  'pause', 'phone', 'pinterest', 'play', 'pop-out', 'printer', 'profile', 'refresh', 'screen-exit-full',
+  'screen-full', 'search', 'settings', 'share', 'star', 'success', 'sync', 'tip', 'tennis-ball', 'trash',
+  'triangle-down', 'triangle-left', 'triangle-right', 'triangle-up', 'twitter', 'view', 'vimeo', 'visibility-off',
+  'volume-default', 'volume-mute', 'warning', 'web', 'wifi', 'youtube']);
+// friendlier names authors may type (`:download:`, `:external-link:`)
+const USTA_ICON_ALIASES = {
+  download: 'arrow-down', external: 'pop-out', 'external-link': 'pop-out', 'open-in-new': 'pop-out',
+};
+// a literal `:name:` left as text in a link label (start, end or between spaces)
+const USTA_ICON_TEXT = /(^|\s):([a-z0-9-]+):(?=\s|$)/i;
+let ustaButtonsCss = null;
+
+/**
+ * Loads styles/usta-buttons.css once — only on pages that use a usta button.
+ * @returns {Promise} resolves when the stylesheet is loaded
+ */
+function loadUstaButtonsCss() {
+  if (!ustaButtonsCss) ustaButtonsCss = loadCSS(`${window.hlx.codeBasePath}/styles/usta-buttons.css`);
+  return ustaButtonsCss;
+}
 
 // trailing `[key=value, …]` on a link label or after the link; values may be
 // unquoted or in straight / curly quotes (the editor may convert quotes)
@@ -305,7 +375,7 @@ function contrastText(color) {
 }
 
 /**
- * The custom properties (styles/buttons.css) for authored `color` (button color;
+ * The custom properties (styles/foundation-buttons.css) for authored `color` (button color;
  * the border + text color for `outline`) and `text-color` options.
  * @param {Object} options from takeCtaOptions
  * @param {boolean} outline whether the button is the outline style
@@ -358,15 +428,126 @@ function ctaOptionVars(options, outline) {
 }
 
 /**
+ * The usta.com icon for an EDS icon name: `arrow-down`, `usta-arrow-down` or an alias.
+ * @param {string} name the name between the colons of `:name:`
+ * @returns {string} a USTA_ICONS name, or ''
+ */
+function ustaIconName(name) {
+  const n = (name || '').toLowerCase().replace(/^usta-/, '');
+  const icon = USTA_ICON_ALIASES[n] || n;
+  return USTA_ICONS.has(icon) ? icon : '';
+}
+
+/**
+ * The icon of a usta button: the `icon="download"` option (+ `icon-position="before"`),
+ * or the EDS icon notation in the link text: `DOWNLOAD PDF :download:` (after the
+ * label) / `:arrow-left: BACK` (before). The pipeline turns `:name:` into
+ * `span.icon.icon-name`; a literal `:name:` (left as text) is read too. It becomes
+ * the usta.com icon (icons/usta/, 20px, per-icon filters).
+ * @param {HTMLAnchorElement} a the usta cta-button
+ * @param {Object} options from takeCtaOptions
+ */
+function decorateUstaIcon(a, options) {
+  let icon = ustaIconName(options.icon);
+  let before = ['before', 'left'].includes((options['icon-position'] || '').toLowerCase());
+  // an option icon wins; a `:name:` in the label is still taken out of the text
+  const fromOption = icon;
+  const optionBefore = before;
+  const textBefore = (node) => {
+    const range = document.createRange();
+    range.setStart(a, 0);
+    range.setEndBefore(node);
+    return range.toString().trim();
+  };
+  const span = a.querySelector('span.icon');
+  const spanIcon = span && ustaIconName([...span.classList].find((c) => c.startsWith('icon-'))?.slice(5));
+  if (spanIcon) {
+    icon = spanIcon;
+    before = !textBefore(span);
+    span.remove();
+  } else if (!span) {
+    const walker = document.createTreeWalker(a, NodeFilter.SHOW_TEXT);
+    let found = '';
+    while (!found && walker.nextNode()) {
+      const node = walker.currentNode;
+      const match = node.textContent.match(USTA_ICON_TEXT);
+      found = match ? ustaIconName(match[2]) : '';
+      if (found) {
+        icon = found;
+        before = !textBefore(node) && !node.textContent.slice(0, match.index).trim();
+        node.textContent = `${node.textContent.slice(0, match.index)}${match[1]}${node.textContent.slice(match.index + match[0].length)}`;
+      }
+    }
+  }
+  if (fromOption) { icon = fromOption; before = optionBefore; }
+  if (!icon) return;
+  // tidy the spaces the icon left behind
+  a.normalize();
+  const { firstChild: first, lastChild: last } = a;
+  if (first?.nodeType === Node.TEXT_NODE) first.textContent = first.textContent.trimStart();
+  if (last?.nodeType === Node.TEXT_NODE) last.textContent = last.textContent.trimEnd();
+  const el = document.createElement('span');
+  el.className = 'cta-usta-icon';
+  el.dataset.icon = icon; // per-icon filters in usta-buttons.css
+  el.setAttribute('aria-hidden', 'true');
+  el.style.setProperty('--cta-usta-icon', `url("${window.hlx.codeBasePath}/icons/usta/${icon}.svg")`);
+  a.append(el);
+  a.classList.add('cta-usta-with-icon');
+  if (before) a.classList.add('cta-usta-icon-left');
+}
+
+/**
+ * The usta.com button-core extras (the look, size and width come from the style name):
+ * border-color, hover-color / hover-text-color / hover-border-color, icon (+ icon-position).
+ * Unknown values are ignored.
+ * @param {HTMLAnchorElement} a the cta-button
+ * @param {Object} options from takeCtaOptions
+ */
+function applyUstaOptions(a, options) {
+  const add = (cls) => cls && a.classList.add(cls);
+  if (a.classList.contains('cta-usta-disabled')) {
+    a.setAttribute('aria-disabled', 'true');
+    a.tabIndex = -1;
+  }
+  const border = ctaColor(options['border-color']);
+  if (border) {
+    a.style.setProperty('--cta-border', border);
+    a.style.setProperty('--cta-border-hover', border);
+  }
+  const hover = {
+    '--cta-bg-hover': ctaColor(options['hover-color']),
+    '--cta-color-hover': ctaColor(options['hover-text-color']),
+    '--cta-border-hover': ctaColor(options['hover-border-color']),
+  };
+  Object.entries(hover).filter(([, v]) => v).forEach(([prop, v]) => a.style.setProperty(prop, v));
+  if (Object.values(hover).some(Boolean)) add('cta-usta-custom-hover');
+  decorateUstaIcon(a, options);
+}
+
+/**
  * Applies authored link options to a cta-button: `color` / `text-color` (see
- * ctaOptionVars) and `new-tab` (true / false).
+ * ctaOptionVars) and `new-tab` (true / false); usta styles also get applyUstaOptions.
  * @param {HTMLAnchorElement} a the cta-button
  * @param {Object} options from takeCtaOptions
  */
 function applyCtaOptions(a, options) {
-  const { vars, custom } = ctaOptionVars(options, a.classList.contains('cta-outline'));
+  // outline: colour = border + text. The usta styles colour the BACKGROUND (as usta.com does)
+  const outline = a.classList.contains('cta-outline');
+  const { vars, custom } = ctaOptionVars(options, outline);
   Object.entries(vars).forEach(([prop, value]) => a.style.setProperty(prop, value));
   if (custom) a.classList.add('cta-custom');
+  // usta.com colours only the background (inline background-color): every usta
+  // family keeps its own border (transparent / black) unless border-color is set
+  if (a.matches('.cta-usta, .cta-usta-classic, .cta-usta-join, .cta-usta-signin')) {
+    a.style.removeProperty('--cta-border');
+    a.style.removeProperty('--cta-border-hover');
+    // …and its own text colour (no contrast pick) unless text-color is authored
+    if (!ctaColor(options['text-color'])) {
+      a.style.removeProperty('--cta-color');
+      a.style.removeProperty('--cta-color-hover');
+    }
+  }
+  if (a.classList.contains('cta-usta')) applyUstaOptions(a, options);
   const newTab = (options['new-tab'] || '').toLowerCase();
   if (['true', 'yes', '1'].includes(newTab)) {
     a.target = '_blank';
@@ -411,8 +592,12 @@ function makeCtaButton(a, p, style) {
 function decorateButtons(main) {
   main.querySelectorAll('p a[href]').forEach((a) => {
     const p = a.closest('p');
-    if (a.querySelector('img')) return;
+    // image links never become buttons; an EDS `:icon:` only in a usta button (icons are a
+    // usta.com feature — foundation links with an icon stay links, as before)
+    const imgs = [...a.querySelectorAll('img')];
+    if (imgs.some((img) => !img.closest('span.icon'))) return;
     const options = takeCtaOptions(a, p);
+    if (imgs.length && !ctaStyleClasses(options?.style).split(' ').includes('cta-usta')) return;
     const text = a.textContent.trim();
 
     // quick structural check: the link is the whole paragraph
@@ -440,7 +625,7 @@ function decorateButtons(main) {
     const mark = marks && (a.closest(marks) || a.querySelector(marks));
     const markStyle = mark && p.contains(mark) ? styles[mark.tagName.toLowerCase()] : '';
     if (markStyle || options) {
-      const optionStyle = CTA_OPTION_STYLES[(options?.style || '').toLowerCase()];
+      const optionStyle = ctaStyleClasses(options?.style);
       makeCtaButton(a, p, optionStyle || markStyle || 'cta-blue');
       if (options) applyCtaOptions(a, options);
       return;
@@ -460,6 +645,8 @@ function decorateButtons(main) {
       em.replaceWith(a);
     }
   });
+  // usta.com buttons: their stylesheet is only fetched on pages that use one
+  if (main.querySelector('a[class*="cta-usta"]')) loadUstaButtonsCss();
 }
 
 // a raw button link inside da.live's inline editor (marks as authored)
@@ -471,7 +658,7 @@ const EDITING_CTA = 'p > em > strong > a:has(> :is(sub, sup, u)), p > strong > a
  * button link plus its `[color=…]` options text. The editor's contents must not
  * be touched (changes become document edits), so the authored colors are set
  * as `--cta-edit-*` properties on its `.prosemirror-editor` wrapper and the
- * wrapper gets classes that buttons.css uses to color the button and hide the
+ * wrapper gets classes that foundation-buttons.css uses to color the button and hide the
  * options text — so it looks like the published button.
  */
 function previewEditingCtas() {
@@ -505,6 +692,38 @@ function previewEditingCtas() {
     });
     editor.classList.toggle('cta-edit-custom', Object.keys(vars).length > 0);
     editor.classList.toggle('cta-edit-options', found.length > 0 && found.every((f) => f.standalone));
+
+    // usta.com buttons carry no marks: a standalone `p > a` + `[style="usta…", …]`.
+    // Same rule: classes + `--cta-edit-*` go on the wrapper only (styles/usta-buttons.css).
+    [...editor.classList].filter((c) => c.startsWith('cta-edit-usta'))
+      .forEach((c) => editor.classList.remove(c));
+    const usta = found.length ? [] : [...editor.querySelectorAll('p > a')].map((link) => {
+      const nodes = [...link.parentElement.childNodes];
+      const after = nodes.slice(nodes.indexOf(link) + 1).map((n) => n.textContent).join('').trim();
+      const before = link.previousSibling?.textContent.trim();
+      const match = after.match(CTA_OPTIONS_SUFFIX);
+      const opts = !before && match?.index === 0 ? parseCtaOptions(match[1]) : null;
+      return opts && ctaStyleClasses(opts.style).includes('cta-usta') ? opts : null;
+    }).filter(Boolean);
+    if (usta.length === 1) {
+      const [opts] = usta;
+      // the page classes, prefixed: cta-usta-ghost → cta-edit-usta-ghost
+      const classes = ctaStyleClasses(opts.style).split(' ').map((c) => c.replace(/^cta-/, 'cta-edit-'));
+      editor.classList.add('cta-edit-usta', ...classes);
+      // as on the page: colour = background, each style keeps its own border
+      const { vars: ustaVars } = ctaOptionVars(opts, false);
+      delete ustaVars['--cta-border'];
+      delete ustaVars['--cta-border-hover'];
+      if (!ctaColor(opts['text-color'])) {
+        delete ustaVars['--cta-color'];
+        delete ustaVars['--cta-color-hover'];
+      }
+      const border = ctaColor(opts['border-color']);
+      if (border) ustaVars['--cta-border'] = border;
+      Object.entries(ustaVars).forEach(([prop, value]) => {
+        editor.style.setProperty(prop.replace('--cta-', '--cta-edit-'), value);
+      });
+    }
   };
   let queued = false;
   new MutationObserver(() => {
@@ -703,9 +922,9 @@ async function loadEager(doc) {
   // spacing) isn't LCP-critical. Awaiting it added a full CSS round-trip to the
   // H1 render delay on slow mobile. Resolve `templateName` for loadLazy's JS.
   const templateCssPromise = loadTemplateCSS();
-  // CTA buttons (styles/buttons.css): start loading now; only block the first
+  // CTA buttons (styles/foundation-buttons.css): start loading now; only block the first
   // section on it when that section actually contains a cta-button.
-  const buttonsCssPromise = loadCSS(`${window.hlx.codeBasePath}/styles/buttons.css`);
+  const buttonsCssPromise = loadCSS(`${window.hlx.codeBasePath}/styles/foundation-buttons.css`);
   const main = doc.querySelector('main');
   if (main) {
     // Experience Workspace block-library pages: strip the DA authoring artifacts
@@ -716,6 +935,7 @@ async function loadEager(doc) {
     }
     decorateMain(main);
     if (main.querySelector('.section:first-of-type .cta-button')) await buttonsCssPromise;
+    if (main.querySelector('.section:first-of-type a[class*="cta-usta"]')) await loadUstaButtonsCss();
     applySectionBackgrounds(main); // not awaited: the options fetch must not block LCP
     document.body.classList.add('appear');
     await loadSection(main.querySelector('.section'), waitForFirstImage);

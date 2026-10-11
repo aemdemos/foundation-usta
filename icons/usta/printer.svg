@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Printer</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M22,11.3333333 L22,21.3333333 L2,21.3333333 L2,11.3333333 L5.33333333,11.3333333 L5.33333333,3 L13.94,3 C15.2216667,3 18.6666667,7.04333333 18.6666667,8.02583333 L18.6666667,11.3333333 L22,11.3333333 Z M17,8.50333333 C17,7.38833333 15.0991667,7.25833333 14.2916667,7.47916667 C14.6691667,6.80166667 14.5458333,4.66666667 13.39,4.66666667 L7,4.66666667 L7,15.5 L17,15.5 L17,8.50333333 Z M15.3333333,13 L8.66666667,13 L8.66666667,12.1666667 L15.3333333,12.1666667 L15.3333333,13 Z M15.3333333,10.5 L8.66666667,10.5 L8.66666667,11.3333333 L15.3333333,11.3333333 L15.3333333,10.5 Z M15.3333333,8.83333333 L8.66666667,8.83333333 L8.66666667,9.66666667 L15.3333333,9.66666667 L15.3333333,8.83333333 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Printer" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#c1c6c8" xlink:href="#path-1"></use>
+    </g>
+</svg>

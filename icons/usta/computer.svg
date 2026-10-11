@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Computer</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M4,16 L20,16 L20,6 L4,6 L4,16 Z M20,18 C21.105,18 21.99,17.105 21.99,16 L22,6 C22,4.895 21.105,4 20,4 L4,4 C2.895,4 2,4.895 2,6 L2,16 C2,17.105 2.895,18 4,18 L0,18 L0,20 L24,20 L24,18 L20,18 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Computer" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

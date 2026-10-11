@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Envelope</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M20.0001,8.00025 L12.0001,13.00025 L4.0001,8.00025 L4.0001,6.00025 L12.0001,11.00025 L20.0001,6.00025 L20.0001,8.00025 Z M20.0001,4.00025 L4.0001,4.00025 C2.8951,4.00025 2.0101,4.89475 2.0101,6.00025 L2.0001,18.00025 C2.0001,19.10525 2.8951,20.00025 4.0001,20.00025 L20.0001,20.00025 C21.1051,20.00025 22.0001,19.10525 22.0001,18.00025 L22.0001,6.00025 C22.0001,4.89475 21.1051,4.00025 20.0001,4.00025 L20.0001,4.00025 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Envelope" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#c1c6c8" xlink:href="#path-1"></use>
+    </g>
+</svg>

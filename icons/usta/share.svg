@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Share</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M7.75,15.875 C9.54629167,8.05254167 16.4583333,6.638625 16.4583333,6.638625 L16.4583333,4 L22,9.25429167 L16.4583333,14.5552917 L16.4583333,11.9166667 C16.4583333,11.9166667 11.57375,11.7812917 7.75,15.875 Z M17.25,15.9897917 L17.25,18.25 L4.58333333,18.25 L4.58333333,8.75 L9.80675,8.75 C10.41475,8.12695833 11.0425417,7.602875 11.6584583,7.16666667 L3,7.16666667 L3,19.8333333 L18.8333333,19.8333333 L18.8333333,14.4745417 L17.25,15.9897917 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Share" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#c1c6c8" xlink:href="#path-1"></use>
+    </g>
+</svg>

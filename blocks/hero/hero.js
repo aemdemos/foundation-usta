@@ -102,7 +102,7 @@ function decorateError(block) {
   block.querySelectorAll('p > a').forEach((a) => {
     const p = a.parentElement;
     if (p.childElementCount === 1 && p.textContent.trim() === a.textContent.trim()) {
-      // an authored cta-button (buttons.css) keeps its own style
+      // an authored cta-button (foundation-buttons.css) keeps its own style
       if (!a.classList.contains('cta-button')) a.classList.add('button');
       p.classList.add('button-container');
     }
@@ -155,7 +155,7 @@ function decorateBanner(block) {
   block.querySelectorAll('p > a').forEach((a) => {
     const p = a.parentElement;
     if (p.childElementCount === 1 && p.textContent.trim() === a.textContent.trim()) {
-      // an authored cta-button (buttons.css) keeps its own style
+      // an authored cta-button (foundation-buttons.css) keeps its own style
       if (!a.classList.contains('cta-button')) a.classList.add('button');
       p.classList.add('button-container');
     }
@@ -223,7 +223,7 @@ function decorateTextUp(block) {
   block.querySelectorAll('p > a').forEach((a) => {
     const p = a.parentElement;
     if (p.childElementCount === 1 && p.textContent.trim() === a.textContent.trim()) {
-      // an authored cta-button (buttons.css) keeps its own style
+      // an authored cta-button (foundation-buttons.css) keeps its own style
       if (!a.classList.contains('cta-button')) a.classList.add('button');
       p.classList.add('button-container');
     }

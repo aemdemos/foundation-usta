@@ -23,7 +23,85 @@ const STYLES = {
   outline: { outer: ['strong', 'em'], inner: 'u', className: 'cta-outline' },
   dark: { outer: ['strong'], inner: 'sup', className: 'cta-dark' },
   link: { outer: [], inner: '', className: '' },
+  // www.usta.com fixed designs (styles/usta-buttons.css): no marks, written as a `style="…"` option
+  'usta-classic': {
+    outer: [], inner: '', className: 'cta-usta-classic', option: true,
+  },
+  'usta-classic-outline': {
+    outer: [], inner: '', className: 'cta-usta-classic cta-usta-classic-ghost', option: true,
+  },
+  'usta-header-join': {
+    outer: [], inner: '', className: 'cta-usta-join', option: true,
+  },
+  'usta-header-signin': {
+    outer: [], inner: '', className: 'cta-usta-signin', option: true,
+  },
 };
+
+// usta.com button-core designs named from words: `usta-pill-wide`, `usta-square-small-column`
+// (= USTA_WORDS in scripts.js — keep in sync)
+const USTA_WORDS = {
+  pill: [],
+  outline: ['cta-usta-ghost'],
+  square: ['cta-usta-rect'],
+  app: ['cta-usta-app'],
+  medium: ['cta-usta-h40'],
+  small: ['cta-usta-h40', 'cta-usta-fs-small'],
+  mini: ['cta-usta-h24', 'cta-usta-fs-small'],
+  compact: ['cta-usta-fs-small'],
+  wide: ['cta-usta-w-large'],
+  narrow: ['cta-usta-w-small'],
+  column: ['cta-usta-w-full'],
+  padded: ['cta-usta-pad-50'],
+  disabled: ['cta-usta-disabled'],
+};
+
+/**
+ * A style's markup recipe: a fixed STYLES entry, or a usta.com button-core design
+ * named from USTA_WORDS (mirrors ctaStyleClasses() in scripts.js).
+ * @param {string} style the style name
+ * @returns {Object|null} { outer, inner, className, option, icons }
+ */
+function styleInfo(style) {
+  const s = (style || '').toLowerCase();
+  if (STYLES[s]) return STYLES[s];
+  const words = s.startsWith('usta-') ? s.slice(5).split('-') : [];
+  const valid = words.length && new Set(words).size === words.length
+    && words.every((w) => USTA_WORDS[w]);
+  if (!valid) return null;
+  return {
+    outer: [],
+    inner: '',
+    className: ['cta-usta', ...words.flatMap((w) => USTA_WORDS[w])].join(' '),
+    option: true,
+    icons: true,
+  };
+}
+
+// usta.com colours a preset may fix (written as options, kept when a button is edited)
+const EXTRA_KEYS = ['border-color', 'hover-color', 'hover-text-color', 'hover-border-color'];
+// the usta.com icons (icons/usta/, = USTA_ICONS in scripts.js), written as `icon="…"`
+const USTA_ICONS = ['add', 'alarm', 'arrow-down', 'arrow-left', 'arrow-right', 'arrow-up', 'attachment',
+  'award', 'bookmark', 'calendar', 'cancel', 'check', 'chevron-back', 'chevron-down', 'chevron-forward',
+  'chevron-up', 'clock', 'cloud', 'comment', 'computer', 'edit', 'envelope', 'facebook', 'flag', 'folder', 'globe',
+  'globe-primary', 'globe-primary-cut', 'google-plus', 'hamburger', 'home', 'info', 'instagram', 'invite', 'like',
+  'link', 'linkedin', 'live-chat', 'location', 'location-search', 'lock', 'logout', 'megaphone', 'mic', 'mobile',
+  'more-info', 'more-options', 'navigation', 'notification', 'overflow', 'pagination-left', 'pagination-right',
+  'pause', 'phone', 'pinterest', 'play', 'pop-out', 'printer', 'profile', 'refresh', 'screen-exit-full',
+  'screen-full', 'search', 'settings', 'share', 'star', 'success', 'sync', 'tip', 'tennis-ball', 'trash',
+  'triangle-down', 'triangle-left', 'triangle-right', 'triangle-up', 'twitter', 'view', 'vimeo', 'visibility-off',
+  'volume-default', 'volume-mute', 'warning', 'web', 'wifi', 'youtube'];
+// = USTA_ICON_ALIASES in scripts.js
+const USTA_ICON_ALIASES = {
+  download: 'arrow-down', external: 'pop-out', 'external-link': 'pop-out', 'open-in-new': 'pop-out',
+};
+const ustaIcon = (name) => {
+  const n = (name || '').toLowerCase().replace(/^usta-/, '');
+  const icon = USTA_ICON_ALIASES[n] || n;
+  return USTA_ICONS.includes(icon) ? icon : '';
+};
+// a `:name:` in a label (start, end or between spaces)
+const ICON_TEXT = /(^|\s):([a-z0-9-]+):(?=\s|$)/i;
 
 const DEFAULT_PRESETS = [
   {
@@ -43,16 +121,55 @@ const DEFAULT_PRESETS = [
   },
 ];
 
+// www.usta.com designs (crawl of 3,388 EN pages) — the most used + one of each look.
+// `extra` = the fixed usta.com colours each design writes as options.
+const usta = (name, style, label, description, more = {}) => ({
+  name: `USTA — ${name}`, style, label, description, color: '', textColor: '', extra: {}, icon: '', iconBefore: false, ...more,
+});
+DEFAULT_PRESETS.push(
+  usta('Pill', 'usta-pill', 'LEARN MORE', 'usta.com standard: black pill, 56px, fits the text.'),
+  usta('Pill, wide — lime', 'usta-pill-wide', 'REGISTER NOW', 'At least 280px wide. Brand lime, black text.', { color: '#cfff05', textColor: '#000000' }),
+  usta('Pill, wide — white', 'usta-pill-wide', 'EXPLORE', 'For dark bands: white, black text.', { color: '#ffffff', textColor: '#000000' }),
+  usta('Pill — blue', 'usta-pill', 'LEARN MORE', 'Brand blue #0373f3, white text.', { color: '#0373f3' }),
+  usta('Pill, wide — green', 'usta-pill-wide', 'JOIN', 'Membership: dark green, light green text.', { color: '#19462e', textColor: '#a4ee90' }),
+  usta('Pill, wide — cream', 'usta-pill-wide', 'SIGN UP NOW', 'Cream #ffefbe, blue text.', { color: '#ffefbe', textColor: '#0373f3' }),
+  usta('Pill, column — white border', 'usta-pill-column', 'SIGN UP', 'For dark bands: 2px white border; fills its column.', { extra: { 'border-color': '#ffffff' } }),
+  usta('Pill, medium, column', 'usta-pill-medium-column', 'CONTACT', 'The 40px pill; fills its column.'),
+  usta('Outline, medium, wide', 'usta-outline-medium-wide', 'SEE ALL NEWS', 'Black 2px border, 40px, at least 280px.'),
+  usta('Outline, column', 'usta-outline-column', 'NCAA GUIDE', 'Outline pill; fills its column.'),
+  usta('Square, column', 'usta-square-column', 'FIND EVENTS', '3px corners, 1px border; fills its column.'),
+  usta('Square, small — external link', 'usta-square-small-column', 'LEARN MORE', 'Cards: 40px, 14px text, pop-out icon.', { icon: 'pop-out' }),
+  usta('Square, small — download', 'usta-square-small-column', 'DOWNLOAD PDF', 'Cards: 40px, 14px text, download arrow.', { icon: 'arrow-down' }),
+  usta('Pill, column — icon', 'usta-pill-column', 'SPORTSMANSHIP', 'Label + 20px icon (star); fills its column.', { icon: 'star' }),
+  usta('Pill — back', 'usta-pill', 'BACK TO AWARDS', 'Arrow before the label.', { icon: 'arrow-left', iconBefore: true }),
+  usta('Pill, wide — custom hover', 'usta-pill-wide', 'WILD CARD REQUEST FORM', 'Turns white with a black border on hover.', {
+    extra: { 'hover-color': '#ffffff', 'hover-text-color': '#000000', 'hover-border-color': '#000000' },
+  }),
+  usta('App, wide', 'usta-app-wide', 'GET STARTED', 'Widget button: label keeps 1px letter spacing.'),
+  usta('App, wide, disabled', 'usta-app-wide-disabled', 'SEARCH', 'Grey disabled state.'),
+  usta('Classic', 'usta-classic', 'SHARE LOCATION', 'Older black button: 1px border, 270px.'),
+  usta('Header — join', 'usta-header-join', 'JOIN', 'Header link: grey border, 3px corners.'),
+  usta('Header — sign in', 'usta-header-signin', 'SIGN IN', 'Header button: black, 120 × 40.'),
+);
+
 const DEFAULT_OPTIONS = {
   color: [
     { label: 'Brand blue', value: '#0373f3' },
     { label: 'Black', value: '#000000' },
     { label: 'Dark grey', value: '#333333' },
     { label: 'Orange', value: '#e87722' },
+    { label: 'USTA lime', value: '#cfff05' },
+    { label: 'USTA dark green', value: '#19462e' },
+    { label: 'USTA light green', value: '#a4ee90' },
+    { label: 'USTA cream', value: '#ffefbe' },
+    { label: 'White', value: '#ffffff' },
   ],
   'text-color': [
     { label: 'White', value: '#ffffff' },
     { label: 'Black', value: '#000000' },
+    { label: 'Brand blue', value: '#0373f3' },
+    { label: 'USTA light green', value: '#a4ee90' },
+    { label: 'USTA dark green', value: '#19462e' },
   ],
 };
 
@@ -71,6 +188,7 @@ const form = $('.btn-plugin-form');
 const preview = $('.btn-plugin-preview');
 const submit = $('.btn-plugin-submit');
 const swatchSets = [...form.querySelectorAll('.btn-plugin-colors')];
+const iconSet = form.querySelector('.btn-plugin-icons');
 
 const state = {
   actions: null,
@@ -146,6 +264,28 @@ function sheetRows(json, name) {
   return null;
 }
 
+/**
+ * Parses `key="value", …` (a preset's fixed usta modifiers) into a clean object —
+ * only EXTRA_KEYS, values reduced to safe characters.
+ * @param {string|Object} source the options text, or an object of options
+ * @returns {Object} key → value
+ */
+function parseExtra(source) {
+  const pairs = typeof source === 'string'
+    ? [...source.matchAll(OPTION_PAIR)].map(([, key, quoted, bare]) => [key.toLowerCase(), quoted ?? bare ?? ''])
+    : Object.entries(source || {});
+  const extra = {};
+  pairs.forEach(([key, value]) => {
+    const v = String(value).trim();
+    if (!EXTRA_KEYS.includes(key) || !v) return;
+    if (key.endsWith('color')) { if (cleanColor(v)) extra[key] = cleanColor(v); return; }
+    if (/^[a-z0-9-]+$/i.test(v)) extra[key] = v.toLowerCase();
+  });
+  return extra;
+}
+
+const extraText = (extra) => Object.entries(extra || {}).map(([k, v]) => `${k}="${v}"`).join(', ');
+
 function parsePresets(rows) {
   const presets = (rows || [])
     .map((row) => ({
@@ -155,8 +295,12 @@ function parsePresets(rows) {
       textColor: cleanColor(row['text-color']),
       label: row.label || '',
       description: row.description || '',
+      extra: parseExtra(row.options || ''),
+      // an icon in the options column: `icon="download"` (+ `icon-position="before"`)
+      icon: ustaIcon((row.options || '').match(/icon="([^"]*)"/)?.[1]),
+      iconBefore: /icon-position="(before|left)"/i.test(row.options || ''),
     }))
-    .filter((p) => p.name && STYLES[p.style]);
+    .filter((p) => p.name && styleInfo(p.style));
   return presets.length ? presets : null;
 }
 
@@ -239,25 +383,63 @@ function applyColors(a, color, textColor) {
     set('--cta-border-hover', 'var(--cta-border)');
     a.classList.add('cta-custom');
   }
+  if (a.matches('.cta-usta, .cta-usta-classic, .cta-usta-join, .cta-usta-signin')) {
+    a.style.removeProperty('--cta-border');
+    a.style.removeProperty('--cta-border-hover');
+    if (!fg) {
+      a.style.removeProperty('--cta-color');
+      a.style.removeProperty('--cta-color-hover');
+    }
+  }
+}
+
+/**
+ * The usta.com modifiers + icon on a preview (mirrors applyUstaOptions() / decorateUstaIcon()).
+ * @param {HTMLAnchorElement} a the preview button
+ * @param {Object} extra the preset's modifiers
+ * @param {string} [icon] a USTA_ICONS name
+ * @param {boolean} [iconBefore] icon before the label
+ */
+function applyUstaPreview(a, extra, icon, iconBefore) {
+  if (!a.classList.contains('cta-usta')) return;
+  if (extra['border-color']) {
+    a.style.setProperty('--cta-border', resolveColor(extra['border-color']));
+    a.style.setProperty('--cta-border-hover', resolveColor(extra['border-color']));
+  }
+  const hover = { 'hover-color': '--cta-bg-hover', 'hover-text-color': '--cta-color-hover', 'hover-border-color': '--cta-border-hover' };
+  Object.entries(hover).forEach(([key, prop]) => {
+    if (extra[key]) { a.style.setProperty(prop, resolveColor(extra[key])); a.classList.add('cta-usta-custom-hover'); }
+  });
+  if (icon) {
+    const span = document.createElement('span');
+    span.className = 'cta-usta-icon';
+    span.dataset.icon = icon;
+    span.style.setProperty('--cta-usta-icon', `url("/icons/usta/${icon}.svg")`);
+    a.append(span);
+    a.classList.add('cta-usta-with-icon');
+    if (iconBefore) a.classList.add('cta-usta-icon-left');
+  }
 }
 
 /**
  * The button as the site renders it (inert: previews are not links).
- * @param {{style: string, label: string, color?: string, textColor?: string}} b
+ * @param {{style: string, label: string, color?: string, textColor?: string, extra?: Object,
+ *   icon?: string, iconBefore?: boolean}} b
  * @returns {HTMLParagraphElement}
  */
 function renderButton({
-  style, label, color, textColor,
+  style, label, color, textColor, extra, icon, iconBefore,
 }) {
   const p = document.createElement('p');
   const a = document.createElement('a');
   a.href = '#';
   a.textContent = label || ' ';
-  const { className } = STYLES[style];
+  const { className, icons } = styleInfo(style);
   if (className) {
     p.className = 'button-wrapper';
     a.className = `cta-button ${className}`;
     applyColors(a, color, textColor);
+    applyUstaPreview(a, extra || {}, icons && ustaIcon(icon), iconBefore);
   }
   p.append(a);
   return p;
@@ -269,17 +451,26 @@ function renderButton({
  * @returns {string} the paragraph to insert, in the shape decorateButtons() reads
  */
 function buildHtml({
-  style, label, url, color, textColor, newTab,
+  style, label, url, color, textColor, newTab, extra, icon, iconBefore,
 }) {
-  const { outer, inner } = STYLES[style];
+  const {
+    outer, inner, option, icons,
+  } = styleInfo(style);
   const href = newTab ? `${url}${NEW_TAB}` : url;
   let html = escapeHtml(label);
   if (inner) html = `<${inner}>${html}</${inner}>`;
   html = `<a href="${escapeHtml(href)}">${html}</a>`;
   [...outer].reverse().forEach((tag) => { html = `<${tag}>${html}</${tag}>`; });
   const options = [];
+  if (option) options.push(`style="${style}"`);
   if (style !== 'link' && color) options.push(`color="${color}"`);
   if (style !== 'link' && textColor) options.push(`text-color="${textColor}"`);
+  if (option && extra && Object.keys(extra).length) options.push(extraText(extra));
+  // the icon, read by decorateUstaIcon() (as typed: `icon="download"`)
+  if (icons && ustaIcon(icon)) {
+    options.push(`icon="${ustaIcon(icon)}"`);
+    if (iconBefore) options.push('icon-position="before"');
+  }
   if (options.length) html += ` [${escapeHtml(options.join(', '))}]`;
   return `<p>${html}</p>`;
 }
@@ -311,7 +502,7 @@ function parseSelection(html) {
       options[key.toLowerCase()] = (quoted ?? bare ?? '').trim();
     });
   }
-  if (STYLES[(options.style || '').toLowerCase()]) style = options.style.toLowerCase();
+  if (styleInfo(options.style)) style = options.style.toLowerCase();
 
   let url = a.getAttribute('href');
   let newTab = ['true', 'yes', '1'].includes((options['new-tab'] || '').toLowerCase());
@@ -319,13 +510,40 @@ function parseSelection(html) {
     url = url.slice(0, -NEW_TAB.length);
     newTab = true;
   }
+  // the icon: `:name:` text, or a span.icon (when the selection comes back converted)
+  let icon = '';
+  let iconBefore = false;
+  let label = a.textContent.replace(OPTIONS_SUFFIX, '').trim();
+  const span = a.querySelector('span.icon');
+  if (span) {
+    icon = ustaIcon([...span.classList].find((c) => c.startsWith('icon-'))?.slice(5));
+    const range = doc.createRange();
+    range.setStart(a, 0);
+    range.setEndBefore(span);
+    iconBefore = !range.toString().trim();
+  } else {
+    const found = label.match(ICON_TEXT);
+    icon = found ? ustaIcon(found[2]) : '';
+    if (icon) {
+      iconBefore = !label.slice(0, found.index).trim();
+      label = `${label.slice(0, found.index)}${label.slice(found.index + found[0].length)}`.replace(/\s+/g, ' ').trim();
+    }
+  }
+  // the `icon="…"` option wins, as on the page
+  if (ustaIcon(options.icon)) {
+    icon = ustaIcon(options.icon);
+    iconBefore = ['before', 'left'].includes((options['icon-position'] || '').toLowerCase());
+  }
   return {
     style,
     url,
     newTab,
-    label: a.textContent.replace(OPTIONS_SUFFIX, '').trim(),
+    icon,
+    iconBefore,
+    label,
     color: cleanColor(options.color),
     textColor: cleanColor(options['text-color']),
+    extra: parseExtra(options),
   };
 }
 
@@ -365,17 +583,48 @@ function fillSwatches(fieldset, choices, selected) {
   }));
 }
 
+/**
+ * Fills the icon group: "No icon" first, then every usta.com icon as a chip.
+ * @param {string} [selected] the icon to check
+ */
+function fillIcons(selected) {
+  const choices = [{ label: iconSet.dataset.default, value: '' }, ...USTA_ICONS.map((i) => ({ label: i, value: i }))];
+  const current = choices.find((c) => c.value === ustaIcon(selected)) || choices[0];
+  iconSet.querySelector('.btn-plugin-swatches').replaceChildren(...choices.map((choice) => {
+    const swatch = document.createElement('label');
+    swatch.className = 'btn-plugin-swatch';
+    swatch.title = choice.label;
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'icon';
+    input.value = choice.value;
+    input.checked = choice === current;
+    input.setAttribute('aria-label', choice.label);
+    const chip = document.createElement('span');
+    chip.className = 'btn-plugin-chip';
+    if (choice.value) {
+      chip.classList.add('is-icon');
+      chip.style.setProperty('--icon', `url("/icons/usta/${choice.value}.svg")`);
+    } else chip.classList.add('is-default');
+    swatch.append(input, chip);
+    return swatch;
+  }));
+}
+
 function readForm() {
   const data = new FormData(form);
   const url = String(data.get('url') || '').trim();
   const typedNewTab = url.endsWith(NEW_TAB);
   return {
     style: state.preset.style,
+    extra: state.extra || state.preset.extra || {},
     label: String(data.get('label') || '').trim(),
     url: typedNewTab ? url.slice(0, -NEW_TAB.length) : url,
     color: cleanColor(data.get('color')),
     textColor: cleanColor(data.get('text-color')),
     newTab: data.get('new-tab') === 'on' || typedNewTab,
+    icon: ustaIcon(data.get('icon')),
+    iconBefore: data.get('icon-before') === 'on',
   };
 }
 
@@ -383,7 +632,7 @@ function updatePreview() {
   const values = readForm();
   preview.replaceChildren(renderButton({ ...values, label: values.label || state.preset.label }));
   // the chosen colour's name next to each swatch group's legend
-  swatchSets.forEach((fieldset) => {
+  [...swatchSets, iconSet].forEach((fieldset) => {
     const checked = fieldset.querySelector('input:checked');
     fieldset.querySelector('.btn-plugin-swatch-value').textContent = checked?.closest('label').title || '';
   });
@@ -402,12 +651,17 @@ function setError(input, show) {
  */
 function openEditor(preset, values = {}) {
   state.preset = preset;
+  // an edited button keeps its own usta modifiers; a picked design uses the preset's
+  state.extra = values.extra && Object.keys(values.extra).length ? values.extra : null;
   editor.classList.toggle('is-link', preset.style === 'link');
+  editor.classList.toggle('has-icons', Boolean(styleInfo(preset.style)?.icons));
   $('#btn-plugin-editor-heading').textContent = preset.name;
   $('.btn-plugin-description').textContent = preset.description;
   form.elements.label.value = values.label ?? preset.label;
   form.elements.url.value = values.url ?? '';
   form.elements['new-tab'].checked = Boolean(values.newTab);
+  fillIcons(values.icon ?? preset.icon);
+  form.elements['icon-before'].checked = Boolean(values.icon ? values.iconBefore : preset.iconBefore);
   const [colorSet, textColorSet] = swatchSets;
   fillSwatches(colorSet, state.options.color || [], values.color ?? preset.color);
   fillSwatches(textColorSet, state.options['text-color'] || [], values.textColor ?? preset.textColor);
@@ -505,8 +759,10 @@ function renderGallery() {
  * colours, else same style, else an ad-hoc one for that style.
  */
 function matchPreset(values) {
-  return state.presets.find((p) => p.style === values.style
+  const sameExtra = (p) => extraText(p.extra) === extraText(values.extra);
+  return state.presets.find((p) => p.style === values.style && sameExtra(p)
       && same(p.color, values.color) && same(p.textColor, values.textColor))
+    || state.presets.find((p) => p.style === values.style && sameExtra(p))
     || state.presets.find((p) => p.style === values.style)
     || {
       name: values.style, style: values.style, label: '', description: '',
