@@ -80,25 +80,24 @@ function styleInfo(style) {
 
 // usta.com colours a preset may fix (written as options, kept when a button is edited)
 const EXTRA_KEYS = ['border-color', 'hover-color', 'hover-text-color', 'hover-border-color'];
-// the usta.com icons (icons/usta/, = USTA_ICONS in scripts.js), written as `icon="…"`
-const USTA_ICONS = ['add', 'alarm', 'arrow-down', 'arrow-left', 'arrow-right', 'arrow-up', 'attachment',
-  'award', 'bookmark', 'calendar', 'cancel', 'check', 'chevron-back', 'chevron-down', 'chevron-forward',
-  'chevron-up', 'clock', 'cloud', 'comment', 'computer', 'edit', 'envelope', 'facebook', 'flag', 'folder', 'globe',
-  'globe-primary', 'globe-primary-cut', 'google-plus', 'hamburger', 'home', 'info', 'instagram', 'invite', 'like',
-  'link', 'linkedin', 'live-chat', 'location', 'location-search', 'lock', 'logout', 'megaphone', 'mic', 'mobile',
-  'more-info', 'more-options', 'navigation', 'notification', 'overflow', 'pagination-left', 'pagination-right',
-  'pause', 'phone', 'pinterest', 'play', 'pop-out', 'printer', 'profile', 'refresh', 'screen-exit-full',
-  'screen-full', 'search', 'settings', 'share', 'star', 'success', 'sync', 'tip', 'tennis-ball', 'trash',
-  'triangle-down', 'triangle-left', 'triangle-right', 'triangle-up', 'twitter', 'view', 'vimeo', 'visibility-off',
-  'volume-default', 'volume-mute', 'warning', 'web', 'wifi', 'youtube'];
+// icons (icons/usta-buttons-icons/, written as `icon="…"`) are listed in the DA sheet:
+// `options` tab, key `icon`
 // = USTA_ICON_ALIASES in scripts.js
 const USTA_ICON_ALIASES = {
   download: 'arrow-down', external: 'pop-out', 'external-link': 'pop-out', 'open-in-new': 'pop-out',
 };
+// any icon file name (as ustaIconName() in scripts.js): letters, digits, hyphens
 const ustaIcon = (name) => {
   const n = (name || '').toLowerCase().replace(/^usta-/, '');
   const icon = USTA_ICON_ALIASES[n] || n;
-  return USTA_ICONS.includes(icon) ? icon : '';
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(icon) ? icon : '';
+};
+// `arrow-down` → `Arrow down (download)`: the name plus the alias authors may type
+const iconLabel = (icon) => {
+  const words = (name) => name.replace(/-/g, ' ');
+  const alias = Object.keys(USTA_ICON_ALIASES).find((a) => USTA_ICON_ALIASES[a] === icon);
+  const label = words(icon).replace(/^./, (c) => c.toUpperCase());
+  return alias ? `${label} (${words(alias)})` : label;
 };
 // a `:name:` in a label (start, end or between spaces)
 const ICON_TEXT = /(^|\s):([a-z0-9-]+):(?=\s|$)/i;
@@ -307,16 +306,19 @@ function parsePresets(rows) {
 
 /**
  * `values` cells look like `Brand blue=#0373f3 | Black=#000000` (a bare value
- * is its own label).
+ * is its own label). Key `icon`: `Download=arrow-down | star` — icon file names in
+ * icons/usta-buttons-icons/ (a bare name gets a readable label).
  */
 function parseOptions(rows) {
   const options = {};
   (rows || []).forEach((row) => {
     const key = (row.key || '').toLowerCase();
-    if (!['color', 'text-color'].includes(key)) return;
+    if (!['color', 'text-color', 'icon'].includes(key)) return;
     options[key] = (row.values || '').split('|').map((entry) => {
       const [label, value = label] = entry.split('=').map((s) => s.trim());
-      return { label, value: cleanColor(value) };
+      if (key !== 'icon') return { label, value: cleanColor(value) };
+      const icon = ustaIcon(value);
+      return { label: entry.includes('=') ? label : icon && iconLabel(icon), value: icon };
     }).filter((o) => o.label && o.value);
   });
   return Object.keys(options).length ? { ...DEFAULT_OPTIONS, ...options } : null;
@@ -404,7 +406,7 @@ function applyColors(a, color, textColor) {
  * The usta.com modifiers + icon on a preview (mirrors applyUstaOptions() / decorateUstaIcon()).
  * @param {HTMLAnchorElement} a the preview button
  * @param {Object} extra the preset's modifiers
- * @param {string} [icon] a USTA_ICONS name
+ * @param {string} [icon] an icon file name in icons/usta-buttons-icons/
  * @param {boolean} [iconBefore] icon before the label
  */
 function applyUstaPreview(a, extra, icon, iconBefore) {
@@ -421,7 +423,7 @@ function applyUstaPreview(a, extra, icon, iconBefore) {
     const span = document.createElement('span');
     span.className = 'cta-usta-icon';
     span.dataset.icon = icon;
-    span.style.setProperty('--cta-usta-icon', `url("/icons/usta/${icon}.svg")`);
+    span.style.setProperty('--cta-usta-icon', `url("/icons/usta-buttons-icons/${icon}.svg")`);
     a.append(span);
     a.classList.add('cta-usta-with-icon');
     if (iconBefore) a.classList.add('cta-usta-icon-left');
@@ -590,27 +592,21 @@ function fillSwatches(fieldset, choices, selected) {
   }));
 }
 
-// `arrow-down` → `Arrow down (download)`: the name plus the alias authors may type
-const iconLabel = (icon) => {
-  const words = (name) => name.replace(/-/g, ' ');
-  const alias = Object.keys(USTA_ICON_ALIASES).find((a) => USTA_ICON_ALIASES[a] === icon);
-  const label = words(icon).replace(/^./, (c) => c.toUpperCase());
-  return alias ? `${label} (${words(alias)})` : label;
-};
-
 /**
- * Selects an icon in the dropdown ("No icon" first, then every usta.com icon,
- * A–Z); the options are built once.
+ * Fills the Icon dropdown: "No icon", then the sheet's `icon` row (options tab), then
+ * the current icon when it isn't one of them.
  * @param {string} [selected] the icon to select
  */
 function fillIcons(selected) {
-  if (!iconSelect.options.length) {
-    iconSelect.append(
-      new Option(iconSelect.dataset.default, ''),
-      ...USTA_ICONS.map((icon) => new Option(iconLabel(icon), icon)),
-    );
-  }
-  iconSelect.value = ustaIcon(selected);
+  const current = ustaIcon(selected);
+  const choices = state.options.icon || [];
+  const missing = current && !choices.some((c) => c.value === current);
+  iconSelect.replaceChildren(
+    new Option(iconSelect.dataset.default, ''),
+    ...choices.map((c) => new Option(c.label, c.value)),
+    ...(missing ? [new Option(iconLabel(current), current)] : []),
+  );
+  iconSelect.value = current;
 }
 
 function readForm() {
@@ -638,7 +634,7 @@ function updatePreview() {
     const checked = fieldset.querySelector('input:checked');
     fieldset.querySelector('.btn-plugin-swatch-value').textContent = checked?.closest('label').title || '';
   });
-  iconPreview.style.setProperty('--icon', values.icon ? `url("/icons/usta/${values.icon}.svg")` : 'none');
+  iconPreview.style.setProperty('--icon', values.icon ? `url("/icons/usta-buttons-icons/${values.icon}.svg")` : 'none');
   form.elements['icon-before'].disabled = !values.icon;
 }
 

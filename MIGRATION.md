@@ -279,7 +279,7 @@ can use them on this site. They are separate from the foundation buttons above, 
     `hover-color` / `hover-text-color` / `hover-border-color`, `new-tab`. The style keeps its own border and text
     colour unless `border-color` or `text-color` is authored (no contrast pick).
   - **Icons (usta button-core designs only, never foundation buttons):** `icon="download"` (any of the 85 icons
-    in `icons/usta/`, aliases `download`, `external`, `external-link`) after the label, `icon-position="before"`
+    in `icons/usta-buttons-icons/`, aliases `download`, `external`, `external-link`) after the label, `icon-position="before"`
     for an icon before it. Typing `:download:` in the button text works too (EDS icon notation, also when the
     pipeline turns it into `span.icon`). A foundation link with an icon stays a link, as before.
 - **Code:**
@@ -5374,3 +5374,31 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
 - **Gate:** eslint + stylelint on the panel OK; `npm run lint` OK; breakpoint check passed; test:a11y passed on the
   panel. Playwright: 86 options, preset icon pre-selected, change → preview icon updates, "before" puts the icon
   first, "No icon" removes it and disables the switch, the group is hidden for a foundation design; no JS errors.
+
+### 2026-10-11 — Buttons: USTA icon folder renamed to `icons/usta-buttons-icons/`
+- `icons/usta/` → `icons/usta-buttons-icons/` (git mv, 85 SVGs, unchanged), so the folder says what it is for.
+  Wired in `decorateUstaIcon()` (scripts.js) and the panel (`applyUstaPreview()`, the Icon dropdown tile).
+- Still **USTA buttons only**: `:name:` / `icon="…"` resolve here only inside a `usta-…` button. Elsewhere `:name:`
+  is the standard EDS icon (`/icons/<name>.svg`, top-level folder).
+- Adding an SVG to the folder is **not** enough on its own: its name must also be added to `USTA_ICONS` in
+  scripts.js and in the panel (the browser can't list a folder; there is no build step). *(Superseded below:
+  the list now lives in the DA sheet.)*
+- **Verified:** lint 0 errors; check:svg passed; `/drafts/usta-buttons`: 18 icons, 14 URLs, all load from the new
+  folder; panel preview + dropdown tile load. Only 404 = the known `:download:` content issue (§6).
+
+### 2026-10-11 — Buttons: Icon list from the DA sheet (`options` tab, key `icon`)
+- **Why:** new SVGs should show in the panel without a code change.
+- `/.da/library/buttons`, tab `options`, new row `icon | Download=arrow-down | star | pop-out | …` (same
+  `Label=value | …` format as the colours; a bare name is labelled by `iconLabel()`). Its order = dropdown order.
+  No row → the dropdown has only "No icon".
+- **No allow-list any more:** `ustaIconName()` (scripts.js) and `ustaIcon()` (panel) accept any safe file name
+  `^[a-z0-9]+(-[a-z0-9]+)*$` after `usta-` stripping + aliases (still USTA buttons only). `USTA_ICONS` was
+  removed from both scripts.js and the panel — the sheet row (all 85, `Download` + `External link` labelled)
+  is the only list.
+- New icon = push `icons/usta-buttons-icons/<name>.svg` + add `<name>` to the sheet row.
+- Trade-off: a typo (`:stra:` in a usta button label) now becomes a 404 icon instead of staying as text.
+- `fillIcons()` rebuilds the `<select>` on every open (sheet may load after the first open) and appends an
+  edited button's icon if the sheet doesn't list it. Unsafe sheet entries (`<script>`, `../x`) are dropped.
+- **Verified:** lint 0 errors; Playwright with a mocked sheet: dropdown = No icon + the sheet's 4 (bad entries
+  dropped), new name → tile `url("/icons/usta-buttons-icons/my-new-icon.svg")`; editing a `:wifi:` button adds
+  "Wifi" and selects it. No sheet row → "No icon" only. `/drafts/usta-buttons`: 18 icons, 14 URLs, as before.
