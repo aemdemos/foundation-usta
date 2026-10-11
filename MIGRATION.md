@@ -5402,3 +5402,56 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
 - **Verified:** lint 0 errors; Playwright with a mocked sheet: dropdown = No icon + the sheet's 4 (bad entries
   dropped), new name → tile `url("/icons/usta-buttons-icons/my-new-icon.svg")`; editing a `:wifi:` button adds
   "Wifi" and selects it. No sheet row → "No icon" only. `/drafts/usta-buttons`: 18 icons, 14 URLs, as before.
+
+### 2026-10-11 — USTA button widths re-checked per style (all 28, 5 viewports)
+- **Why:** the card button (`usta-square-small-column`) had been wider than on usta.com, and the earlier compare
+  wrote off all 66 width differences at once. Now every style is checked against usta.com on its own.
+- **Survey:**
+  - For each style, the crawl pages that show it: up to 12 per style, 102 pages, 4,382 buttons.
+  - Each one measured at 390 / 768 / 992 / 1200 / 1440: rendered width, the label's own width, and its column.
+  - The same label + icon is then rendered with our style in default content.
+  - Scripts in /tmp/usta: `pick-pages.mjs`, `survey.mjs`, `predict.mjs`, `per-style.cjs`.
+- **Fixed** (a consistent difference for the style):
+  - **`column` desktop formula:**
+    - usta.com's AEM grid G is `min(our column + 30px, viewport - 30px)` (962 / 1170 / 1200), and a 3-of-12
+      button is `G / 4 - 30px` (211 / 263 / 270).
+    - We used a quarter of our column (218 / 270 / 270), which was wrong at 992 and 1200.
+    - `pill-medium-column` and `outline-column` keep the quarter: they sit in a nested 300px column (48 / 50).
+  - **`usta-square-column` / `usta-square-compact-column`** (district pages, full-viewport grid):
+    - square-column: `50vw - 12px` on tablet, `25vw - 15px` on desktop.
+    - square-compact-column: `25vw - 12px` on tablet, `100vw / 6 - 30px` on desktop.
+    - Survey match before → after:
+
+      | Style | Before (768 / 992 / 1200 / 1440) | After |
+      |---|---|---|
+      | square-column | 5 / 11 / 4 / 2 of 31 | 15 / 19 / 16 / 16 |
+      | square-compact-column | 0 / 2 / 1 / 1 | 18 / 25 / 20 / 19 |
+
+  - **`usta-classic`** on phones: the column less 8px (328 at 390): 0 → 57 of 61.
+  - **`usta-app-wide-disabled`** (always the site-search SEARCH button): 268px on phones, 170px on tablet,
+    then 280: 1 → 13 of 16 at 390, 3 → 13 of 16 at 768.
+  - **`usta-pill-column-disabled`** (Texas yearbooks): 4 of 12 on tablet (228px): 0 → 6 of 6.
+  - **`usta-square-small-column`**: its label's width (the earlier fix): DOWNLOAD PDF 194 at every width.
+- **Already matching:** app-wide, header-join, header-signin, outline-medium-wide, pill (from 768),
+  pill-wide (from 768), pill-medium-column, pill-medium-wide, pill-mini(-narrow), pill-narrow-padded,
+  pill-padded, pill-compact-padded, pill-medium, pill-medium-narrow, square-wide (from 768).
+- **Written off** (tied to specific pages / components, not the style):
+  - **pill-column:** no single usta.com width. The 33 surveyed pages show 6+ layouts (e.g. 328/598/158/210/270
+    on 12 pages, 328/348/218/270/270 on 5, 366/298/188/240/300 on 5). The grid model matches the most common
+    per width (110 / 45 / 58 / 42 / 91 of ~177); inside a card / column block the button fills that cell.
+  - **pill / pill-wide / square-wide on phones:** narrow page columns (54–243px) on 6 / 21 / 1 pages.
+  - **usta-app:** the event-calendar widget's "Search" (158px, 3 pages).
+  - **header-signin:** 2 pages with another header.
+  - **classic:** 1 page (rankings, 250px).
+  - **pill-small-column**, **square-small-column** (parks LEARN MORE 219px), **outline-column** (Texas
+    committees), **square-medium-column**: 1 page each.
+  - **square-column / square-compact-column on phones:** the district pages' 8px gutter (374 / 382px) would
+    overflow this site's column.
+- **Side-by-side** (68 designs × 5 widths, `/drafts/usta-buttons` vs each design's source page): 249 / 340 match.
+  Every remaining difference is width, except the JOIN / SIGN IN compact header at 1200 (breakpoint deviation).
+  Per style, in /tmp/usta/parity-final3.json (`per-style.cjs`).
+- **Gate:**
+  - lint 0 errors, breakpoint check passed, check:svg passed;
+  - check:overflow passed on `/drafts/usta-buttons` and home;
+  - check:typography passed (home), test:a11y passed (sample);
+  - 86-page link regression (main vs this branch, 390 + 1440): 3,962 links, 0 differences.
