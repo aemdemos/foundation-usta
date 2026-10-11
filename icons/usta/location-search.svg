@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Location</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M11.99995,11.49995 C10.61995,11.49995 9.49995,10.37995 9.49995,8.99995 C9.49995,7.61995 10.61995,6.49995 11.99995,6.49995 C13.37995,6.49995 14.49995,7.61995 14.49995,8.99995 C14.49995,10.37995 13.37995,11.49995 11.99995,11.49995 M11.99995,1.99995 C8.13495,1.99995 4.99995,5.13545 4.99995,8.99995 C4.99995,14.24995 11.99995,21.99995 11.99995,21.99995 C11.99995,21.99995 18.99995,14.24995 18.99995,8.99995 C18.99995,5.13545 15.86495,1.99995 11.99995,1.99995" id="path-1"></path>
+    </defs>
+    <g id="Icons/Location" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#c8102e" xlink:href="#path-1"></use>
+    </g>
+</svg>

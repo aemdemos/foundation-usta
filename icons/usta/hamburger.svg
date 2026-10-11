@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons /Hamburger Menu</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Icons-/Hamburger-Menu" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Hamburger-menu-Mobile" transform="translate(0.000000, 2.000000)" fill="#00143f" fill-rule="nonzero">
+            <path d="M24,4 L0,4 L0,0 L24,0 L24,4 Z M24,8 L0,8 L0,12 L24,12 L24,8 Z M24,16 L0,16 L0,20 L24,20 L24,16 Z" id="Shape"></path>
+        </g>
+    </g>
+</svg>

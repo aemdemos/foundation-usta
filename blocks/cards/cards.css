@@ -1276,7 +1276,10 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   color: var(--link-color);
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-m); /* source LEARN MORE: 16px mobile → 18px at 768 */
-  font-weight: 400;
+
+  /* source: the label is inside a <b> — weight 700 on the single-weight Graphik Regular face,
+     which the browser renders as a synthetic bold (as on www.ustafoundation.com) */
+  font-weight: 700;
   line-height: 24px;
   letter-spacing: normal;
   text-transform: none;
@@ -1285,12 +1288,10 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   white-space: normal;
 }
 
-/* Source LEARN MORE is regular weight. Authors sometimes wrap it in <strong>
-   (bold, undecorated), which would override the link — normalize the inner
-   emphasis back to regular weight + inherit the link's underline. */
+/* an inner strong / b (authored bold) keeps the link's weight + underline */
 .cards.support .cards-support-card-body a strong,
 .cards.support .cards-support-card-body a b {
-  font-weight: 400;
+  font-weight: inherit;
   text-decoration: inherit;
 }
 

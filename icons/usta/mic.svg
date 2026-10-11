@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Mic</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M17.2998,11.4998 C17.2998,14.4998 14.7653,16.5998 11.9998,16.5998 C9.2403,16.5998 6.7003,14.4998 6.7003,11.4998 L4.9998,11.4998 C4.9998,14.9148 7.7203,17.7353 10.9998,18.2198 L10.9998,21.4998 L12.9998,21.4998 L12.9998,18.2198 C16.2798,17.7353 18.9998,14.9148 18.9998,11.4998 L17.2998,11.4998 Z M14.9903,11.4998 L14.9998,5.4998 C14.9998,3.8403 13.6603,2.4998 11.9998,2.4998 C10.3453,2.4998 8.9998,3.8403 8.9998,5.4998 L8.9998,11.4998 C8.9998,13.1553 10.3453,14.4998 11.9998,14.4998 C13.6548,14.4998 14.9903,13.1553 14.9903,11.4998 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Mic" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

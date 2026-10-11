@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/View</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M12,8.9998 C10.345,8.9998 9,10.3448 9,11.9998 C9,13.6553 10.345,14.9998 12,14.9998 C13.655,14.9998 15,13.6553 15,11.9998 C15,10.3448 13.655,8.9998 12,8.9998 M12,16.9998 C9.24,16.9998 7,14.7603 7,11.9998 C7,9.2398 9.24,6.9998 12,6.9998 C14.76,6.9998 17,9.2398 17,11.9998 C17,14.7603 14.76,16.9998 12,16.9998 M12,4.4998 C7,4.4998 2.73,7.6103 1,11.9998 C2.73,16.3898 7,19.4998 12,19.4998 C17,19.4998 21.27,16.3898 23,11.9998 C21.27,7.6103 17.005,4.4998 12,4.4998" id="path-1"></path>
+    </defs>
+    <g id="Icons/View" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

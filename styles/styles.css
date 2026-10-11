@@ -389,7 +389,7 @@ button.button.accent:disabled:focus-visible {
 }
 
 /* cta-button (authorable CTA styles: blue / black / dark / outline + authored
-   colors) lives in styles/buttons.css, loaded early by scripts.js loadEager(). */
+   colors) lives in styles/foundation-buttons.css, loaded early by scripts.js loadEager(). */
 
 main img {
   max-width: 100%;

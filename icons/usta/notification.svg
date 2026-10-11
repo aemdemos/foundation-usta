@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Notification</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M18.50015,16.00005 L18.50015,10.50005 C18.50015,7.42505 16.36465,4.86005 13.50015,4.18005 L13.50015,3.50005 C13.50015,2.67005 12.83015,2.00005 12.00015,2.00005 C11.17015,2.00005 10.50015,2.67005 10.50015,3.50005 L10.50015,4.18005 C7.63515,4.86005 5.50015,7.42505 5.50015,10.50005 L5.50015,16.00005 L3.50015,18.00005 L3.50015,19.00005 L20.50015,19.00005 L20.50015,18.00005 L18.50015,16.00005 Z M12.00015,22.00005 C13.10515,22.00005 14.00015,21.10505 14.00015,20.00005 L10.00015,20.00005 C10.00015,21.10505 10.89515,22.00005 12.00015,22.00005 L12.00015,22.00005 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Notification" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>
