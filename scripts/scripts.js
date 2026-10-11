@@ -246,17 +246,8 @@ function ctaStyleClasses(style) {
   return ['cta-usta', ...words.flatMap((w) => USTA_WORDS[w])].join(' ');
 }
 
-// the usta.com button-core icons self-hosted in /icons/usta/ (icon="<name>" or `:name:`)
-const USTA_ICONS = new Set(['add', 'alarm', 'arrow-down', 'arrow-left', 'arrow-right', 'arrow-up', 'attachment',
-  'award', 'bookmark', 'calendar', 'cancel', 'check', 'chevron-back', 'chevron-down', 'chevron-forward',
-  'chevron-up', 'clock', 'cloud', 'comment', 'computer', 'edit', 'envelope', 'facebook', 'flag', 'folder', 'globe',
-  'globe-primary', 'globe-primary-cut', 'google-plus', 'hamburger', 'home', 'info', 'instagram', 'invite', 'like',
-  'link', 'linkedin', 'live-chat', 'location', 'location-search', 'lock', 'logout', 'megaphone', 'mic', 'mobile',
-  'more-info', 'more-options', 'navigation', 'notification', 'overflow', 'pagination-left', 'pagination-right',
-  'pause', 'phone', 'pinterest', 'play', 'pop-out', 'printer', 'profile', 'refresh', 'screen-exit-full',
-  'screen-full', 'search', 'settings', 'share', 'star', 'success', 'sync', 'tip', 'tennis-ball', 'trash',
-  'triangle-down', 'triangle-left', 'triangle-right', 'triangle-up', 'twitter', 'view', 'vimeo', 'visibility-off',
-  'volume-default', 'volume-mute', 'warning', 'web', 'wifi', 'youtube']);
+// the usta button icons: any SVG in /icons/usta-buttons-icons/ (icon="<name>" or `:name:`).
+// No list here: a new SVG works once pushed; the Buttons panel lists them from the DA sheet.
 // friendlier names authors may type (`:download:`, `:external-link:`)
 const USTA_ICON_ALIASES = {
   download: 'arrow-down', external: 'pop-out', 'external-link': 'pop-out', 'open-in-new': 'pop-out',
@@ -430,12 +421,12 @@ function ctaOptionVars(options, outline) {
 /**
  * The usta.com icon for an EDS icon name: `arrow-down`, `usta-arrow-down` or an alias.
  * @param {string} name the name between the colons of `:name:`
- * @returns {string} a USTA_ICONS name, or ''
+ * @returns {string} a safe icon file name (letters, digits, hyphens), or ''
  */
 function ustaIconName(name) {
   const n = (name || '').toLowerCase().replace(/^usta-/, '');
   const icon = USTA_ICON_ALIASES[n] || n;
-  return USTA_ICONS.has(icon) ? icon : '';
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(icon) ? icon : '';
 }
 
 /**
@@ -443,7 +434,7 @@ function ustaIconName(name) {
  * or the EDS icon notation in the link text: `DOWNLOAD PDF :download:` (after the
  * label) / `:arrow-left: BACK` (before). The pipeline turns `:name:` into
  * `span.icon.icon-name`; a literal `:name:` (left as text) is read too. It becomes
- * the usta.com icon (icons/usta/, 20px, per-icon filters).
+ * the usta.com icon (icons/usta-buttons-icons/, 20px, per-icon filters).
  * @param {HTMLAnchorElement} a the usta cta-button
  * @param {Object} options from takeCtaOptions
  */
@@ -490,7 +481,7 @@ function decorateUstaIcon(a, options) {
   el.className = 'cta-usta-icon';
   el.dataset.icon = icon; // per-icon filters in usta-buttons.css
   el.setAttribute('aria-hidden', 'true');
-  el.style.setProperty('--cta-usta-icon', `url("${window.hlx.codeBasePath}/icons/usta/${icon}.svg")`);
+  el.style.setProperty('--cta-usta-icon', `url("${window.hlx.codeBasePath}/icons/usta-buttons-icons/${icon}.svg")`);
   a.append(el);
   a.classList.add('cta-usta-with-icon');
   if (before) a.classList.add('cta-usta-icon-left');

@@ -139,10 +139,12 @@ Copy the three files, then adapt:
     - A preset can fix colours in `extra` (keys in `EXTRA_KEYS`: `border-color`, the hover colours) and an
       `icon` (+ `iconBefore`). They are written after the colours and kept when a button is edited.
     - **Icons are for the usta button-core designs only** (the Icon dropdown shows only for them). The panel
-      writes `icon="…"` (+ `icon-position="before"`); `USTA_ICONS` / `USTA_ICON_ALIASES` mirror scripts.js.
-    - The Icon dropdown is a native `<select>` (type-ahead, keyboard, screen readers) built from `USTA_ICONS`,
-      labelled by `iconLabel()` ("Arrow down (download)"), with a preview tile of the chosen icon. "Icon
-      before the text" is disabled while no icon is chosen.
+      writes `icon="…"` (+ `icon-position="before"`); `USTA_ICON_ALIASES` mirrors scripts.js. Any icon
+      file name (`a-z`, `0-9`, `-`) is accepted, here and in scripts.js — there is no allow-list.
+    - The Icon dropdown is a native `<select>` (type-ahead, keyboard, screen readers) built from the sheet's
+      `icon` row (§5.2) — the only icon list (no list in code). Bare names are labelled by
+      `iconLabel()` ("Arrow down (download)"); an edited button's icon is added if the list lacks it. A preview
+      tile shows the chosen icon. "Icon before the text" is disabled while no icon is chosen.
     - The site CSS for these lives in its own file (`styles/usta-buttons.css`), linked from `buttons.html`.
   - `contrastText()` / `applyColors()` duplicate the scripts.js logic for the preview (scripts.js can't be
     imported: it runs `loadPage()` on import). **Keep them in sync.**
@@ -216,6 +218,11 @@ Tab `options`:
 |---|---|
 | color | `Brand blue=#0373f3 \| Orange=#e87722 \| USTA lime=#cfff05 \| USTA dark green=#19462e` |
 | text-color | `White=#ffffff \| Black=#000000 \| USTA dark green=#19462e` |
+| icon | `Download=arrow-down \| star \| pop-out \| arrow-left` |
+
+`icon` = the Icon dropdown, in this order: file names in `icons/usta-buttons-icons/` (without `.svg`); a
+bare name gets a readable label. **Without this row the dropdown has only "No icon"** (there is no list in
+code). To add an icon: push `icons/usta-buttons-icons/<name>.svg`, then add `<name>` to this row — no code change.
 
 A sheet with a single tab is read as `presets`.
 
