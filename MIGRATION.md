@@ -82,8 +82,39 @@ _Per-template/section/block build details are captured in the dated Log below as
 landscape + target order is in §2a above (full report: `docs/MIGRATION-SCOPE.md`)._
 
 ### Buttons (CTA) — authoring & code reference
-_Current state as of 2026-10-10 (merged to main in PR #68, `472a662`). This is the single place to read the button
-rules; the dated Log entries of 2026-09-29, 2026-10-07/08 and 2026-10-10 hold the history and are partly superseded._
+_Current state as of 2026-10-11. Foundation buttons: merged to main (PR #68). Buttons panel: merged (PR #69, #70).
+USTA buttons: branch `usta-buttons`, staged for the user to push. This is the single place to read the button
+rules; the dated Log entries (2026-09-29 → 2026-10-11) hold the history and are partly superseded._
+
+**0. Overview — what we have done and what we are enabling**
+
+| Area | What it is | Status |
+|---|---|---|
+| Foundation buttons | 5 styles: the site-wide default button + blue / black / dark / outline `cta-button`s (items 1–4) | ✅ live on main |
+| Authored options | `[style=…, color=…, text-color=…, new-tab=…]` after any standalone link (item 2) | ✅ live on main |
+| Link targets | internal = same tab, external + files = new tab, `#_blank` = force new tab | ✅ live on main |
+| Buttons in every block | `decorateButtons()` runs before blocks; block CSS skips `.cta-button` (items 3–4) | ✅ live on main |
+| Buttons panel (DA / Experience Workspace) | a library plugin: pick a design, set text / link / colours / new tab / icon, Insert or Update (item 8) | ✅ on main; USTA presets + icon picker on `usta-buttons` |
+| Layout (canvas) editing preview | a button keeps its look while being edited in da.live Layout (item 7) | ✅ foundation on main; USTA untested in DA |
+| USTA (www.usta.com) buttons | 28 styles / 68 designs + 85 icons, own stylesheet, loaded only where used (item 9) | 🟡 built + verified locally; branch not pushed |
+| Sample / test pages | foundation: 4 DA pages (item 5); USTA: `/drafts/usta-buttons` (item 9) | 🟡 foundation previewed, not published; USTA local only |
+
+- **Counts:** a *style* is the look named in `style="…"`; a *design* is a style + the options usta.com authors
+  combine with it (colours, border, hover, icon). Foundation 5 styles / 5 designs; USTA 28 styles / 68 designs;
+  **total 33 styles / 73 designs.**
+- **Stylesheets:** `styles/foundation-buttons.css` (foundation, every page) and `styles/usta-buttons.css` (USTA,
+  only on pages with a USTA button). The panel UI has its own `tools/plugins/buttons/buttons.css`.
+- **Icons** are a USTA feature only (`icon="…"` or `:name:` on the usta button-core designs). A foundation link
+  with an icon stays a normal link.
+- **Enablement still to do** (outward-facing → the user's steps, see §6 Buttons):
+  1. Push `usta-buttons` (all changes are staged), open a PR to `main`.
+  2. Test in DA with `?ref=usta-buttons`: the panel's `USTA — …` designs and icon picker, Insert / Update, and a
+     USTA button in Layout view (default content and inside a block).
+  3. After merge: upload + preview `/drafts/usta-buttons` in DA; publish the foundation sample pages.
+  4. Optional: add USTA rows to the panel sheet `/.da/library/buttons` (`options` column for colours / icon) and
+     USTA entries to the block library `/.da/library/blocks/buttons`.
+  5. The panel registration (`da.live/config` → library → `Buttons`, `/tools/plugins/buttons/buttons.html`) is
+     a one-off per site; nothing new is needed for USTA.
 
 **1. Authoring — formatting marks.** A link becomes a button only when it is the ONLY thing in its paragraph
 (a link inside a sentence, a list item, or a link whose text is its URL stays a normal link).
@@ -191,7 +222,22 @@ only the image + caption.
   only the Layout editing preview regresses (raw link until refresh). The published site is unaffected.
   Update the selectors in `foundation-buttons.css` and `EDITING_CTA` in `scripts.js`.
 
-**8. Setting this up in another project:** follow
+**8. Buttons panel (DA / Experience Workspace plugin)** — `tools/plugins/buttons/buttons.{html,js,css}`.
+- **For authors:** listed under **Extensions** in the DA library.
+  - Pick a design from the gallery (5 foundation + 21 `USTA — …`), then set the text, link, button colour, text
+    colour and "Open in a new tab"; USTA designs also get an **Icon** picker (85 icons + "before the text").
+  - Live preview on white / grey / dark, then **Insert button**. The panel stays open after inserting.
+  - Select an existing button first and the panel opens on it, pre-filled; **Update button** replaces it.
+- **What it writes:** exactly the authoring contract above — foundation marks (bold / italic / sub / sup /
+  underline) or `[style="usta-…", color=…, icon=…]` options, new tab as `#_blank`. `decorateButtons()` does the rest.
+- **Config:** the optional DA sheet `/.da/library/buttons` (tabs `presets` + `options`) replaces the built-in
+  designs and colour swatches; without it the panel shows its defaults. Registered once in
+  `da.live/config#/aemdemos/foundation-usta/` → library → `Buttons` = `/tools/plugins/buttons/buttons.html`.
+- **UI:** Adobe Spectrum 2 look (PR #70). Previews use the real `foundation-buttons.css` / `usta-buttons.css`.
+- **Testing:** `localhost:3000/tools/plugins/buttons/buttons.html` (Insert disabled outside DA), then in DA with
+  `?ref=<branch>`.
+
+**Setting this up in another project:** follow
 [tools/plugins/buttons/README.md](tools/plugins/buttons/README.md). It covers the files to copy, the scripts.js
 wiring, DA plugin registration, the optional `/.da/library/buttons` sheet, the Layout (ProseMirror) fixes, testing
 with `?ref=<branch>` and troubleshooting. Keep it up to date when the buttons code changes.
@@ -259,6 +305,8 @@ can use them on this site. They are separate from the foundation buttons above, 
     (e.g. 4 of 12 = 370px, or a narrow card cell) — a page layout choice, not the button. Without a width option
     the style gives the most common column; inside a card / column block the button fills that cell.
   - Not comparable: #39 sage `LEARN MORE` at 390 / 768 (the source author hides it below desktop).
+  - **Typography** (2026-10-11, 390 / 768 / 992 / 1200 / 1440): 335 / 340 label checks match; see that Log entry
+    (synthetic-bold JOIN, nowrap / wrap rules, long column labels).
 - **Deviation:** the header `usta-header-join` / `usta-header-signin` switch to their compact size below
   **1200** (usta.com: below 1370, which is not a project breakpoint).
 
@@ -282,11 +330,16 @@ can use them on this site. They are separate from the foundation buttons above, 
 - [ ] Optional: contrast check when an author sets BOTH `color` and `text-color` (not checked today).
 - [ ] Optional: same size for all CTA styles (dark/outline are 25px padding / 46px tall vs blue 14px / 40px) — kept
   as is by user decision 2026-10-10.
-- [ ] **USTA buttons (§3 item 9):** after branch `usta-buttons` is pushed:
-  - upload `/drafts/usta-buttons` to DA and preview it;
-  - test the panel's `USTA — …` presets and the Layout editing preview (`cta-edit-usta*`, not yet tested in
-    DA) with `?ref=usta-buttons`;
-  - optionally add USTA rows (with the `options` column) to the `/.da/library/buttons` sheet.
+- [ ] **USTA buttons (§3 items 0 + 9):**
+  - [ ] push branch `usta-buttons` (all changes staged) and open a PR to `main` — user's step;
+  - [ ] in DA with `?ref=usta-buttons`: test the panel's `USTA — …` designs, the icon picker, Insert / Update,
+    and the Layout editing preview of a USTA button (`cta-edit-usta*`, not yet tested in DA) in default content
+    and inside a block;
+  - [ ] after merge: upload + preview `/drafts/usta-buttons` in DA (local only today);
+  - [ ] optional: USTA rows in the `/.da/library/buttons` sheet (`options` column) and USTA entries in
+    `/.da/library/blocks/buttons`;
+  - [ ] optional: confirm in DA that `:download:` typed inside a link survives save + preview (supported both as
+    text and as the pipeline's `span.icon`; verified on local markup only).
 
 ---
 
@@ -5251,3 +5304,39 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
 - **Rename:** `styles/buttons.css` → `styles/foundation-buttons.css` (`loadEager()`, the panel page, comments in
   styles.css / hero / footer, README). There are no other code changes for foundation buttons.
 - **Sample:** 68 designs. White and white-border buttons sit in a `dark` section, so they are visible.
+
+### 2026-10-11 — Button typography parity, all viewports (USTA + foundation)
+- **Method:** for every button label, measured the element that actually holds the text: family, size, weight,
+  line-height, letter-spacing, colour (rest + forced `:hover`), transform, decoration, text-align / centring,
+  white-space, line count, label size, and truncation.
+  - **USTA:** all 68 designs vs usta.com at 390 / 768 / 992 / 1200 / 1440.
+  - **Foundation:** every button on the 86 migrated pages vs the same button on ustafoundation.com, at the same
+    widths. Each one is paired with the closest same-label candidate, so the order on the page doesn't matter.
+- **Results:**
+  - USTA: 335 / 340 match after the fixes below.
+  - Foundation: 115 / 120 match. The other 5 are `/index` "Go home", which has no source page.
+  - Remaining differences, explained:
+    - JOIN / SIGN IN at exactly 1200–1369: usta.com's header stays compact until 1370 (the breakpoint
+      deviation recorded in §3 item 9).
+    - "League Info" at 390: the source page squeezes it into a 104px column.
+    - "2026 Tournament Calendar" at 390 is 363 vs 364px: the source overflows the screen by 1px; ours stops at
+      the edge, with identical type.
+- **Gotcha — synthetic bold:** ustafoundation.com and usta.com declare each Graphik face as a single weight-400
+  face. Wherever they ask for a bold weight (a `<b>` in a link, `font-weight: 900` in the compact header), the
+  browser draws a synthetic bold. Our `fonts.css` declares Graphik Semibold as 600, and a 600 face is never
+  emboldened. The computed `font-weight` of the `<a>` hides this (400 on both sides): measure the text's own
+  element, and compare zoomed (3×) crops.
+- **Fixes:**
+  - `cards (support)` LEARN MORE: `font-weight: 700`, so the Graphik Regular face (400) gets the same synthetic
+    bold as the source's `<b>`. The earlier "regular weight" rule was a misread of the `<a>`'s weight.
+  - `usta-header-join` (compact): a `Graphik Semibold Synthetic` alias of the same woff2, declared 400, at
+    `font-weight: 900`. This gives the source's emboldened JOIN exactly; from 1200 it's back to the normal face.
+  - `usta-header-signin` (compact): `white-space: nowrap` (source), `normal` from 1200.
+  - `usta-app*`: `white-space: normal` (`.button-primary-style` has no nowrap).
+  - `column` buttons: `min-width: max-content` again (as the source, a long label widens the button), capped on
+    phones at the screen edge (`max-width: calc(100% + (100vw - 100%) / 2)`), so the page never scrolls
+    sideways. The previous `min-width: 0` truncated long labels with "…".
+- **Verified:**
+  - lint, breakpoint check, check:overflow (sample + home), check:typography (home) and test:a11y (sample + home)
+    passed;
+  - 86-page link regression (main vs this branch, 390 + 1440): 3,962 links, 0 differences.

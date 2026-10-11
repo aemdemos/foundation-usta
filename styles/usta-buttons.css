@@ -99,9 +99,10 @@ a.cta-button.cta-usta.cta-usta-ghost:any-link {
 }
 
 /* usta-app — .button-primary-style (app/widget buttons: SEARCH, GET STARTED …):
-   identical box, but the label keeps the 1px letter-spacing */
+   identical box, but the label keeps the 1px letter-spacing and may wrap (no nowrap there) */
 a.cta-button.cta-usta.cta-usta-app:any-link {
   letter-spacing: 1px;
+  white-space: normal;
 }
 
 /* modifiers (source: button-core--height--small / --x-small, --border--rectangular,
@@ -136,12 +137,13 @@ a.cta-button.cta-usta.cta-usta-pad-50:any-link {
 }
 
 /* column (.button-core--not-fixed-width): fills its column — a block cell (card, column).
-   In default content the column is usta.com's grid column (below). On phones a long label
-   ellipsises inside the column instead of pushing the page wider (min-width: max-content from 768) */
+   In default content the column is usta.com's grid column (below). As on usta.com a long label
+   widens the button past its column (min-width: max-content); on phones only up to the screen edge
+   (the right gutter), so the page never scrolls sideways */
 a.cta-button.cta-usta.cta-usta-w-full:any-link {
-  width: 100%;
-  min-width: 0;
-  max-width: none;
+  width: max-content;
+  min-width: 100%;
+  max-width: calc(100% + (100vw - 100%) / 2);
 }
 
 a.cta-button.cta-usta.cta-usta-custom-hover:hover {
@@ -223,12 +225,13 @@ a.cta-button.cta-usta.cta-usta-icon-left .cta-usta-icon {
    buttons): the full column less the 8px grid gutter on phones, 6 of 12 on tablet, 3 of 12 on desktop
    (usta.com's 1200px grid: 270px at 1280+, 218px at 992) */
 .default-content-wrapper a.cta-button.cta-usta.cta-usta-w-full:any-link {
-  width: calc(100% - 8px);
+  min-width: calc(100% - 8px);
 }
 
 @media (width >= 768px) {
   .default-content-wrapper a.cta-button.cta-usta.cta-usta-w-full:any-link {
     width: calc(50% - 12px);
+    min-width: max-content;
   }
 }
 
@@ -256,6 +259,7 @@ a.cta-button.cta-usta.cta-usta-icon-left .cta-usta-icon {
   a.cta-button.cta-usta.cta-usta-w-full:any-link {
     width: 100%;
     min-width: max-content;
+    max-width: none;
   }
 }
 
@@ -350,6 +354,18 @@ a.cta-button.cta-usta-classic:focus-visible {
 
 /* ---- usta-join — .usta-ghost-button-link (header JOIN) --------------------- */
 
+/* usta.com declares Graphik Semibold as one weight-400 face, and its compact header asks for
+   font-weight 900, so JOIN renders in a synthetic (browser-made) bold there. Our fonts.css face is
+   declared 600, which a 900 request doesn't embolden: this alias of the same file, declared 400,
+   gives the identical synthetic bold. */
+@font-face {
+  font-family: "Graphik Semibold Synthetic";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/graphik-semibold.woff2") format("woff2");
+}
+
 a.cta-button.cta-usta-join:any-link {
   --cta-bg: transparent;
   --cta-color: #000;
@@ -375,10 +391,10 @@ a.cta-button.cta-usta-join:any-link {
   padding: 14px;
   background-color: var(--cta-bg);
   color: var(--cta-color);
-  font-family: var(--heading-semibold-font-family);
+  font-family: "Graphik Semibold Synthetic", var(--heading-semibold-font-family);
   font-size: 12px;
   font-style: normal;
-  font-weight: 400;
+  font-weight: 900;
   line-height: calc(20 / 14);
   letter-spacing: normal;
   text-decoration: none;
@@ -444,6 +460,7 @@ a.cta-button.cta-usta-signin:any-link {
   letter-spacing: 0;
   text-decoration: none;
   text-transform: uppercase;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -477,7 +494,9 @@ a.cta-button.cta-usta-signin:focus-visible {
   a.cta-button.cta-usta-join:any-link {
     height: 40px;
     min-height: 40px;
+    font-family: var(--heading-semibold-font-family);
     font-size: 16px;
+    font-weight: 400;
   }
 
   a.cta-button.cta-usta-signin:any-link {
@@ -487,6 +506,7 @@ a.cta-button.cta-usta-signin:focus-visible {
     min-height: 40px;
     border-width: 1px;
     font-size: 14px;
+    white-space: normal;
   }
 }
 
