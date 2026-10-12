@@ -1283,11 +1283,6 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
   white-space: normal;
 }
 
-/* Authors may wrap the label in <strong>/<b> (as the source does): keep it at the
-   link's 700 (not the browser's `bolder` 900) and inherit the link's underline. */
-.cards.support .cards-support-card-body a strong,
-.cards.support .cards-support-card-body a b {
-  font-weight: 700;
 /* an inner strong / b (authored bold) keeps the link's weight + underline */
 .cards.support .cards-support-card-body a strong,
 .cards.support .cards-support-card-body a b {
