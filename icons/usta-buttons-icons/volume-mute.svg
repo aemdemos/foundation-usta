@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/volume Mute</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M12.00005,4 L9.91005,6.09 L12.00005,8.18 L12.00005,4 Z M4.27505,3 L3.00005,4.275 L7.72505,9 L3.00005,9 L3.00005,15 L7.00005,15 L12.00005,20 L12.00005,13.275 L16.25505,17.53 C15.58505,18.045 14.83005,18.46 14.00005,18.71 L14.00005,20.775 C15.37505,20.46 16.63005,19.83 17.68505,18.965 L19.72505,21 L21.00005,19.725 L12.00005,10.725 L4.27505,3 Z M19.00005,12 C19.00005,12.94 18.79505,13.825 18.46005,14.64 L19.97505,16.155 C20.62505,14.91 21.00005,13.5 21.00005,12 C21.00005,7.72 18.00505,4.14 14.00005,3.23 L14.00005,5.295 C16.89005,6.155 19.00005,8.83 19.00005,12 L19.00005,12 Z M16.50005,12 C16.50005,10.235 15.48005,8.71 14.00005,7.975 L14.00005,10.185 L16.45505,12.64 C16.48505,12.43 16.50005,12.215 16.50005,12 L16.50005,12 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/volume-Mute" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

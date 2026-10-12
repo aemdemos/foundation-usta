@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Invite</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M14.9999,14.00005 C12.3349,14.00005 6.9999,15.33505 6.9999,18.00005 L6.9999,20.00005 L22.9999,20.00005 L22.9999,18.00005 C22.9999,15.33505 17.6649,14.00005 14.9999,14.00005 L14.9999,14.00005 Z M5.9999,10.00005 L5.9999,7.00005 L3.9999,7.00005 L3.9999,10.00005 L0.9999,10.00005 L0.9999,12.00005 L3.9999,12.00005 L3.9999,15.00005 L5.9999,15.00005 L5.9999,12.00005 L8.9999,12.00005 L8.9999,10.00005 L5.9999,10.00005 Z M14.9999,12.00005 C17.2099,12.00005 18.9999,10.20505 18.9999,8.00005 C18.9999,5.79005 17.2099,4.00005 14.9999,4.00005 C12.7899,4.00005 10.9999,5.79005 10.9999,8.00005 C10.9999,10.20505 12.7899,12.00005 14.9999,12.00005 L14.9999,12.00005 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Invite" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

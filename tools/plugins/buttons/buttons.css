@@ -1,0 +1,823 @@
+/*
+ * Buttons plugin panel (Experience Workspace library), styled after Adobe
+ * Spectrum 2 so it sits naturally inside the DA editor: the Adobe Clean type
+ * stack, the Spectrum gray scale and accent blue, 8px field corners, 16px
+ * cards, pill call-to-action, side labels. The site's tokens and the real
+ * cta-button styles (styles.css + foundation-buttons.css + usta-buttons.css, linked in buttons.html) are
+ * used ONLY inside the button previews.
+ *   gallery — one card per preset, the real button centred on a canvas
+ *   editor  — a drawer that slides in from the right over the gallery: header,
+ *             sticky live preview, grouped field cards, sticky footer
+ */
+.btn-plugin {
+  /* Spectrum 2, light theme */
+  --bp-gray-25: #fff;
+  --bp-gray-50: #f8f8f8;
+  --bp-gray-75: #f3f3f3;
+  --bp-gray-100: #e9e9e9;
+  --bp-gray-200: #e1e1e1;
+  --bp-gray-300: #dadada;
+  --bp-gray-500: #8f8f8f;
+  --bp-gray-700: #505050;
+  --bp-gray-800: #292929;
+  --bp-gray-900: #131313;
+  --bp-accent: #3b63fb;
+  --bp-accent-hover: #274dea;
+  --bp-accent-down: #1d3ecf;
+  --bp-negative: #d73220;
+  --bp-font: "Adobe Clean", adobe-clean, "Source Sans Pro", -apple-system, "Segoe UI", roboto, sans-serif;
+  --bp-radius-field: 8px;
+  --bp-radius-card: 16px;
+  --bp-pad: 24px;
+  --bp-label-width: 104px;
+  --bp-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --bp-slide: 320ms;
+  --bp-fast: 130ms;
+
+  min-height: 100vh;
+  background-color: var(--bp-gray-75);
+  color: var(--bp-gray-900);
+  font-family: var(--bp-font);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.btn-plugin h1,
+.btn-plugin h2 {
+  margin: 0;
+  color: var(--bp-gray-900);
+  font-family: var(--bp-font);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.btn-plugin p {
+  margin: 0;
+}
+
+/* styles.css reserves the site nav height on every <header> */
+.btn-plugin header {
+  min-height: 0;
+}
+
+.btn-plugin [hidden] {
+  display: none;
+}
+
+.btn-plugin :focus-visible {
+  outline: 2px solid var(--bp-accent);
+  outline-offset: 2px;
+}
+
+.btn-plugin fieldset {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.btn-plugin legend {
+  padding: 0;
+}
+
+.btn-plugin .btn-plugin-hint {
+  color: var(--bp-gray-700);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* previews keep the site's own type, so a text-link design reads as on the page */
+.btn-plugin .btn-plugin-sample,
+.btn-plugin .btn-plugin-preview {
+  font-family: var(--body-font-family);
+  font-size: 16px;
+}
+
+/* ---- gallery ------------------------------------------------------------ */
+.btn-plugin .btn-plugin-gallery {
+  padding: 24px var(--bp-pad) 32px;
+  transition: transform var(--bp-slide) var(--bp-ease), opacity var(--bp-slide) var(--bp-ease);
+}
+
+.btn-plugin.is-editing .btn-plugin-gallery {
+  opacity: 0.35;
+  transform: translateX(-32px);
+}
+
+.btn-plugin .btn-plugin-intro h1 {
+  font-size: 20px;
+}
+
+.btn-plugin .btn-plugin-intro p {
+  margin-top: 4px;
+  color: var(--bp-gray-700);
+}
+
+.btn-plugin .btn-plugin-status {
+  margin-top: 16px;
+  border: 1px solid var(--bp-gray-200);
+  border-radius: var(--bp-radius-field);
+  padding: 8px 12px;
+  background-color: var(--bp-gray-25);
+  color: var(--bp-gray-700);
+  font-size: 12px;
+}
+
+.btn-plugin .btn-plugin-status:empty {
+  display: none;
+}
+
+.btn-plugin .btn-plugin-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* every card: same canvas height, button centred → the column lines up */
+.btn-plugin .btn-plugin-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bp-gray-200);
+  border-radius: var(--bp-radius-card);
+  background-color: var(--bp-gray-25);
+  overflow: hidden;
+  transition: border-color var(--bp-fast), box-shadow var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-card:hover {
+  border-color: var(--bp-gray-500);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.btn-plugin .btn-plugin-card.is-current {
+  border-color: var(--bp-accent);
+  box-shadow: inset 0 0 0 1px var(--bp-accent);
+}
+
+.btn-plugin .btn-plugin-sample {
+  position: relative;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 132px;
+  border-bottom: 1px solid var(--bp-gray-200);
+
+  /* equal top/bottom room so the "Current" badge (top-left) never touches the
+     button and every card's button stays vertically centred */
+  padding: 40px 16px;
+  background-color: var(--bp-gray-50);
+}
+
+.btn-plugin .btn-plugin-sample p,
+.btn-plugin .btn-plugin-preview p {
+  max-width: 100%;
+  margin: 0;
+  text-align: center;
+}
+
+.btn-plugin .btn-plugin-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  border-radius: 999px;
+  padding: 1px 10px;
+  background-color: var(--bp-accent);
+  color: var(--bp-gray-25);
+  font-family: var(--bp-font);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.btn-plugin .btn-plugin-pick {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 64px;
+  border: 0;
+  padding: 12px 12px 12px 16px;
+  background: none;
+  color: var(--bp-gray-900);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* stretch the pick button's hit area over the whole card */
+.btn-plugin .btn-plugin-pick::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--bp-radius-card);
+}
+
+.btn-plugin .btn-plugin-pick:focus-visible {
+  outline: 0;
+}
+
+.btn-plugin .btn-plugin-pick:focus-visible::after {
+  outline: 2px solid var(--bp-accent);
+  outline-offset: -2px;
+}
+
+.btn-plugin .btn-plugin-name {
+  font-weight: 700;
+}
+
+.btn-plugin .btn-plugin-card-description {
+  grid-column: 1;
+  color: var(--bp-gray-700);
+  font-size: 12px;
+}
+
+.btn-plugin .btn-plugin-go {
+  display: grid;
+  grid-area: 1 / 2 / span 2;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--bp-radius-field);
+  color: var(--bp-gray-700);
+  transition: background-color var(--bp-fast), color var(--bp-fast);
+}
+
+/* chevron drawn with two borders; colour follows currentcolor */
+.btn-plugin .btn-plugin-go::before,
+.btn-plugin .btn-plugin-back-icon::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid currentcolor;
+  border-right: 2px solid currentcolor;
+  transform: translateX(-1px) rotate(45deg);
+}
+
+.btn-plugin .btn-plugin-card:hover .btn-plugin-go {
+  background-color: var(--bp-gray-100);
+  color: var(--bp-gray-900);
+}
+
+/* ---- editor drawer -------------------------------------------------------- */
+.btn-plugin .btn-plugin-editor {
+  container: bp-editor / inline-size;
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 480px);
+  background-color: var(--bp-gray-75);
+  box-shadow: -1px 0 0 var(--bp-gray-200), -12px 0 32px rgb(0 0 0 / 12%);
+  visibility: hidden;
+  transform: translateX(100%);
+  transition: transform var(--bp-slide) var(--bp-ease), visibility 0s linear var(--bp-slide);
+}
+
+.btn-plugin .btn-plugin-editor.is-open {
+  visibility: visible;
+  transform: none;
+  transition: transform var(--bp-slide) var(--bp-ease), visibility 0s;
+}
+
+.btn-plugin .btn-plugin-editor-head {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--bp-gray-200);
+  padding: 14px var(--bp-pad) 16px calc(var(--bp-pad) - 10px);
+  background-color: var(--bp-gray-25);
+}
+
+/* Spectrum quiet action button */
+.btn-plugin .btn-plugin-back {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--bp-radius-field);
+  padding: 0;
+  background: none;
+  color: var(--bp-gray-800);
+  cursor: pointer;
+  transition: background-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-back:hover {
+  background-color: var(--bp-gray-100);
+}
+
+.btn-plugin .btn-plugin-back:active {
+  background-color: var(--bp-gray-200);
+}
+
+.btn-plugin .btn-plugin-back-icon {
+  display: grid;
+  place-items: center;
+  transform: scaleX(-1);
+}
+
+.btn-plugin .btn-plugin-editor-title {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+/* Spectrum "detail" text */
+.btn-plugin .btn-plugin-eyebrow {
+  color: var(--bp-gray-700);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.btn-plugin .btn-plugin-editor-title h2 {
+  overflow: hidden;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-plugin .btn-plugin-description {
+  margin-top: 2px;
+  color: var(--bp-gray-700);
+  font-size: 12px;
+}
+
+.btn-plugin .btn-plugin-description:empty {
+  display: none;
+}
+
+.btn-plugin .btn-plugin-editor-body {
+  flex: 1;
+  padding: 0 var(--bp-pad) 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* live preview stays in view while the field cards scroll underneath */
+.btn-plugin .btn-plugin-stage {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 calc(-1 * var(--bp-pad));
+  padding: 16px var(--bp-pad) 8px;
+  background-color: var(--bp-gray-75);
+}
+
+.btn-plugin .btn-plugin-preview {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-height: 120px;
+  border: 1px solid var(--bp-gray-200);
+  border-radius: var(--bp-radius-card);
+  padding: 24px 16px;
+  background-color: var(--bp-gray-25);
+  transition: background-color var(--bp-fast), border-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-preview[data-canvas="light"] {
+  background-color: var(--light-color);
+}
+
+.btn-plugin .btn-plugin-preview[data-canvas="dark"] {
+  border-color: #1d1d1f;
+  background-color: #1d1d1f;
+}
+
+/* "Preview on": a compact Spectrum action group, label left, options right */
+.btn-plugin .btn-plugin-canvas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.btn-plugin .btn-plugin-canvas legend {
+  float: left;
+  color: var(--bp-gray-700);
+  font-size: 12px;
+}
+
+.btn-plugin .btn-plugin-canvas-options {
+  display: flex;
+}
+
+.btn-plugin .btn-plugin-canvas label {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.btn-plugin .btn-plugin-canvas input,
+.btn-plugin .btn-plugin-swatch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.btn-plugin .btn-plugin-canvas span {
+  min-width: 52px;
+  padding: 5px 12px;
+  background-color: var(--bp-gray-100);
+  color: var(--bp-gray-800);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  pointer-events: none;
+  transition: background-color var(--bp-fast), color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-canvas label + label span {
+  box-shadow: inset 1px 0 0 var(--bp-gray-300);
+}
+
+.btn-plugin .btn-plugin-canvas label:first-of-type span {
+  border-radius: var(--bp-radius-field) 0 0 var(--bp-radius-field);
+}
+
+.btn-plugin .btn-plugin-canvas label:last-of-type span {
+  border-radius: 0 var(--bp-radius-field) var(--bp-radius-field) 0;
+}
+
+.btn-plugin .btn-plugin-canvas label:hover span {
+  background-color: var(--bp-gray-200);
+}
+
+.btn-plugin .btn-plugin-canvas input:checked + span {
+  background-color: var(--bp-gray-800);
+  box-shadow: none;
+  color: var(--bp-gray-25);
+}
+
+.btn-plugin .btn-plugin-canvas input:focus-visible + span {
+  outline: 2px solid var(--bp-accent);
+  outline-offset: 2px;
+}
+
+/* ---- form ------------------------------------------------------------------ */
+.btn-plugin .btn-plugin-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* a white card per group of fields on the light grey panel */
+.btn-plugin .btn-plugin-group {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--bp-gray-200);
+  border-radius: var(--bp-radius-card);
+  padding: 16px 20px;
+  background-color: var(--bp-gray-25);
+}
+
+/* narrow panel: label on top (Spectrum default); wide: side label (below) */
+.btn-plugin .btn-plugin-field {
+  display: grid;
+  gap: 6px;
+}
+
+.btn-plugin .btn-plugin-field-label,
+.btn-plugin .btn-plugin-switch-label {
+  color: var(--bp-gray-800);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.btn-plugin .btn-plugin-field-control {
+  min-width: 0;
+}
+
+.btn-plugin .btn-plugin-field input[type="text"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--bp-gray-500);
+  border-radius: var(--bp-radius-field);
+  padding: 10px 12px;
+  background-color: var(--bp-gray-25);
+  color: var(--bp-gray-900);
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-field input[type="text"]:hover {
+  border-color: var(--bp-gray-800);
+}
+
+.btn-plugin .btn-plugin-field input[type="text"]:focus-visible {
+  border-color: var(--bp-accent);
+}
+
+.btn-plugin .btn-plugin-field input[aria-invalid="true"] {
+  border-color: var(--bp-negative);
+}
+
+.btn-plugin .btn-plugin-field .btn-plugin-hint,
+.btn-plugin .btn-plugin-error {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.btn-plugin .btn-plugin-error {
+  color: var(--bp-negative);
+}
+
+.btn-plugin .btn-plugin-error:empty {
+  display: none;
+}
+
+/* colour swatches: a radio group; the chip is drawn, the radio covers it */
+.btn-plugin .btn-plugin-swatch-value {
+  margin-left: 4px;
+  color: var(--bp-gray-700);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.btn-plugin .btn-plugin-swatch-value:not(:empty)::before {
+  content: "· ";
+}
+
+/* -8px: the first chip lines up with the text fields' left edge */
+.btn-plugin .btn-plugin-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -8px;
+}
+
+.btn-plugin .btn-plugin-swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+
+/* Spectrum swatch: rounded square, hairline edge */
+.btn-plugin .btn-plugin-chip {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: var(--swatch, var(--bp-gray-25));
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 15%);
+  pointer-events: none;
+  transition: box-shadow var(--bp-fast);
+}
+
+/* "Design default": Spectrum's "no colour" swatch, white with a red slash */
+.btn-plugin .btn-plugin-chip.is-default {
+  background:
+    linear-gradient(135deg, transparent calc(50% - 1px), var(--bp-negative) calc(50% - 1px)
+    calc(50% + 1px), transparent calc(50% + 1px)),
+    var(--bp-gray-25);
+}
+
+.btn-plugin .btn-plugin-swatch:hover .btn-plugin-chip {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 15%), 0 0 0 2px var(--bp-gray-25), 0 0 0 4px var(--bp-gray-300);
+}
+
+.btn-plugin .btn-plugin-swatch input:checked + .btn-plugin-chip {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 15%), 0 0 0 2px var(--bp-gray-25), 0 0 0 4px var(--bp-gray-900);
+}
+
+.btn-plugin .btn-plugin-swatch input:focus-visible + .btn-plugin-chip {
+  outline: 2px solid var(--bp-accent);
+  outline-offset: 6px;
+}
+
+/* a text link has no button colours */
+.btn-plugin .btn-plugin-editor.is-link .btn-plugin-group:has(.btn-plugin-colors) {
+  display: none;
+}
+
+/* icons: only for the designs that take one (usta.com button-core) */
+.btn-plugin .btn-plugin-editor:not(.has-icons) .btn-plugin-icon-group {
+  display: none;
+}
+
+/* Spectrum picker: a native select (type-ahead, keyboard, screen readers) with
+   a preview of the chosen icon on its left and a chevron on its right */
+.btn-plugin .btn-plugin-select {
+  position: relative;
+}
+
+.btn-plugin .btn-plugin-select select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--bp-gray-500);
+  border-radius: var(--bp-radius-field);
+  padding: 10px 36px 10px 48px;
+  background-color: var(--bp-gray-25);
+  color: var(--bp-gray-900);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-select select:hover {
+  border-color: var(--bp-gray-800);
+}
+
+.btn-plugin .btn-plugin-select select:focus-visible {
+  border-color: var(--bp-accent);
+}
+
+/* grey tile: some usta.com icons are white */
+.btn-plugin .btn-plugin-select-icon {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--bp-gray-200) var(--icon, none) center / 18px no-repeat;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.btn-plugin .btn-plugin-select::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--bp-gray-800);
+  border-bottom: 2px solid var(--bp-gray-800);
+  pointer-events: none;
+  transform: translateY(-75%) rotate(45deg);
+}
+
+/* "Open in a new tab": Spectrum switch, emphasized (accent when on) */
+.btn-plugin .btn-plugin-switch {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.btn-plugin .btn-plugin-switch-text {
+  display: grid;
+  gap: 2px;
+}
+
+.btn-plugin .btn-plugin-switch input {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  border: 2px solid var(--bp-gray-700);
+  border-radius: 10px;
+  background-color: var(--bp-gray-25);
+  cursor: pointer;
+  appearance: none;
+  transition: background-color var(--bp-fast), border-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-switch input:disabled {
+  cursor: default;
+}
+
+.btn-plugin .btn-plugin-switch input::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--bp-gray-700);
+  transition: transform var(--bp-fast) var(--bp-ease), background-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-switch input:checked {
+  border-color: var(--bp-accent);
+  background-color: var(--bp-accent);
+}
+
+.btn-plugin .btn-plugin-switch input:checked::before {
+  background-color: var(--bp-gray-25);
+  transform: translateX(16px);
+}
+
+.btn-plugin .btn-plugin-switch:hover input:not(:checked) {
+  border-color: var(--bp-gray-900);
+}
+
+.btn-plugin .btn-plugin-switch:hover input:not(:checked)::before {
+  background-color: var(--bp-gray-900);
+}
+
+/* "Icon before the text" while no icon is chosen */
+.btn-plugin .btn-plugin-switch:has(input:disabled) {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* side labels: label and field on one line when the drawer has the room */
+@container bp-editor (min-width: 360px) {
+  .btn-plugin .btn-plugin-field {
+    grid-template-columns: var(--bp-label-width) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  /* centred on the 44px field / swatch row */
+  .btn-plugin .btn-plugin-field-label {
+    padding-top: 12px;
+  }
+
+  .btn-plugin .btn-plugin-swatch-value {
+    display: block;
+    margin-left: 0;
+  }
+
+  .btn-plugin .btn-plugin-swatch-value:not(:empty)::before {
+    content: none;
+  }
+}
+
+/* ---- sticky footer ---------------------------------------------------------- */
+.btn-plugin .btn-plugin-editor-foot {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--bp-gray-200);
+  padding: 16px var(--bp-pad);
+  background-color: var(--bp-gray-25);
+}
+
+.btn-plugin .btn-plugin-editor-status {
+  color: var(--bp-gray-700);
+  font-size: 12px;
+}
+
+.btn-plugin .btn-plugin-editor-status:empty {
+  display: none;
+}
+
+/* Spectrum accent button: pill, bold label */
+.btn-plugin .btn-plugin-submit {
+  min-height: 44px;
+  border: 0;
+  border-radius: 22px;
+  padding: 10px 24px;
+  background-color: var(--bp-accent);
+  color: var(--bp-gray-25);
+  font-family: var(--bp-font);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: background-color var(--bp-fast);
+}
+
+.btn-plugin .btn-plugin-submit:hover {
+  background-color: var(--bp-accent-hover);
+}
+
+.btn-plugin .btn-plugin-submit:active {
+  background-color: var(--bp-accent-down);
+}
+
+.btn-plugin .btn-plugin-submit:disabled {
+  background-color: var(--bp-gray-100);
+  color: var(--bp-gray-500);
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-plugin {
+    --bp-slide: 0s;
+    --bp-fast: 0s;
+  }
+}

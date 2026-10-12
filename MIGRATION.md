@@ -81,6 +81,235 @@ completeness will read <100% (duplicate hidden mobile/desktop copies, like the h
 _Per-template/section/block build details are captured in the dated Log below as they land; the template
 landscape + target order is in §2a above (full report: `docs/MIGRATION-SCOPE.md`)._
 
+### Buttons (CTA) — authoring & code reference
+_Current state as of 2026-10-11. Foundation buttons: merged to main (PR #68). Buttons panel: merged (PR #69, #70).
+USTA buttons: branch `usta-buttons`, pushed (not yet merged). This is the single place to read the button
+rules; the dated Log entries (2026-09-29 → 2026-10-11) hold the history and are partly superseded._
+
+**0. Overview — what we have done and what we are enabling**
+
+| Area | What it is | Status |
+|---|---|---|
+| Foundation buttons | 5 styles: the site-wide default button + blue / black / dark / outline `cta-button`s (items 1–4) | ✅ live on main |
+| Authored options | `[style=…, color=…, text-color=…, new-tab=…]` after any standalone link (item 2) | ✅ live on main |
+| Link targets | internal = same tab, external + files = new tab, `#_blank` = force new tab | ✅ live on main |
+| Buttons in every block | `decorateButtons()` runs before blocks; block CSS skips `.cta-button` (items 3–4) | ✅ live on main |
+| Buttons panel (DA / Experience Workspace) | a library plugin: pick a design, set text / link / colours / new tab / icon, Insert or Update (item 8) | ✅ on main; USTA presets + icon picker on `usta-buttons` |
+| Layout (canvas) editing preview | a button keeps its look while being edited in da.live Layout (item 7) | ✅ foundation on main; USTA untested in DA |
+| USTA (www.usta.com) buttons | 28 styles / 68 designs + 85 icons, own stylesheet, loaded only where used (item 9) | 🟡 built + validated; branch pushed, PR to `main` pending |
+| Sample / test pages | foundation: 4 DA pages (item 5); USTA: `/drafts/usta-buttons` (item 9) | 🟡 all previewed in DA, not published |
+
+- **Counts:** a *style* is the look named in `style="…"`; a *design* is a style + the options usta.com authors
+  combine with it (colours, border, hover, icon). Foundation 5 styles / 5 designs; USTA 28 styles / 68 designs;
+  **total 33 styles / 73 designs.**
+- **Stylesheets:** `styles/foundation-buttons.css` (foundation, every page) and `styles/usta-buttons.css` (USTA,
+  only on pages with a USTA button). The panel UI has its own `tools/plugins/buttons/buttons.css`.
+- **Icons** are a USTA feature only (`icon="…"` or `:name:` on the usta button-core designs). A foundation link
+  with an icon stays a normal link.
+- **Enablement still to do** (outward-facing → the user's steps, see §6 Buttons):
+  1. ~~Push `usta-buttons`~~ (done); open a PR to `main`.
+  2. Test in DA with `?ref=usta-buttons`: the panel's `USTA — …` designs and icon picker, Insert / Update, and a
+     USTA button in Layout view (default content and inside a block).
+  3. Publish the sample pages (`/drafts/usta-buttons` is already previewed; fix its `:download:` text, see §6).
+  4. Optional: add USTA rows to the panel sheet `/.da/library/buttons` (`options` column for colours / icon) and
+     USTA entries to the block library `/.da/library/blocks/buttons`.
+  5. The panel registration (`da.live/config` → library → `Buttons`, `/tools/plugins/buttons/buttons.html`) is
+     a one-off per site; nothing new is needed for USTA.
+
+**1. Authoring — formatting marks.** A link becomes a button only when it is the ONLY thing in its paragraph
+(a link inside a sentence, a list item, or a link whose text is its URL stays a normal link).
+
+| Author formats the link as | Class | Look |
+|---|---|---|
+| ***bold + italic*** + subscript (the default CTA) | `cta-button cta-blue` | solid brand blue `#0373f3`, white, 3px radius, 40px |
+| ***bold + italic*** + superscript | `cta-button cta-black` | black, fully rounded, 56px |
+| ***bold + italic*** + underline | `cta-button cta-outline` | transparent, `#333` text + 2px border, square, 46px; light grey on hover |
+| **bold** (no italic) + superscript | `cta-button cta-dark` | `#333`, white text, 2px border, square, 46px; black on hover |
+| **bold** only | `button primary` | site-wide blue CTA (170px min, 40px) — the inner pages' LEARN MORE / MAKE A GIFT / GIVE A GIFT |
+| *italic* only / ***bold + italic*** (no mark) | `button secondary` / `button accent` | also the site-wide blue CTA (see 3.) |
+
+- **Strikethrough is NOT used:** the DA editor stores a `<del>` as literal "<del>" text, so a strikethrough button
+  breaks the next time the page is saved. Subscript, superscript and underline survive DA + the aem.page pipeline.
+- Widths follow the label (+ padding): blue 14px side padding (40px tall), black 24px (56px), dark/outline 25px +
+  a 2px border (46px), so a dark/outline button is ~22px wider and 6px taller than a blue one with the same label
+  (accepted as is).
+
+**2. Authoring — options (override anything).** Type options in square brackets after the link text (inside the
+link or right after it, same paragraph); they are removed from the label:
+`Make a Gift [style="outline", color="#e87722", text-color="#ffffff", new-tab="true"]`
+- `style` = `blue` | `black` | `dark` | `outline` — wins over the formatting mark; default `blue`. Any standalone
+  link with options becomes a button, even without bold/italic.
+- `color` = button colour (for `outline`: border + text, fills on hover) — hex, `rgb()`, a CSS colour name or a site
+  colour token like the Spacer block (`brand-orange`). `text-color` = label colour; if omitted, black or white is
+  picked for WCAG contrast. Both are validated (`CSS.supports`) and set with `style.setProperty` — an invalid value
+  is ignored. No contrast check when BOTH colours are authored.
+- `new-tab` = `true` (new tab) | `false` (same tab, even for an external link).
+- Straight, curly or no quotes all work. Brackets inside a normal sentence are never touched.
+
+**3. Code — where it lives.**
+- `scripts/scripts.js` → `decorateButtons()` (runs over all of `main` and the header/footer fragments, before blocks
+  decorate, so it works in every block): `CTA_BUTTON_STYLES` (bold+italic: `sub` blue · `sup` black · `u` outline),
+  `CTA_BOLD_ONLY_STYLES` (`sup` dark), `CTA_OPTION_STYLES`, `takeCtaOptions()` / `parseCtaOptions()` /
+  `applyCtaOptions()` / `ctaOptionVars()` / `ctaColor()` / `contrastText()` / `makeCtaButton()`. The marks are
+  stripped from the label. `previewEditingCtas()` handles the da.live Layout editor (see 7.).
+- `styles/foundation-buttons.css` → every `cta-button` style, driven by custom properties (`--cta-bg / --cta-color /
+  --cta-border` + `-hover`); authored colours are set inline on the same properties (`.cta-custom` darkens on
+  hover). Loaded by `loadEager()`; awaited only when the first section contains a cta-button.
+- `styles/styles.css` → the boilerplate `.button` / `.primary` / `.secondary` / `.accent` rules and the site-wide
+  blue CTA override `main a.button:any-link, main a.button.primary/.secondary/.accent` (it replaced the old
+  `body.general` theme rule). Because it repaints the boilerplate variants, bold / italic / bold+italic links all
+  render as the blue CTA on every page — the distinct dark/outline looks come only from `cta-button`.
+- Block CSS that styles its own links skips authored CTAs with `:not(.cta-button)` / `:where(:not(.cta-button))`
+  (specificity unchanged): `hero.css` (banner `p:has(> a:only-child) > a`; text-up `.button-container` width),
+  `hero.js` (no hero `.button` class on a cta-button), `columns.css` (feature `a:only-child`), `cards.css` (news,
+  support, expand links), `quote.css` (tweet links), `footer.css` (footer links), `news.css` (article links skip
+  `.cta-button, .button`).
+- Link targets (new tab vs same tab) are separate: `decorateLinkTarget()` in scripts.js (internal = same tab,
+  external + files = new tab, `#_blank` URL suffix = force new tab). `new-tab=` in the options overrides it.
+
+**4. Block behaviour to know.** Every block variant renders authored CTAs (tested: banner-stats-grid, all 8 cards
+variants, columns default / feature collage / feature video / profile / stats, hero banner / banner medium / error /
+text-up / text-up medium, quote default / image / tweet, table default / directory). Put CTAs in the block's text
+or description cell: Cards (expand) turns its 4th cell into the pinned DONATE bar, and a Columns image cell keeps
+only the image + caption.
+
+**5. Test & sample pages** (DA = source of truth; uploaded + previewed, not yet published):
+- `/drafts/block-samples/buttons` — the author-facing sample: Blue, Black, Dark, Outline, Custom (options).
+- `/.da/library/blocks/buttons` — DA library entries: Blue, Black, Dark, Outline Button.
+- `/drafts/buttons-test` — every style + option, and CTAs inside Columns / Cards / Columns (feature) / Quote / Table / Hero.
+- `/drafts/buttons-blocks-test` — the real markup of every block sample + Dark / Outline / Orange CTAs (24 variants).
+- The in-tool preview window renders the LOCAL copies (`/content/drafts/…`), regenerated through run-bulk-import
+  with one-off page scripts (kept in /tmp, not in tools/importer) — keep them in sync with DA after a DA edit.
+
+**6. Gotchas.**
+- A strikethrough authored or pasted into DA turns into literal "<del>" text → never use it for buttons.
+- The import converter (run-bulk-import) always hoists `<del>` outside the link; sub/sup/u stay inside.
+- The local dev server serves `/drafts/…` from aem.page; a local content file is only reachable under `/content/…`.
+- Never pipe the import bundler into `tail -0` — it stops the bundler before it writes, and the runner silently
+  reuses the stale bundle.
+
+**7. Experience Workspace (da.live canvas, Layout view) — buttons while editing.**
+- **What happens:**
+  - Layout loads `https://{ref}--foundation-usta--aemdemos.preview.da.live/{path}?quick-edit=on`.
+  - Every content change re-runs our `loadPage()`, so buttons are decorated.
+  - **Clicking or editing a paragraph** swaps it for da.live's inline editor (`div.prosemirror-editor >
+    .ProseMirror > p`). The editor shows the raw marks (`<em><strong><a><sub|sup|u>`) plus the `[options]`
+    text until the next re-render or a refresh. This also happens inside blocks.
+- **What we do (central — NO per-block changes needed):**
+  - `styles/foundation-buttons.css`: the `.prosemirror-editor …` selectors give the raw link the button look.
+  - `scripts/scripts.js` → `previewEditingCtas()` (only with `?quick-edit`) parses the options. It sets
+    `--cta-edit-*` and the `.cta-edit-custom` / `.cta-edit-options` classes **on the editor wrapper only**.
+    The ProseMirror content must never be modified: changes there are saved back to the document as edits.
+  - The foundation-buttons.css rules then apply the colours and hide the options text (`font-size: 0` on the paragraph).
+  - The colour and hide rules carry `:not(#cta-edit)` (ID-level specificity). Block paragraph rules such as
+    `.cards.content .cards-content-card-body p` (0,3,1) would otherwise win and leave the options text visible.
+  - The 12px paragraph margin is deliberately NOT boosted, so a block's own button-paragraph margin still wins,
+    as it does on the page.
+- **What needs to be done:**
+  - **New or changed block:** nothing, as long as its CSS doesn't use an ID selector or `!important` on `p` /
+    `a` font-size or colours.
+  - To check a block, add a button with options to one of its text cells in Layout, then click it. The button
+    must keep its style and colour and the `[…]` text must be hidden.
+  - If a block still shows the options, check its paragraph/link rules in DevTools against the
+    `.prosemirror-editor` rules. Raise the foundation-buttons.css rule; don't add per-block overrides.
+  - **New button style or mark:** add it to the `.prosemirror-editor` selectors in foundation-buttons.css and to
+    `EDITING_CTA` in scripts.js, next to `CTA_BUTTON_STYLES`.
+  - **Testing Layout:** use a pushed branch, `da.live/canvas?ref=<branch>#/…`. `ref=local` points at a branch
+    called `local`, which doesn't exist, so the page renders unstyled.
+- **Limits while editing:** `style=` doesn't change the look (the mark decides it), and an editor holding several
+  buttons gets no authored colours. Both are correct after re-render or refresh.
+- **Dependency:** `.prosemirror-editor` and the mark nesting are da.live internals, not an API. If DA changes them,
+  only the Layout editing preview regresses (raw link until refresh). The published site is unaffected.
+  Update the selectors in `foundation-buttons.css` and `EDITING_CTA` in `scripts.js`.
+
+**8. Buttons panel (DA / Experience Workspace plugin)** — `tools/plugins/buttons/buttons.{html,js,css}`.
+- **For authors:** listed under **Extensions** in the DA library.
+  - Pick a design from the gallery (5 foundation + 21 `USTA — …`), then set the text, link, button colour, text
+    colour and "Open in a new tab"; USTA designs also get an **Icon** picker (85 icons + "before the text").
+  - Live preview on white / grey / dark, then **Insert button**. The panel stays open after inserting.
+  - Select an existing button first and the panel opens on it, pre-filled; **Update button** replaces it.
+- **What it writes:** exactly the authoring contract above — foundation marks (bold / italic / sub / sup /
+  underline) or `[style="usta-…", color=…, icon=…]` options, new tab as `#_blank`. `decorateButtons()` does the rest.
+- **Config:** the optional DA sheet `/.da/library/buttons` (tabs `presets` + `options`) replaces the built-in
+  designs and colour swatches; without it the panel shows its defaults. Registered once in
+  `da.live/config#/aemdemos/foundation-usta/` → library → `Buttons` = `/tools/plugins/buttons/buttons.html`.
+- **UI:** Adobe Spectrum 2 look (PR #70). Previews use the real `foundation-buttons.css` / `usta-buttons.css`.
+- **Testing:** `localhost:3000/tools/plugins/buttons/buttons.html` (Insert disabled outside DA), then in DA with
+  `?ref=<branch>`.
+
+**Setting this up in another project:** follow
+[tools/plugins/buttons/README.md](tools/plugins/buttons/README.md). It covers the files to copy, the scripts.js
+wiring, DA plugin registration, the optional `/.da/library/buttons` sheet, the Layout (ProseMirror) fixes, testing
+with `?ref=<branch>` and troubleshooting. Keep it up to date when the buttons code changes.
+
+**9. USTA (www.usta.com) button system** — branch `usta-buttons`, 2026-10-11. The parent site's buttons, so authors
+can use them on this site. They are separate from the foundation buttons above, which are unchanged.
+- **Two stylesheets:** `styles/foundation-buttons.css` holds the foundation `cta-button` styles (renamed from
+  `styles/buttons.css`). `styles/usta-buttons.css` holds every `cta-usta*` style.
+- **Scope:**
+  - Crawl of 3,388 usta.com EN pages (sitemap: 12,411 URLs, 3,088 core pages + samples of news and pro
+    pages). All returned 200; 9,672 buttons were found, which clustered into 119 computed-style variants.
+  - A second survey (222 pages with column or icon buttons, × 390 / 768 / 1440) measured widths and icons.
+  - **68 designs** (28 style names + colours / icons) belong to usta.com's own button system and are implemented.
+  - **51 variants are out of scope:** section microsites (WordPress / legacy themes: Pacific NW, New England,
+    Colorado…), ustacoaching.com (12px-radius buttons), and third-party widgets (Termly, Auth0, forms).
+    They are listed in the report.
+- **Authoring:** no marks; a standalone link + options. The **style name says how the button looks**; there is
+  no width / height / size option (user decision 2026-10-11: too many options for authors).
+  `Register Now [style="usta-pill-wide", color="#cfff05", text-color="#000000"]`
+  - **Naming:** `usta-` + words, any order, each at most once (`USTA_WORDS` in scripts.js):
+
+    | Word | Meaning (usta.com class) |
+    |---|---|
+    | `pill` | black rounded button, 56px, 18px Graphik Semibold, hover opacity .7 (`.button-core`) |
+    | `outline` | transparent, 2px black border (`--ghost`) |
+    | `square` | 3px corners, 1px border (`--border--rectangular`) |
+    | `app` | as `pill`, the label keeps `letter-spacing: 1px` (`.button-primary-style`, Vue widgets) |
+    | `medium` / `small` / `mini` / `compact` | 40px · 40px + 14px text · 24px + 14px text · 56px + 14px text |
+    | `wide` / `narrow` / `column` | at least 280px · at most 170px · fills its column (`--large` / `--small` / `--not-fixed-width`) |
+    | `padded` / `disabled` | 50px side padding · grey disabled state |
+
+    Fixed designs: `usta-classic`, `usta-classic-outline` (`.usta-black-button` / `.usta-ghost-button`, 270px),
+    `usta-header-join`, `usta-header-signin` (header `.usta-ghost-button-link` / `.v-authentication-button`).
+    The 28 names used on usta.com are listed on the sample page.
+  - **`column` width:** in a block cell (card, column) it fills the cell. In default content it takes the
+    usta.com grid column such buttons sit on most (≈600 measured): full width less the 8px gutter on phones
+    (328px), 6 of 12 on tablet (348px), 3 of 12 on desktop (`calc(25% - 22.5px)` = 270px at 1200).
+  - **Options:** `color` (the background, as usta.com sets it inline) / `text-color` / `border-color`,
+    `hover-color` / `hover-text-color` / `hover-border-color`, `new-tab`. The style keeps its own border and text
+    colour unless `border-color` or `text-color` is authored (no contrast pick).
+  - **Icons (usta button-core designs only, never foundation buttons):** `icon="download"` (any of the 85 icons
+    in `icons/usta-buttons-icons/`, aliases `download`, `external`, `external-link`) after the label, `icon-position="before"`
+    for an icon before it. Typing `:download:` in the button text works too (EDS icon notation, also when the
+    pipeline turns it into `span.icon`). A foundation link with an icon stays a link, as before.
+- **Code:**
+  - `styles/usta-buttons.css` (values from the usta.com clientlibs; per-icon filters on `[data-icon]`).
+    - It is fetched only when a page contains a usta button: `loadUstaButtonsCss()`, called from
+      `decorateButtons()`; `loadEager()` awaits it if the first section has one.
+    - Foundation pages never load it.
+  - `scripts/scripts.js`:
+    - `ctaStyleClasses()` resolves `style=` (fixed `CTA_OPTION_STYLES` or `usta-` + `USTA_WORDS`);
+    - `applyUstaOptions()` (border / hover colours, disabled ARIA) and `decorateUstaIcon()` (icon);
+    - `applyCtaOptions()` keeps each usta style's own border and text colour;
+    - `previewEditingCtas()` styles a usta button in the Layout editor (`.cta-edit-usta*` on the wrapper).
+  - Panel `tools/plugins/buttons/buttons.js`: `styleInfo()` + `USTA_WORDS` (mirror scripts.js), 21 `USTA — …`
+    presets, an Icon picker for usta designs (writes `icon="…"`), sheet column `options` (colours, icon).
+- **Sample:** `/drafts/usta-buttons` — all 68 designs grouped, each with the options to type and its source page;
+  white / white-border buttons sit in a `dark` section. Previewed in DA (2026-10-11), not published.
+- **Catalogue + screenshots:** `migration-work/usta-buttons/index.html` (local, not committed): usta.com vs EDS
+  element screenshots (rest + hover) at 390 / 768 / 1440 and `catalogue.json`.
+- **Parity:** computed styles at rest and forced `:hover`, source vs sample, 68 designs × 390 / 768 / 1440.
+  - **Every property except width matches** on all 202 comparable checks (colours, height, border, radius,
+    padding, font, line-height, letter spacing, label width, opacity, icon size + filter, hover).
+  - **Width matches on 136 / 202.** The other 66 are buttons whose source page puts them in a different column
+    (e.g. 4 of 12 = 370px, or a narrow card cell) — a page layout choice, not the button. Without a width option
+    the style gives the most common column; inside a card / column block the button fills that cell.
+  - Not comparable: #39 sage `LEARN MORE` at 390 / 768 (the source author hides it below desktop).
+  - **Typography** (2026-10-11, 390 / 768 / 992 / 1200 / 1440): 335 / 340 label checks match; see that Log entry
+    (synthetic-bold JOIN, nowrap / wrap rules, long column labels).
+- **Deviation:** the header `usta-header-join` / `usta-header-signin` switch to their compact size below
+  **1200** (usta.com: below 1370, which is not a project breakpoint).
+
 ## 6. Open items / TODO
 
 ### Standing
@@ -91,6 +320,29 @@ landscape + target order is in §2a above (full report: `docs/MIGRATION-SCOPE.md
 - [ ] **Re-upload corrected pages to DA (production)** — cards-expand donate hrefs, cards-profile JPEGs, and
   the re-imported home (statement + collage text). This is the USER's step (outward-facing, on request only).
 - [ ] Run `npm run check:overflow` + `npm run check:typography` once deps + dev server are up.
+
+### Buttons (see §3 "Buttons (CTA)")
+- [ ] **Publish** in DA (previewed only): `/drafts/block-samples/buttons`, `/.da/library/blocks/buttons`,
+  `/drafts/buttons-test`, `/drafts/buttons-blocks-test`. User's step (outward-facing).
+- [ ] Re-confirm on a page an author creates from scratch in DA that bold + superscript (dark) and bold + italic +
+  underline (outline) survive save + preview (verified on uploaded markup only).
+- [ ] Optional: a `Hero (banner, medium)` block sample (the variant has none; tested via a copy of hero-banner).
+- [ ] Optional: contrast check when an author sets BOTH `color` and `text-color` (not checked today).
+- [ ] Optional: same size for all CTA styles (dark/outline are 25px padding / 46px tall vs blue 14px / 40px) — kept
+  as is by user decision 2026-10-10.
+- [ ] **USTA buttons (§3 items 0 + 9):**
+  - [x] push branch `usta-buttons`; [ ] open a PR to `main` — user's step;
+  - [ ] in DA with `?ref=usta-buttons`: test the panel's `USTA — …` designs, the icon picker, Insert / Update,
+    and the Layout editing preview of a USTA button (`cta-edit-usta*`, not yet tested in DA) in default content
+    and inside a block;
+  - [x] upload + preview `/drafts/usta-buttons` in DA;
+  - [ ] in DA, `/drafts/usta-buttons` intro paragraph: put the typed `:download:` in code formatting. As plain
+    text the pipeline turns it into `span.icon-download`, and `decorateIcons()` then requests
+    `/icons/download.svg` (404 in the console). Content only, no code change;
+  - [ ] optional: USTA rows in the `/.da/library/buttons` sheet (`options` column) and USTA entries in
+    `/.da/library/blocks/buttons`;
+  - [ ] optional: confirm in DA that `:download:` typed inside a link survives save + preview (supported both as
+    text and as the pipeline's `span.icon`; verified on local markup only).
 
 ---
 
@@ -4704,3 +4956,502 @@ clamps it: `MAX_LIMIT = 3` — values > 3 render 3; 1–2 are honoured; empty / 
 `DEFAULT_LIMIT` (3). (Negative values previously reached `slice(0, n)` and silently dropped cards from the end.)
 No content edits — existing `Max Items: 4` metadata is left as authored and is simply capped at runtime.
 Verified on `/en/home/news/frances-tiafoe-fund-surpasses-1-million-raised` (max-items 4 → 3 cards).
+
+### 2026-10-10 — Buttons: own stylesheet, 2 new styles (dark / outline), authored `[options]`
+- **`styles/buttons.css` (new):** all `cta-button` styles moved out of styles.css (the customer has 20+ button
+  looks). Loaded by `loadEager()` right away (non-blocking; awaited only when the first section contains a
+  cta-button, so no flash of an unstyled LCP button). Every style is driven by custom properties
+  (`--cta-bg / --cta-color / --cta-border` + `-hover`), so a variant or an authored colour only overrides tokens.
+  The boilerplate `.button` / `.primary` / `.secondary` / `.accent` rules + the site-wide blue CTA stay in styles.css.
+- **Authoring contract** (standalone link alone in its paragraph) — ⚠️ SUPERSEDED for Dark: strikethrough was
+  replaced by bold (no italic) + superscript the same day (DA can't keep `<del>`). Current rules: §3 "Buttons (CTA)".
+  | Authored | Class | Look |
+  |---|---|---|
+  | bold + italic + subscript | `cta-button cta-blue` | solid brand blue, 3px radius, 40px |
+  | bold + italic + superscript | `cta-button cta-black` | black, fully rounded, 56px |
+  | ~~bold + italic + strikethrough~~ → bold + superscript | `cta-button cta-dark` | #333, white text, 2px border, square, 46px |
+  | bold + italic + **underline** (new) | `cta-button cta-outline` | transparent, #333 text + 2px border, square, 46px; light grey on hover |
+- **Authored options** — append to the link (inside the label or right after it, same paragraph):
+  `Make a gift [style="outline", color="#e87722", text-color="#fff", new-tab="true"]`
+  - `style` = blue | black | dark | outline (wins over the formatting mark; default blue).
+  - `color` = button colour (for `outline`: border + text, filled on hover). Any CSS colour (hex, rgb(), named) or a
+    design-token name like the Spacer block (`brand-orange`). Invalid values are ignored (validated with
+    `CSS.supports`; set via `style.setProperty`, never innerHTML).
+  - `text-color` = label colour. If omitted with `color`, black or white is picked by WCAG contrast.
+  - `new-tab` = true → `target=_blank` + noopener; false → `_self` (overrides the external-link rule).
+  - Straight or curly quotes, or unquoted values. Options make ANY standalone link a cta-button (no bold/italic
+    needed). Brackets in a normal sentence are never touched. Custom-coloured buttons darken slightly on hover.
+- **scripts.js:** `CTA_BUTTON_STYLES` += del/s → cta-dark, u → cta-outline; new `takeCtaOptions` /
+  `applyCtaOptions` / `ctaColor` / `contrastText` / `makeCtaButton`; `decorateButtons` reads options first.
+- **news.css fix (pre-existing bug):** the article inline-link colour rule also hit `.button` links → blue text on a
+  blue button (seen on /drafts/nasvit/testpage, which uses the news template). Now skips `.cta-button, .button`.
+- **Test page:** `content/drafts/buttons-test` — written by a one-off page script (kept in /tmp, not in
+  tools/importer) run through run-bulk-import. Local preview: `localhost:3000/content/drafts/buttons-test` (the dev
+  server serves `/drafts/…` from aem.page, so the local file is only reachable under `/content/`). Note: the
+  converter writes strikethrough OUTSIDE the link (`<del><em><strong><a>`), which decorateButtons handles. 15
+  cases incl. curly quotes, unquoted values, a token, new-tab true/false, an invalid colour, prose with brackets.
+- **Verified:** all cases render as specified, labels cleaned, 0 JS errors; existing cta-blue / cta-black unchanged
+  (158×40 / 251×56) on /drafts/block-samples/buttons; lint 0 errors · breakpoint ✓ · check:overflow ✓ · test:a11y ✓.
+- **To confirm in DA:** that strikethrough and underline survive preview on a real authored link (strikethrough
+  did before 2026-09-29; underline not yet tried in DA).
+- **Follow-up (same day): CTA buttons inside blocks + footer.** `decorateButtons()` runs over the whole page
+  (block cells and the header/footer fragments too) before blocks decorate, so the marks and `[options]` work in
+  any block. Test page section 4 (Columns, Cards, Columns (feature), Quote, Table, Hero (banner), Hero (text-up)),
+  incl. a cell holding only an options link (the pipeline wraps it in a <p>). Columns / Cards / Quote / Table worked
+  as-is. Three blocks' own CTA rules out-ranked buttons.css and forced their blue button:
+  - `hero.js`: no hero `.button` class on a link that's already a `cta-button` (text-up / error `a.button` rules).
+  - `hero.css`: banner structural CTA selectors `p:has(> a:only-child) > a` → `…> a:not(.cta-button)`; text-up
+    `.button-container:has(> .cta-button) { width: auto }` (≥992) so the label isn't squeezed into the source
+    column. The `.button-container` wrapper is kept: the hero's "has a CTA" layout depends on it.
+  - `columns.css`: feature `a:only-child` → `a:only-child:not(.cta-button)`.
+  - `footer.css`: `footer .footer a:any-link` → `a:where(:not(.cta-button)):any-link` (same 0,2,2 specificity,
+    which the social-icon rule relies on); a footer CTA had blue underlined text on its button.
+  Verified: every block case = authored style; 70 block/button links on 8 real pages identical old vs new at
+  390/1440; footer links unchanged. Gates: lint 0 errors · breakpoint ✓ · check:overflow ✓ (test page) ·
+  test:a11y ✓ (test page, home, who-we-are, our-impact).
+  Not covered: links in list items or alongside other text in a paragraph never become buttons (boilerplate rule);
+  authored colour pairs are not contrast-checked when both `color` and `text-color` are given.
+- **Follow-up: CTA buttons tested in EVERY block variant.** `/content/drafts/buttons-blocks-test` (one-off page
+  script, /tmp only) = the real block markup of all 23 block samples + `hero (banner, medium)` (no sample yet), each
+  with a Dark (strikethrough), Outline (underline) and Orange (`[color=…]`) CTA in its main text cell. Skipped:
+  spacer, donate-embed, embed-instagram, video-embed, social (no author CTA), retired custom-*, toc-profile (a tab
+  container; its child blocks are covered). Result after fixes: **24/24 variants render all 3 CTAs as authored, at
+  390 and 1440**. Extra fixes (same `:where(:not(.cta-button))` pattern, specificity unchanged):
+  - `cards.css`: `.cards.news .cards-news-card-link a` (+ its 992 tier), `.cards.support .cards-support-card-body a`,
+    `.cards.expand .cards-expand-donate a` (+ hover/focus) — they restyled every link as a text link / donate bar.
+  - `quote.css`: `.quote.tweet a:any-link` forced link-blue text.
+  Block behaviour to know (by design, not changed): Cards (expand) turns its 4th cell into the pinned DONATE bar, and
+  Columns' image cell keeps only image + caption — put CTAs in the description / text cell.
+  Regression: 160 links on all 31 block samples + 6 real pages identical old (main) vs new at 390/1440.
+- **Buttons block sample updated** (`/drafts/block-samples/buttons`, regenerated through run-bulk-import, same
+  scaffold): + Dark Button, Outline Button and Custom Button (options syntax, 3 examples) sections. Blue / Black
+  unchanged (158×40 / 251×56). LOCAL copy only — upload to DA + preview to publish it to authors.
+  a11y: the only violation is an empty <title> at the local `/content/…` address (the Metadata `Title` is applied
+  by aem.page — confirmed "Buttons — Block Sample" there); overflow ✓.
+- **Final regression (all 86 pages, old main vs new, 390 + 1440):** 3,962 button / block / footer links → 0
+  differences; 98 body-text links (49 visible × 2 widths) → 0 differences. Gates on home, who-we-are, get-involved
+  and a news article: lint 0 errors · breakpoint ✓ · check:overflow ✓ · check:typography ✓ · test:a11y ✓.
+- **DA fix (2026-10-10): Dark CTA showed "<del>" as text** on `/drafts/buttons-blocks-test` (aem.live). Its DA source
+  held the strikethrough as literal escaped text (`<p>&lt;del&gt;<em><strong><a>…`), so no `<del>` reached
+  decorateButtons. Rewrote all 24 to `<p><em><strong><a …><del>Label</del></a></strong></em></p>`, uploaded + previewed
+  (originals backed up in /tmp). Finding: the aem.page pipeline normalises strikethrough to OUTSIDE the link
+  (`<p><del><em><strong><a>`) — a real tag, which decorateButtons handles (`a.closest('del, s')`). So
+  `/drafts/buttons-test` and `/drafts/block-samples/buttons` were already correct (source had a real `<del>`); the
+  sample was re-uploaded in the inside-link form, buttons-test only re-previewed. Verified on the issue67 preview:
+  buttons-blocks-test 24/24 variants ✓, buttons-test + buttons sample: every Dark CTA = #333 square. Not published.
+  Gotcha: the import converter (run-bulk-import) also always hoists <del> outside the link; that is fine for the
+  pipeline — the breakage only happens when the markup is pasted into DA as text.
+
+### 2026-10-10 — Dark CTA = bold + superscript (strikethrough dropped); other marks unchanged
+DA can't keep strikethrough: the editor stores a `<del>` as literal "<del>" text, so the dark CTA broke after a
+save. A full flip of the marks was tried and reverted (user: keep the change small). Final contract — standalone
+link, alone in its paragraph:
+| Authored | Class | Look |
+|---|---|---|
+| bold + italic + subscript (default) | `cta-button cta-blue` | solid brand blue, 3px radius, 40px |
+| bold + italic + superscript | `cta-button cta-black` | black, fully rounded, 56px |
+| bold + italic + underline | `cta-button cta-outline` | transparent, #333 text + 2px border, square, 46px |
+| **bold (no italic) + superscript** | `cta-button cta-dark` | #333, white text, square, 46px |
+- `scripts.js`: `del` / `s` removed from `CTA_BUTTON_STYLES`; new `CTA_BOLD_ONLY_STYLES = { sup: 'cta-dark' }`, used
+  when the link is bold but not italic. `[options]` unchanged.
+- DA content (uploaded + previewed, not published; pre-change copies in /tmp/m/da-backup2): `/drafts/buttons-test`
+  (9 dark), `/drafts/block-samples/buttons` (1 dark + label), `/drafts/buttons-blocks-test` (24 dark), library
+  `/.da/library/blocks/buttons` (Blue/Black unchanged + new Dark Button and Outline Button entries).
+- Gotcha: until this code is pushed, the branch (still on `f7dcd6e`, strikethrough mapping) renders bold +
+  superscript as the default blue `.button.primary` (170px min-width) — that is the "dark CTA looks like the
+  default / wider" report. Verified with the local code: buttons-blocks-test 24/24 variants ✓.
+- Gotcha (same day): the in-tool **preview window** renders the LOCAL content copy (`/content/drafts/…`), not DA. The
+  local copies of buttons-test / buttons-blocks-test / block-samples/buttons still had the old `<del>` markup, so the
+  Dark CTA fell back to `.button.accent` there. Regenerated all three through run-bulk-import with dark = bold +
+  superscript (local now = DA: 9 / 24 / 1 dark, 0 strikethrough). Verified at the `/content/drafts/…` URLs:
+  blocks-test 24/24, every Dark CTA = #333 square. Also: never pipe the bundler into `tail -0` — it kills the
+  bundler before it writes the bundle, and the runner then silently reuses the stale one.
+
+### 2026-10-10 — Buttons merged to main (PR #68) + final regressions; consolidated reference added
+- `issue67` (`81c44b0`: dark = bold + superscript) merged to main as **PR #68** (`472a662`).
+- **Regression, issue67 preview vs main preview (all 86 pages, 390 + 1440):** 3,962 button / block / footer links →
+  0 differences; 98 body-text links → 0 differences. Branch preview: buttons-blocks-test 24/24 variants;
+  buttons-test, block-samples/buttons and the DA library page = every style correct; 0 JS errors.
+- **Regression after the merge, old code vs merged main:** baseline = the preview of the deleted branch
+  `aem-20261009-1218` (byte-identical to pre-buttons main `cb76906` on all 8 changed files — scripts.js, styles.css,
+  hero.css, cards.css, columns.css, footer.css, quote.css, news.css; main preview = merged code, also verified).
+  3,962 button / block / footer links → **0 differences**. The body-text link run on merged main was stopped before
+  it ran (same code as the issue67 run above, which was 0 / 98).
+- **Docs:** added the consolidated **§3 "Buttons (CTA)" reference** (authoring marks, options, code locations, block
+  exclusions, test pages, gotchas) and a **§6 Buttons** open-items list; flagged the superseded strikethrough rows in
+  the earlier 2026-10-10 entry.
+
+### 2026-10-10 — Experience Workspace: Buttons plugin + block-library preview cleanup (branch `buttons-plugin`)
+- **Buttons plugin** — `tools/plugins/buttons/buttons.{html,js,css}`, a DA library plugin. The author picks a
+  preset design from a gallery, then sees **only that design** (large live preview, description) and sets
+  text, link URL, button colour, text colour and **Open in a new tab**, then Insert. If a button is selected in the
+  editor (`actions.getSelection()`), the panel opens straight on it, pre-filled, and **Update** replaces it
+  (`actions.sendHTML` replaces the selection). After inserting, the panel **stays open** and shows "Button
+  inserted.". The author closes it from DA (we removed the `closeLibrary()` call, 2026-10-11).
+  - **Output = the existing authoring contract; `decorateButtons()` is unchanged.** Blue
+    `<strong><em><a><sub>`, Black `…<sup>`, Outline `…<u>`, Dark `<strong><a><sup>` (no italic), Text link =
+    plain `<a>`. Colours are added as a trailing ` [color="…", text-color="…"]` (only when set). New tab is
+    added as `#_blank` on the href (decorateLinkTarget). Rendered through the real `scripts.js` locally, these come out as
+    the expected `a.cta-button.cta-*` (+ `cta-custom`, `target=_blank`).
+  - **Security:** URLs can be a relative path / `#` / `?`, or http(s) / mailto / tel. `javascript:`, `data:` and
+    `//host` are rejected. Colours must pass `CSS.supports('color')` or be an existing `--token`, and are limited
+    to quote-free characters. All text is HTML-escaped. The selection is parsed with an inert `DOMParser`.
+  - **Previews are the real CSS.** The page links `styles.css`, `fonts.css` and `buttons.css` (same origin). The
+    preview colour logic duplicates `applyCtaOptions()` / `ctaColor()` / `contrastText()` from scripts.js,
+    because scripts.js runs `loadPage()` on import. **Keep the two in sync.**
+  - **Config sheet `/.da/library/buttons`** (DA, save only, no publish), read through
+    `actions.daFetch(admin.da.live/source/…/.da/library/buttons.json)`. Tabs:
+    - `presets`: name | style (blue/black/dark/outline/link) | color | text-color | label | description
+    - `options`: key (`color` / `text-color`) | values (`Brand blue=#0373f3 | Orange=#e87722`)
+
+    A single-sheet doc counts as `presets`. If the sheet is missing, the panel uses built-in defaults
+    (4 styles + Text link; blue/black/dark grey/orange; white/black) and shows a status note.
+  - **Registration (manual, outward-facing):** at `da.live/config#/aemdemos/foundation-usta/`, `library` tab, add
+    the row title `Buttons`, path `/tools/plugins/buttons/buttons.html`. DA lists plugins under **"Extensions"**. The
+    **Buttons** block-library entry stays for now (author choice: keep both).
+  - Outside DA the SDK never resolves; after 3 s the panel shows the defaults with Insert disabled. This
+    lets you review it at `localhost:3000/tools/plugins/buttons/buttons.html`.
+  - **Not possible:** the core DA "Edit link" dialog can't be extended (no new-tab checkbox there). There, type
+    `#_blank` at the end of the URL, or use this panel. Typing `#_blank` in the panel's URL field also ticks new tab.
+  - **To test in DA:** an Update on a partial selection inside a paragraph may split it. Select the whole button
+    line.
+- **Block-library preview cleanup** (port of aemdemos/patients-stryker#312) —
+  `tools/da-library-preview/da-library-preview.{js,css}`. It is loaded from `loadEager()` only when the path starts
+  with `/.da/library/`, and runs **before** `decorateMain()`. It:
+  - removes the `library-metadata` tables, the `library-container-start/end` marker tables and the group-name
+    heading right before a start marker;
+  - groups the sections into variants, frames each one, and adds a name tab (`data-library-label`, from the
+    metadata `name`);
+  - hides the header and footer.
+  - **Adaptations vs #312:**
+    - our tokens / px values instead of its missing ones;
+    - section backgrounds are kept, because for section-metadata styles the background IS the example;
+    - the variant margin is set **inline** from `--library-variant-margin`, because hero/spacer zero their
+      section margins with (0,4,1) selectors.
+  - `blocks/library-metadata` (the old name/description label) never loads now, since its tables are removed
+    first. Delete it once this is confirmed in EW. Verified locally: the buttons, hero, quote, spacer and
+    section-metadata library docs.
+  - **Limitation:** EW's Insert-block dialog loads the **`main`** preview, so this only shows there after merge.
+- **Verified:** lint 0 errors; stylelint on the new CSS OK; breakpoint check passed; axe passed on the plugin
+  (gallery + single-button view with errors shown) and the library previews (buttons, hero); overflow sweep OK at
+  360–1920 on all three. A mock-SDK run checked the sheet load, insert, validation and edit-mode prefill/update.
+
+### 2026-10-10 — Buttons plugin: panel UI redesign (branch `buttons-plugin`)
+Author feedback after testing in DA: the gallery cards didn't line up and the form felt plain. The output markup and
+the sheet format are unchanged; this is a UI-only change in `tools/plugins/buttons/`.
+- **Gallery:** each card has a **fixed-height plain canvas** (no dot pattern, per author) with the real button **centred**, so cards line up
+  whatever the button's size (the pill, outline and link used to sit left-aligned at different heights). Below it are
+  the name, the description and a chevron. The whole card is the pick button. The design last open in the editor gets a
+  **"Current"** badge and `aria-current` (badge text from `data-current` on the list, so it can be localised).
+- **Editor = a drawer that slides in from the right** (`transform` + delayed `visibility`, 320 ms; the gallery
+  dims and shifts left behind it). It is a fixed panel: full width in the narrow DA panel, 480 px max on wide screens.
+  - **Header:** back chevron and the design name.
+  - **Live preview:** sticky at the top while the fields scroll, with a **"Preview on: White / Grey / Dark"**
+    toggle, so authors can check a button against dark sections.
+  - **Colours are swatch radio groups** (not selects). The first swatch is "Design default" (a slashed chip), and
+    the chosen colour's name shows next to the legend.
+  - **New tab is a switch** (`role="switch"` checkbox) with a hint.
+  - **Footer:** sticky, with the Insert/Update button and a status line.
+  - **Keyboard:** Esc or back closes the drawer, and focus returns to that card. The gallery is `inert` while the drawer
+    is open, and the drawer is `inert` while closed.
+- **Changing design keeps the author's text (if edited), link and new tab.** Colours follow the new design.
+- **Gotchas:**
+  - Global `header { min-height: var(--nav-height) }` in styles.css hit the panel's `<header>`s. Reset under
+    `.btn-plugin`.
+  - The drawn swatch chips and segment pills need `pointer-events: none` so clicks reach the radio underneath.
+  - Reduced motion: the duration tokens `--bp-slide` / `--bp-fast` are set to 0s (no `!important`).
+- **Verified:** eslint + stylelint clean; mock-SDK flows (insert, validation, Esc/back, carry-over, edit-mode
+  prefill/update) all pass. Custom axe found 0 violations on the gallery, the drawer with errors, dark canvas + switch
+  on, and the gallery with the Current badge. `test:a11y` and the 360–1920 overflow sweep passed on the plugin page.
+
+### 2026-10-10 — EW Layout view: buttons turned into plain links while editing
+Symptom: in the da.live canvas **Layout** view, a button turns into a plain italic link with the raw
+`[color="…"]` text after you click it or insert one with the plugin. It only looks right after a page refresh.
+- **How Layout works** (da-live `ew-editor-wysiwyg.js`, da-nx `quick-edit.js`):
+  - The iframe is `https://{ref}--{site}--{org}.preview.da.live/{path}?quick-edit=on&controller=parent`.
+  - preview.da.live appends a bootstrap to `scripts.js` that loads quick-edit with our `loadPage`.
+  - Each content change sends `set-body`: the body is replaced and our `loadPage()` runs again, so blocks and buttons
+    **are** decorated. Checked with a local harness that runs the real `quick-edit.js`.
+  - **Clicking a paragraph** (and the refocus after a `set-body`) replaces that decorated element with
+    `div.prosemirror-editor > .ProseMirror > p`. That is a raw ProseMirror paragraph showing the marks as authored
+    (`<em><strong><a><sub|sup|u>`) plus the options text. It stays like that until the next full re-render.
+  - Our code must not touch that DOM: changes to it are sent back to the document as edits.
+- **Fix (CSS only, `styles/buttons.css`):** `.prosemirror-editor em > strong > a:has(> sub|sup|u)` and
+  `p > strong > a:has(> sup)` are added to the `.cta-button` / `.cta-black` / `.cta-dark` / `.cta-outline`
+  rules, and the inner mark is reset to normal text. The base rule gained `font-style: normal` (no-op on the live page).
+  The button keeps its style while it's being edited.
+- **Limitation:** authored `color=` / `text-color=` options are plain text inside the editor, so they show as text and
+  only apply on the next re-render (or a refresh).
+- **Gotcha:** `?ref=local` points the Layout iframe at a branch called `local`, which doesn't exist (no CSS/JS, so
+  Times font). Test Layout with a pushed branch: `?ref=<branch>`.
+- **Verified:** harness screenshot (edited buttons keep their style); lint clean; breakpoint check passed;
+  `test:a11y /` passed.
+- **Follow-up (same day): options text and colours while editing.**
+  - **Problem:** authors still saw `[color="#e87722"]` attached to the button, with the default colour, until a refresh.
+  - **Fix:** `previewEditingCtas()` in `scripts.js` runs only with `?quick-edit`.
+    - A MutationObserver (batched per animation frame) finds each `.prosemirror-editor` and parses the raw
+      button's options text (`parseCtaOptions`).
+    - It writes the colours as `--cta-edit-*` custom properties on the **wrapper**. The wrapper sits outside the
+      ProseMirror `contenteditable`, so these changes are never sent back as edits.
+    - It adds `.cta-edit-custom` (apply the colours) and `.cta-edit-options` (standalone button: hide the
+      options text) to the wrapper.
+    - `buttons.css` hides the options text with `font-size: 0` on the paragraph; the link keeps its own 18px.
+      It also restores the `p.button-wrapper` 12px margins, which would otherwise collapse to 0 (they are em-based).
+  - **Refactor:** the colour logic moved from `applyCtaOptions()` into `ctaOptionVars()`, shared by the page and
+    the editor. Output on the page is unchanged.
+  - **Limits:** while editing, `style=` doesn't change the look (the mark decides it), and an editor wrapping
+    several buttons gets no colours.
+  - **Verified:** the harness with the real `quick-edit.js` shows LEARN MORE in orange and the outline button with an orange
+    border and text, with the options text hidden. lint, breakpoint check and `test:a11y` passed.
+- **Follow-up 2 (2026-10-11): options still visible inside blocks.**
+  - **Problem:** in a Cards (content) cell, the colours applied but `[color=…]` stayed visible.
+  - **Cause** (CDP `getMatchedStylesForNode`): `.cards.content .cards-content-card-body p` at (0,3,1) beat the
+    hide rule at (0,2,5).
+  - **Fix:** `:not(#cta-edit)` on the colour and hide rules, so they win over any block's class-based rules.
+    It's a central fix with no `!important`, and blocks need no changes.
+  - **Verified:** a harness cards cell shows the options paragraph at font-size 0 with DONATETEST1 black and white.
+    Default content is still correct. lint, breakpoint check and `test:a11y` passed.
+  - The "what needs to be done" checklist is in §3 Buttons (CTA), item 7.
+
+### 2026-10-11 — Buttons panel: stays open after Insert + portable setup guide
+- **Panel stays open:** removed `actions.closeLibrary()` after `sendHTML` in `tools/plugins/buttons/buttons.js`.
+  The status line shows "Button inserted."; the author closes the panel from DA.
+- **Layout: name/title briefly missing after inserting a button in Cards (profile):** not our code. A harness
+  with buttons in three profile cards keeps every name and title, also with a button open in the editor. DA
+  reopens its inline editor on the wrong element after an insert shifts positions; the document is fine and a
+  refresh fixes it (confirmed by the author).
+- **New guide:** [tools/plugins/buttons/README.md](tools/plugins/buttons/README.md) — how to set up the Buttons
+  panel from scratch in another project (files, scripts.js wiring, DA registration, config sheet, Layout fixes,
+  testing, troubleshooting). Linked from §3 Buttons (CTA), item 8.
+
+
+### 2026-10-11 — Buttons panel: Adobe Spectrum 2 redesign (branch `buttons-panel-spectrum`)
+- **Scope:** panel UI only (`tools/plugins/buttons/buttons.html` + `buttons.css`). The inserted HTML and the
+  page CSS are unchanged; JS only got a JSDoc tweak.
+- **Look:** Spectrum 2 tokens (`--bp-*`: gray-25…900, accent `#3b63fb`, Adobe Clean stack, 8px field radius,
+  16px card radius, 24px side padding). Light grey panel, white cards; previews still use the site font.
+- **Editor:** white header (back button, "DESIGN" eyebrow, name, description); sticky preview card with a
+  "Preview on" action group; three white cards (text + link / colours / new tab); pill submit in a white footer.
+- **Side labels:** `@container bp-editor (min-width: 360px)` puts each label on the same line as its control
+  (104px label column); narrower drawers stack labels on top. Colour groups are `div role="group"` (a
+  `fieldset`/`legend` can't join the grid).
+- **No placeholders** (Spectrum guidance): the link example moved to the help text.
+- **Gotcha:** stylelint `no-descending-specificity` — the switch `:checked` rules must come before the
+  `:hover input:not(:checked)` rules. Stylelint's default globs don't cover `tools/`; run
+  `npx stylelint tools/plugins/buttons/buttons.css` by hand.
+- **Verified:** screenshots at 520px and 340px; lint, stylelint on the panel, breakpoint check and `test:a11y` passed.
+
+### 2026-10-11 — usta.com button system: 58 designs for authors (branch `usta-buttons`)
+- **Request:** the parent site's (www.usta.com, EN only) buttons in the Buttons panel, 1:1, without touching the
+  foundation setup. Full reference: §3 Buttons (CTA), item 9.
+- **Discovery:**
+  - 12,411 sitemap URLs were cut to 3,388 EN pages (core pages + news and pro samples). A Playwright crawl
+    recorded every visible `a` / `button` that looks like a button, with its computed styles.
+  - That gave 119 variants. Grouped by usta.com's class system (`button-core` and its modifiers, the
+    `button-primary-style` widgets, the classic and header buttons), they reduce to 58 distinct authored
+    results.
+  - Redirects were followed (32), and 19 off-site pages were excluded.
+- **Build:**
+  - `styles/usta-buttons.css` (values from the usta.com clientlibs);
+  - 85 self-hosted icons in `icons/usta/` (≤4.2 KB each);
+  - the options in `scripts.js`;
+  - presets in the panel;
+  - the sample page `/drafts/usta-buttons`, generated through run-bulk-import with a one-off script (kept in
+    /tmp).
+- **Fonts:** usta.com's `Graphik-Semibold-App.woff2` is byte-identical (same md5) to `fonts/graphik-semibold.woff2`,
+  so no new font.
+- **Parity fixes found by the compare run:**
+  - **Colours:** coloured buttons kept their transparent border; blue kept white text (no contrast pick).
+  - **Disabled:** border colour = text colour; the app disabled state is `#b3b3b3`.
+  - **Icons:** the reversed icon has 10px on both sides. Per-icon filters (span `data-icon`) follow usta.com:
+    `tennis-ball` / `play` / `cancel` keep their colours, 16 icons are lightened, ghost icons are black and
+    disabled icons grey. This was caught only in the screenshots (a yellow tennis ball rendered as blue), so
+    the compare tool now also checks the icon `filter`.
+  - **Header:** the join line-height is `calc(20 / 14)`; the compact sign-in border is `currentcolor`.
+  - **Width:** `--not-fixed-width` beats `--small` (source cascade order).
+  - **Hover:** custom hovers are read from the source's inline `--hover-*` values.
+- **Gotchas (compare tool):**
+  - Playwright leaves the pointer where it clicked the cookie banner, which caused a real `:hover` at rest.
+    Fix: `mouse.move(0, 0)`, and force `:hover` through CDP `CSS.forcePseudoState`.
+  - Pick duplicate source labels by background + height.
+  - The source letter-spacing sits on the label span, not the `<a>`.
+- **Verified:**
+  - parity 168 / 174 (3 noted exceptions, see §3 item 9);
+  - foundation regression of 86 pages × 390 / 1440 (main vs this branch): 3,941 links, **0 differences**;
+  - `usta-buttons.css` and the icons are not requested on foundation pages;
+  - lint, breakpoint check, check:svg, check:overflow (sample) and check:typography (home) passed;
+  - `test:a11y` passed on the sample, the panel and home.
+
+### 2026-10-11 — USTA buttons v2: descriptive style names, no width option, column widths, icons, `foundation-buttons.css`
+- **Customer feedback:**
+  - the sample's full-width buttons stretched across the page;
+  - `style="usta"` doesn't say how the button looks;
+  - too many options (no width option);
+  - icon variants were missing (Parks & Recreation: pop-out / download / chevron on the 40px square card button).
+- **Style names:** `usta-` + words (`pill | outline | square | app`, `medium | small | mini | compact`,
+  `wide | narrow | column`, `padded`, `disabled`) replace `style="usta"` + the height / width / font-size / shape /
+  padding / disabled options. 28 names are used on usta.com. Fixed designs were renamed: `usta-classic-outline`,
+  `usta-header-join`, `usta-header-signin`. Reference: §3 Buttons (CTA), item 9.
+- **Why "full width" looked wrong:**
+  - usta.com's `--not-fixed-width` fills the AEM grid column the author placed it on. The sample put it in the
+    1,170px content column, and the old compare skipped width for these buttons, so it never failed.
+  - A survey of 222 pages at 3 widths showed one dominant pattern: 328 / 348 / 270px, i.e. the full column on
+    phones, 6 of 12 on tablet and 3 of 12 on desktop.
+  - `column` now reproduces that in default content and fills the cell inside blocks.
+- **Header:** JOIN / SIGN IN are 82px on phones and 120px from 768, as measured in the usta.com header.
+- **Icons:**
+  - `icon="…"` (+ `icon-position="before"`) or `:name:` in the text, on usta button-core designs only. A
+    foundation link with an icon stays a link.
+  - 18 icon designs on the sample, from the survey.
+  - The panel has an Icon picker; chips have a grey background because some usta.com SVGs are white.
+- **Rename:** `styles/buttons.css` → `styles/foundation-buttons.css` (`loadEager()`, the panel page, comments in
+  styles.css / hero / footer, README). There are no other code changes for foundation buttons.
+- **Sample:** 68 designs. White and white-border buttons sit in a `dark` section, so they are visible.
+
+### 2026-10-11 — Button typography parity, all viewports (USTA + foundation)
+- **Method:** for every button label, measured the element that actually holds the text: family, size, weight,
+  line-height, letter-spacing, colour (rest + forced `:hover`), transform, decoration, text-align / centring,
+  white-space, line count, label size, and truncation.
+  - **USTA:** all 68 designs vs usta.com at 390 / 768 / 992 / 1200 / 1440.
+  - **Foundation:** every button on the 86 migrated pages vs the same button on ustafoundation.com, at the same
+    widths. Each one is paired with the closest same-label candidate, so the order on the page doesn't matter.
+- **Results:**
+  - USTA: 335 / 340 match after the fixes below.
+  - Foundation: 115 / 120 match. The other 5 are `/index` "Go home", which has no source page.
+  - Remaining differences, explained:
+    - JOIN / SIGN IN at exactly 1200–1369: usta.com's header stays compact until 1370 (the breakpoint
+      deviation recorded in §3 item 9).
+    - "League Info" at 390: the source page squeezes it into a 104px column.
+    - "2026 Tournament Calendar" at 390 is 363 vs 364px: the source overflows the screen by 1px; ours stops at
+      the edge, with identical type.
+- **Gotcha — synthetic bold:** ustafoundation.com and usta.com declare each Graphik face as a single weight-400
+  face. Wherever they ask for a bold weight (a `<b>` in a link, `font-weight: 900` in the compact header), the
+  browser draws a synthetic bold. Our `fonts.css` declares Graphik Semibold as 600, and a 600 face is never
+  emboldened. The computed `font-weight` of the `<a>` hides this (400 on both sides): measure the text's own
+  element, and compare zoomed (3×) crops.
+- **Fixes:**
+  - `cards (support)` LEARN MORE: `font-weight: 700`, so the Graphik Regular face (400) gets the same synthetic
+    bold as the source's `<b>`. The earlier "regular weight" rule was a misread of the `<a>`'s weight.
+  - `usta-header-join` (compact): a `Graphik Semibold Synthetic` alias of the same woff2, declared 400, at
+    `font-weight: 900`. This gives the source's emboldened JOIN exactly; from 1200 it's back to the normal face.
+  - `usta-header-signin` (compact): `white-space: nowrap` (source), `normal` from 1200.
+  - `usta-app*`: `white-space: normal` (`.button-primary-style` has no nowrap).
+  - `column` buttons: `min-width: max-content` again (as the source, a long label widens the button), capped on
+    phones at the screen edge (`max-width: calc(100% + (100vw - 100%) / 2)`), so the page never scrolls
+    sideways. The previous `min-width: 0` truncated long labels with "…".
+- **Verified:**
+  - lint, breakpoint check, check:overflow (sample + home), check:typography (home) and test:a11y (sample + home)
+    passed;
+  - 86-page link regression (main vs this branch, 390 + 1440): 3,962 links, 0 differences.
+
+### 2026-10-11 — Buttons: validation of branch `usta-buttons` (§3 Buttons (CTA) vs the code)
+- **Mirrors (panel ↔ scripts.js):** `USTA_WORDS` (13 words), `USTA_ICONS` (85) and `USTA_ICON_ALIASES` are
+  identical. The 85 icon names match the 85 files in `icons/usta/`, and every `cta-usta*` class used in JS has a
+  rule in `usta-buttons.css`. No references to the old `styles/buttons.css` remain.
+- **Panel:** 26 designs (5 foundation + 21 `USTA — …`), as documented. The Icon picker shows for a USTA design.
+- **`/drafts/usta-buttons`** (390 / 768 / 1440): 68 usta buttons (42 distinct class sets), 18 with icons, all icons
+  rendered, no option text left in a label, no horizontal overflow; `usta-buttons.css` is loaded.
+- **Foundation isolation:** `/drafts/buttons-test` (37 foundation buttons) and `/` load only
+  `foundation-buttons.css`.
+- **One content issue:** a 404 for `/icons/download.svg` on the sample, from the `:download:` typed as plain text
+  in its intro paragraph (see §6). Not a code bug.
+- **Docs:** the status lines in §3 / §6 were stale (branch "not pushed", sample "local only") and are updated.
+- **Gate:** lint 0 errors; stylelint on the panel OK; breakpoint check passed; check:svg passed; check:overflow
+  passed on `/drafts/usta-buttons` (360–1920); test:a11y passed on `/drafts/usta-buttons`, `/drafts/buttons-test`
+  and the panel.
+- **Not covered:** the DA steps (panel Insert / Update and the USTA Layout editing preview with
+  `?ref=usta-buttons`). They need a signed-in DA session.
+
+### 2026-10-11 — Buttons panel: Icon dropdown + config-sheet merge
+- **Icon dropdown:** the 85-chip icon grid is replaced by a native `<select>` (`#btn-plugin-icon`, "No icon" + 85
+  icons, labelled e.g. "Arrow down (download)", type-ahead), styled as a Spectrum picker with a preview tile of
+  the chosen icon (grey tile: some usta icons are white). Still shown only for USTA designs (foundation buttons
+  ignore icons by design). "Icon before the text" is disabled while no icon is chosen. Output unchanged:
+  `icon="…"` (+ `icon-position="before"`).
+- **Sheet merge (why the USTA designs were missing in DA):** the `/.da/library/buttons` `presets` tab replaced all
+  defaults. Now the USTA designs from `DEFAULT_PRESETS` are appended unless the sheet has its own `usta-…` rows.
+  The `options` tab still replaces `DEFAULT_OPTIONS`: the USTA colours must be listed there to show as swatches.
+- **Gate:** eslint + stylelint on the panel OK; `npm run lint` OK; breakpoint check passed; test:a11y passed on the
+  panel. Playwright: 86 options, preset icon pre-selected, change → preview icon updates, "before" puts the icon
+  first, "No icon" removes it and disables the switch, the group is hidden for a foundation design; no JS errors.
+
+### 2026-10-11 — Buttons: USTA icon folder renamed to `icons/usta-buttons-icons/`
+- `icons/usta/` → `icons/usta-buttons-icons/` (git mv, 85 SVGs, unchanged), so the folder says what it is for.
+  Wired in `decorateUstaIcon()` (scripts.js) and the panel (`applyUstaPreview()`, the Icon dropdown tile).
+- Still **USTA buttons only**: `:name:` / `icon="…"` resolve here only inside a `usta-…` button. Elsewhere `:name:`
+  is the standard EDS icon (`/icons/<name>.svg`, top-level folder).
+- Adding an SVG to the folder is **not** enough on its own: its name must also be added to `USTA_ICONS` in
+  scripts.js and in the panel (the browser can't list a folder; there is no build step). *(Superseded below:
+  the list now lives in the DA sheet.)*
+- **Verified:** lint 0 errors; check:svg passed; `/drafts/usta-buttons`: 18 icons, 14 URLs, all load from the new
+  folder; panel preview + dropdown tile load. Only 404 = the known `:download:` content issue (§6).
+
+### 2026-10-11 — Buttons: Icon list from the DA sheet (`options` tab, key `icon`)
+- **Why:** new SVGs should show in the panel without a code change.
+- `/.da/library/buttons`, tab `options`, new row `icon | Download=arrow-down | star | pop-out | …` (same
+  `Label=value | …` format as the colours; a bare name is labelled by `iconLabel()`). Its order = dropdown order.
+  No row → the dropdown has only "No icon".
+- **No allow-list any more:** `ustaIconName()` (scripts.js) and `ustaIcon()` (panel) accept any safe file name
+  `^[a-z0-9]+(-[a-z0-9]+)*$` after `usta-` stripping + aliases (still USTA buttons only). `USTA_ICONS` was
+  removed from both scripts.js and the panel — the sheet row (all 85, `Download` + `External link` labelled)
+  is the only list.
+- New icon = push `icons/usta-buttons-icons/<name>.svg` + add `<name>` to the sheet row.
+- Trade-off: a typo (`:stra:` in a usta button label) now becomes a 404 icon instead of staying as text.
+- `fillIcons()` rebuilds the `<select>` on every open (sheet may load after the first open) and appends an
+  edited button's icon if the sheet doesn't list it. Unsafe sheet entries (`<script>`, `../x`) are dropped.
+- **Verified:** lint 0 errors; Playwright with a mocked sheet: dropdown = No icon + the sheet's 4 (bad entries
+  dropped), new name → tile `url("/icons/usta-buttons-icons/my-new-icon.svg")`; editing a `:wifi:` button adds
+  "Wifi" and selects it. No sheet row → "No icon" only. `/drafts/usta-buttons`: 18 icons, 14 URLs, as before.
+
+### 2026-10-11 — USTA button widths re-checked per style (all 28, 5 viewports)
+- **Why:** the card button (`usta-square-small-column`) had been wider than on usta.com, and the earlier compare
+  wrote off all 66 width differences at once. Now every style is checked against usta.com on its own.
+- **Survey:**
+  - For each style, the crawl pages that show it: up to 12 per style, 102 pages, 4,382 buttons.
+  - Each one measured at 390 / 768 / 992 / 1200 / 1440: rendered width, the label's own width, and its column.
+  - The same label + icon is then rendered with our style in default content.
+  - Scripts in /tmp/usta: `pick-pages.mjs`, `survey.mjs`, `predict.mjs`, `per-style.cjs`.
+- **Fixed** (a consistent difference for the style):
+  - **`column` desktop formula:**
+    - usta.com's AEM grid G is `min(our column + 30px, viewport - 30px)` (962 / 1170 / 1200), and a 3-of-12
+      button is `G / 4 - 30px` (211 / 263 / 270).
+    - We used a quarter of our column (218 / 270 / 270), which was wrong at 992 and 1200.
+    - `pill-medium-column` and `outline-column` keep the quarter: they sit in a nested 300px column (48 / 50).
+  - **`usta-square-column` / `usta-square-compact-column`** (district pages, full-viewport grid):
+    - square-column: `50vw - 12px` on tablet, `25vw - 15px` on desktop.
+    - square-compact-column: `25vw - 12px` on tablet, `100vw / 6 - 30px` on desktop.
+    - Survey match before → after:
+
+      | Style | Before (768 / 992 / 1200 / 1440) | After |
+      |---|---|---|
+      | square-column | 5 / 11 / 4 / 2 of 31 | 15 / 19 / 16 / 16 |
+      | square-compact-column | 0 / 2 / 1 / 1 | 18 / 25 / 20 / 19 |
+
+  - **`usta-classic`** on phones: the column less 8px (328 at 390): 0 → 57 of 61.
+  - **`usta-app-wide-disabled`** (always the site-search SEARCH button): 268px on phones, 170px on tablet,
+    then 280: 1 → 13 of 16 at 390, 3 → 13 of 16 at 768.
+  - **`usta-pill-column-disabled`** (Texas yearbooks): 4 of 12 on tablet (228px): 0 → 6 of 6.
+  - **`usta-square-small-column`**: its label's width (the earlier fix): DOWNLOAD PDF 194 at every width.
+- **Already matching:** app-wide, header-join, header-signin, outline-medium-wide, pill (from 768),
+  pill-wide (from 768), pill-medium-column, pill-medium-wide, pill-mini(-narrow), pill-narrow-padded,
+  pill-padded, pill-compact-padded, pill-medium, pill-medium-narrow, square-wide (from 768).
+- **Written off** (tied to specific pages / components, not the style):
+  - **pill-column:** no single usta.com width. The 33 surveyed pages show 6+ layouts (e.g. 328/598/158/210/270
+    on 12 pages, 328/348/218/270/270 on 5, 366/298/188/240/300 on 5). The grid model matches the most common
+    per width (110 / 45 / 58 / 42 / 91 of ~177); inside a card / column block the button fills that cell.
+  - **pill / pill-wide / square-wide on phones:** narrow page columns (54–243px) on 6 / 21 / 1 pages.
+  - **usta-app:** the event-calendar widget's "Search" (158px, 3 pages).
+  - **header-signin:** 2 pages with another header.
+  - **classic:** 1 page (rankings, 250px).
+  - **pill-small-column**, **square-small-column** (parks LEARN MORE 219px), **outline-column** (Texas
+    committees), **square-medium-column**: 1 page each.
+  - **square-column / square-compact-column on phones:** the district pages' 8px gutter (374 / 382px) would
+    overflow this site's column.
+- **Side-by-side** (68 designs × 5 widths, `/drafts/usta-buttons` vs each design's source page): 249 / 340 match.
+  Every remaining difference is width, except the JOIN / SIGN IN compact header at 1200 (breakpoint deviation).
+  Per style, in /tmp/usta/parity-final3.json (`per-style.cjs`).
+- **Gate:**
+  - lint 0 errors, breakpoint check passed, check:svg passed;
+  - check:overflow passed on `/drafts/usta-buttons` and home;
+  - check:typography passed (home), test:a11y passed (sample);
+  - 86-page link regression (main vs this branch, 390 + 1440): 3,962 links, 0 differences.

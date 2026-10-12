@@ -1,0 +1,665 @@
+/*
+ * USTA (www.usta.com) button system — replicated 1:1 from the usta.com clientlibs
+ * (`.button-core` / `.button-primary-style`, `.usta-ghost-button-link`,
+ * `.v-authentication-button`, `.usta-black-button`, `.usta-ghost-button`).
+ * Scoped entirely to `.cta-usta*` classes, which only exist when an author picks a
+ * `style="usta…"` option, and loaded by scripts.js ONLY on pages that contain one,
+ * so the USTA Foundation buttons and pages are unaffected.
+ *
+ * Authoring: any standalone link + options, e.g.
+ *   Register Now [style="usta-pill-wide", color="#cfff05", text-color="#000000"]
+ * style = usta- + words saying how it looks (USTA_WORDS in scripts.js), each → a class here:
+ *   look: pill | outline | square | app        size: medium | small | mini | compact
+ *   width: wide | narrow | column              also: padded | disabled
+ *   fixed designs: usta-classic | usta-classic-outline | usta-header-join | usta-header-signin
+ * Options: color / text-color / border-color, hover-color / hover-text-color / hover-border-color,
+ *   icon = <name> [icon-position = before] (or `:name:` in the button text).
+ * Colours are set per button, inline, exactly like usta.com.
+ * Built on the cta-button custom properties (styles/foundation-buttons.css):
+ *   --cta-bg / --cta-color / --cta-border and their -hover versions.
+ */
+
+/* ---- core pill: .button-core (the AEM button component) ------------------ */
+
+a.cta-button.cta-usta:any-link {
+  --cta-bg: #000;
+  --cta-color: #fff;
+  --cta-border: transparent;
+  --cta-bg-hover: var(--cta-bg);
+  --cta-color-hover: var(--cta-color);
+  --cta-border-hover: var(--cta-border);
+
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+
+  /* <768: full width of its column, up to 280px (source: width:100%; max-width:280px) */
+  width: 100%;
+  min-width: 0;
+  max-width: 280px;
+  height: 56px;
+  min-height: 56px;
+  margin: 0;
+  border: 2px solid var(--cta-border);
+  border-radius: 9999px;
+  padding: 14px;
+  overflow: hidden;
+  background-color: var(--cta-bg);
+  color: var(--cta-color);
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+
+  /* the <a> carries 1px but the label span resets it to 0 (.button-core__text-content) */
+  letter-spacing: 0;
+  text-align: center;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+/* hover / active / focus: the source fades the button; authored colours stay */
+a.cta-button.cta-usta:hover,
+a.cta-button.cta-usta:focus-visible {
+  border-color: var(--cta-border-hover);
+  background-color: var(--cta-bg-hover);
+  color: var(--cta-color-hover);
+  text-decoration: none;
+  opacity: 0.7;
+  filter: none;
+}
+
+a.cta-button.cta-usta:active {
+  opacity: 0.7;
+  filter: drop-shadow(0 4px 4px rgb(0 0 0 / 50%));
+}
+
+a.cta-button.cta-usta:focus {
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 50%));
+}
+
+a.cta-button.cta-usta:focus-visible {
+  outline: 2px dotted #000;
+  outline-offset: 0;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* usta-ghost — .button-core--ghost: transparent, black 2px border + text */
+a.cta-button.cta-usta.cta-usta-ghost:any-link {
+  --cta-bg: transparent;
+  --cta-color: #000;
+  --cta-border: #000;
+}
+
+/* usta-app — .button-primary-style (app/widget buttons: SEARCH, GET STARTED …):
+   identical box, but the label keeps the 1px letter-spacing and may wrap (no nowrap there) */
+a.cta-button.cta-usta.cta-usta-app:any-link {
+  letter-spacing: 1px;
+  white-space: normal;
+}
+
+/* modifiers (source: button-core--height--small / --x-small, --border--rectangular,
+   --small-fs, --small, --large, --not-fixed-width, --custom-hover, [disabled]) */
+a.cta-button.cta-usta.cta-usta-h40:any-link {
+  height: 40px;
+  min-height: 40px;
+}
+
+a.cta-button.cta-usta.cta-usta-h24:any-link {
+  height: 24px;
+  min-height: 24px;
+}
+
+a.cta-button.cta-usta.cta-usta-rect:any-link {
+  border-width: 1px;
+  border-radius: 3px;
+}
+
+a.cta-button.cta-usta.cta-usta-fs-small:any-link {
+  font-size: 14px;
+}
+
+a.cta-button.cta-usta.cta-usta-w-small:any-link {
+  max-width: 170px;
+}
+
+/* button-core__padding-left--50px + __padding-right--50px */
+a.cta-button.cta-usta.cta-usta-pad-50:any-link {
+  padding-right: 50px;
+  padding-left: 50px;
+}
+
+/* column (.button-core--not-fixed-width): fills its column — a block cell (card, column).
+   In default content the column is usta.com's grid column (below). As on usta.com a long label
+   widens the button past its column (min-width: max-content); on phones only up to the screen edge
+   (the right gutter), so the page never scrolls sideways */
+a.cta-button.cta-usta.cta-usta-w-full:any-link {
+  width: max-content;
+  min-width: 100%;
+  max-width: calc(100% + (100vw - 100%) / 2);
+}
+
+a.cta-button.cta-usta.cta-usta-custom-hover:hover {
+  opacity: 1;
+}
+
+a.cta-button.cta-usta.cta-usta-disabled:any-link {
+  --cta-bg: #a8a8a8;
+  --cta-color: #6d7278;
+
+  /* source `border: 0` → border colour = the text colour */
+  --cta-border: currentcolor;
+
+  border-width: 0;
+  box-shadow: none;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* the only disabled app button on usta.com is the search module's (#b3b3b3) */
+a.cta-button.cta-usta.cta-usta-app.cta-usta-disabled:any-link {
+  --cta-bg: #b3b3b3;
+}
+
+a.cta-button.cta-usta.cta-usta-ghost.cta-usta-disabled:any-link {
+  --cta-bg: transparent;
+  --cta-color: #a8a8a8;
+  --cta-border: #a8a8a8;
+
+  border-width: 2px;
+}
+
+/* icon (.button-core__icon): 20px, 10px after the label, black SVG inverted to white */
+a.cta-button.cta-usta .cta-usta-icon {
+  display: block;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  background: var(--cta-usta-icon) center / contain no-repeat;
+  filter: invert(100%);
+}
+
+/* per-icon filters, as usta.com: coloured icons kept, others lightened */
+a.cta-button.cta-usta .cta-usta-icon:is([data-icon="tennis-ball"], [data-icon="play"], [data-icon="cancel"]) {
+  filter: none;
+}
+
+a.cta-button.cta-usta .cta-usta-icon:is([data-icon="calendar"], [data-icon="envelope"], [data-icon="hamburger"],
+  [data-icon="location"], [data-icon="location-search"], [data-icon="more-info"], [data-icon="navigation"],
+  [data-icon="printer"], [data-icon="profile"], [data-icon="search"], [data-icon="share"], [data-icon="success"],
+  [data-icon="triangle-down"], [data-icon="triangle-left"], [data-icon="triangle-right"], [data-icon="triangle-up"]) {
+  filter: invert(1) brightness(742%) sepia(100%) saturate(100%);
+}
+
+/* ghost: black icon; disabled: grey (both win over the per-icon filters, as on usta.com) */
+a.cta-button.cta-usta.cta-usta-ghost .cta-usta-icon[data-icon] {
+  filter: brightness(0);
+}
+
+a.cta-button.cta-usta.cta-usta-disabled .cta-usta-icon[data-icon] {
+  filter: invert(55%);
+}
+
+a.cta-button.cta-usta.cta-usta-with-icon:any-link {
+  padding-right: 34px;
+}
+
+/* .button-core--reverse: icon before the label, 10px on both sides of it */
+a.cta-button.cta-usta.cta-usta-icon-left:any-link {
+  flex-direction: row-reverse;
+}
+
+a.cta-button.cta-usta.cta-usta-icon-left .cta-usta-icon {
+  margin-right: 10px;
+}
+
+/* column in default content = the usta.com grid column it is placed on most (width survey 2026-10-11:
+   102 pages × 5 widths): the full column less the 8px grid gutter on phones, 6 of 12 on tablet, 3 of 12
+   on desktop. usta.com's AEM grid G is min(our column + 30px, viewport - 30px) (962 at 992, 1170 at 1200,
+   1200 from 1230) and a 3-of-12 button is G / 4 - 30px: 211 / 263 / 270px */
+.default-content-wrapper a.cta-button.cta-usta.cta-usta-w-full:any-link {
+  min-width: calc(100% - 8px);
+}
+
+@media (width >= 768px) {
+  .default-content-wrapper a.cta-button.cta-usta.cta-usta-w-full:any-link {
+    width: calc(50% - 12px);
+    min-width: max-content;
+  }
+
+  /* usta-pill-column-disabled (Texas yearbooks, all its pages) sits on 4 of 12 on tablet: 228px */
+  .default-content-wrapper a.cta-button.cta-usta.cta-usta-w-full.cta-usta-disabled:any-link {
+    width: calc(100% / 3 - 12px);
+  }
+}
+
+@media (width >= 992px) {
+  .default-content-wrapper a.cta-button.cta-usta.cta-usta-w-full:any-link,
+  .default-content-wrapper a.cta-button.cta-usta.cta-usta-w-full.cta-usta-disabled:any-link {
+    width: calc(min(100% + 30px, 100vw - 30px) / 4 - 30px);
+  }
+
+  /* usta-pill-medium-column (CONTACT…) and usta-outline-column sit in a nested 300px column on
+     usta.com instead: 218px at 992, 270px from 1200 (48 of 50) — a quarter of this site's column */
+  .default-content-wrapper a.cta-button.cta-usta.cta-usta-w-full:is(.cta-usta-ghost, .cta-usta-h40:not(.cta-usta-fs-small)):any-link {
+    width: calc(25% - 22.5px);
+  }
+}
+
+/* usta-square-column / usta-square-compact-column sit on usta.com's district pages (who-we-are/…),
+   whose grid is the full viewport: square-column 50vw - 12px on tablet, 25vw - 15px on desktop
+   (372 / 233 / 285 / 345px at 768 / 992 / 1200 / 1440, 5 of 9 pages); square-compact-column 25vw - 12px
+   on tablet, 100vw / 6 - 30px on desktop (180 / 135 / 170 / 210px, 4 of 7 pages). On phones they keep
+   this site's column: the source's 374 / 382px would need its 8px page gutter. */
+@media (width >= 768px) {
+  .default-content-wrapper a.cta-button.cta-usta.cta-usta-rect.cta-usta-w-full:not(.cta-usta-h40, .cta-usta-fs-small):any-link {
+    width: calc(50vw - 12px);
+  }
+
+  .default-content-wrapper a.cta-button.cta-usta.cta-usta-rect.cta-usta-fs-small.cta-usta-w-full:not(.cta-usta-h40):any-link {
+    width: calc(25vw - 12px);
+  }
+}
+
+@media (width >= 992px) {
+  .default-content-wrapper a.cta-button.cta-usta.cta-usta-rect.cta-usta-w-full:not(.cta-usta-h40, .cta-usta-fs-small):any-link {
+    width: calc(25vw - 15px);
+  }
+
+  .default-content-wrapper a.cta-button.cta-usta.cta-usta-rect.cta-usta-fs-small.cta-usta-w-full:not(.cta-usta-h40):any-link {
+    width: calc(100vw / 6 - 30px);
+  }
+}
+
+/* usta-square-small-column (the card button: DOWNLOAD PDF, LEARN MORE, GET STARTED …) sits in narrow
+   card columns on usta.com, so it is always just its label's width there (measured: 6 of 6 on desktop,
+   5 of 6 on tablet / phones, e.g. DOWNLOAD PDF 194px at every width). Inside a block it still fills a
+   cell that is wider than the label. */
+.default-content-wrapper a.cta-button.cta-usta.cta-usta-rect.cta-usta-h40.cta-usta-fs-small.cta-usta-w-full:any-link {
+  width: max-content;
+  min-width: max-content;
+  max-width: none;
+}
+
+@media (width >= 768px) {
+  a.cta-button.cta-usta:any-link {
+    width: max-content;
+    min-width: 120px;
+    max-width: none;
+  }
+
+  a.cta-button.cta-usta.cta-usta-w-large:any-link {
+    min-width: 280px;
+  }
+
+  a.cta-button.cta-usta.cta-usta-w-small:any-link {
+    max-width: 170px;
+  }
+
+  a.cta-button.cta-usta.cta-usta-w-full:any-link {
+    width: 100%;
+    min-width: max-content;
+    max-width: none;
+  }
+}
+
+@media (width >= 992px) {
+  /* .button-core--large .button-core_with-icon */
+  a.cta-button.cta-usta.cta-usta-w-large.cta-usta-with-icon:any-link {
+    padding-right: 54px;
+  }
+}
+
+/* usta-app-wide-disabled is usta.com's site-search SEARCH button (all 16 surveyed pages): 268px on
+   phones, 170px on tablet, then the normal wide 280px */
+a.cta-button.cta-usta.cta-usta-app.cta-usta-w-large.cta-usta-disabled:any-link {
+  width: 268px;
+  max-width: 100%;
+}
+
+@media (width >= 768px) {
+  a.cta-button.cta-usta.cta-usta-app.cta-usta-w-large.cta-usta-disabled:any-link {
+    width: 170px;
+    min-width: 0;
+  }
+}
+
+@media (width >= 992px) {
+  a.cta-button.cta-usta.cta-usta-app.cta-usta-w-large.cta-usta-disabled:any-link {
+    width: max-content;
+    min-width: 280px;
+  }
+}
+
+/* ---- usta-classic — .usta-black-button / share-location button ------------ */
+
+a.cta-button.cta-usta-classic:any-link {
+  --cta-bg: #000;
+  --cta-color: #fff;
+  --cta-border: #000;
+  --cta-bg-hover: var(--cta-bg);
+  --cta-color-hover: var(--cta-color);
+  --cta-border-hover: var(--cta-border);
+
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: none;
+  height: 56px;
+  min-height: 56px;
+  margin: 0;
+  border: 1px solid var(--cta-border);
+  border-radius: 9999px;
+  padding: 1px 6px;
+  background-color: var(--cta-bg);
+  color: var(--cta-color);
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 1.13px;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* usta-classic-ghost — .usta-ghost-button: white, 2px black border, max 270px */
+a.cta-button.cta-usta-classic.cta-usta-classic-ghost:any-link {
+  --cta-bg: #fff;
+  --cta-color: #000;
+  --cta-border: #000;
+
+  max-width: 270px;
+  border-width: 2px;
+}
+
+a.cta-button.cta-usta-classic:hover,
+a.cta-button.cta-usta-classic:focus-visible {
+  border-color: var(--cta-border-hover);
+  background-color: var(--cta-bg-hover);
+  color: var(--cta-color-hover);
+  text-decoration: none;
+  opacity: 0.7;
+  filter: none;
+}
+
+a.cta-button.cta-usta-classic:active {
+  opacity: 0.7;
+  filter: drop-shadow(0 4px 4px rgb(0 0 0 / 50%));
+}
+
+a.cta-button.cta-usta-classic:focus {
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 50%));
+}
+
+a.cta-button.cta-usta-classic:focus-visible {
+  outline: 2px dotted #000;
+  outline-offset: 0;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* in default content on phones: the column less usta.com's 8px grid gutter (328px at 390; 57 of 61) */
+.default-content-wrapper a.cta-button.cta-usta-classic:not(.cta-usta-classic-ghost):any-link {
+  width: calc(100% - 8px);
+}
+
+@media (width >= 768px) {
+  /* the share-location button is a fixed 270px from 768 (100% below) */
+  a.cta-button.cta-usta-classic:any-link,
+  .default-content-wrapper a.cta-button.cta-usta-classic:not(.cta-usta-classic-ghost):any-link {
+    width: 270px;
+  }
+
+  a.cta-button.cta-usta-classic.cta-usta-classic-ghost:any-link {
+    width: 100%;
+  }
+}
+
+/* ---- usta-join — .usta-ghost-button-link (header JOIN) --------------------- */
+
+/* usta.com declares Graphik Semibold as one weight-400 face, and its compact header asks for
+   font-weight 900, so JOIN renders in a synthetic (browser-made) bold there. Our fonts.css face is
+   declared 600, which a 900 request doesn't embolden: this alias of the same file, declared 400,
+   gives the identical synthetic bold. */
+@font-face {
+  font-family: "Graphik Semibold Synthetic";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/graphik-semibold.woff2") format("woff2");
+}
+
+a.cta-button.cta-usta-join:any-link {
+  --cta-bg: transparent;
+  --cta-color: #000;
+  --cta-border: #bebebe;
+  --cta-bg-hover: #e6e6e6;
+  --cta-color-hover: var(--cta-color);
+  --cta-border-hover: var(--cta-border);
+
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* compact header size below 1200 (source: below 1370 — not a project breakpoint);
+     82px wide on phones, 120px from 768 (as measured in the usta.com header) */
+  min-width: 82px;
+  max-width: none;
+  height: 30px;
+  min-height: 30px;
+  margin: 0;
+  border: 1px solid var(--cta-border);
+  border-radius: 3px;
+  padding: 14px;
+  background-color: var(--cta-bg);
+  color: var(--cta-color);
+  font-family: "Graphik Semibold Synthetic", var(--heading-semibold-font-family);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: calc(20 / 14);
+  letter-spacing: normal;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+a.cta-button.cta-usta-join:hover,
+a.cta-button.cta-usta-join:focus-visible {
+  border-color: var(--cta-border-hover);
+  background-color: var(--cta-bg-hover);
+  color: var(--cta-color-hover);
+  text-decoration: none;
+  filter: none;
+}
+
+a.cta-button.cta-usta-join:active {
+  filter: drop-shadow(0 4px 4px rgb(0 0 0 / 50%));
+}
+
+a.cta-button.cta-usta-join:focus {
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 50%));
+}
+
+a.cta-button.cta-usta-join:focus-visible {
+  outline: 2px dotted #000;
+  outline-offset: 0;
+}
+
+/* ---- usta-signin — .v-authentication-button (header SIGN IN) --------------- */
+
+a.cta-button.cta-usta-signin:any-link {
+  --cta-bg: #000;
+  --cta-color: #fff;
+  --cta-border: currentcolor;
+  --cta-bg-hover: var(--cta-bg);
+  --cta-color-hover: var(--cta-color);
+  --cta-border-hover: var(--cta-border);
+
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* compact header size below 1200 (source: below 1370): no border (`border: 0`);
+     82px wide on phones, 120px from 768 (as measured in the usta.com header) */
+  width: 82px;
+  min-width: 0;
+  max-width: none;
+  height: 30px;
+  min-height: 30px;
+  margin: 0;
+  border: 0 solid var(--cta-border);
+  border-radius: 3px;
+  padding: 0;
+  background-color: var(--cta-bg);
+  color: var(--cta-color);
+  font-family: var(--heading-semibold-font-family);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+a.cta-button.cta-usta-signin:hover,
+a.cta-button.cta-usta-signin:focus-visible {
+  border-color: var(--cta-border-hover);
+  background-color: var(--cta-bg-hover);
+  color: var(--cta-color-hover);
+  text-decoration: none;
+  opacity: 0.7;
+  filter: none;
+}
+
+a.cta-button.cta-usta-signin:focus-visible {
+  outline: 2px dotted #000;
+  outline-offset: 0;
+}
+
+@media (width >= 768px) {
+  a.cta-button.cta-usta-join:any-link {
+    min-width: 120px;
+  }
+
+  a.cta-button.cta-usta-signin:any-link {
+    width: 120px;
+  }
+}
+
+@media (width >= 1200px) {
+  /* desktop header size (source: from 1370) */
+  a.cta-button.cta-usta-join:any-link {
+    height: 40px;
+    min-height: 40px;
+    font-family: var(--heading-semibold-font-family);
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  a.cta-button.cta-usta-signin:any-link {
+    --cta-border: #000;
+
+    height: 40px;
+    min-height: 40px;
+    border-width: 1px;
+    font-size: 14px;
+    white-space: normal;
+  }
+}
+
+/* ---- Experience Workspace (Layout view) editor preview --------------------
+   While a paragraph is edited, da.live shows the raw link + its `[style="usta…"]`
+   options text. previewEditingCtas() (scripts.js) adds `.cta-edit-usta` +
+   `.cta-edit-\3c style>` and the authored colours as `--cta-edit-*` on the editor
+   WRAPPER only (never inside .ProseMirror). These rules give the raw link the button
+   look and hide the options text; `:not(#cta-edit)` outranks block paragraph/link
+   rules without !important. They never match on the published page. */
+.prosemirror-editor.cta-edit-usta:not(#cta-edit) p:has(> a) {
+  margin: 12px 0;
+  font-size: 0;
+}
+
+.prosemirror-editor.cta-edit-usta:not(#cta-edit) p > a {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  height: 56px;
+  border: 2px solid var(--cta-edit-border, transparent);
+  border-radius: 9999px;
+  padding: 14px;
+  background-color: var(--cta-edit-bg, #000);
+  color: var(--cta-edit-color, #fff);
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.prosemirror-editor.cta-edit-usta-ghost:not(#cta-edit) p > a {
+  border-color: var(--cta-edit-border, #000);
+  background-color: var(--cta-edit-bg, transparent);
+  color: var(--cta-edit-color, #000);
+}
+
+.prosemirror-editor.cta-edit-usta-app:not(#cta-edit) p > a {
+  letter-spacing: 1px;
+}
+
+.prosemirror-editor:is(.cta-edit-usta-classic, .cta-edit-usta-classic-ghost):not(#cta-edit) p > a {
+  min-width: 270px;
+  border-width: 1px;
+  border-color: var(--cta-edit-border, #000);
+  line-height: 16px;
+  letter-spacing: 1.13px;
+}
+
+.prosemirror-editor.cta-edit-usta-classic-ghost:not(#cta-edit) p > a {
+  border-width: 2px;
+  background-color: var(--cta-edit-bg, #fff);
+  color: var(--cta-edit-color, #000);
+}
+
+.prosemirror-editor:is(.cta-edit-usta-join, .cta-edit-usta-signin):not(#cta-edit) p > a {
+  height: 40px;
+  border-width: 1px;
+  border-radius: 3px;
+  font-size: 16px;
+  line-height: 1.4286;
+}
+
+.prosemirror-editor.cta-edit-usta-join:not(#cta-edit) p > a {
+  border-color: #bebebe;
+  background-color: transparent;
+  color: #000;
+}
+
+.prosemirror-editor.cta-edit-usta-signin:not(#cta-edit) p > a {
+  width: 120px;
+  border-color: #000;
+  padding: 0;
+  font-size: 14px;
+}

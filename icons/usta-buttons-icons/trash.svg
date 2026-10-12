@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Trash</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M19.0002,4.00005 L15.5002,4.00005 L14.5002,3.00005 L9.5002,3.00005 L8.5002,4.00005 L5.0002,4.00005 L5.0002,6.00005 L19.0002,6.00005 L19.0002,4.00005 Z M6.0002,19.00005 C6.0002,20.10505 6.8952,21.00005 8.0002,21.00005 L16.0002,21.00005 C17.1052,21.00005 18.0002,20.10505 18.0002,19.00005 L18.0002,7.00005 L6.0002,7.00005 L6.0002,19.00005 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Trash" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

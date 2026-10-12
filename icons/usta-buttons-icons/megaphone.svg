@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Megaphone</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Icons/Megaphone" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-7" transform="translate(2.000000, 6.000000)" fill-rule="nonzero">
+            <polygon id="Rectangle-4" fill="#000000" points="3 3.57142857 17 1 17 10 3 7.42857143"></polygon>
+            <rect id="Rectangle-3" fill="#000000" x="0" y="4" width="2" height="3" rx="1"></rect>
+            <rect id="Rectangle-3" fill="#000000" x="18" y="0" width="2" height="12" rx="1"></rect>
+            <path d="M7.15755111,8.13314824 C6.36520492,8.14042826 5.72452625,8.78070403 5.71674779,9.57304549 C5.71666051,9.5861711 5.71666051,9.5861711 5.71673954,9.59929677 C5.72374868,10.3621607 6.34785413,10.9749021 7.11071807,10.9678929 L9.42190271,10.9466579 C10.2142489,10.9393779 10.8549276,10.2991021 10.862706,9.50676066 C10.8627933,9.49363505 10.8627933,9.49363505 10.8627143,9.48050938 C10.8557051,8.71764544 10.2315997,8.10490407 9.46873576,8.11191322 L7.15755111,8.13314824 Z" id="Rectangle-5" stroke="#000000" transform="translate(8.289727, 9.539903) rotate(8.000000) translate(-8.289727, -9.539903) "></path>
+        </g>
+    </g>
+</svg>

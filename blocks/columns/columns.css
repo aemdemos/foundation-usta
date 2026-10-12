@@ -163,7 +163,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   vertical-align: top;
 }
 
-.columns.feature .columns-feature-row a:only-child {
+.columns.feature .columns-feature-row a:only-child:not(.cta-button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -186,8 +186,8 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   text-decoration: none;
 }
 
-.columns.feature .columns-feature-row a:only-child:hover,
-.columns.feature .columns-feature-row a:only-child:focus-visible {
+.columns.feature .columns-feature-row a:only-child:not(.cta-button):hover,
+.columns.feature .columns-feature-row a:only-child:not(.cta-button):focus-visible {
   background-color: var(--link-hover-color);
   color: #fff;
   text-decoration: none;
@@ -282,7 +282,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
     margin-inline: 0;
   }
 
-  .columns.feature .columns-feature-row a:only-child {
+  .columns.feature .columns-feature-row a:only-child:not(.cta-button) {
      padding: 4px 19px;
   }
 }

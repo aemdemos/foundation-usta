@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Volume Default</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M14.0001,3 L14.0001,5.065 C16.8901,5.925 19.0001,8.6 19.0001,11.77 C19.0001,14.94 16.8901,17.615 14.0001,18.475 L14.0001,20.54 C18.0051,19.63 21.0001,16.055 21.0001,11.77 C21.0001,7.485 18.0051,3.91 14.0001,3 L14.0001,3 Z M16.5001,11.77 C16.5001,10.005 15.4801,8.48 14.0001,7.745 L14.0001,15.8 C15.4801,15.06 16.5001,13.535 16.5001,11.77 L16.5001,11.77 Z M3.0001,8.77 L3.0001,14.77 L7.0001,14.77 L12.0001,19.77 L12.0001,3.77 L7.0001,8.77 L3.0001,8.77 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Volume-Default" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

@@ -1,0 +1,164 @@
+/*
+ * CTA buttons — the site's authorable call-to-action styles for any content
+ * (default content and block cells). decorateButtons() (scripts.js) turns a
+ * standalone link formatted bold + italic + ONE extra mark into
+ * `a.cta-button.{style}`:
+ *   subscript → .cta-blue      superscript   → .cta-black
+ *   underline → .cta-outline   and BOLD ONLY (no italic) + superscript → .cta-dark
+ * Authors can also append options to the link, e.g.
+ *   Donate [style="outline", color="#e87722", text-color="#fff", new-tab="true"]
+ * which decorateButtons() turns into the inline custom properties below.
+ *
+ * Every style is driven by custom properties, so a variant (or an authored
+ * color) only overrides the tokens it changes:
+ *   --cta-bg / --cta-color / --cta-border              resting state
+ *   --cta-bg-hover / --cta-color-hover / --cta-border-hover   hover + focus
+ * A separate class from the boilerplate `.button` (.primary/.secondary/.accent),
+ * so none of those rules, block resets or overrides interact with it.
+ *
+ * Experience Workspace (Layout view): clicking a paragraph swaps the decorated
+ * button for da.live's inline text editor (`.prosemirror-editor`), which shows
+ * the raw marks (<em><strong><a><sub|sup|u>) until the next full re-render.
+ * The `.prosemirror-editor …` selectors give those raw links the same look so
+ * the button doesn't turn into a plain link while it's being edited, and
+ * previewEditingCtas() (scripts.js) applies its `[color=…]` options there too.
+ */
+
+a.cta-button:any-link,
+.prosemirror-editor em > strong > a:has(> :is(sub, sup, u)),
+.prosemirror-editor p > strong > a:has(> sup) {
+  --cta-bg: var(--brand-blue);
+  --cta-color: var(--background-color);
+  --cta-border: transparent;
+  --cta-bg-hover: var(--link-hover-color);
+  --cta-color-hover: var(--background-color);
+  --cta-border-hover: var(--cta-border);
+
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--cta-border);
+  border-radius: 3px;
+  padding: 9px 14px;
+  background-color: var(--cta-bg);
+  color: var(--cta-color);
+  font-family: var(--heading-semibold-font-family);
+  font-size: 18px;
+  font-style: normal;
+
+  /* the semibold face is baked into the font file; weight 600 would
+     synthetically over-bold it (source renders it at 400). */
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 1px;
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+a.cta-button:hover,
+a.cta-button:focus-visible {
+  border-color: var(--cta-border-hover);
+  background-color: var(--cta-bg-hover);
+  color: var(--cta-color-hover);
+  text-decoration: none;
+}
+
+a.cta-button:focus-visible {
+  outline: 2px solid var(--link-hover-color);
+  outline-offset: 2px;
+}
+
+/* cta-blue — solid blue CTA (source LEARN MORE on hero / columns / inner
+   pages): the base rule above. */
+
+/* cta-black — black, fully rounded 56px CTA (source 404 BACK TO HOMEPAGE). */
+a.cta-button.cta-black:any-link,
+.prosemirror-editor em > strong > a:has(> sup) {
+  --cta-bg: var(--dark-color);
+
+  min-height: 56px;
+  border-radius: 9999px;
+  padding: 17px 24px;
+}
+
+/* cta-dark — dark #333, square, 2px border (the boilerplate primary look). */
+a.cta-button.cta-dark:any-link,
+.prosemirror-editor p > strong > a:has(> sup) {
+  --cta-bg: var(--text-color);
+  --cta-border: var(--text-color);
+  --cta-bg-hover: var(--dark-color);
+  --cta-border-hover: var(--dark-color);
+
+  min-height: 46px;
+  border-width: 2px;
+  border-radius: 0;
+  padding: 11px 25px;
+}
+
+/* cta-outline — transparent, #333 text + 2px #333 border, square (the
+   boilerplate secondary look); fills light grey on hover. */
+a.cta-button.cta-outline:any-link,
+.prosemirror-editor em > strong > a:has(> u) {
+  --cta-bg: transparent;
+  --cta-color: var(--text-color);
+  --cta-border: var(--text-color);
+  --cta-bg-hover: var(--light-color);
+  --cta-color-hover: var(--dark-color);
+  --cta-border-hover: var(--dark-color);
+
+  min-height: 46px;
+  border-width: 2px;
+  border-radius: 0;
+  padding: 11px 25px;
+}
+
+/* Authored colors (`color=` / `text-color=`): decorateButtons() sets the custom
+   properties inline and adds `.cta-custom`. Hover keeps the authored colors and
+   darkens slightly, since there is no hover color to derive from an arbitrary
+   authored one. */
+a.cta-button.cta-custom:hover,
+a.cta-button.cta-custom:focus-visible {
+  filter: brightness(0.88);
+}
+
+/* EW inline editor: the style mark inside the raw button link renders as
+   normal button text (decorateButtons() unwraps it on the live page). */
+.prosemirror-editor strong > a > :is(sub, sup, u) {
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: baseline;
+  text-decoration: none;
+}
+
+/* EW inline editor: authored `[color=…]` options. previewEditingCtas()
+   (scripts.js) parses them and sets `--cta-edit-*` on the editor wrapper, and
+   adds `.cta-edit-options` when the paragraph is a standalone button, which
+   hides the options text (font-size 0; the link sets its own size) so the
+   button looks as it will on the page.
+   `:not(#cta-edit)` adds ID-level specificity so these editor-only rules beat
+   any block's own paragraph/link styles (e.g. `.cards.content
+   .cards-content-card-body p` is 0,3,1) — one central fix instead of per-block
+   overrides, without !important. They never match on the published page. */
+.prosemirror-editor.cta-edit-custom:not(#cta-edit) :is(
+  em > strong > a:has(> :is(sub, sup, u)),
+  p > strong > a:has(> sup)
+) {
+  border-color: var(--cta-edit-border, var(--cta-border));
+  background-color: var(--cta-edit-bg, var(--cta-bg));
+  color: var(--cta-edit-color, var(--cta-color));
+}
+
+/* margin as p.button-wrapper (em margins would collapse at size 0); not
+   boosted, so a block that resets its button paragraph margin still wins,
+   as it does on the page. */
+.prosemirror-editor.cta-edit-options p:has(> em > strong > a > :is(sub, sup, u), > strong > a > sup) {
+  margin: 12px 0;
+}
+
+.prosemirror-editor.cta-edit-options:not(#cta-edit) p:has(> em > strong > a > :is(sub, sup, u), > strong > a > sup) {
+  font-size: 0;
+}

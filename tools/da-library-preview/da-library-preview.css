@@ -1,0 +1,76 @@
+/*
+ * Experience Workspace block-library preview (/.da/library/* only; loaded by
+ * da-library-preview.js). Hides the site chrome and frames each variant with a
+ * name tab, so the preview shows exactly what gets inserted into a page.
+ */
+body.library-preview > header,
+body.library-preview > footer {
+  display: none;
+}
+
+body.library-preview main {
+  --library-preview-border: 1px solid #ddd;
+  --library-preview-radius: 6px;
+
+  padding: 24px 12px;
+}
+
+/* every section of a variant gets the side borders; the first/last close it.
+   The section margin is set inline by da-library-preview.js from
+   --library-variant-margin (several blocks set their own section margins), so
+   every variant has the same rhythm. Section backgrounds are left alone: for
+   section styles they ARE the example. */
+body.library-preview main > .section.library-variant {
+  --library-variant-margin: 0;
+
+  position: relative;
+  border-inline: var(--library-preview-border);
+}
+
+body.library-preview main > .section.library-variant-start {
+  --library-variant-margin: 48px 0 0;
+
+  border-top: var(--library-preview-border);
+  border-start-start-radius: var(--library-preview-radius);
+  border-start-end-radius: var(--library-preview-radius);
+  padding-top: 24px;
+}
+
+body.library-preview main > .section.library-variant-end {
+  border-bottom: var(--library-preview-border);
+  border-end-start-radius: var(--library-preview-radius);
+  border-end-end-radius: var(--library-preview-radius);
+  padding-bottom: 24px;
+}
+
+body.library-preview main > .section.library-variant-start:first-child {
+  --library-variant-margin: 32px 0 0;
+}
+
+body.library-preview main > .section.library-variant-empty {
+  min-height: 48px;
+}
+
+/* the variant name, as a tab sitting on the top border */
+body.library-preview main > .section.library-variant-start[data-library-label]::before {
+  content: attr(data-library-label);
+  position: absolute;
+  bottom: 100%;
+  left: -1px;
+  border: var(--library-preview-border);
+  border-bottom: 0;
+  border-start-start-radius: var(--library-preview-radius);
+  border-start-end-radius: var(--library-preview-radius);
+  padding: 4px 12px;
+  background-color: var(--light-color);
+  color: var(--text-color);
+  font-family: var(--body-font-family);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+@media (width >= 768px) {
+  body.library-preview main {
+    padding: 32px 24px;
+  }
+}

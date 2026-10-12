@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Sync</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M12.0001,17.99985 C8.6851,17.99985 6.0001,15.31485 6.0001,11.99985 C6.0001,10.98535 6.2551,10.03485 6.6951,9.19535 L5.2351,7.73535 C4.4601,8.97485 4.0001,10.42985 4.0001,11.99985 C4.0001,16.41985 7.5801,19.99985 12.0001,19.99985 L12.0001,22.99985 L16.0001,18.99985 L12.0001,14.99985 L12.0001,17.99985 Z M12.0001,3.99985 L12.0001,0.99985 L8.0001,4.99985 L12.0001,8.99985 L12.0001,5.99985 C15.3151,5.99985 18.0001,8.68485 18.0001,11.99985 C18.0001,13.01485 17.7451,13.96535 17.3051,14.80485 L18.7651,16.26485 C19.5401,15.02535 20.0001,13.57035 20.0001,11.99985 C20.0001,7.57985 16.4201,3.99985 12.0001,3.99985 L12.0001,3.99985 Z" id="path-1"></path>
+    </defs>
+    <g id="Icons/Sync" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>

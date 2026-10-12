@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Icons/Wifi</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M5.0001,12.5561 L7.0001,14.5561 C9.7601,11.7961 14.2396,11.7961 17.0001,14.5561 L19.0001,12.5561 C15.1351,8.6916 8.8646,8.6916 5.0001,12.5561 M9.0001,16.5561 L12.0001,19.5561 L15.0001,16.5561 C13.3446,14.9011 10.6551,14.9011 9.0001,16.5561 M1.0001,8.5561 L3.0001,10.5561 C7.9696,5.5866 16.0301,5.5866 21.0001,10.5561 L23.0001,8.5561 C16.9251,2.4816 7.0746,2.4816 1.0001,8.5561" id="path-1"></path>
+    </defs>
+    <g id="Icons/Wifi" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="Mask" fill="#000000" xlink:href="#path-1"></use>
+    </g>
+</svg>
