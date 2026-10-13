@@ -5455,3 +5455,54 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
   - check:overflow passed on `/drafts/usta-buttons` and home;
   - check:typography passed (home), test:a11y passed (sample);
   - 86-page link regression (main vs this branch, 390 + 1440): 3,962 links, 0 differences.
+
+### 2026-10-12 — News template: article column width below 1200 (image size mismatch)
+- **Symptom:** on `/en/home/news/carol-ngounoue-runner-up-wimbledon-event` the columns image was wider than
+  the source at every width under 1200 (336×224 vs 328×218 mobile, 720 vs 708 tablet, 466 vs 451 @992,
+  570 vs 555 @1199). It's not image scaling: the source puts every news component in AEM grid columns with a
+  side margin of **4px mobile, 6px tablet and 15px desktop**, so the whole article column is narrower.
+- **Fix (`templates/news/news.css`, scoped `body.news`):** the section wrappers are **328** (<768) and **708**
+  (768–991), applying to the headline, body and related articles alike. At **992–1199** the article body
+  wrappers get `padding-inline: 30px` (body = viewport − 60), while the H1 pulls back out 15px and Related
+  Articles stays on the global container, matching the source. **≥1200 is unchanged** (the source snaps
+  everything to the 1170 column; at 1215 and 1440 both sides are already identical).
+- **Excluded:** `split-left` / `split-right` sections keep their own grid. Known open gap: on the source, the
+  split-left tweet section stays **stacked at 768–991** (EDS splits from 768), and its columns are 451/555
+  vs 440 in EDS at 992/1199.
+- **Verified** vs source at 375/768/992/1199: carol-ngounoue, ngounoue-excellence-team-junior-french-open and
+  njtl-essay-contest-winners-2024-open all match on H1 / image / paragraph x + width.
+- **Gate:** lint 0 errors, stylelint news.css OK, breakpoint check passed, check:overflow and
+  check:typography passed. test:a11y fails on `link-in-text-block` (the tweet's links), which already
+  failed before this change (confirmed by stashing it). Note: the quality checkers need
+  `PLAYWRIGHT_BROWSERS_PATH` pointed at a 1187-named copy of the installed headless shell in this environment.
+- **Regression sweep (same day):**
+  - **Before/after layout diff:** all 73 news articles plus 6 non-news pages (home, news landing, who-we-are,
+    what-we-do, get-involved, our-impact) at 375/768/992/1100/1199/1200/1440. Every element in `main` compared
+    on x / width / height.
+    - Non-news pages: **0 changes**. News ≥1200: **0 changes**.
+    - No element got wider, no new horizontal overflow, element counts identical.
+    - Changes on news pages <1200 are only the expected widths: −8 (mobile), −12/−6/−4 (tablet: full / half / third
+      columns), −30/−15 (992–1199: full / half columns).
+    - Split sections are untouched at ≥768.
+  - **Parity vs live source:** 8 articles × 375–1199, paragraphs matched by text. Paragraph x/width matching
+    the source went from **0 → 605 of 643**, and paragraph height (line count) from **517 → 590**.
+  - **Known pre-existing gaps (not caused by this change):**
+    - `mississippi-njtl-family-biz-builder` and `kathleen-wu-usta-foundation-president`: on the source, the
+      columns block is an UNEVEN split (image ~371 / text ~531 @992), while EDS splits 50/50. Narrowing the body
+      moved the image closer (466 → 451) but the text slightly further from the source (466 → 451), so 4
+      paragraphs there wrap one extra line.
+    - kathleen-wu's columns stay side-by-side at 768 on the source.
+    - `frances-tiafoe-fund…` and `…offline-by-aerie…`: the source H1 IS inset at desktop (30/932), unlike other
+      articles (author-controlled on the source; unchanged here).
+    - The split-left 768–991 stacking noted above.
+- **Full source-parity sweep, all 73 news articles (2026-10-13):** source vs EDS before vs EDS after, at
+  375/600/768/992/1199. Elements matched by text.
+  - **H1 at 375/600/768:** matches the source on **73/73** pages (was 0/73). The 328/708 article column holds on
+    every news page, so the template-wide rule is correct and doesn't need narrower scoping.
+  - **Paragraph x/width match:** 0 → 661 of 665 (375 and 600), 7 → 599 of 663 (768), 7 → 630 of 665 (992 and 1199).
+  - **Images:** 0 → 86 of 87 (375 and 600), 0 → 69 of 87 (768), 0 → 83 of 87 (992), 0 → 82 of 87 (1199).
+  - **Line count:** 483 → 618 at 375, and improved at every width.
+  - **Elements that matched the source before but not after: 0.** No overflow at any width.
+  - **Remaining gaps are pre-existing per-block layouts:** 12 articles whose source columns stay side by side
+    at 768 (e.g. 348/408/468 text columns), and one article (`usta-foundation-celebrates-24-outstanding…`) with
+    an indented 288 block.

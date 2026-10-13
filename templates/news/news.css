@@ -11,6 +11,55 @@
  * 1170/708/328); this file only sets the article's typography + media layout.
  */
 
+/* ---- Article content column -----------------------------------------------
+   Source news articles lay every component in AEM grid columns that carry a
+   side margin (4px mobile, 6px tablet, 15px desktop), so the article column is
+   NARROWER than the site's 336/720 container: 328 @<768, 708 @768–991 (headline,
+   body, images, related articles alike). From 992 the headline + Related Articles
+   stay on the 15px container gutter, while the article BODY (columns image/text,
+   paragraphs, share bar) is inset a further 15px → viewport − 60 (992–1199);
+   from 1200 the source snaps everything to the one 1170 column. Measured on carol-ngounoue-runner-up-wimbledon-
+   event: image 328/708/451@992/555@1199 (was 336/720/466/570). Split sections keep
+   their own grid (styles.css). */
+body.news main > .section > div {
+  max-width: 328px;
+}
+
+@media (width >= 768px) {
+  body.news main > .section > div {
+    max-width: 708px;
+  }
+}
+
+@media (width >= 992px) {
+  body.news main > .section:not(.related-articles, .split-left, .split-right) > div {
+    max-width: 1230px;
+    padding-inline: 30px;
+  }
+
+  /* headline stays on the container gutter, like the source */
+  body.news main > .section:not(.split-left, .split-right) > .default-content-wrapper > h1 {
+    margin-inline: -15px;
+  }
+
+  body.news main > .section.related-articles > div {
+    max-width: 1200px;
+  }
+}
+
+/* ≥1200: the source snaps headline + body to the one 1170 column — back to the
+   global container (inset off). */
+@media (width >= 1200px) {
+  body.news main > .section:not(.related-articles, .split-left, .split-right) > div {
+    max-width: 1200px;
+    padding-inline: 15px;
+  }
+
+  body.news main > .section:not(.split-left, .split-right) > .default-content-wrapper > h1 {
+    margin-inline: 0;
+  }
+}
+
 /* ---- Space above the headline (breadcrumb → H1 gap) -----------------------
    The source's breadcrumb→H1 gap is AUTHOR-controlled per article, not a fixed
    template rule: the DEFAULT article (e.g. evert-speaks-on-rally-to-rebuild) has
