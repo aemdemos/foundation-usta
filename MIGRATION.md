@@ -5540,3 +5540,13 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
 - **Verified:** every `main` heading/paragraph at 375 now matches source x/width/line-count (were 1 line short on 5
   paragraphs); 768/992/1200 unchanged from before. Known, unreported: at 768 the source insets the same text by 6px
   (708 vs our 720, same line breaks) and the collage text sits at x394 vs our 391 / 515 vs 503 @992.
+
+### 2026-10-13 — Site-wide image tooltips (alt text on hover)
+- **Request:** show each image's alt text as a tooltip on hover, on every image across the site.
+- **Implementation:** `decorateImageTooltips()` in `scripts/scripts.js`, called from `loadPage()`. It's one delegated
+  `mouseover` listener on `document` that copies `alt` → `title` the first time an image is hovered, giving the native
+  browser tooltip. It's delegated (same pattern as `decorateLinkTargets`) so images built later — header, footer, block
+  JS, related-articles feeds — are covered without per-block changes. No CSS, no cost before the first hover.
+- **Skipped on purpose:** decorative images (`alt=""`, so no empty tooltips) and images that already have a `title`
+  (an authored title wins).
+- **Verified:** homepage — 12/13 images get a title equal to their alt; the 1 decorative image gets none.

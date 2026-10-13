@@ -1042,8 +1042,24 @@ function decorateLinkTargets() {
   }, true);
 }
 
+/**
+ * Shows an image's alt text as its native hover tooltip, site-wide. One
+ * delegated listener sets `title` from `alt` on first hover, so images built
+ * later (header, footer, blocks, feeds) are covered too. Decorative images
+ * (`alt=""`) and images that already declare a title are left alone.
+ */
+function decorateImageTooltips() {
+  document.addEventListener('mouseover', (e) => {
+    const img = e.target;
+    if (img.tagName !== 'IMG' || img.hasAttribute('title')) return;
+    const alt = img.getAttribute('alt')?.trim();
+    if (alt) img.title = alt;
+  });
+}
+
 async function loadPage() {
   decorateLinkTargets();
+  decorateImageTooltips();
   await loadEager(document);
   await loadLazy(document);
   // Defer the delayed phase ~3s (EDS convention) so non-critical third parties
