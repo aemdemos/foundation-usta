@@ -5506,3 +5506,14 @@ Symptom: in the da.live canvas **Layout** view, a button turns into a plain ital
   - **Remaining gaps are pre-existing per-block layouts:** 12 articles whose source columns stay side by side
     at 768 (e.g. 348/408/468 text columns), and one article (`usta-foundation-celebrates-24-outstanding…`) with
     an indented 288 block.
+
+### 2026-10-13 — Leadership theme: "Our Staff" heading → card row gap
+Source (leadership-and-staff #tab=staff), measured live at 1200/992/768/440/375: the `h3` "Our Staff" has margin 0
+and the first `.cmp-teaser` row starts a flat **16px** below it at every width. EDS had **32px (mobile) / 40px
+(≥768)**, from the global default-content → block gap (`.default-content-wrapper + div[class$="-wrapper"]`).
+Fixed in the `body.leadership` theme section of styles.css only:
+`.default-content-wrapper + .cards-wrapper:has(> .cards.profile:not(.bio)) { margin-top: 16px }` (the h3's own
+9/14px bottom margin collapses into it). `:not(.bio)` leaves the Board tab's bio cards at their own 8px
+(cards.css). Verified 16px at all five widths; Board wrapper still 8px.
+Gotcha: the browser checkers need `PLAYWRIGHT_BROWSERS_PATH=/tmp/pw` here (the pinned headless-shell 1187 isn't
+in /ms-playwright).

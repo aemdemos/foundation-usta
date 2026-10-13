@@ -638,6 +638,14 @@ body.leadership main h1 {
   margin-top: 0;
 }
 
+/* "Our Staff" heading → first card row: the source gap is a flat 16px at every
+   breakpoint (h3 margin 0, cards directly below), vs our global 32px/40px
+   default-content → block gap. Profile grid only — the Board tab's `bio` cards
+   keep their own 8px (cards.css). */
+body.leadership main .section > .default-content-wrapper + .cards-wrapper:has(> .cards.profile:not(.bio)) {
+  margin-top: 16px;
+}
+
 /* Site-wide CTA button = the source's SOLID BLUE pill (every page; it was scoped
    to the `general` theme until 2026-10-07): brand-blue bg, white, 3px radius, 18px
    Graphik Semibold uppercase, 40px tall. decorateButtons() marks <strong>/<em>
