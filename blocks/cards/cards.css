@@ -1134,9 +1134,13 @@ main .section > .default-content-wrapper + .cards-wrapper:has(> .cards.profile.b
 
 /* Section intro (default content above the cards): "Your support makes a
    difference." heading + subtitle. Source renders these centered and black
-   (#000). Mobile inset is handled by the GLOBAL 336px content column
-   (styles.css) — the intro only needs its center + color here. */
+   (#000). The 336px mobile column comes from the GLOBAL content column
+   (styles.css), and the source's AEM column sits 4px inside it, so the
+   intro and the cards (list padding below) are 328 wide (x24 @375, x4 @320).
+   Released at 768. */
 .cards-container:has(.cards.support) .default-content-wrapper {
+  box-sizing: border-box;
+  padding-inline: 4px;
   text-align: center;
 }
 
@@ -1172,6 +1176,10 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
     padding: 65px 0 40px;
   }
 
+  .cards-container:has(.cards.support) .default-content-wrapper {
+    padding-inline: 0;
+  }
+
   /* wrapper 40 + card top padding 8 = 48 */
   main .section.cards-container:has(.cards.support) > .cards-wrapper {
     margin-top: 40px;
@@ -1186,8 +1194,9 @@ main .section.cards-container:has(.cards.support) > .cards-wrapper {
 .cards.support > ul {
   list-style: none;
   margin: 0 auto;
+  box-sizing: border-box;
   max-width: 336px;
-  padding: 0 0 32px;
+  padding: 0 4px 32px; /* 4px source column inset → 328 cards (reset at 768) */
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

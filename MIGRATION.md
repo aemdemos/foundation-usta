@@ -5523,3 +5523,20 @@ collapses with and beats the 32px section gap (tab nav's 6px bottom padding + 32
 only): `.toc-profile-panel > .default-content-wrapper:first-child > :first-child { margin-top: 0 }`. Verified 38px
 tab→heading and 16px heading→cards at 1200/992/768/440/375. Board tab h3 already had margin-top 0 (unchanged); its
 tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
+
+### 2026-10-13 — Homepage QA: LEARN MORE size (768/992) + mobile text-column width (375)
+- **Issue 1 (LEARN MORE wider at 768 / 992): not reproducible.** Measured source vs local, aem.page and aem.live at
+  767/768/800/900/991/992: hero + collage LEARN MORE are **147.4×40** on both (cropped screenshots pixel-identical);
+  cards-support LEARN MORE text links 112.6 on both. The only real button delta was **below 375**: the collage
+  LEARN MORE was a fixed `width: 211px`, but the source is a FLUID 8-of-12 column of the text column's grid (12px
+  gutter) → 200 @320. Now `calc((100% + 12px) * 2 / 3 - 12px)` (210 @375, 199 @320; label min-width still wins ≥768).
+- **Issue 2 (375 text column too wide): fixed.** The source's AEM text column sits INSIDE the 336px mobile content
+  column — **4px** each side for the video feature's text cell and the support band (intro + cards) → 328 (x24),
+  **7.5px** for the collage heading + text cell → 321 (x27). EDS ran text edge-to-edge in 336 (x20), so paragraphs
+  wrapped to fewer lines. Added mobile `padding-inline` on those cells/wrappers (cards.css support intro + `ul`,
+  columns.css collage default-content + text cell, video text cell), reset at 768. Video/collage images untouched.
+  Moved the video text cell's ≥992 `padding: 16px 15px 0` into the later ≥992 rule for the same selector so the
+  cascade order is base → 768 reset → 992 (otherwise the base 4px would override it).
+- **Verified:** every `main` heading/paragraph at 375 now matches source x/width/line-count (were 1 line short on 5
+  paragraphs); 768/992/1200 unchanged from before. Known, unreported: at 768 the source insets the same text by 6px
+  (708 vs our 720, same line breaks) and the collage text sits at x394 vs our 391 / 515 vs 503 @992.

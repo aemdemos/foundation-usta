@@ -129,6 +129,21 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   text-align: center;
 }
 
+/* Mobile text column: the source's AEM column sits INSIDE the 336px content
+   column — 4px each side for the video feature's text (328 @375, x24; set on the
+   video text-cell rule below) and 7.5px for the collage's text (321 @375, x27) —
+   so the paragraphs wrap like the source. Image/video cells keep the full
+   column. Released at 768. */
+.columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) {
+  padding-inline: 7.5px;
+}
+
+@media (width >= 768px) {
+  .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) {
+    padding-inline: 0;
+  }
+}
+
 /* headings & text reset within the block (source uses tight margins) */
 .columns.feature h2,
 .columns.feature h3 {
@@ -267,19 +282,23 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   color: #000; /* source heading is pure black (#000), not the #333 body text color */
 }
 
-/* Mobile: the SOURCE constrains this heading to the fixed ~336px centered column
-   (like the collage/text below it) so it wraps "For decades, our work has / had
-   an impact nationwide." — ours spanned the full 400px. Cap + center on mobile;
-   release at the desktop tier where the heading runs full-width. */
+/* Mobile: the SOURCE constrains this heading to the same 321px column as the
+   collage text below it (the 336 content column minus its 7.5px AEM column
+   inset) so it wraps "For decades, our work has / had an impact nationwide." —
+   ours spanned the full 400px. Cap + center on mobile; release at the desktop
+   tier where the heading runs full-width. */
 .section.columns-container:has(.columns-feature-collage) .default-content-wrapper {
+  box-sizing: border-box;
   max-width: 336px;
   margin-inline: auto;
+  padding-inline: 7.5px;
 }
 
 @media (width >= 768px) {
   .section.columns-container:has(.columns-feature-collage) .default-content-wrapper {
     max-width: none;
     margin-inline: 0;
+    padding-inline: 0;
   }
 
   .columns.feature .columns-feature-row a:only-child:not(.cta-button) {
@@ -463,7 +482,8 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 /* Collage LEARN MORE: the source button fills a grid column but never gets
    narrower than its label (min-width: max-content). Its label is an inner <span>
    with NORMAL letter-spacing (118px; the 1px sits on the link only) + 14px side
-   padding. Column = 8/12 of the 321px mobile text column (211px), 4/12 of the
+   padding. Column = 8/12 of the mobile text column's grid (12px gutter): 210 of
+   321 @375, 200 of 305 @320 — FLUID, never a fixed 211. 4/12 of the
    text column's grid from 768 (gutter 6px / 15px from 992): 148 (label wins) @768
    and @992 → 151 @1100 → 167 @1200+. The paragraph is a block so the % resolves
    against the text column; its top margin keeps the old inline-block gap. */
@@ -474,7 +494,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 }
 
 .columns.feature:has(.columns-feature-collage) .columns-feature-row > div:not(.columns-feature-collage) p:has(> a:only-child) > a:only-child {
-  width: 211px;
+  width: calc((100% + 12px) * 2 / 3 - 12px);
   min-width: max-content;
   padding: 4px 14px;
   letter-spacing: normal;
@@ -541,10 +561,6 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
     text-align: left;
   }
 
-  .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
-    padding: 16px 15px 0;
-  }
-
   .columns.feature .columns-feature-row > .columns-feature-media {
     margin-left: calc(100% / 11);
     padding: 15px 30px 32px;
@@ -567,6 +583,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  padding-inline: 4px; /* mobile source column inset (see above); 0 from 768 */
 }
 
 .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) > * {
@@ -594,6 +611,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
 @media (width >= 768px) {
   .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
     column-gap: 78px;
+    padding-inline: 0;
   }
 
   .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) {
@@ -613,6 +631,7 @@ body:not(.news) .columns:not(.feature, .stats, .statement) > div > div > :is(h1,
   .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) {
     justify-content: flex-start;
     column-gap: 30px;
+    padding: 16px 15px 0; /* text starts 16px below the card top, 15px gutter */
   }
 
   .columns.feature:has(.columns-feature-media) .columns-feature-row > div:not(.columns-feature-media) p:has(> a:only-child) {
