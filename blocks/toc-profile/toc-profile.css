@@ -11,20 +11,21 @@
 
 .toc-profile {
   box-sizing: border-box;
-  width: 100%;
 
   /* Space ABOVE the tab bar — the sample authors the intro heading/paragraph in
      the SAME section as the bar, so there's no spacer between them; the source
-     leaves ~77px above the tab row. Add it here (a bit less on mobile). Bottom
-     margin gives the ~32px source gap from the bar down to the active panel's
-     heading (the panel section's own top margin/spacer adds the rest). */
-  margin-top: 48px;
-  margin-bottom: 8px;
+     leaves 77px above the tab row at every width. Add it here. Bottom margin
+     gives the ~32px source gap from the bar down to the active panel's heading
+     (the panel section's own top margin/spacer adds the rest).
+     Mobile (<768): the source tab row is a 328px column — a 4px inset each side
+     of the 336 wrapper (the same inset as the H1 above it). */
+  margin: 77px 4px 8px;
+  width: auto;
 }
 
 @media (width >= 768px) {
   .toc-profile {
-    margin-top: 77px; /* source content→tab-row gap */
+    margin-inline: 0;
   }
 }
 

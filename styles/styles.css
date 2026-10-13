@@ -629,13 +629,26 @@ main .section.dark {
    The source page's H1 sits ~41px below the breadcrumb with no heading margin,
    whereas our global `h1` carries a 0.8em (~80px at 100px) top margin. Zero that
    margin and set the first section's top padding to the measured source gap.
+   Mobile (<768): the source H1 sits 24px below the header (16 container + 8
+   column padding) in a 328px column — a 4px inset each side of the 336 wrapper.
    ------------------------------------------------------------------ */
 body.leadership main > .section:first-of-type {
-  padding-top: 41px;
+  padding-top: 24px;
 }
 
 body.leadership main h1 {
   margin-top: 0;
+  margin-inline: 4px;
+}
+
+@media (width >= 768px) {
+  body.leadership main > .section:first-of-type {
+    padding-top: 41px;
+  }
+
+  body.leadership main h1 {
+    margin-inline: 0;
+  }
 }
 
 /* Tabs → panel heading ("Our Staff"): the source gap is a flat 38px below the
