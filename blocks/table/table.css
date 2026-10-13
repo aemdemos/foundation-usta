@@ -244,31 +244,6 @@
   }
 }
 
-/* Option: mobile-only — `Table (directory, mobile-only)`. The source repeats the
-   Advisory Board list between the Board leader cards and the "Officers and
-   Directors" band on phones only (< 768), LEFT-aligned, 8px in from the content
-   edge: leader card → heading text 102px, heading → names 17px, last name → band
-   52px (measured @375/600). Hidden from 768 like the source (the full directory
-   below is the desktop list). */
-.table.directory.mobile-only {
-  padding: 50px 0 16px; /* + the 32px block rhythm → 102px above, 52px below */
-}
-
-.table.directory.mobile-only .table-directory-col {
-  padding: 0 8px;
-  text-align: left;
-}
-
-.table.directory.mobile-only .table-directory-col h4 {
-  margin: 0 0 10px;
-}
-
-@media (width >= 768px) {
-  main .section > .table-wrapper:has(> .table.directory.mobile-only) {
-    display: none;
-  }
-}
-
 /* ==================================================================
    Single-column LIST table (news winners grouped by grade/category). Built by
    table.js as `.table-list > .table-list-group` — one group per row (a header
