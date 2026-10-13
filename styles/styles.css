@@ -651,6 +651,22 @@ body.leadership main h1 {
   }
 }
 
+/* Tabs → panel heading ("Our Staff"): the source gap is a flat 38px below the
+   38px-tall tab at every breakpoint. Our tab nav's 6px bottom padding + the 32px
+   section gap already make 38px, but the global h3 top margin (44.8px from 768)
+   out-collapses the section gap. Zero it so the section gap governs. */
+body.leadership main .toc-profile-panel > .default-content-wrapper:first-child > :first-child {
+  margin-top: 0;
+}
+
+/* "Our Staff" heading → first card row: the source gap is a flat 16px at every
+   breakpoint (h3 margin 0, cards directly below), vs our global 32px/40px
+   default-content → block gap. Profile grid only — the Board tab's `bio` cards
+   keep their own 8px (cards.css). */
+body.leadership main .section > .default-content-wrapper + .cards-wrapper:has(> .cards.profile:not(.bio)) {
+  margin-top: 16px;
+}
+
 /* Site-wide CTA button = the source's SOLID BLUE pill (every page; it was scoped
    to the `general` theme until 2026-10-07): brand-blue bg, white, 3px radius, 18px
    Graphik Semibold uppercase, 40px tall. decorateButtons() marks <strong>/<em>
