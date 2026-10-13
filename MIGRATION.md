@@ -5517,3 +5517,9 @@ Fixed in the `body.leadership` theme section of styles.css only:
 (cards.css). Verified 16px at all five widths; Board wrapper still 8px.
 Gotcha: the browser checkers need `PLAYWRIGHT_BROWSERS_PATH=/tmp/pw` here (the pinned headless-shell 1187 isn't
 in /ms-playwright).
+Follow-up (same day) — tabs → "Our Staff" heading gap: source is a flat **38px** from the 38px-tall tab's bottom
+to the h3 at every width. EDS was 38 (<768) but **50.8 (≥768)**: the global h3 `margin-top` (44.8px at ≥768)
+collapses with and beats the 32px section gap (tab nav's 6px bottom padding + 32px = 38). Fix (leadership theme
+only): `.toc-profile-panel > .default-content-wrapper:first-child > :first-child { margin-top: 0 }`. Verified 38px
+tab→heading and 16px heading→cards at 1200/992/768/440/375. Board tab h3 already had margin-top 0 (unchanged); its
+tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.

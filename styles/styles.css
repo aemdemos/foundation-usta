@@ -638,6 +638,14 @@ body.leadership main h1 {
   margin-top: 0;
 }
 
+/* Tabs → panel heading ("Our Staff"): the source gap is a flat 38px below the
+   38px-tall tab at every breakpoint. Our tab nav's 6px bottom padding + the 32px
+   section gap already make 38px, but the global h3 top margin (44.8px from 768)
+   out-collapses the section gap. Zero it so the section gap governs. */
+body.leadership main .toc-profile-panel > .default-content-wrapper:first-child > :first-child {
+  margin-top: 0;
+}
+
 /* "Our Staff" heading → first card row: the source gap is a flat 16px at every
    breakpoint (h3 margin 0, cards directly below), vs our global 32px/40px
    default-content → block gap. Profile grid only — the Board tab's `bio` cards
