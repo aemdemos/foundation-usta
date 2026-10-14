@@ -1303,11 +1303,6 @@ footer {
     margin-top: 56px;
   }
 
-  /* source @1440: History text bottom → yellow strip 121px (was 56). */
-  main > .section.spacer-container:has(.spacer[style*='section-yellow-bg']) {
-    margin: 121px 0 17px;
-  }
-
   /* source @1440: Chris Evert photo bottom → yellow band bottom 108px (was 32, the
      bare section-yellow padding). */
   main > .section.section-yellow.center-intro {
