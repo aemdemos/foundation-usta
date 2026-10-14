@@ -137,7 +137,7 @@ async function runPair(browser, job, pair) {
         a.screenshot = `${base}-src.jpg`;
         b.screenshot = `${base}-eds.jpg`;
         diffs[vw] = {
-          diffShot: `${base}-diff.jpg`, mismatch: d.mismatch, foldMismatch: d.foldMismatch, regions: d.regions, width: d.width, height: d.height,
+          diffShot: `${base}-diff.jpg`, mismatch: d.mismatch, foldMismatch: d.foldMismatch, areas: d.areas, width: d.width, height: d.height,
         };
       } catch (err) {
         diffs[vw] = { error: `Pixel diff failed: ${err.message.split('\n')[0]}` };

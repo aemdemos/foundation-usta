@@ -361,8 +361,326 @@ export async function capturePage(browser, url, opts, onStep = () => {}) {
 /* ------------------------------------------------------------ pixel diff */
 
 /**
- * Diff two PNG buffers in a headless canvas. Returns mismatch ratios, the
- * vertical regions that differ, and JPEG renders of both shots + the diff.
+ * Runs in a blank page: shift-aware pixel diff of two screenshots.
+ * 1. The rows of both shots are aligned top-to-bottom (edit distance over row "signatures" =
+ *    luminance per column bin), so content that merely moved up/down doesn't count as different.
+ * 2. Pixels are compared at the aligned position; differing 16px cells are grouped into boxes.
+ * 3. Rows left unmatched by the alignment are sections missing on EDS / extra on EDS.
+ */
+async function diffInPage({ thr, fold }) {
+  const load = (src) => new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = src;
+  });
+  const [ia, ib] = await Promise.all([load('/a.png'), load('/b.png')]);
+  const w = Math.max(ia.width, ib.width);
+  const h = Math.max(ia.height, ib.height);
+  const ha = ia.height;
+  const hb = ib.height;
+  const mk = (img) => {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
+    if (img) g.drawImage(img, 0, 0);
+    return { c, g };
+  };
+  const A = mk(ia);
+  const B = mk(ib);
+  const da = A.g.getImageData(0, 0, w, h).data;
+  const db = B.g.getImageData(0, 0, w, h).data;
+
+  // 1. row signatures
+  const C = 48;
+  const binOf = new Uint8Array(w);
+  for (let x = 0; x < w; x += 1) binOf[x] = Math.min(C - 1, Math.floor((x * C) / w));
+  const binCount = new Float32Array(C);
+  for (let x = 0; x < w; x += 1) binCount[binOf[x]] += 1;
+  const signature = (d, H) => {
+    const s = new Float32Array(H * C);
+    for (let y = 0; y < H; y += 1) {
+      const o = y * C;
+      for (let x = 0; x < w; x += 1) {
+        const k = (y * w + x) * 4;
+        s[o + binOf[x]] += 0.3 * d[k] + 0.59 * d[k + 1] + 0.11 * d[k + 2];
+      }
+      for (let c = 0; c < C; c += 1) s[o + c] /= binCount[c];
+    }
+    return s;
+  };
+  const sa = signature(da, ha);
+  const sb = signature(db, hb);
+  // 2. global row alignment (edit distance on 4px "super-rows", banded): every EDS row is
+  //    matched to an original row, or marked as extra; skipped original rows are missing
+  const F = 4;
+  const na = Math.ceil(ha / F);
+  const nb = Math.ceil(hb / F);
+  const superSig = (sig, H, n) => {
+    const out = new Float32Array(n * C);
+    for (let r = 0; r < n; r += 1) {
+      const y0 = r * F;
+      const y1 = Math.min(H, y0 + F);
+      for (let y = y0; y < y1; y += 1) {
+        for (let k = 0; k < C; k += 1) out[r * C + k] += sig[y * C + k] / (y1 - y0);
+      }
+    }
+    return out;
+  };
+  const qa = superSig(sa, ha, na);
+  const qb = superSig(sb, hb, nb);
+  const match = (j, i) => {
+    let c = 0;
+    for (let k = 0; k < C; k += 1) c += Math.abs(qb[j * C + k] - qa[i * C + k]);
+    return c / C;
+  };
+  const GAPC = 14; // cost of one unmatched super-row (mean luminance delta that counts as "different")
+  const BAND = 300; // max vertical drift, in super-rows (1200px)
+  const dmin = Math.min(0, na - nb) - BAND;
+  const dmax = Math.max(0, na - nb) + BAND;
+  const K = dmax - dmin + 1;
+  const cost = new Float32Array((nb + 1) * K).fill(Infinity);
+  const back = new Uint8Array((nb + 1) * K); // 1 = match, 2 = EDS row extra, 3 = original row missing
+  const at = (j, i) => {
+    const d = i - j - dmin;
+    return d >= 0 && d < K && i >= 0 && i <= na ? j * K + d : -1;
+  };
+  for (let j = 0; j <= nb; j += 1) {
+    for (let i = Math.max(0, j + dmin); i <= Math.min(na, j + dmax); i += 1) {
+      const here = at(j, i);
+      if (j === 0 && i === 0) cost[here] = 0;
+      else {
+        let best = Infinity;
+        let how = 0;
+        const diag = j > 0 && i > 0 ? at(j - 1, i - 1) : -1;
+        if (diag >= 0) { best = cost[diag] + match(j - 1, i - 1); how = 1; }
+        const up = j > 0 ? at(j - 1, i) : -1;
+        if (up >= 0 && cost[up] + GAPC < best) { best = cost[up] + GAPC; how = 2; }
+        const left = i > 0 ? at(j, i - 1) : -1;
+        if (left >= 0 && cost[left] + GAPC < best) { best = cost[left] + GAPC; how = 3; }
+        cost[here] = best;
+        back[here] = how;
+      }
+    }
+  }
+  const mapB = new Int32Array(nb).fill(-1); // EDS super-row → original super-row (-1 = extra)
+  const missingA = new Uint8Array(na);
+  for (let j = nb, i = na; j > 0 || i > 0;) {
+    const how = back[at(j, i)];
+    if (how === 1) { mapB[j - 1] = i - 1; j -= 1; i -= 1; } else if (how === 2) j -= 1; else { missingA[i - 1] = 1; i -= 1; }
+  }
+  const srcRowOf = (y) => {
+    const j = Math.floor(y / F);
+    return j < nb && mapB[j] >= 0 ? mapB[j] * F + (y - j * F) : -1;
+  };
+  // nearest matched original row at/after (dir=1) or at/before (dir=-1) an EDS row
+  const nearestSrc = (y, dir) => {
+    for (let j = Math.floor(y / F); j >= 0 && j < nb; j += dir) if (mapB[j] >= 0) return mapB[j] * F;
+    return dir > 0 ? ha : 0;
+  };
+
+  // 3. aligned pixel diff + heatmap; unaligned diff only for the first screen
+  const D = mk(null);
+  const heat = D.g.createImageData(w, h);
+  const od = heat.data;
+  const CELL = 16;
+  const gw = Math.ceil(w / CELL);
+  const gh = Math.ceil(hb / CELL);
+  const cells = new Uint16Array(gw * gh);
+  const foldH = Math.min(fold, h);
+  let diff = 0;
+  let foldDiff = 0;
+  for (let y = 0; y < h; y += 1) {
+    const ya = y < hb ? srcRowOf(y) : -1;
+    const extraRow = y < hb && ya < 0;
+    const outside = y >= hb || ya < 0 || ya >= ha;
+    for (let x = 0; x < w; x += 1) {
+      const kb = (y * w + x) * 4;
+      let hot = outside;
+      if (!outside) {
+        // tolerate 1–3px drift (line-height / sub-pixel differences): a pixel only differs
+        // if no original pixel within ±3px vertically and ±1px horizontally matches it
+        hot = true;
+        for (let dy = 0; dy <= 6 && hot; dy += 1) {
+          const yy = ya + (dy % 2 ? -(dy + 1) / 2 : dy / 2);
+          if (yy >= 0 && yy < ha) {
+            for (let dx = -1; dx <= 1 && hot; dx += 1) {
+              const xx = x + dx;
+              if (xx >= 0 && xx < w) {
+                const ka = (yy * w + xx) * 4;
+                if (Math.max(Math.abs(da[ka] - db[kb]), Math.abs(da[ka + 1] - db[kb + 1]), Math.abs(da[ka + 2] - db[kb + 2])) <= thr) hot = false;
+              }
+            }
+          }
+        }
+      }
+      if (y < foldH) {
+        const raw = y >= ha || y >= hb || Math.max(Math.abs(da[kb] - db[kb]), Math.abs(da[kb + 1] - db[kb + 1]), Math.abs(da[kb + 2] - db[kb + 2])) > thr;
+        if (raw) foldDiff += 1;
+      }
+      if (extraRow) {
+        od[kb] = 60; od[kb + 1] = 110; od[kb + 2] = 230; od[kb + 3] = 255;
+      } else if (hot) {
+        od[kb] = 255; od[kb + 1] = 0; od[kb + 2] = 60; od[kb + 3] = 255;
+        if (y < hb && !extraRow) {
+          diff += 1;
+          cells[Math.floor(y / CELL) * gw + Math.floor(x / CELL)] += 1;
+        }
+      } else {
+        const grey = 0.3 * db[kb] + 0.59 * db[kb + 1] + 0.11 * db[kb + 2];
+        const v = 255 - (255 - grey) * 0.25;
+        od[kb] = v; od[kb + 1] = v; od[kb + 2] = v; od[kb + 3] = 255;
+      }
+    }
+  }
+  D.g.putImageData(heat, 0, 0);
+
+  // 4. group differing cells into boxes (dilate 1 cell, connected components, merge neighbours)
+  const HOT = CELL * CELL * 0.06;
+  const isHot = (i) => cells[i] > HOT;
+  const near = new Uint8Array(gw * gh);
+  for (let gy = 0; gy < gh; gy += 1) {
+    for (let gx = 0; gx < gw; gx += 1) {
+      if (isHot(gy * gw + gx)) {
+        for (let dy = -1; dy <= 1; dy += 1) {
+          for (let dx = -1; dx <= 1; dx += 1) {
+            const ny = gy + dy;
+            const nx = gx + dx;
+            if (ny >= 0 && ny < gh && nx >= 0 && nx < gw) near[ny * gw + nx] = 1;
+          }
+        }
+      }
+    }
+  }
+  const seen = new Uint8Array(gw * gh);
+  let boxes = [];
+  for (let i = 0; i < gw * gh; i += 1) {
+    if (near[i] && !seen[i]) {
+      const stack = [i];
+      seen[i] = 1;
+      let x0 = Infinity; let y0 = Infinity; let x1 = -1; let y1 = -1; let px = 0;
+      while (stack.length) {
+        const j = stack.pop();
+        const gx = j % gw;
+        const gy = (j - gx) / gw;
+        if (isHot(j)) {
+          px += cells[j];
+          x0 = Math.min(x0, gx); y0 = Math.min(y0, gy); x1 = Math.max(x1, gx); y1 = Math.max(y1, gy);
+        }
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+          const nx = gx + dx;
+          const ny = gy + dy;
+          const n = ny * gw + nx;
+          if (nx >= 0 && nx < gw && ny >= 0 && ny < gh && near[n] && !seen[n]) { seen[n] = 1; stack.push(n); }
+        });
+      }
+      if (x1 >= 0) boxes.push({
+        x0, y0, x1, y1, px,
+      });
+    }
+  }
+  // merge boxes that overlap or sit within 2 cells of each other
+  let merged = true;
+  while (merged) {
+    merged = false;
+    for (let i = 0; i < boxes.length && !merged; i += 1) {
+      for (let j = i + 1; j < boxes.length && !merged; j += 1) {
+        const p = boxes[i];
+        const q = boxes[j];
+        if (p.x0 - 2 <= q.x1 && q.x0 - 2 <= p.x1 && p.y0 - 2 <= q.y1 && q.y0 - 2 <= p.y1) {
+          boxes[i] = {
+            x0: Math.min(p.x0, q.x0), y0: Math.min(p.y0, q.y0), x1: Math.max(p.x1, q.x1), y1: Math.max(p.y1, q.y1), px: p.px + q.px,
+          };
+          boxes.splice(j, 1);
+          merged = true;
+        }
+      }
+    }
+  }
+  const toSrc = (y, bh) => {
+    const top = nearestSrc(y, 1);
+    const bottom = Math.max(top + 4, nearestSrc(y + bh - 1, -1) + F);
+    return [Math.min(top, ha - 4), Math.min(ha, bottom) - Math.min(top, ha - 4)];
+  };
+  boxes = boxes
+    .map((b) => {
+      const x = b.x0 * CELL;
+      const y = b.y0 * CELL;
+      const bw = Math.min(w, (b.x1 + 1) * CELL) - x;
+      const bh = Math.min(hb, (b.y1 + 1) * CELL) - y;
+      const [sy, sh] = toSrc(y, bh);
+      return {
+        kind: 'visual', eds: [x, y, bw, bh], src: [x, sy, bw, sh], ratio: b.px / (bw * bh), px: b.px,
+      };
+    })
+    .filter((b) => b.px >= 150 && b.eds[2] * b.eds[3] >= 576);
+
+  // 5. runs of unmatched rows = sections missing on / added to EDS
+  const GAP = 40;
+  const flatRows = (sig, y0, y1) => {
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let y = y0; y < y1; y += 2) {
+      for (let k = 0; k < C; k += 1) {
+        const v = sig[y * C + k];
+        if (v < lo) lo = v;
+        if (v > hi) hi = v;
+      }
+    }
+    return hi - lo < 12;
+  };
+  const gaps = [];
+  for (let i = 0; i < na;) {
+    if (!missingA[i]) { i += 1; } else {
+      let e = i;
+      while (e < na && missingA[e]) e += 1;
+      const y0 = i * F;
+      const y1 = Math.min(ha, e * F);
+      if (y1 - y0 >= GAP) {
+        // where that content would sit on EDS: the EDS row matched just before it
+        let jb = 0;
+        for (let j = 0; j < nb; j += 1) if (mapB[j] >= 0 && mapB[j] < i) jb = j + 1;
+        gaps.push({
+          kind: flatRows(sa, y0, y1) ? 'spacing-missing' : 'missing', src: [0, y0, w, y1 - y0], eds: [0, Math.max(0, jb * F - 2), w, 4],
+        });
+      }
+      i = e;
+    }
+  }
+  for (let j = 0; j < nb;) {
+    if (mapB[j] >= 0) { j += 1; } else {
+      let e = j;
+      while (e < nb && mapB[e] < 0) e += 1;
+      const y0 = j * F;
+      const y1 = Math.min(hb, e * F);
+      if (y1 - y0 >= GAP) {
+        const ia2 = j > 0 ? nearestSrc(y0 - 1, -1) + F : 0;
+        gaps.push({
+          kind: flatRows(sb, y0, y1) ? 'spacing-extra' : 'extra', eds: [0, y0, w, y1 - y0], src: [0, Math.max(0, Math.min(ha, ia2) - 2), w, 4],
+        });
+      }
+      j = e;
+    }
+  }
+
+  const areas = [...gaps, ...boxes.sort((p, q) => q.px - p.px).slice(0, 40)];
+  const jpg = (c) => c.toDataURL('image/jpeg', 0.78).split(',')[1];
+  return {
+    width: w,
+    height: h,
+    mismatch: diff / (w * hb),
+    foldMismatch: foldDiff / (w * foldH),
+    areas,
+    a: jpg(A.c),
+    b: jpg(B.c),
+    d: jpg(D.c),
+  };
+}
+
+/**
+ * Diff two PNG buffers in a headless canvas. Returns mismatch ratios, the boxed areas that
+ * differ (with positions on both shots), and JPEG renders of both shots + a heatmap.
  */
 export async function diffImages(browser, pngA, pngB, { threshold = 40, foldHeight = 900 } = {}) {
   const ctx = await browser.newContext();
@@ -374,87 +692,7 @@ export async function diffImages(browser, pngA, pngB, { threshold = 40, foldHeig
     return route.fulfill({ body: '<!doctype html><title>diff</title>', contentType: 'text/html' });
   });
   await page.goto('http://diff.local/');
-  const out = await page.evaluate(async ({ thr, fold }) => {
-    const load = (src) => new Promise((res, rej) => {
-      const i = new Image();
-      i.onload = () => res(i);
-      i.onerror = rej;
-      i.src = src;
-    });
-    const [ia, ib] = await Promise.all([load('/a.png'), load('/b.png')]);
-    const w = Math.max(ia.width, ib.width);
-    const h = Math.max(ia.height, ib.height);
-    const mk = (img) => {
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      const g = c.getContext('2d', { willReadFrequently: true });
-      g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
-      if (img) g.drawImage(img, 0, 0);
-      return { c, g };
-    };
-    const A = mk(ia);
-    const B = mk(ib);
-    const da = A.g.getImageData(0, 0, w, h).data;
-    const db = B.g.getImageData(0, 0, w, h).data;
-    const D = mk(null);
-    const out2 = D.g.createImageData(w, h);
-    const od = out2.data;
-    const rows = new Uint32Array(h);
-    let diff = 0;
-    let foldDiff = 0;
-    const foldH = Math.min(fold, h);
-    for (let y = 0; y < h; y += 1) {
-      const outside = y >= ia.height || y >= ib.height;
-      for (let x = 0; x < w; x += 1) {
-        const k = (y * w + x) * 4;
-        const delta = outside ? 255 : Math.max(
-          Math.abs(da[k] - db[k]),
-          Math.abs(da[k + 1] - db[k + 1]),
-          Math.abs(da[k + 2] - db[k + 2]),
-        );
-        if (delta > thr) {
-          od[k] = 255; od[k + 1] = 0; od[k + 2] = 60; od[k + 3] = 255;
-          diff += 1;
-          rows[y] += 1;
-          if (y < foldH) foldDiff += 1;
-        } else {
-          const grey = 0.3 * db[k] + 0.59 * db[k + 1] + 0.11 * db[k + 2];
-          const v = 255 - (255 - grey) * 0.25;
-          od[k] = v; od[k + 1] = v; od[k + 2] = v; od[k + 3] = 255;
-        }
-      }
-    }
-    D.g.putImageData(out2, 0, 0);
-    // vertical regions where >3% of a row differs
-    const regions = [];
-    let start = -1;
-    let gap = 0;
-    for (let y = 0; y < h; y += 1) {
-      const hot = rows[y] / w > 0.03;
-      if (hot) {
-        if (start < 0) start = y;
-        gap = 0;
-      } else if (start >= 0) {
-        gap += 1;
-        if (gap > 30) {
-          if (y - gap - start > 8) regions.push({ y: start, h: y - gap - start });
-          start = -1; gap = 0;
-        }
-      }
-    }
-    if (start >= 0) regions.push({ y: start, h: h - start });
-    const jpg = (c) => c.toDataURL('image/jpeg', 0.78).split(',')[1];
-    return {
-      width: w,
-      height: h,
-      mismatch: diff / (w * h),
-      foldMismatch: foldDiff / (w * foldH),
-      regions: regions.slice(0, 50),
-      a: jpg(A.c),
-      b: jpg(B.c),
-      d: jpg(D.c),
-    };
-  }, { thr: threshold, fold: foldHeight });
+  const out = await page.evaluate(diffInPage, { thr: threshold, fold: foldHeight });
   await ctx.close();
   return {
     ...out,

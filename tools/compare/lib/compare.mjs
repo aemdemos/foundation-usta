@@ -417,6 +417,79 @@ function compareTypography(src, eds) {
   return rows;
 }
 
+const union = (boxes) => {
+  const bs = boxes.filter(Boolean);
+  if (!bs.length) return null;
+  const x0 = Math.min(...bs.map((b) => b[0]));
+  const y0 = Math.min(...bs.map((b) => b[1]));
+  const x1 = Math.max(...bs.map((b) => b[0] + b[2]));
+  const y1 = Math.max(...bs.map((b) => b[1] + b[3]));
+  return [x0, y0, x1 - x0, y1 - y0];
+};
+const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
+
+/**
+ * Turn the raw diff areas of one viewport into numbered, prioritised findings.
+ * Neighbouring missing/extra runs are clustered: missing + extra together = a section that differs.
+ */
+function visualFindings(vp, areas = []) {
+  const out = [];
+  const gaps = areas.filter((a) => a.kind !== 'visual').sort((p, q) => p.src[1] - q.src[1]);
+  const clusters = [];
+  gaps.forEach((g) => {
+    const last = clusters[clusters.length - 1];
+    const span = (list, side) => union(list.map((x) => x[side]));
+    if (last) {
+      const ls = span(last, 'src');
+      const le = span(last, 'eds');
+      if (g.src[1] <= ls[1] + ls[3] + 32 && g.eds[1] <= le[1] + le[3] + 32) { last.push(g); return; }
+    }
+    clusters.push([g]);
+  });
+  clusters.forEach((cl) => {
+    const has = (k) => cl.some((g) => g.kind === k);
+    const missing = cl.filter((g) => g.kind === 'missing' || g.kind === 'spacing-missing');
+    const extra = cl.filter((g) => g.kind === 'extra' || g.kind === 'spacing-extra');
+    const content = has('missing') || has('extra');
+    const srcBox = union((missing.length ? missing : cl).map((g) => g.src));
+    const edsBox = union((extra.length ? extra : cl).map((g) => g.eds));
+    const mh = missing.reduce((a, g) => a + g.src[3], 0);
+    const eh = extra.reduce((a, g) => a + g.eds[3], 0);
+    let f;
+    if (!content) {
+      f = {
+        kind: 'spacing', priority: 'low', label: 'Spacing differs', detail: `Vertical white space differs by about ${Math.abs(eh - mh)}px (original ${mh}px vs EDS ${eh}px).`,
+      };
+    } else if (missing.length && extra.length) {
+      f = {
+        kind: 'section', priority: Math.max(mh, eh) >= 120 ? 'high' : 'medium', label: 'Section differs', detail: `A ${mh}px tall part of the original was replaced by ${eh}px of different content on EDS (layout, wrapping or content change).`,
+      };
+    } else if (missing.length) {
+      f = {
+        kind: 'missing', priority: mh >= 80 ? 'high' : 'medium', label: 'Section missing on EDS', detail: `About ${mh}px of the original has no matching area on EDS.`,
+      };
+    } else {
+      f = {
+        kind: 'extra', priority: eh >= 80 ? 'medium' : 'low', label: 'Extra section on EDS', detail: `About ${eh}px on EDS has no matching area on the original.`,
+      };
+    }
+    out.push({ ...f, src: srcBox, eds: edsBox });
+  });
+  areas.filter((a) => a.kind === 'visual' && a.ratio >= 0.05).forEach((a) => {
+    const area = a.eds[2] * a.eds[3];
+    let priority = 'low';
+    if (a.ratio >= 0.3 && area >= 5000) priority = 'high';
+    else if (a.ratio >= 0.1 && area >= 2000) priority = 'medium';
+    out.push({
+      kind: 'visual', priority, label: 'Visual difference', detail: `${a.eds[2]}×${a.eds[3]}px area — ${Math.round(a.ratio * 100)}% of its pixels differ.`, src: a.src, eds: a.eds,
+    });
+  });
+  return out
+    .sort((p, q) => PRIORITY_RANK[p.priority] - PRIORITY_RANK[q.priority] || q.eds[2] * q.eds[3] - p.eds[2] * p.eds[3])
+    .slice(0, 30)
+    .map((f, i) => ({ ...f, id: `v${vp}-${i + 1}`, category: 'Visual' }));
+}
+
 function compareVisual(src, eds, diffs) {
   return Object.keys(src.viewports).map((vp) => {
     const va = src.viewports[vp] || {};
@@ -432,7 +505,7 @@ function compareVisual(src, eds, diffs) {
       diffShot: d.diffShot,
       mismatch: d.mismatch ?? null,
       foldMismatch: d.foldMismatch ?? null,
-      regions: d.regions || [],
+      areas: visualFindings(vp, d.areas),
       // screenshot pixel size (both shots are padded to the same size when diffed)
       shotWidth: d.width || Number(vp),
       srcShotHeight: d.height || va.shotHeight || ha,
@@ -513,7 +586,10 @@ function buildChanges(src, eds, r) {
   const changes = [];
   const add = (target, c) => {
     if ((!c.src && !c.eds) || changes.length >= 400) return;
-    const change = { id: changes.length + 1, ...c };
+    const priority = {
+      missing: 'high', broken: 'high', changed: 'medium', extra: 'low',
+    }[c.kind];
+    const change = { id: changes.length + 1, priority, ...c };
     changes.push(change);
     target.changeId = change.id;
   };
@@ -690,6 +766,13 @@ function buildIssues(r) {
     .forEach((row) => add('info', 'Typography', `${row.selector} present on original but not on EDS`));
 
   r.visual.forEach((v) => {
+    v.areas.filter((a) => a.priority !== 'low').slice(0, 8).forEach((a) => add(
+      a.priority === 'high' ? 'warning' : 'info',
+      'Visual',
+      `${a.label} @ ${v.viewport}px`,
+      a.detail,
+      a.id,
+    ));
     if (v.error) add('error', 'Visual', `Capture failed @ ${v.viewport}px`, v.error);
     if (v.foldMismatch != null && v.foldMismatch > 0.3) add('error', 'Visual', `Above-the-fold differs by ${(v.foldMismatch * 100).toFixed(1)}% @ ${v.viewport}px`);
     else if (v.foldMismatch != null && v.foldMismatch > 0.12) add('warning', 'Visual', `Above-the-fold differs by ${(v.foldMismatch * 100).toFixed(1)}% @ ${v.viewport}px`);

@@ -41,11 +41,6 @@ const tone = (s) => {
   if (s >= 90) return 'good';
   return s >= 75 ? 'mid' : 'bad';
 };
-const foldTone = (m) => {
-  if (m == null) return '';
-  if (m > 0.3) return 'bad';
-  return m > 0.12 ? 'mid' : 'good';
-};
 const scoreEl = (s) => h('span', { class: `score ${tone(s)}` }, s == null ? '–' : s);
 const badge = (text, cls = '') => h('span', { class: `badge ${cls}` }, text);
 const statusLabel = { pass: 'Pass', review: 'Needs review', fail: 'Fail' };
@@ -376,7 +371,7 @@ async function openRun(id, pairIdx, tab, changeId) {
 function showRun(pairIdx, tab, changeId) {
   const { job } = state;
   const pair = pairIdx != null && pairIdx !== '' ? job.pairs[Number(pairIdx)] : null;
-  fill(app, runHeader(job), pair ? pairDetail(pair, tab || 'issues', changeId) : runSummary(job));
+  fill(app, runHeader(job), pair ? pairDetail(pair, tab || 'visual', changeId) : runSummary(job));
   if (!pair) window.scrollTo(0, 0);
 }
 
@@ -488,7 +483,7 @@ function runSummary(job) {
 /* ------------------------------------------------------------ pair detail */
 
 const TABS = [
-  ['issues', 'Issues'], ['visual', 'Visual'], ['text', 'Text'], ['headings', 'Headings'], ['links', 'Links'],
+  ['visual', 'Difference review'], ['issues', 'Issues'], ['text', 'Text'], ['headings', 'Headings'], ['links', 'Links'],
   ['media', 'Images & media'], ['meta', 'Metadata'], ['typography', 'Typography'], ['network', 'Console & network'], ['notes', 'Review notes'],
 ];
 
@@ -496,7 +491,10 @@ function tabCount(r, key) {
   const t = r.text.stats;
   const n = {
     issues: r.counts.error + r.counts.warning,
-    visual: r.changes?.length,
+    visual: (() => {
+      const vs = r.visual.map((v) => Number(v.viewport));
+      return vs.length ? findingsAt(r, String(Math.max(...vs))).filter((f) => f.priority === 'high').length : 0;
+    })(),
     text: t.missing + t.changed + t.extra,
     headings: r.headings.ops.filter((o) => o.type !== 'equal' || o.levelChanged).length,
     links: r.links.missing.length + r.links.targetChanged.length + r.links.extra.length,
@@ -588,214 +586,325 @@ function issuesTab(pair, r) {
   return wrap;
 }
 
-const KIND_LABEL = {
-  missing: 'Missing on EDS', changed: 'Changed', extra: 'Extra on EDS', broken: 'Broken / no alt',
+const PRIORITY_LABEL = { high: 'High', medium: 'Medium', low: 'Low' };
+const ELEMENT_PRIORITY = {
+  missing: 'high', broken: 'high', changed: 'medium', extra: 'low',
 };
 
 function locateLink(pair, id) {
-  if (!id) return null;
-  return h('a', { class: 'locate', href: runHref(pair.index, 'visual', id), title: 'Show this change on the screenshots' }, '📍 Show');
+  if (id == null) return null;
+  return h('a', { class: 'locate', href: runHref(pair.index, 'visual', id), title: 'Show this on the screenshots' }, '📍 Show');
 }
 
 const pctOf = (n, total) => `${(100 * n) / total}%`;
 
+const foundOn = (f) => {
+  if (f.src && f.eds) return 'Both pages';
+  return f.src ? 'Original only' : 'EDS only';
+};
+
+/** All findings that can be drawn at one viewport, numbered top-to-bottom. */
+function findingsAt(r, vp) {
+  const elements = (r.changes || [])
+    .filter((c) => c.src?.[vp] || c.eds?.[vp])
+    .map((c) => ({
+      id: String(c.id),
+      priority: c.priority || ELEMENT_PRIORITY[c.kind] || 'low',
+      kind: c.kind,
+      category: c.category,
+      label: c.label,
+      detail: c.detail,
+      src: c.src?.[vp] || null,
+      eds: c.eds?.[vp] || null,
+    }));
+  const areas = (r.visual.find((v) => String(v.viewport) === String(vp))?.areas || [])
+    .map((a) => ({ ...a, id: String(a.id) }));
+  const y = (f) => (f.eds ? f.eds[1] : f.src[1]);
+  return [...elements, ...areas]
+    .sort((p, q) => y(p) - y(q))
+    .map((f, i) => ({ ...f, num: String(i + 1).padStart(2, '0') }));
+}
+
 function visualTab(pair, r, focusId) {
   const vis = r.visual;
   if (!vis.length) return h('div', { class: 'empty' }, 'No screenshots captured.');
-  const changes = r.changes || [];
-  const focus = changes.find((c) => c.id === Number(focusId));
-  const located = (c, vp) => c.src?.[vp] || c.eds?.[vp];
-  let current = (focus && vis.find((x) => located(focus, x.viewport))) || vis[0];
-  let mode = 'side';
-  let showMarks = true;
-  let showRegions = false;
-  let selected = focus ? focus.id : null;
-  const kinds = new Set(Object.keys(KIND_LABEL));
-  const wrap = h('div');
+  const hasFocus = (v) => findingsAt(r, v.viewport).some((f) => f.id === focusId);
+  const focusVp = focusId && vis.find(hasFocus);
+  const widest = String(Math.max(...vis.map((x) => Number(x.viewport))));
+  let current = focusVp || vis.find((v) => v.viewport === widest) || vis[0];
+  let view = 'side';
+  let overlayMode = 'blend';
+  let zoom = 1;
+  let prioFilter = 'all';
+  let showLow = false;
+  let selected = focusVp ? focusId : null;
+  const wrap = h('div', { class: 'review' });
   const img = (name, alt) => {
     const src = asset(name);
     return src ? h('img', { src, alt, loading: 'lazy' }) : h('div', { class: 'placeholder' }, 'Screenshot not included in this report');
   };
 
-  const highlight = (id, scroll) => {
+  let findings = [];
+  let visible = []; // findings drawn on the screenshots (low priority only when asked)
+  let barEl = null;
+  const renderBar = () => {
+    if (!barEl) return;
+    const f = visible.find((x) => x.id === selected) || findings.find((x) => x.id === selected);
+    const i = visible.indexOf(f);
+    const step = (d) => {
+      if (!visible.length) return;
+      const fresh = d > 0 ? 0 : visible.length - 1; // nothing selected yet: start at an end
+      const next = visible[i < 0 ? fresh : (i + d + visible.length) % visible.length];
+      // eslint-disable-next-line no-use-before-define
+      select(next.id, true);
+    };
+    fill(
+      barEl,
+      f ? [
+        h('span', { class: `mark-num prio-${f.priority}` }, f.num),
+        h('span', { class: `badge ${{ high: 'error', medium: 'warning', low: 'added' }[f.priority]}` }, PRIORITY_LABEL[f.priority]),
+        h('span', { class: 'fb-text' }, h('b', null, f.label), ` · ${f.category} — `, f.detail),
+      ] : h('span', { class: 'muted' }, visible.length ? `${visible.length} findings marked at ${current.viewport}px — click a numbered box, or step through them →` : 'No high or medium priority differences at this viewport.'),
+      h('span', { class: 'spacer' }),
+      h('button', {
+        type: 'button', class: 'btn small', onclick: () => step(-1), disabled: !visible.length, 'aria-label': 'Previous finding',
+      }, '‹ Prev'),
+      h('button', {
+        type: 'button', class: 'btn small', onclick: () => step(1), disabled: !visible.length, 'aria-label': 'Next finding',
+      }, 'Next ›'),
+    );
+  };
+
+  const select = (id, scroll) => {
     selected = id;
-    wrap.querySelectorAll('[data-change]').forEach((el) => el.classList.toggle('selected', el.dataset.change === String(id)));
-    const item = wrap.querySelector(`.change-item[data-change="${id}"]`);
-    if (item) item.scrollIntoView({ block: 'nearest' });
+    wrap.querySelectorAll('.mark').forEach((el) => el.classList.toggle('selected', el.dataset.f === id));
+    renderBar();
     if (!scroll) return;
     const scroller = wrap.querySelector('.shot-scroll');
-    const mark = scroller?.querySelector(`.mark[data-change="${id}"]`);
-    if (!mark) return;
-    const top = mark.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-    scroller.scrollTo({ top: Math.max(0, scroller.scrollTop + top - 80), behavior: 'smooth' });
+    const marks = [...(scroller?.querySelectorAll(`.mark[data-f="${id}"]`) || [])];
+    if (!marks.length) return;
+    const sr = scroller.getBoundingClientRect();
+    const top = Math.min(...marks.map((m) => m.getBoundingClientRect().top)) - sr.top;
+    const left = Math.min(...marks.map((m) => m.getBoundingClientRect().left)) - sr.left;
+    scroller.scrollTo({
+      top: Math.max(0, scroller.scrollTop + top - 60),
+      left: zoom > 1 ? Math.max(0, scroller.scrollLeft + left - 40) : 0,
+      behavior: 'smooth',
+    });
   };
 
   const draw = () => {
     const v = current;
     const vp = v.viewport;
     const W = v.shotWidth || v.width;
-    const onShot = changes.filter((c) => kinds.has(c.kind) && (c.src?.[vp] || c.eds?.[vp]));
-    const markEl = (c, box, H, dashed) => {
+    findings = findingsAt(r, vp);
+    const counts = { high: 0, medium: 0, low: 0 };
+    findings.forEach((f) => { counts[f.priority] += 1; });
+    visible = showLow ? findings : findings.filter((f) => f.priority !== 'low' || f.id === selected);
+
+    const markEl = (f, box, H, dashed) => {
       const [x, y, w, bh] = box;
+      const pad = bh <= 6 ? 0 : 3;
       return h(
         'button',
         {
           type: 'button',
-          class: `mark kind-${c.kind}${dashed ? ' on-original' : ''}${c.id === selected ? ' selected' : ''}`,
-          dataset: { change: String(c.id) },
+          class: `mark prio-${f.priority}${dashed ? ' on-original' : ''}${bh <= 6 ? ' thin' : ''}${f.id === selected ? ' selected' : ''}`,
+          dataset: { f: f.id },
           style: {
-            left: pctOf(x - 3, W),
-            top: pctOf(y - 3, H),
-            width: pctOf(w + 6, W),
-            height: pctOf(bh + 6, H),
+            left: pctOf(Math.max(0, x - pad), W),
+            top: pctOf(Math.max(0, y - pad), H),
+            width: pctOf(Math.min(W, w + 2 * pad), W),
+            height: pctOf(bh + 2 * pad, H),
           },
-          title: `#${c.id} ${c.label}${dashed ? ' (position on the original)' : ''}\n${c.detail}`,
-          'aria-label': `Change ${c.id}: ${c.label}`,
-          onclick: () => highlight(c.id, false),
+          title: `${f.num} · ${PRIORITY_LABEL[f.priority]} · ${f.label}${dashed ? ' (position on the original)' : ''}\n${f.detail}`,
+          'aria-label': `Finding ${f.num}: ${f.label}`,
+          onclick: () => select(f.id, false),
         },
-        h('span', { class: 'mark-num' }, c.id),
+        h('span', { class: 'mark-num' }, f.num),
       );
     };
-    // sides: which boxes to draw — 'src', 'eds', or 'both' (shared coordinate space: EDS box wins)
-    const canvas = (H, sides, ...kids) => {
+    // side: 'src' | 'eds' | 'both' (overlay: EDS box, else dashed original box)
+    const canvas = (H, side, ...kids) => {
       const el = h('div', { class: 'shot-canvas', style: { aspectRatio: `${W} / ${H}` } }, kids);
-      if (showRegions || mode === 'diff') {
-        v.regions.forEach((rg) => el.append(h('div', { class: 'region-mark', style: { top: pctOf(rg.y, H), height: pctOf(Math.max(rg.h, 4), H) } })));
-      }
-      if (showMarks) {
-        onShot.forEach((c) => {
-          let box = null;
-          let dashed = false;
-          if (sides === 'src') box = c.src?.[vp];
-          else if (sides === 'eds') box = c.eds?.[vp];
-          else if (c.eds?.[vp]) box = c.eds[vp];
-          else { box = c.src?.[vp]; dashed = true; }
-          if (box && box[1] < H) el.append(markEl(c, box, H, dashed));
-        });
-      }
+      visible.forEach((f) => {
+        let box = side === 'src' ? f.src : f.eds;
+        let dashed = false;
+        if (side === 'both' && !box) { box = f.src; dashed = true; }
+        if (box && box[1] < H) el.append(markEl(f, box, H, dashed));
+      });
       return el;
     };
-    // never upscale: show each shot at most at its captured width
-    const native = { maxWidth: `${W}px`, width: '100%', justifySelf: 'center' };
     const hSrc = v.srcShotHeight || v.srcHeight;
     const hEds = v.edsShotHeight || v.edsHeight;
-    let body;
-    if (mode === 'side') {
-      body = h(
+    const cap = { maxWidth: `${Math.round(W * zoom)}px` };
+    const pageHead = (dot, label, url) => h(
+      'div',
+      { class: 'page-head' },
+      h('span', { class: `dot ${dot}` }),
+      h('b', null, label),
+      h('a', {
+        class: 'page-url', href: url, target: '_blank', rel: 'noopener noreferrer', title: url,
+      }, url),
+    );
+
+    let stage;
+    if (view === 'side') {
+      stage = h(
         'div',
-        { class: 'shot-grid' },
-        h('div', { class: 'shot', style: native }, h('div', { class: 'shot-label' }, `Original · ${v.srcHeight}px tall`), canvas(hSrc, 'src', img(v.srcShot, 'Original page screenshot'))),
-        h('div', { class: 'shot', style: native }, h('div', { class: 'shot-label' }, `EDS · ${v.edsHeight}px tall`), canvas(hEds, 'eds', img(v.edsShot, 'EDS page screenshot'))),
+        { class: 'shot-grid', style: { width: `${zoom * 100}%` } },
+        h('div', { class: 'shot', style: cap }, pageHead('grey', 'Original page', pair.original), canvas(hSrc, 'src', img(v.srcShot, 'Original page screenshot'))),
+        h('div', { class: 'shot', style: cap }, pageHead('blue', 'EDS migrated page', pair.eds), canvas(hEds, 'eds', img(v.edsShot, 'EDS page screenshot'))),
       );
-    } else if (mode === 'diff') {
-      body = h('div', { class: 'shot-grid single' }, h(
-        'div',
-        { class: 'shot', style: native },
-        h('div', { class: 'shot-label' }, 'Differences (red) over a faded EDS render'),
-        canvas(hEds, 'both', img(v.diffShot, 'Pixel difference map')),
-      ));
-    } else {
-      const top = h('div', { class: 'top' }, img(v.edsShot, 'EDS page screenshot'));
-      const line = h('div', { class: 'swipe-line' });
-      const range = h('input', {
-        type: 'range', min: '0', max: '100', value: '50', 'aria-label': mode === 'swipe' ? 'Swipe position' : 'EDS opacity',
-      });
-      const apply = () => {
-        if (mode === 'swipe') {
-          top.style.clipPath = `inset(0 0 0 ${range.value}%)`;
-          line.style.left = `${range.value}%`;
-        } else top.style.opacity = String(range.value / 100);
-      };
-      range.addEventListener('input', apply);
-      apply();
-      body = h(
+    } else if (view === 'overlay') {
+      const H = Math.max(hSrc, hEds);
+      let layers;
+      let control = null;
+      if (overlayMode === 'heatmap') {
+        layers = [img(v.diffShot, 'Pixel difference heatmap')];
+      } else {
+        const top = h('div', { class: 'top' }, img(v.edsShot, 'EDS page screenshot'));
+        const line = h('div', { class: 'swipe-line' });
+        const range = h('input', {
+          type: 'range', min: '0', max: '100', value: '50', 'aria-label': overlayMode === 'swipe' ? 'Swipe position' : 'EDS opacity',
+        });
+        const apply = () => {
+          if (overlayMode === 'swipe') {
+            top.style.clipPath = `inset(0 0 0 ${range.value}%)`;
+            line.style.left = `${range.value}%`;
+          } else top.style.opacity = String(range.value / 100);
+        };
+        range.addEventListener('input', apply);
+        apply();
+        layers = [img(v.srcShot, 'Original page screenshot'), top, overlayMode === 'swipe' ? line : null];
+        control = h('span', { class: 'range' }, overlayMode === 'swipe' ? 'Original ◀' : 'Original', range, overlayMode === 'swipe' ? '▶ EDS' : 'EDS');
+      }
+      stage = h(
         'div',
         null,
-        h('div', { class: 'range', style: { margin: '0 0 8px' } }, mode === 'swipe' ? 'Original ◀' : 'EDS opacity', range, mode === 'swipe' ? '▶ EDS' : ''),
-        h('div', { class: 'shot-grid single' }, h(
+        h(
           'div',
-          { class: 'shot', style: native },
-          canvas(Math.max(hSrc, hEds), 'both', img(v.srcShot, 'Original page screenshot'), top, mode === 'swipe' ? line : null),
-        )),
+          { class: 'overlay-bar' },
+          h('div', { class: 'seg' }, [['blend', 'Blend'], ['swipe', 'Swipe'], ['heatmap', 'Heatmap']].map(([k, l]) => h('button', {
+            type: 'button', 'aria-pressed': String(overlayMode === k), onclick: () => { overlayMode = k; draw(); },
+          }, l))),
+          control,
+          h('span', { class: 'small muted' }, overlayMode === 'heatmap' ? 'Red = pixels that differ after lining the pages up · blue = rows that only exist on EDS.' : 'Boxes are drawn at EDS positions; dashed boxes show where an item sits on the original.'),
+        ),
+        h('div', { class: 'shot-grid single' }, h('div', { class: 'shot', style: cap }, canvas(H, 'both', layers))),
+      );
+    } else {
+      const shown = findings.filter((f) => prioFilter === 'all' || f.priority === prioFilter);
+      stage = h(
+        'div',
+        { class: 'findings-list' },
+        h('div', { class: 'chips' }, [['all', `All (${findings.length})`], ['high', `High (${counts.high})`], ['medium', `Medium (${counts.medium})`], ['low', `Low (${counts.low})`]]
+          .map(([k, l]) => h('button', {
+            type: 'button', class: 'chip', 'aria-pressed': String(prioFilter === k), onclick: () => { prioFilter = k; draw(); },
+          }, l))),
+        shown.length ? h('div', { class: 'table-wrap' }, h(
+          'table',
+          null,
+          h('thead', null, h('tr', null, ['#', 'Priority', 'Finding', 'Type', 'Found on', 'Details', ''].map((t) => h('th', null, t)))),
+          h('tbody', null, shown.map((f) => h(
+            'tr',
+            null,
+            h('td', null, h('span', { class: `mark-num prio-${f.priority}` }, f.num)),
+            h('td', null, badge(PRIORITY_LABEL[f.priority], { high: 'error', medium: 'warning', low: 'added' }[f.priority])),
+            h('td', null, h('b', null, f.label)),
+            h('td', null, f.category),
+            h('td', { class: 'small' }, foundOn(f)),
+            h('td', { class: 'url' }, f.detail),
+            h('td', null, h('button', {
+              type: 'button',
+              class: 'btn small',
+              onclick: () => {
+                view = 'side';
+                selected = f.id;
+                draw();
+              },
+            }, 'View')),
+          ))),
+        )) : h('div', { class: 'empty' }, 'No findings for this filter.'),
       );
     }
 
-    const sideText = (c) => {
-      if (c.src?.[vp] && c.eds?.[vp]) return 'both pages';
-      return c.src?.[vp] ? 'original' : 'EDS';
-    };
-    const atVp = (c) => c.src?.[vp] || c.eds?.[vp];
-    const countBy = (k) => changes.filter((c) => c.kind === k && atVp(c)).length;
-    const panel = h(
-      'aside',
-      { class: 'change-panel', 'aria-label': 'Changes marked on the screenshots' },
-      h('div', { class: 'change-head' }, h('b', null, `${onShot.length} change${onShot.length === 1 ? '' : 's'} marked at ${vp}px`)),
-      h('div', { class: 'chips' }, Object.entries(KIND_LABEL).map(([k, l]) => h('button', {
-        type: 'button',
-        class: `chip kind-chip kind-${k}`,
-        'aria-pressed': String(kinds.has(k)),
-        onclick: () => { if (kinds.has(k)) kinds.delete(k); else kinds.add(k); draw(); },
-      }, h('span', { class: 'swatch' }), `${l} (${countBy(k)})`))),
-      onShot.length ? h('ol', { class: 'change-list' }, onShot.map((c) => h('li', null, h(
-        'button',
-        {
-          type: 'button',
-          class: `change-item${c.id === selected ? ' selected' : ''}`,
-          dataset: { change: String(c.id) },
-          onclick: () => highlight(c.id, true),
-        },
-        h('span', { class: `mark-num kind-${c.kind}` }, c.id),
-        h(
-          'span',
-          { class: 'ci-body' },
-          h('b', null, c.label),
-          h('span', { class: 'ci-meta' }, `${c.category} · ${sideText(c)}`),
-          h('span', { class: 'ci-detail' }, c.detail),
-        ),
-      )))) : h('div', { class: 'empty small' }, changes.length ? 'No located changes at this viewport for the selected types.' : 'No content changes located — check the pixel-diff areas.'),
-    );
+    const zoomBtn = (d, label) => h('button', {
+      type: 'button',
+      class: 'btn icon',
+      'aria-label': label,
+      disabled: (d < 0 && zoom <= 0.5) || (d > 0 && zoom >= 2),
+      onclick: () => {
+        zoom = Math.round(Math.min(2, Math.max(0.5, zoom + d)) * 100) / 100;
+        draw();
+      },
+    }, d < 0 ? '−' : '+');
+    const exportBtn = STATIC
+      ? h('button', { type: 'button', class: 'btn', onclick: () => window.print() }, '⬇ Print / PDF')
+      : h('a', { class: 'btn', href: `/api/jobs/${state.job.id}/report.html` }, '⬇ Export report');
+    barEl = h('div', { class: 'finding-bar', role: 'status' });
 
-    const scroller = h('div', { class: 'shot-scroll' }, body);
     fill(
       wrap,
       h(
         'div',
-        { class: 'vis-toolbar' },
-        h('div', { class: 'chips' }, vis.map((x) => h('button', {
-          type: 'button', class: 'chip', 'aria-pressed': String(x === current), onclick: () => { current = x; draw(); },
-        }, `${x.viewport}px`))),
-        h('div', { class: 'chips' }, [['side', 'Side by side'], ['swipe', 'Swipe'], ['overlay', 'Overlay'], ['diff', 'Diff map']].map(([k, l]) => h('button', {
-          type: 'button', class: 'chip', 'aria-pressed': String(mode === k), onclick: () => { mode = k; draw(); },
-        }, l))),
-        h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: showMarks, onchange: (e) => { showMarks = e.target.checked; draw(); } }), 'Show change markers'),
-        h('label', { class: 'check' }, h('input', {
-          type: 'checkbox', checked: showRegions || mode === 'diff', disabled: mode === 'diff', onchange: (e) => { showRegions = e.target.checked; draw(); },
-        }), 'Show pixel-diff areas'),
+        { class: 'review-head' },
+        h(
+          'div',
+          null,
+          h('h2', null, 'Difference review'),
+          h('p', { class: 'muted' }, `${pair.src?.title || 'Original'} compared with ${pair.edsInfo?.title || 'EDS'}`),
+        ),
+        exportBtn,
       ),
-      v.error ? h('div', { class: 'error-box' }, v.error) : null,
       h(
         'div',
-        { class: 'cards' },
-        [['Above-the-fold diff', pct(v.foldMismatch), foldTone(v.foldMismatch)],
-          ['Full-page diff', pct(v.mismatch), ''],
-          ['Height original → EDS', `${v.srcHeight} → ${v.edsHeight}`, Math.abs(v.heightDelta) > 0.1 ? 'mid' : ''],
-          ['Horizontal overflow (EDS)', v.edsOverflow ? `${v.edsOverflow}px` : 'none', v.edsOverflow ? 'bad' : 'good']]
-          .map(([k, val, c]) => h('div', { class: 'card' }, h('div', { class: 'k' }, k), h('div', { class: `v ${c}`, style: { fontSize: '18px' } }, val))),
+        { class: 'cards review-cards' },
+        [['Total findings', findings.length, '', `Automated checks at ${vp}px`],
+          ['High priority', counts.high, counts.high ? 'bad' : 'good', 'Review first'],
+          ['Medium priority', counts.medium, counts.medium ? 'mid' : 'good', 'Visual / content review'],
+          ['Page height', h('span', null, (v.edsHeight || 0).toLocaleString(), h('small', null, ' px')), '', `EDS captured height · original ${(v.srcHeight || 0).toLocaleString()}px`]]
+          .map(([k, val, c, sub]) => h('div', { class: 'card' }, h('div', { class: 'k' }, k), h('div', { class: `v ${c}` }, val), h('div', { class: 'small muted' }, sub))),
+      ),
+      v.error ? h('div', { class: 'error-box' }, v.error) : null,
+      !r.changes && !v.areas ? h('div', { class: 'error-box' }, 'This run was made before differences were marked — run the page again to see numbered findings.') : null,
+      h(
+        'div',
+        { class: 'review-panel' },
+        h(
+          'div',
+          { class: 'review-toolbar' },
+          h('div', { class: 'seg tabs-seg', role: 'tablist' }, [['side', 'Side by side'], ['overlay', 'Overlay'], ['list', 'Findings list']].map(([k, l]) => h('button', {
+            type: 'button', role: 'tab', 'aria-selected': String(view === k), onclick: () => { view = k; draw(); },
+          }, l))),
+          h('span', { class: 'spacer' }),
+          h('div', { class: 'seg' }, vis.map((x) => h('button', {
+            type: 'button',
+            'aria-pressed': String(x === current),
+            onclick: () => { current = x; selected = null; draw(); },
+          }, `${x.viewport}px`))),
+          view === 'list' ? null : h('label', { class: 'check small' }, h('input', {
+            type: 'checkbox', checked: showLow, onchange: (e) => { showLow = e.target.checked; draw(); },
+          }), `Show low priority (${counts.low})`),
+          view === 'list' ? null : h('div', { class: 'zoom' }, zoomBtn(-0.25, 'Zoom out'), h('span', { class: 'zoom-val' }, `${Math.round(zoom * 100)}%`), zoomBtn(0.25, 'Zoom in')),
+        ),
+        view === 'list' ? null : barEl,
+        view === 'list' ? stage : h('div', { class: 'shot-scroll' }, stage),
       ),
       h(
         'p',
-        { class: 'small muted' },
-        'Numbered boxes mark each difference found in the content: ',
-        Object.entries(KIND_LABEL).map(([k, l]) => h('span', { class: `legend kind-${k}` }, h('span', { class: 'swatch' }), l)),
-        mode === 'side' ? '' : ' Dashed boxes show where an item sits on the original.',
-        ' Click a box or a list item to jump to it. Red bands are areas where pixels differ.',
+        { class: 'small muted legend-line' },
+        h('span', { class: 'legend prio-high' }, h('span', { class: 'swatch' }), 'High'),
+        h('span', { class: 'legend prio-medium' }, h('span', { class: 'swatch' }), 'Medium'),
+        h('span', { class: 'legend prio-low' }, h('span', { class: 'swatch' }), 'Low'),
+        'Boxes mark areas that still differ after the two pages are lined up (content that only moved is ignored), plus text, heading, link and image differences. Hover a box for details.',
       ),
-      h('div', { class: 'vis-layout' }, scroller, panel),
     );
-    if (selected) setTimeout(() => highlight(selected, true), 60);
+    renderBar();
+    if (selected && view !== 'list') setTimeout(() => select(selected, true), 60);
   };
   draw();
-  if (focus) setTimeout(() => wrap.scrollIntoView({ block: 'start' }), 30);
+  if (focusVp) setTimeout(() => wrap.scrollIntoView({ block: 'start' }), 30);
   return wrap;
 }
 
@@ -1104,7 +1213,20 @@ async function boot() {
     document.body.classList.add('static');
     state.job = window.REPORT;
   } else {
-    state.config = await api('/api/config');
+    try {
+      state.config = await api('/api/config');
+    } catch {
+      // opened as a file, or the server isn't running: explain how to start it
+      const code = (t) => h('pre', { class: 'mono', style: { background: '#f2f4f7', padding: '10px 12px', borderRadius: '8px' } }, t);
+      fill(app, h(
+        'div',
+        { class: 'panel' },
+        h('h2', null, 'Start the checker first'),
+        h('p', { class: 'lead' }, 'This page needs the Page Parity Checker server. Opening index.html directly from disk will not work.'),
+        h('ol', { class: 'list' }, h('li', null, 'Open a terminal in the project folder.'), h('li', null, 'First time only:', code('npm install')), h('li', null, 'Start the checker:', code('npm run compare')), h('li', null, 'Open ', h('a', { href: 'http://localhost:4100' }, 'http://localhost:4100'), ' in your browser.')),
+      ));
+      return;
+    }
   }
   window.addEventListener('hashchange', route);
   route();

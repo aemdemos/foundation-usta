@@ -5572,3 +5572,11 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
   change list and "📍 Show" links from the Issues/Text/Headings/Links tabs. Gotcha: the original serves different
   heading copy per breakpoint ("Make a donation" on desktop vs "Make a donation to us" at 375), so the home-page
   heading change is desktop-only. Content is compared at the widest viewport; markers are placed per viewport.
+- **Difference review + shift-aware diff (same day).** The page view now opens on a "Difference review": summary cards,
+  Side by side / Overlay / Findings list, zoom, and numbered priority-coloured boxes on both screenshots. The pixel
+  diff first lines the two pages up (banded edit distance over 4px row signatures), then compares with ±3px/±1px
+  tolerance, and groups differing 16px cells into boxes; unmatched rows become missing/extra/section/spacing
+  findings. **Dead end:** aligning fixed 48px strips independently jittered back and forth (dozens of false
+  missing/extra sections on get-involved); one global monotonic alignment fixed it. Without the drift tolerance,
+  1–3px line-height drift flagged every mobile text line. Result on get-involved @1440: mismatch 6.5% → 1.8%,
+  2 high findings. One of them is real: the floating "Donate" side tab renders blank on EDS.

@@ -12,7 +12,7 @@ npm run compare -- --port 4200
 
 | Area | How |
 |---|---|
-| **Visual** | Full-page screenshot of both pages at each selected viewport (defaults: 375 / first project breakpoint / 1440). Pixel diff with above-the-fold and full-page mismatch %, differing regions, page height and horizontal overflow. Viewer modes: side-by-side, swipe, overlay, diff map. |
+| **Visual** | Full-page screenshot of both pages at each selected viewport (defaults: 375 / first project breakpoint / 1440). **Shift-aware** pixel diff: the two pages are lined up row by row first, so content that only moved up/down is ignored; areas that still differ are boxed, and unmatched rows become "section missing / extra / differs" or "spacing differs". Page height and horizontal overflow. |
 | **Text** | Visible text split into blocks, aligned with an LCS diff → missing / changed (word-level highlight) / extra / regrouped (same text split into different paragraphs). Overall word similarity. |
 | **Headings** | Outline side by side, missing/changed headings, level changes, heading-hierarchy problems. |
 | **Links** | Matched on normalised destination (host, `.html`, trailing slash ignored; documents by file name). Missing, extra, different target, different #anchor, EDS links still pointing at the original domain. Optional HTTP status check of every EDS link. |
@@ -21,16 +21,20 @@ npm run compare -- --port 4200
 | **Typography** | Computed font family/size/weight/line-height/colour/letter-spacing for body, h1–h6, p, a, li at every viewport. |
 | **Console & network** | JS errors and failed requests on both pages. |
 
-### Change markers
+### Difference review (default view of a page)
 
-Every located difference is drawn on the screenshots as a **numbered, colour-coded box**:
-red = missing on EDS, orange = changed, blue = extra on EDS, purple = broken image / no `alt`.
-Side by side shows each box on the page where it lives (both pages for a change). Swipe, overlay
-and diff map show the EDS position, plus a dashed box for items that exist only on the original.
-The panel next to the screenshots lists the changes for the current viewport (filter by type).
-Click a box or a list item to jump to it. Rows in the Issues, Text, Headings and Links tabs have a
-**📍 Show** link that opens the screenshot at that change. Positions are measured at every viewport,
-so a change is marked wherever the element is rendered.
+Summary cards (total / high / medium findings, page height) and three views:
+
+- **Side by side** – original and EDS screenshots with numbered `01`, `02`… boxes around every area
+  that differs, coloured by priority (red high, orange medium, blue low; low is hidden until you tick
+  *Show low priority*). Each box is drawn on both pages at its own position. Click a box, or use
+  **‹ Prev / Next ›**, to read what differs. The view zooms (50–200%) and switches width (375/768/1440…).
+- **Overlay** – blend (opacity), swipe, or heatmap (red = differing pixels, blue = rows only on EDS).
+- **Findings list** – every finding with priority, type, where it was found and a **View** button.
+
+Findings combine the visual areas with located content differences (missing/changed/extra text,
+headings, links, broken images / missing alt). Rows in the Issues, Text, Headings and Links tabs
+have a **📍 Show** link that opens the screenshot at that finding.
 
 Each pair gets a **parity score** (text 30%, visual 20%, links 15%, headings / images / typography
 10% each, metadata 5%), an auto status (Pass ≥ 90 with no errors, Needs review ≥ 75, Fail),
