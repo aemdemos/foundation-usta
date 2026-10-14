@@ -23,30 +23,30 @@ npm run compare -- --port 4200
 
 ### Difference review (default view of a page)
 
-Summary cards (total / high / medium findings, page height) and three views:
+Built to be read top-down, one finding at a time:
 
-- **Side by side** – original and EDS screenshots with numbered `01`, `02`… boxes around every area
-  that differs, coloured by priority (red high, orange medium, blue low; low is hidden until you tick
-  *Show low priority*). Each box is drawn on both pages at its own position. Click a box, or use
-  **‹ Prev / Next ›**, to read what differs. The view zooms (50–200%) and switches width (375/768/1440…).
-- **Overlay** – blend (opacity), swipe, or heatmap (red = differing pixels, blue = rows only on EDS).
-- **Findings list** – every finding with priority, type, where it was found and a **View** button.
+- **One-line verdict + cards**: *Fix first* / *Worth checking* / *Minor* / page height for the chosen width.
+- **Screenshots** (original | EDS, side by side, synced scroll, zoom, 375/768/1440…) with small numbered
+  **pins** only — no boxes until you pick something.
+- **"What's different" list** next to the screenshots, grouped **Fix first → Worth checking → Minor**
+  (Minor collapsed), filterable by *Content / Spacing / Visual*. Every item has a plain title
+  ("39px more space on EDS") and what to check ("Between “By giving…” and image “Donors…”: 203px → 242px.
+  Check margin / padding.").
+- **Pick an item** (or a pin) → it's outlined on **both** pages, the rest of the screenshot is dimmed, and
+  both pages scroll to it. Click again to clear. *Outline all* shows every box at once if you want the full picture.
+- **Overlay** tab: blend / swipe / heatmap.
 
-**Spacing & layout** (striped boxes with the measured difference, e.g. `↕ +39px`, `↔ 815 → 930px`):
-measured from the real element boxes of everything that exists on both pages (text blocks,
-headings, images) at every width —
-- *More / Less space on EDS*: gap between an element and the one directly below it (margins, section padding);
-- *Content starts further left/right*: left edge moved (horizontal padding/margin), centred content ignored;
-- *Text column wider/narrower*: multi-line text width (explains different line wrapping);
-- *Image size differs*.
+To keep the list short: spacing differences that repeat (same kind of gap, same size, 3+ places)
+are merged into **one** item ("24px more space between headings and text on EDS — 5 places",
+selecting it highlights all of them); pixel-diff areas that a spacing/content finding already
+explains are hidden. Rows in the Issues, Text, Headings and Links tabs have a **📍 Show** link.
 
-Spacing differences that repeat (same element transition, e.g. heading → text, similar delta, 3+
-times) are summarised above the screenshots as **Recurring spacing differences — fix once, globally**.
-Use **Show: Spacing & layout** in the toolbar to see only these boxes.
-
-Findings combine the visual areas with located content differences (missing/changed/extra text,
-headings, links, broken images / missing alt). Rows in the Issues, Text, Headings and Links tabs
-have a **📍 Show** link that opens the screenshot at that finding.
+What is measured:
+- **Visual** – shift-aware pixel diff (pages are lined up first, so content that only moved is ignored).
+- **Spacing & layout** – from the real element boxes of everything on both pages: gap to the element
+  below (margins / section padding), left-edge shifts (padding), multi-line text width (wrapping),
+  image size. Priority: ≥96px fix first, ≥24px worth checking, smaller = minor.
+- **Content** – missing / changed / extra text, headings, links, broken images, missing alt.
 
 Each pair gets a **parity score** (text 30%, visual 20%, links 15%, headings / images / typography
 10% each, metadata 5%), an auto status (Pass ≥ 90 with no errors, Needs review ≥ 75, Fail),

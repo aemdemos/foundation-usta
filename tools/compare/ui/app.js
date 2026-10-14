@@ -586,9 +586,19 @@ function issuesTab(pair, r) {
   return wrap;
 }
 
-const PRIORITY_LABEL = { high: 'High', medium: 'Medium', low: 'Low' };
 const ELEMENT_PRIORITY = {
   missing: 'high', broken: 'high', changed: 'medium', extra: 'low',
+};
+const PRIORITY_RANK2 = { high: 0, medium: 1, low: 2 };
+const GROUPS = [
+  ['high', 'Fix first', 'Clear differences — content missing or layout clearly off.'],
+  ['medium', 'Worth checking', 'Noticeable differences — confirm whether they matter.'],
+  ['low', 'Minor', 'Small differences — usually fine to ignore.'],
+];
+const TYPE_INFO = {
+  content: { label: 'Content' },
+  spacing: { label: 'Spacing & layout' },
+  visual: { label: 'Visual' },
 };
 
 function locateLink(pair, id) {
@@ -596,26 +606,74 @@ function locateLink(pair, id) {
   return h('a', { class: 'locate', href: runHref(pair.index, 'visual', id), title: 'Show this on the screenshots' }, '📍 Show');
 }
 
+const whereText = (f) => {
+  if (f.src && f.eds) return 'both pages';
+  return f.src ? 'original only' : 'EDS only';
+};
 const pctOf = (n, total) => `${(100 * n) / total}%`;
-const SPACING_CATS = ['Spacing', 'Layout'];
+const nums = (s) => (String(s || '').match(/-?\d+/g) || []).map(Number);
+
 const typeOf = (f) => {
-  if (SPACING_CATS.includes(f.category)) return 'spacing';
+  if (f.category === 'Spacing' || f.category === 'Layout') return 'spacing';
   return f.category === 'Visual' ? 'visual' : 'content';
 };
-const TYPE_LABEL = {
-  all: 'All', visual: 'Visual', spacing: 'Spacing & layout', content: 'Content',
-};
 
-const foundOn = (f) => {
-  if (f.src && f.eds) return 'Both pages';
-  return f.src ? 'Original only' : 'EDS only';
-};
+/** Plain-language title + "what to check" for one finding. */
+function describe(f) {
+  const [m1, m2] = nums(f.measure);
+  const d = f.delta ?? m1;
+  switch (f.kind) {
+    case 'spacing':
+      return {
+        title: d > 0 ? `${d}px more space on EDS` : `${Math.abs(d)}px less space on EDS`,
+        hint: f.detail
+          ? `${f.detail.replace(/^Gap between /, 'Between ').replace(/: (\d+)px on the original vs (\d+)px on EDS.*$/, ': $1px → $2px')}. Check margin / padding.`
+          : 'The gap between these blocks differs — check margin / padding.',
+      };
+    case 'padding':
+      return {
+        title: `Content sits ${Math.abs(m1)}px further ${m1 > 0 ? 'right' : 'left'} on EDS`,
+        hint: 'Check the left padding / margin of this block.',
+      };
+    case 'width':
+      return {
+        title: `Text column ${Math.abs(m2 - m1)}px ${m2 > m1 ? 'wider' : 'narrower'} on EDS`,
+        hint: `Lines wrap differently (${m1}px → ${m2}px) — check the container width / padding.`,
+      };
+    case 'size':
+      return { title: 'Image is a different size', hint: f.detail };
+    case 'visual':
+      return { title: 'Looks different here', hint: 'Pixels differ in this area — compare colours, images and styling by eye.' };
+    case 'section':
+      return { title: 'This section looks different', hint: 'Layout, wrapping or content changed here — compare the two pages side by side.' };
+    case 'missing':
+      return f.category === 'Visual'
+        ? { title: 'Part of the original is missing on EDS', hint: f.detail }
+        : { title: f.label, hint: f.detail };
+    case 'extra':
+      return f.category === 'Visual'
+        ? { title: 'Extra content on EDS', hint: f.detail }
+        : { title: f.label, hint: f.detail };
+    default:
+      return { title: f.label, hint: f.detail };
+  }
+}
 
-/** All findings that can be drawn at one viewport, numbered top-to-bottom. */
+const area = (b) => b[2] * b[3];
+const overlap = (p, q) => Math.max(0, Math.min(p[0] + p[2], q[0] + q[2]) - Math.max(p[0], q[0]))
+  * Math.max(0, Math.min(p[1] + p[3], q[1] + q[3]) - Math.max(p[1], q[1]));
+const boxesOf = (f, side) => (f.members ? f.members.map((m) => m[side]) : [f[side]])
+  .filter(Boolean);
+
+/**
+ * Findings for one viewport, simplified for review:
+ * repeated spacing differences become one grouped item, pixel areas that a spacing/content
+ * finding already explains are dropped, and everything gets a plain-language title.
+ */
 function findingsAt(r, vp) {
-  const elements = (r.changes || [])
-    .filter((c) => c.src?.[vp] || c.eds?.[vp])
-    .map((c) => ({
+  const v = r.visual.find((x) => String(x.viewport) === String(vp));
+  let list = [
+    ...(r.changes || []).filter((c) => c.src?.[vp] || c.eds?.[vp]).map((c) => ({
       id: String(c.id),
       priority: c.priority || ELEMENT_PRIORITY[c.kind] || 'low',
       kind: c.kind,
@@ -624,129 +682,122 @@ function findingsAt(r, vp) {
       detail: c.detail,
       src: c.src?.[vp] || null,
       eds: c.eds?.[vp] || null,
-    }));
-  const areas = (r.visual.find((v) => String(v.viewport) === String(vp))?.areas || [])
-    .map((a) => ({ ...a, id: String(a.id) }));
-  const y = (f) => (f.eds ? f.eds[1] : f.src[1]);
-  return [...elements, ...areas]
-    .sort((p, q) => y(p) - y(q))
-    .map((f, i) => ({ ...f, num: String(i + 1).padStart(2, '0') }));
+    })),
+    ...(v?.areas || []).map((a) => ({ ...a, id: String(a.id) })),
+  ];
+  // repeated spacing differences → one item
+  (v?.patterns || []).forEach((pt, i) => {
+    const ids = pt.ids.map(String);
+    const members = list.filter((f) => ids.includes(f.id));
+    if (members.length < 2) return;
+    list = list.filter((f) => !ids.includes(f.id));
+    const [from, to] = pt.transition.split(' → ');
+    list.push({
+      id: `p${vp}-${i + 1}`,
+      kind: 'spacing',
+      category: 'Spacing',
+      priority: members.some((m) => m.priority === 'high') ? 'high' : 'medium',
+      members,
+      title: `${pt.delta > 0 ? `${pt.delta}px more` : `${-pt.delta}px less`} space between ${from}s and ${to} on EDS — ${members.length} places`,
+      hint: 'Same difference repeats, so it is probably one global CSS rule (margin / padding). Fix it once.',
+      src: members[0].src,
+      eds: members[0].eds,
+    });
+  });
+  // pixel differences already explained by a spacing / content finding
+  const explained = list.filter((f) => f.category !== 'Visual');
+  list = list.filter((f) => {
+    if (f.kind !== 'visual' || !f.eds) return true;
+    const covered = explained.reduce((a, o) => a + boxesOf(o, 'eds').reduce((b, x) => b + overlap(f.eds, x), 0), 0);
+    return covered / area(f.eds) < 0.4;
+  });
+  const y = (f) => (f.eds || f.src)[1];
+  return list
+    .map((f) => ({ ...f, ...(f.title ? {} : describe(f)), type: typeOf(f) }))
+    .sort((p, q) => PRIORITY_RANK2[p.priority] - PRIORITY_RANK2[q.priority] || y(p) - y(q))
+    .map((f, i) => ({ ...f, num: i + 1 }));
 }
 
 function visualTab(pair, r, focusId) {
   const vis = r.visual;
   if (!vis.length) return h('div', { class: 'empty' }, 'No screenshots captured.');
-  const hasFocus = (v) => findingsAt(r, v.viewport).some((f) => f.id === focusId);
+  const owns = (f, id) => f.id === id || f.members?.some((m) => m.id === id);
+  const hasFocus = (v) => findingsAt(r, v.viewport).some((f) => owns(f, focusId));
   const focusVp = focusId && vis.find(hasFocus);
   const widest = String(Math.max(...vis.map((x) => Number(x.viewport))));
   let current = focusVp || vis.find((v) => v.viewport === widest) || vis[0];
   let view = 'side';
   let overlayMode = 'blend';
   let zoom = 1;
-  let prioFilter = 'all';
   let typeFilter = 'all';
-  let showLow = false;
-  let selected = focusVp ? focusId : null;
+  let outlineAll = false;
+  let showMinor = false;
+  let selected = focusVp ? findingsAt(r, focusVp.viewport).find((f) => owns(f, focusId))?.id : null;
   const wrap = h('div', { class: 'review' });
   const img = (name, alt) => {
     const src = asset(name);
     return src ? h('img', { src, alt, loading: 'lazy' }) : h('div', { class: 'placeholder' }, 'Screenshot not included in this report');
   };
 
-  let findings = [];
-  let visible = []; // findings drawn on the screenshots (low priority only when asked)
-  let barEl = null;
-  const renderBar = () => {
-    if (!barEl) return;
-    const f = visible.find((x) => x.id === selected) || findings.find((x) => x.id === selected);
-    const i = visible.indexOf(f);
-    const step = (d) => {
-      if (!visible.length) return;
-      const fresh = d > 0 ? 0 : visible.length - 1; // nothing selected yet: start at an end
-      const next = visible[i < 0 ? fresh : (i + d + visible.length) % visible.length];
-      // eslint-disable-next-line no-use-before-define
-      select(next.id, true);
-    };
-    fill(
-      barEl,
-      f ? [
-        h('span', { class: `mark-num prio-${f.priority}` }, f.num),
-        h('span', { class: `badge ${{ high: 'error', medium: 'warning', low: 'added' }[f.priority]}` }, PRIORITY_LABEL[f.priority]),
-        h('span', { class: 'fb-text' }, h('b', null, f.label), f.measure ? h('span', { class: 'fb-measure' }, f.measure) : null, ` · ${f.category} — `, f.detail),
-      ] : h('span', { class: 'muted' }, visible.length ? `${visible.length} findings marked at ${current.viewport}px — click a numbered box, or step through them →` : 'No high or medium priority differences at this viewport.'),
-      h('span', { class: 'spacer' }),
-      h('button', {
-        type: 'button', class: 'btn small', onclick: () => step(-1), disabled: !visible.length, 'aria-label': 'Previous finding',
-      }, '‹ Prev'),
-      h('button', {
-        type: 'button', class: 'btn small', onclick: () => step(1), disabled: !visible.length, 'aria-label': 'Next finding',
-      }, 'Next ›'),
-    );
-  };
-
-  const select = (id, scroll) => {
-    selected = id;
-    wrap.querySelectorAll('.mark').forEach((el) => el.classList.toggle('selected', el.dataset.f === id));
-    renderBar();
-    if (!scroll) return;
+  const scrollTo = (id) => {
     const scroller = wrap.querySelector('.shot-scroll');
-    const marks = [...(scroller?.querySelectorAll(`.mark[data-f="${id}"]`) || [])];
+    const marks = [...(scroller?.querySelectorAll(`[data-f="${id}"]`) || [])];
     if (!marks.length) return;
     const sr = scroller.getBoundingClientRect();
     const top = Math.min(...marks.map((m) => m.getBoundingClientRect().top)) - sr.top;
-    const left = Math.min(...marks.map((m) => m.getBoundingClientRect().left)) - sr.left;
-    scroller.scrollTo({
-      top: Math.max(0, scroller.scrollTop + top - 60),
-      left: zoom > 1 ? Math.max(0, scroller.scrollLeft + left - 40) : 0,
-      behavior: 'smooth',
-    });
+    scroller.scrollTo({ top: Math.max(0, scroller.scrollTop + top - 120), behavior: 'smooth' });
   };
 
   const draw = () => {
     const v = current;
     const vp = v.viewport;
     const W = v.shotWidth || v.width;
-    findings = findingsAt(r, vp);
+    const all = findingsAt(r, vp);
     const counts = { high: 0, medium: 0, low: 0 };
-    findings.forEach((f) => { counts[f.priority] += 1; });
-    const spacingCount = findings.filter((f) => SPACING_CATS.includes(f.category)).length;
-    visible = findings.filter((f) => f.id === selected
-      || ((showLow || f.priority !== 'low') && (typeFilter === 'all' || typeOf(f) === typeFilter)));
+    all.forEach((f) => { counts[f.priority] += 1; });
+    const shown = all.filter((f) => typeFilter === 'all' || f.type === typeFilter);
+    const sel = all.find((f) => f.id === selected) || null;
 
-    const markEl = (f, box, H, dashed) => {
-      const [x, y, w, bh] = box;
-      const pad = bh <= 6 ? 0 : 3;
-      return h(
-        'button',
-        {
-          type: 'button',
-          class: `mark prio-${f.priority} kind-${f.kind}${dashed ? ' on-original' : ''}${bh <= 6 ? ' thin' : ''}${f.id === selected ? ' selected' : ''}`,
-          dataset: { f: f.id },
-          style: {
-            left: pctOf(Math.max(0, x - pad), W),
-            top: pctOf(Math.max(0, y - pad), H),
-            width: pctOf(Math.min(W, w + 2 * pad), W),
-            height: pctOf(bh + 2 * pad, H),
-          },
-          title: `${f.num} · ${PRIORITY_LABEL[f.priority]} · ${f.label}${dashed ? ' (position on the original)' : ''}\n${f.detail}`,
-          'aria-label': `Finding ${f.num}: ${f.label}`,
-          onclick: () => select(f.id, false),
-        },
-        h('span', { class: 'mark-num' }, f.num),
-        f.measure ? h('span', { class: 'mark-measure' }, f.measure) : null,
-      );
-    };
-    // side: 'src' | 'eds' | 'both' (overlay: EDS box, else dashed original box)
-    const canvas = (H, side, ...kids) => {
-      const el = h('div', { class: 'shot-canvas', style: { aspectRatio: `${W} / ${H}` } }, kids);
-      visible.forEach((f) => {
-        let box = side === 'src' ? f.src : f.eds;
+    // screenshot layer: a numbered pin per finding; outline + spotlight only for the selected one
+    const layer = (H, side) => {
+      const out = [];
+      shown.forEach((f) => {
+        const isSel = sel && f.id === sel.id;
+        if (f.priority === 'low' && !showMinor && !isSel) return;
+        let boxes = side === 'both' ? boxesOf(f, 'eds') : boxesOf(f, side);
         let dashed = false;
-        if (side === 'both' && !box) { box = f.src; dashed = true; }
-        if (box && box[1] < H) el.append(markEl(f, box, H, dashed));
+        if (side === 'both' && !boxes.length) { boxes = boxesOf(f, 'src'); dashed = true; }
+        boxes.filter((b) => b[1] < H).forEach((b, i) => {
+          const [x, y, w, bh] = b;
+          if (isSel || outlineAll) {
+            out.push(h('div', {
+              class: `hl prio-${f.priority}${isSel ? ' selected' : ''}${isSel && !f.members ? ' spot' : ''}${dashed ? ' dashed' : ''}`,
+              dataset: { f: f.id },
+              style: {
+                left: pctOf(Math.max(0, x - 4), W),
+                top: pctOf(Math.max(0, y - 4), H),
+                width: pctOf(Math.min(W, w + 8), W),
+                height: pctOf(Math.max(8, bh + 8), H),
+              },
+            }));
+          }
+          if (i === 0 || isSel) {
+            out.push(h('button', {
+              type: 'button',
+              class: `pin prio-${f.priority}${isSel ? ' selected' : ''}`,
+              dataset: { f: f.id },
+              style: { left: pctOf(Math.max(0, x), W), top: pctOf(Math.max(0, y), H) },
+              title: `${f.num}. ${f.title}`,
+              'aria-label': `Finding ${f.num}: ${f.title}`,
+              // eslint-disable-next-line no-use-before-define
+              onclick: () => choose(f.id),
+            }, f.num));
+          }
+        });
       });
-      return el;
+      return out;
     };
+    const canvas = (H, side, ...kids) => h('div', { class: 'shot-canvas', style: { aspectRatio: `${W} / ${H}` } }, kids, layer(H, side));
     const hSrc = v.srcShotHeight || v.srcHeight;
     const hEds = v.edsShotHeight || v.edsHeight;
     const cap = { maxWidth: `${Math.round(W * zoom)}px` };
@@ -768,7 +819,7 @@ function visualTab(pair, r, focusId) {
         h('div', { class: 'shot', style: cap }, pageHead('grey', 'Original page', pair.original), canvas(hSrc, 'src', img(v.srcShot, 'Original page screenshot'))),
         h('div', { class: 'shot', style: cap }, pageHead('blue', 'EDS migrated page', pair.eds), canvas(hEds, 'eds', img(v.edsShot, 'EDS page screenshot'))),
       );
-    } else if (view === 'overlay') {
+    } else {
       const H = Math.max(hSrc, hEds);
       let layers;
       let control = null;
@@ -801,51 +852,80 @@ function visualTab(pair, r, focusId) {
             type: 'button', 'aria-pressed': String(overlayMode === k), onclick: () => { overlayMode = k; draw(); },
           }, l))),
           control,
-          h('span', { class: 'small muted' }, overlayMode === 'heatmap' ? 'Red = pixels that differ after lining the pages up · blue = rows that only exist on EDS.' : 'Boxes are drawn at EDS positions; dashed boxes show where an item sits on the original.'),
+          h('span', { class: 'small muted' }, overlayMode === 'heatmap' ? 'Red = pixels that differ after lining the pages up · blue = rows that only exist on EDS.' : 'Drag the slider to compare the two pages in place.'),
         ),
         h('div', { class: 'shot-grid single' }, h('div', { class: 'shot', style: cap }, canvas(H, 'both', layers))),
       );
-    } else {
-      const shown = findings.filter((f) => (prioFilter === 'all' || f.priority === prioFilter)
-        && (typeFilter === 'all' || typeOf(f) === typeFilter));
-      const nType = (t) => findings.filter((f) => typeOf(f) === t).length;
-      stage = h(
-        'div',
-        { class: 'findings-list' },
-        h('div', { class: 'chips' }, [['all', `All (${findings.length})`], ['high', `High (${counts.high})`], ['medium', `Medium (${counts.medium})`], ['low', `Low (${counts.low})`]]
-          .map(([k, l]) => h('button', {
-            type: 'button', class: 'chip', 'aria-pressed': String(prioFilter === k), onclick: () => { prioFilter = k; draw(); },
-          }, l))),
-        h('div', { class: 'chips' }, [['all', 'All types'], ['visual', `Visual (${nType('visual')})`], ['spacing', `Spacing & layout (${nType('spacing')})`], ['content', `Content (${nType('content')})`]]
-          .map(([k, l]) => h('button', {
-            type: 'button', class: 'chip', 'aria-pressed': String(typeFilter === k), onclick: () => { typeFilter = k; draw(); },
-          }, l))),
-        shown.length ? h('div', { class: 'table-wrap' }, h(
-          'table',
-          null,
-          h('thead', null, h('tr', null, ['#', 'Priority', 'Finding', 'Type', 'Found on', 'Details', ''].map((t) => h('th', null, t)))),
-          h('tbody', null, shown.map((f) => h(
-            'tr',
-            null,
-            h('td', null, h('span', { class: `mark-num prio-${f.priority}` }, f.num)),
-            h('td', null, badge(PRIORITY_LABEL[f.priority], { high: 'error', medium: 'warning', low: 'added' }[f.priority])),
-            h('td', null, h('b', null, f.label)),
-            h('td', null, f.category),
-            h('td', { class: 'small' }, foundOn(f)),
-            h('td', { class: 'url' }, f.detail),
-            h('td', null, h('button', {
-              type: 'button',
-              class: 'btn small',
-              onclick: () => {
-                view = 'side';
-                selected = f.id;
-                draw();
-              },
-            }, 'View')),
-          ))),
-        )) : h('div', { class: 'empty' }, 'No findings for this filter.'),
-      );
     }
+
+    // the "what's different" list
+    const item = (f) => h(
+      'li',
+      null,
+      h(
+        'button',
+        {
+          type: 'button',
+          class: `fi${sel && f.id === sel.id ? ' selected' : ''}`,
+          dataset: { f: f.id },
+          // eslint-disable-next-line no-use-before-define
+          onclick: () => choose(f.id),
+          'aria-expanded': String(!!(sel && f.id === sel.id)),
+        },
+        h('span', { class: `pin static prio-${f.priority}` }, f.num),
+        h(
+          'span',
+          { class: 'fi-body' },
+          h('span', { class: 'fi-title' }, f.title),
+          h('span', { class: 'fi-hint' }, f.hint),
+          sel && f.id === sel.id && f.members ? h('span', { class: 'fi-detail' }, h('b', null, 'Places: '), f.members.map((m) => m.detail.replace(/^Gap between /, '').replace(/:.*$/, '')).join(' · ')) : null,
+          sel && f.id === sel.id && !f.members && f.detail && f.kind !== 'spacing' && !f.hint.includes(f.detail) ? h('span', { class: 'fi-detail' }, f.detail) : null,
+          h('span', { class: 'fi-meta' }, TYPE_INFO[f.type].label, ' · ', whereText(f)),
+        ),
+      ),
+    );
+    const groupBlock = ([prio, label, blurb]) => {
+      const list = shown.filter((f) => f.priority === prio);
+      if (!list.length) return null;
+      const body = h('ol', { class: 'fl' }, list.map(item));
+      if (prio === 'low') {
+        return h(
+          'details',
+          {
+            class: 'fg',
+            open: showMinor || (sel && sel.priority === 'low'),
+            ontoggle: (e) => {
+              if (showMinor !== e.target.open) { showMinor = e.target.open; draw(); }
+            },
+          },
+          h('summary', null, h('span', { class: `fg-title prio-${prio}` }, `${label} (${list.length})`), h('span', { class: 'fg-blurb' }, blurb)),
+          body,
+        );
+      }
+      return h('div', { class: 'fg' }, h('div', { class: `fg-title prio-${prio}` }, `${label} (${list.length})`), h('div', { class: 'fg-blurb' }, blurb), body);
+    };
+    const nType = (t) => all.filter((f) => f.type === t).length;
+    const panel = h(
+      'aside',
+      { class: 'fpanel', 'aria-label': 'What is different' },
+      h('div', { class: 'fp-head' }, h('b', null, 'What’s different'), h('span', { class: 'muted small' }, ` at ${vp}px`)),
+      h('div', { class: 'chips' }, [['all', `All (${all.length})`], ['content', `Content (${nType('content')})`], ['spacing', `Spacing (${nType('spacing')})`], ['visual', `Visual (${nType('visual')})`]]
+        .map(([k, l]) => h('button', {
+          type: 'button', class: 'chip', 'aria-pressed': String(typeFilter === k), onclick: () => { typeFilter = k; draw(); },
+        }, l))),
+      shown.length ? GROUPS.map(groupBlock) : h('div', { class: 'empty small' }, all.length ? 'Nothing of this type.' : 'No differences found at this width 🎉'),
+    );
+
+    const choose = (id) => {
+      selected = selected === id ? null : id;
+      draw();
+      if (selected) {
+        setTimeout(() => {
+          scrollTo(selected);
+          wrap.querySelector(`.fi[data-f="${selected}"]`)?.scrollIntoView({ block: 'nearest' });
+        }, 30);
+      }
+    };
 
     const zoomBtn = (d, label) => h('button', {
       type: 'button',
@@ -860,62 +940,36 @@ function visualTab(pair, r, focusId) {
     const exportBtn = STATIC
       ? h('button', { type: 'button', class: 'btn', onclick: () => window.print() }, '⬇ Print / PDF')
       : h('a', { class: 'btn', href: `/api/jobs/${state.job.id}/report.html` }, '⬇ Export report');
-    barEl = h('div', { class: 'finding-bar', role: 'status' });
+    let verdict = `At ${vp}px everything important matches.`;
+    if (counts.high) verdict = `At ${vp}px: ${counts.high} thing${counts.high > 1 ? 's' : ''} to fix first, ${counts.medium} worth checking.`;
+    else if (counts.medium) verdict = `At ${vp}px nothing critical — ${counts.medium} thing${counts.medium > 1 ? 's' : ''} worth checking.`;
 
     fill(
       wrap,
       h(
         'div',
         { class: 'review-head' },
-        h(
-          'div',
-          null,
-          h('h2', null, 'Difference review'),
-          h('p', { class: 'muted' }, `${pair.src?.title || 'Original'} compared with ${pair.edsInfo?.title || 'EDS'}`),
-        ),
+        h('div', null, h('h2', null, 'Difference review'), h('p', { class: 'muted' }, verdict)),
         exportBtn,
       ),
       h(
         'div',
         { class: 'cards review-cards' },
-        [['Total findings', findings.length, '', `Automated checks at ${vp}px`],
-          ['High priority', counts.high, counts.high ? 'bad' : 'good', 'Review first'],
-          ['Medium priority', counts.medium, counts.medium ? 'mid' : 'good', 'Visual / content review'],
-          ['Spacing & layout', spacingCount, spacingCount ? 'mid' : 'good', 'Gaps, padding, column width'],
-          ['Page height', h('span', null, (v.edsHeight || 0).toLocaleString(), h('small', null, ' px')), '', `EDS captured height · original ${(v.srcHeight || 0).toLocaleString()}px`]]
+        [['Fix first', counts.high, counts.high ? 'bad' : 'good', 'Clear differences'],
+          ['Worth checking', counts.medium, counts.medium ? 'mid' : 'good', 'Confirm if they matter'],
+          ['Minor', counts.low, '', 'Usually fine'],
+          ['Page height', h('span', null, (v.edsHeight || 0).toLocaleString(), h('small', null, ' px')), '', `EDS · original ${(v.srcHeight || 0).toLocaleString()}px`]]
           .map(([k, val, c, sub]) => h('div', { class: 'card' }, h('div', { class: 'k' }, k), h('div', { class: `v ${c}` }, val), h('div', { class: 'small muted' }, sub))),
       ),
-      v.patterns?.length ? h(
-        'div',
-        { class: 'patterns' },
-        h('b', null, `Recurring spacing differences at ${vp}px — fix once, globally`),
-        h('ul', null, v.patterns.map((pt) => h(
-          'li',
-          null,
-          h('span', { class: 'fb-measure' }, `↕ ${pt.delta > 0 ? '+' : ''}${pt.delta}px × ${pt.count}`),
-          ' ',
-          pt.text,
-          ' ',
-          h('button', {
-            type: 'button',
-            class: 'btn small',
-            onclick: () => {
-              view = 'side';
-              [selected] = pt.ids;
-              draw();
-            },
-          }, 'Show first'),
-        ))),
-      ) : null,
       v.error ? h('div', { class: 'error-box' }, v.error) : null,
-      !r.changes && !v.areas ? h('div', { class: 'error-box' }, 'This run was made before differences were marked — run the page again to see numbered findings.') : null,
+      !r.changes && !v.areas ? h('div', { class: 'error-box' }, 'This run was made before differences were marked — run the page again to see findings.') : null,
       h(
         'div',
         { class: 'review-panel' },
         h(
           'div',
           { class: 'review-toolbar' },
-          h('div', { class: 'seg tabs-seg', role: 'tablist' }, [['side', 'Side by side'], ['overlay', 'Overlay'], ['list', 'Findings list']].map(([k, l]) => h('button', {
+          h('div', { class: 'seg tabs-seg', role: 'tablist' }, [['side', 'Side by side'], ['overlay', 'Overlay']].map(([k, l]) => h('button', {
             type: 'button', role: 'tab', 'aria-selected': String(view === k), onclick: () => { view = k; draw(); },
           }, l))),
           h('span', { class: 'spacer' }),
@@ -924,32 +978,23 @@ function visualTab(pair, r, focusId) {
             'aria-pressed': String(x === current),
             onclick: () => { current = x; selected = null; draw(); },
           }, `${x.viewport}px`))),
-          view === 'list' ? null : h('label', { class: 'check small' }, 'Show ', h('select', {
-            'aria-label': 'Finding type to show',
-            onchange: (e) => { typeFilter = e.target.value; selected = null; draw(); },
-          }, Object.entries(TYPE_LABEL).map(([k, l]) => h('option', { value: k, selected: typeFilter === k }, l)))),
-          view === 'list' ? null : h('label', { class: 'check small' }, h('input', {
-            type: 'checkbox', checked: showLow, onchange: (e) => { showLow = e.target.checked; draw(); },
-          }), `Show low priority (${counts.low})`),
-          view === 'list' ? null : h('div', { class: 'zoom' }, zoomBtn(-0.25, 'Zoom out'), h('span', { class: 'zoom-val' }, `${Math.round(zoom * 100)}%`), zoomBtn(0.25, 'Zoom in')),
+          h('label', { class: 'check small' }, h('input', {
+            type: 'checkbox', checked: outlineAll, onchange: (e) => { outlineAll = e.target.checked; draw(); },
+          }), 'Outline all'),
+          h('div', { class: 'zoom' }, zoomBtn(-0.25, 'Zoom out'), h('span', { class: 'zoom-val' }, `${Math.round(zoom * 100)}%`), zoomBtn(0.25, 'Zoom in')),
         ),
-        view === 'list' ? null : barEl,
-        view === 'list' ? stage : h('div', { class: 'shot-scroll' }, stage),
+        h('div', { class: 'review-body' }, h('div', { class: 'shot-scroll' }, stage), panel),
       ),
-      h(
-        'p',
-        { class: 'small muted legend-line' },
-        h('span', { class: 'legend prio-high' }, h('span', { class: 'swatch' }), 'High'),
-        h('span', { class: 'legend prio-medium' }, h('span', { class: 'swatch' }), 'Medium'),
-        h('span', { class: 'legend prio-low' }, h('span', { class: 'swatch' }), 'Low'),
-        'Boxes mark areas that still differ after the two pages are lined up (content that only moved is ignored), plus text, heading, link and image differences. Hover a box for details.',
-      ),
+      h('p', { class: 'small muted' }, 'Pick an item in the list (or a numbered pin) to highlight it on both pages. Content that only moved up or down is ignored. Click the item again to clear the highlight.'),
     );
-    renderBar();
-    if (selected && view !== 'list') setTimeout(() => select(selected, true), 60);
   };
   draw();
-  if (focusVp) setTimeout(() => wrap.scrollIntoView({ block: 'start' }), 30);
+  if (selected) {
+    setTimeout(() => {
+      wrap.scrollIntoView({ block: 'start' });
+      scrollTo(selected);
+    }, 60);
+  }
   return wrap;
 }
 

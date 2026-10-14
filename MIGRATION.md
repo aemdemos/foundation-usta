@@ -5587,3 +5587,8 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
   gap is ~2px on the original vs ~25px on EDS (5 places), so a global heading margin-bottom needs aligning with
   the source. Section gaps also vary by ±40–90px, e.g. text → yellow band +39px and image → "Impact Societies"
   +56px. Not fixed yet; reported only.
+- **Decluttered review (same day, after user feedback "too cluttered").** Drawing every finding as a box at once
+  was unreadable. The view now shows numbered pins plus a grouped plain-language list (Fix first / Worth checking /
+  Minor collapsed). Only the selected finding is outlined, on both pages, with the rest dimmed. Recurring spacing
+  differences are merged into one item, and pixel areas already explained by a spacing/content finding are hidden.
+  Spacing is "fix first" only at ≥96px (it was ≥48, which put 10 spacing items in Fix first on get-involved).

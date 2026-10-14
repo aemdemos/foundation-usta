@@ -579,10 +579,11 @@ const makeLocators = (src, eds) => ({
   eds: Object.fromEntries(Object.keys(MARK_KEYS).map((k) => [k, locator(eds, k)])),
 });
 
+// spacing is rarely "broken": only very large gaps are fix-first
 const spacingPriority = (d) => {
   const a = Math.abs(d);
-  if (a >= 48) return 'high';
-  return a >= 20 ? 'medium' : 'low';
+  if (a >= 96) return 'high';
+  return a >= 24 ? 'medium' : 'low';
 };
 const signed = (n) => `${n > 0 ? '+' : ''}${n}px`;
 const overlapsX = (p, q) => p[0] < q[0] + q[2] && q[0] < p[0] + p[2];
