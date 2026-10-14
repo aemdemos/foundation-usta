@@ -597,6 +597,14 @@ function locateLink(pair, id) {
 }
 
 const pctOf = (n, total) => `${(100 * n) / total}%`;
+const SPACING_CATS = ['Spacing', 'Layout'];
+const typeOf = (f) => {
+  if (SPACING_CATS.includes(f.category)) return 'spacing';
+  return f.category === 'Visual' ? 'visual' : 'content';
+};
+const TYPE_LABEL = {
+  all: 'All', visual: 'Visual', spacing: 'Spacing & layout', content: 'Content',
+};
 
 const foundOn = (f) => {
   if (f.src && f.eds) return 'Both pages';
@@ -636,6 +644,7 @@ function visualTab(pair, r, focusId) {
   let overlayMode = 'blend';
   let zoom = 1;
   let prioFilter = 'all';
+  let typeFilter = 'all';
   let showLow = false;
   let selected = focusVp ? focusId : null;
   const wrap = h('div', { class: 'review' });
@@ -663,7 +672,7 @@ function visualTab(pair, r, focusId) {
       f ? [
         h('span', { class: `mark-num prio-${f.priority}` }, f.num),
         h('span', { class: `badge ${{ high: 'error', medium: 'warning', low: 'added' }[f.priority]}` }, PRIORITY_LABEL[f.priority]),
-        h('span', { class: 'fb-text' }, h('b', null, f.label), ` · ${f.category} — `, f.detail),
+        h('span', { class: 'fb-text' }, h('b', null, f.label), f.measure ? h('span', { class: 'fb-measure' }, f.measure) : null, ` · ${f.category} — `, f.detail),
       ] : h('span', { class: 'muted' }, visible.length ? `${visible.length} findings marked at ${current.viewport}px — click a numbered box, or step through them →` : 'No high or medium priority differences at this viewport.'),
       h('span', { class: 'spacer' }),
       h('button', {
@@ -700,7 +709,9 @@ function visualTab(pair, r, focusId) {
     findings = findingsAt(r, vp);
     const counts = { high: 0, medium: 0, low: 0 };
     findings.forEach((f) => { counts[f.priority] += 1; });
-    visible = showLow ? findings : findings.filter((f) => f.priority !== 'low' || f.id === selected);
+    const spacingCount = findings.filter((f) => SPACING_CATS.includes(f.category)).length;
+    visible = findings.filter((f) => f.id === selected
+      || ((showLow || f.priority !== 'low') && (typeFilter === 'all' || typeOf(f) === typeFilter)));
 
     const markEl = (f, box, H, dashed) => {
       const [x, y, w, bh] = box;
@@ -709,7 +720,7 @@ function visualTab(pair, r, focusId) {
         'button',
         {
           type: 'button',
-          class: `mark prio-${f.priority}${dashed ? ' on-original' : ''}${bh <= 6 ? ' thin' : ''}${f.id === selected ? ' selected' : ''}`,
+          class: `mark prio-${f.priority} kind-${f.kind}${dashed ? ' on-original' : ''}${bh <= 6 ? ' thin' : ''}${f.id === selected ? ' selected' : ''}`,
           dataset: { f: f.id },
           style: {
             left: pctOf(Math.max(0, x - pad), W),
@@ -722,6 +733,7 @@ function visualTab(pair, r, focusId) {
           onclick: () => select(f.id, false),
         },
         h('span', { class: 'mark-num' }, f.num),
+        f.measure ? h('span', { class: 'mark-measure' }, f.measure) : null,
       );
     };
     // side: 'src' | 'eds' | 'both' (overlay: EDS box, else dashed original box)
@@ -794,13 +806,19 @@ function visualTab(pair, r, focusId) {
         h('div', { class: 'shot-grid single' }, h('div', { class: 'shot', style: cap }, canvas(H, 'both', layers))),
       );
     } else {
-      const shown = findings.filter((f) => prioFilter === 'all' || f.priority === prioFilter);
+      const shown = findings.filter((f) => (prioFilter === 'all' || f.priority === prioFilter)
+        && (typeFilter === 'all' || typeOf(f) === typeFilter));
+      const nType = (t) => findings.filter((f) => typeOf(f) === t).length;
       stage = h(
         'div',
         { class: 'findings-list' },
         h('div', { class: 'chips' }, [['all', `All (${findings.length})`], ['high', `High (${counts.high})`], ['medium', `Medium (${counts.medium})`], ['low', `Low (${counts.low})`]]
           .map(([k, l]) => h('button', {
             type: 'button', class: 'chip', 'aria-pressed': String(prioFilter === k), onclick: () => { prioFilter = k; draw(); },
+          }, l))),
+        h('div', { class: 'chips' }, [['all', 'All types'], ['visual', `Visual (${nType('visual')})`], ['spacing', `Spacing & layout (${nType('spacing')})`], ['content', `Content (${nType('content')})`]]
+          .map(([k, l]) => h('button', {
+            type: 'button', class: 'chip', 'aria-pressed': String(typeFilter === k), onclick: () => { typeFilter = k; draw(); },
           }, l))),
         shown.length ? h('div', { class: 'table-wrap' }, h(
           'table',
@@ -863,9 +881,32 @@ function visualTab(pair, r, focusId) {
         [['Total findings', findings.length, '', `Automated checks at ${vp}px`],
           ['High priority', counts.high, counts.high ? 'bad' : 'good', 'Review first'],
           ['Medium priority', counts.medium, counts.medium ? 'mid' : 'good', 'Visual / content review'],
+          ['Spacing & layout', spacingCount, spacingCount ? 'mid' : 'good', 'Gaps, padding, column width'],
           ['Page height', h('span', null, (v.edsHeight || 0).toLocaleString(), h('small', null, ' px')), '', `EDS captured height · original ${(v.srcHeight || 0).toLocaleString()}px`]]
           .map(([k, val, c, sub]) => h('div', { class: 'card' }, h('div', { class: 'k' }, k), h('div', { class: `v ${c}` }, val), h('div', { class: 'small muted' }, sub))),
       ),
+      v.patterns?.length ? h(
+        'div',
+        { class: 'patterns' },
+        h('b', null, `Recurring spacing differences at ${vp}px — fix once, globally`),
+        h('ul', null, v.patterns.map((pt) => h(
+          'li',
+          null,
+          h('span', { class: 'fb-measure' }, `↕ ${pt.delta > 0 ? '+' : ''}${pt.delta}px × ${pt.count}`),
+          ' ',
+          pt.text,
+          ' ',
+          h('button', {
+            type: 'button',
+            class: 'btn small',
+            onclick: () => {
+              view = 'side';
+              [selected] = pt.ids;
+              draw();
+            },
+          }, 'Show first'),
+        ))),
+      ) : null,
       v.error ? h('div', { class: 'error-box' }, v.error) : null,
       !r.changes && !v.areas ? h('div', { class: 'error-box' }, 'This run was made before differences were marked — run the page again to see numbered findings.') : null,
       h(
@@ -883,6 +924,10 @@ function visualTab(pair, r, focusId) {
             'aria-pressed': String(x === current),
             onclick: () => { current = x; selected = null; draw(); },
           }, `${x.viewport}px`))),
+          view === 'list' ? null : h('label', { class: 'check small' }, 'Show ', h('select', {
+            'aria-label': 'Finding type to show',
+            onchange: (e) => { typeFilter = e.target.value; selected = null; draw(); },
+          }, Object.entries(TYPE_LABEL).map(([k, l]) => h('option', { value: k, selected: typeFilter === k }, l)))),
           view === 'list' ? null : h('label', { class: 'check small' }, h('input', {
             type: 'checkbox', checked: showLow, onchange: (e) => { showLow = e.target.checked; draw(); },
           }), `Show low priority (${counts.low})`),

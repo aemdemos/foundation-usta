@@ -458,7 +458,7 @@ function visualFindings(vp, areas = []) {
     let f;
     if (!content) {
       f = {
-        kind: 'spacing', priority: 'low', label: 'Spacing differs', detail: `Vertical white space differs by about ${Math.abs(eh - mh)}px (original ${mh}px vs EDS ${eh}px).`,
+        kind: 'spacing', priority: Math.abs(eh - mh) >= 24 ? 'medium' : 'low', label: 'Spacing differs', measure: `↕ ${eh - mh > 0 ? '+' : ''}${eh - mh}px`, detail: `Vertical white space differs by about ${Math.abs(eh - mh)}px (original ${mh}px vs EDS ${eh}px).`,
       };
     } else if (missing.length && extra.length) {
       f = {
@@ -574,15 +574,201 @@ const clip = (t, n = 160) => {
 };
 const HEADING_TAG = /^h[1-6]$/;
 
+const makeLocators = (src, eds) => ({
+  src: Object.fromEntries(Object.keys(MARK_KEYS).map((k) => [k, locator(src, k)])),
+  eds: Object.fromEntries(Object.keys(MARK_KEYS).map((k) => [k, locator(eds, k)])),
+});
+
+const spacingPriority = (d) => {
+  const a = Math.abs(d);
+  if (a >= 48) return 'high';
+  return a >= 20 ? 'medium' : 'low';
+};
+const signed = (n) => `${n > 0 ? '+' : ''}${n}px`;
+const overlapsX = (p, q) => p[0] < q[0] + q[2] && q[0] < p[0] + p[2];
+const bottom = (b) => b[1] + b[3];
+
+/**
+ * Spacing & layout: compares the measured boxes of elements that exist on both pages
+ * (matched text blocks, headings and images) at every viewport.
+ *  - vertical gap to the element directly below (margins / section padding)
+ *  - left edge (horizontal padding / margin), skipped for centred content
+ *  - width of multi-line text (column width → different wrapping) and image size
+ */
+function layoutFindings(r, L) {
+  const pairs = [];
+  r.headings.ops.filter((o) => o.type === 'equal' || o.type === 'changed').forEach((o) => pairs.push({
+    a: L.src.headings(o.a), b: L.eds.headings(o.b), name: `heading “${clip(o.a.text, 40)}”`, text: true, type: 'heading',
+  }));
+  r.text.ops.filter((o) => (o.type === 'equal' || o.type === 'changed') && !HEADING_TAG.test(o.a.tag))
+    .forEach((o) => pairs.push({
+      a: L.src.blocks(o.a), b: L.eds.blocks(o.b), name: `“${clip(o.a.text, 40)}”`, text: true, type: o.a.tag === 'a' || o.a.text.length <= 24 ? 'button/link' : 'text',
+    }));
+  const used = new Set();
+  r.media.srcImages.filter((i) => normalizeText(i.alt)).forEach((i) => {
+    const k = normalizeText(i.alt).toLowerCase();
+    const j = r.media.edsImages.find((e) => !used.has(e) && normalizeText(e.alt).toLowerCase() === k);
+    if (!j) return;
+    used.add(j);
+    pairs.push({
+      a: L.src.images(i), b: L.eds.images(j), name: `image “${clip(i.alt, 40)}”`, image: true, type: 'image',
+    });
+  });
+
+  const out = {};
+  r.visual.forEach((v) => {
+    const vp = v.viewport;
+    const items = pairs.filter((p) => p.a?.[vp] && p.b?.[vp])
+      .map((p) => ({ ...p, A: p.a[vp], B: p.b[vp] }))
+      .sort((p, q) => p.A[1] - q.A[1]);
+    const found = [];
+
+    // 1. vertical gaps: each item vs the nearest item directly below it (same column on both pages)
+    const targets = new Set();
+    items.forEach((p) => {
+      const below = items.filter((q) => q !== p && !targets.has(q)
+        && q.A[1] >= bottom(p.A) - 2 && q.B[1] >= bottom(p.B) - 2
+        && overlapsX(p.A, q.A) && overlapsX(p.B, q.B));
+      if (!below.length) return;
+      const q = below.reduce((m, x) => (x.A[1] < m.A[1] ? x : m));
+      targets.add(q);
+      const gapA = q.A[1] - bottom(p.A);
+      const gapB = q.B[1] - bottom(p.B);
+      const d = gapB - gapA;
+      if (Math.abs(d) < 12 || gapA > 900) return;
+      const span = (P, Q) => {
+        const x0 = Math.min(P[0], Q[0]);
+        const x1 = Math.max(P[0] + P[2], Q[0] + Q[2]);
+        return [x0, bottom(P), x1 - x0, Math.max(6, Q[1] - bottom(P))];
+      };
+      found.push({
+        kind: 'spacing',
+        category: 'Spacing',
+        priority: spacingPriority(d),
+        label: d > 0 ? 'More space on EDS' : 'Less space on EDS',
+        measure: `↕ ${signed(d)}`,
+        detail: `Gap between ${p.name} and ${q.name}: ${gapA}px on the original vs ${gapB}px on EDS (${signed(d)}).`,
+        src: span(p.A, q.A),
+        eds: span(p.B, q.B),
+        transition: `${p.type} → ${q.type}`,
+        delta: d,
+      });
+    });
+
+    // 2. horizontal offset and 3. width — consecutive items with the same delta are grouped
+    const group = (list, delta, make) => {
+      let run = [];
+      const flush = () => {
+        if (run.length) found.push(make(run));
+        run = [];
+      };
+      list.forEach((p) => {
+        const d = delta(p);
+        if (d == null) { flush(); return; }
+        if (run.length && Math.abs(delta(run[0]) - d) > 3) flush();
+        run.push(p);
+      });
+      flush();
+    };
+    const centred = (p) => Math.abs((p.A[0] + p.A[2] / 2) - (p.B[0] + p.B[2] / 2)) < 4;
+    group(items, (p) => {
+      const d = p.B[0] - p.A[0];
+      return Math.abs(d) >= 8 && !centred(p) ? d : null;
+    }, (run) => {
+      const d = run[0].B[0] - run[0].A[0];
+      return {
+        kind: 'padding',
+        category: 'Layout',
+        priority: Math.abs(d) >= 24 ? 'medium' : 'low',
+        label: d > 0 ? 'Content starts further right on EDS' : 'Content starts further left on EDS',
+        measure: `↔ ${signed(d)}`,
+        detail: `Left edge of ${run.length > 1 ? `${run.length} items from ${run[0].name}` : run[0].name} is at ${run[0].A[0]}px on the original vs ${run[0].B[0]}px on EDS (${signed(d)}) — horizontal padding/margin differs.`,
+        src: union(run.map((p) => p.A)),
+        eds: union(run.map((p) => p.B)),
+      };
+    });
+    group(items.filter((p) => (p.text && p.A[3] >= 36 && p.B[3] >= 36) || p.image), (p) => {
+      const d = p.B[2] - p.A[2];
+      const dh = p.image ? p.B[3] - p.A[3] : 0;
+      return Math.abs(d) >= (p.image ? 8 : 20) || Math.abs(dh) >= 8 ? d : null;
+    }, (run) => {
+      const p = run[0];
+      const d = p.B[2] - p.A[2];
+      if (p.image) {
+        return {
+          kind: 'size',
+          category: 'Layout',
+          priority: Math.abs(d) >= 40 || Math.abs(p.B[3] - p.A[3]) >= 40 ? 'medium' : 'low',
+          label: 'Image size differs',
+          measure: `${p.A[2]}×${p.A[3]} → ${p.B[2]}×${p.B[3]}`,
+          detail: `${p.name} renders at ${p.A[2]}×${p.A[3]}px on the original vs ${p.B[2]}×${p.B[3]}px on EDS.`,
+          src: union(run.map((x) => x.A)),
+          eds: union(run.map((x) => x.B)),
+        };
+      }
+      return {
+        kind: 'width',
+        category: 'Layout',
+        priority: Math.abs(d) >= 40 ? 'medium' : 'low',
+        label: d > 0 ? 'Text column wider on EDS' : 'Text column narrower on EDS',
+        measure: `↔ ${p.A[2]} → ${p.B[2]}px`,
+        detail: `${run.length > 1 ? `${run.length} text blocks from ${p.name} are` : `${p.name} is`} ${p.A[2]}px wide on the original vs ${p.B[2]}px on EDS (${signed(d)}), so lines wrap differently.`,
+        src: union(run.map((x) => x.A)),
+        eds: union(run.map((x) => x.B)),
+      };
+    });
+    out[vp] = found;
+  });
+  return out;
+}
+
+/**
+ * Recurring spacing differences (same element-type transition, similar delta, 3+ places) —
+ * these usually come from one global CSS rule, so they're worth fixing once.
+ */
+function spacingPatterns(layout) {
+  const out = {};
+  Object.entries(layout).forEach(([vp, found]) => {
+    const groups = new Map();
+    found.filter((f) => f.kind === 'spacing').forEach((f) => {
+      const key = `${f.transition}|${Math.round(f.delta / 6)}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(f);
+    });
+    out[vp] = [...groups.values()].filter((g) => g.length >= 3).map((g) => {
+      const avg = Math.round(g.reduce((a, f) => a + f.delta, 0) / g.length);
+      return {
+        transition: g[0].transition,
+        delta: avg,
+        count: g.length,
+        ids: g.map((f) => f.id),
+        text: `${g[0].transition} gap is ${avg > 0 ? `${avg}px larger` : `${-avg}px smaller`} on EDS in ${g.length} places — probably one global spacing rule (margin/padding).`,
+      };
+    }).sort((x, y) => y.count - x.count);
+  });
+  return out;
+}
+
+/** Add spacing/layout findings to each viewport; drop pixel "spacing" areas they already explain. */
+function mergeLayout(r, layout) {
+  r.visual.forEach((v) => {
+    const extra = layout[v.viewport] || [];
+    const explained = (a) => a.kind === 'spacing' && extra.some((f) => f.kind === 'spacing'
+      && f.eds[1] <= bottom(a.eds) + 16 && a.eds[1] <= bottom(f.eds) + 16);
+    v.areas = [
+      ...v.areas.filter((a) => !explained(a)),
+      ...extra.map((f, i) => Object.assign(f, { id: `l${v.viewport}-${i + 1}` })),
+    ];
+  });
+  const patterns = spacingPatterns(layout);
+  r.visual.forEach((v) => { v.patterns = patterns[v.viewport] || []; });
+}
+
 /**
  * Every located difference becomes a numbered "change" with its box on the original and/or
  * EDS screenshot at each viewport. Ops/items get a changeId so issues and tables can link to it.
  */
-function buildChanges(src, eds, r) {
-  const L = {
-    src: Object.fromEntries(Object.keys(MARK_KEYS).map((k) => [k, locator(src, k)])),
-    eds: Object.fromEntries(Object.keys(MARK_KEYS).map((k) => [k, locator(eds, k)])),
-  };
+function buildChanges(r, L) {
   const changes = [];
   const add = (target, c) => {
     if ((!c.src && !c.eds) || changes.length >= 400) return;
@@ -766,9 +952,17 @@ function buildIssues(r) {
     .forEach((row) => add('info', 'Typography', `${row.selector} present on original but not on EDS`));
 
   r.visual.forEach((v) => {
-    v.areas.filter((a) => a.priority !== 'low').slice(0, 8).forEach((a) => add(
+    v.areas.filter((a) => a.priority !== 'low' && a.category === 'Visual').slice(0, 8).forEach((a) => add(
       a.priority === 'high' ? 'warning' : 'info',
       'Visual',
+      `${a.label} @ ${v.viewport}px`,
+      a.detail,
+      a.id,
+    ));
+    (v.patterns || []).forEach((pt) => add('warning', 'Spacing', `Recurring spacing difference @ ${v.viewport}px`, pt.text, pt.ids[0]));
+    v.areas.filter((a) => a.priority !== 'low' && a.category !== 'Visual').slice(0, 10).forEach((a) => add(
+      a.priority === 'high' ? 'warning' : 'info',
+      a.category,
       `${a.label} @ ${v.viewport}px`,
       a.detail,
       a.id,
@@ -807,7 +1001,9 @@ export function comparePair(src, eds, { diffs, linkStatus } = {}) {
     },
     linkStatus: linkStatus || null,
   };
-  r.changes = buildChanges(src, eds, r);
+  const L = makeLocators(src, eds);
+  r.changes = buildChanges(r, L);
+  mergeLayout(r, layoutFindings(r, L));
   r.scores = scoreAll(r);
   r.issues = buildIssues(r);
   const errors = r.issues.filter((i) => i.severity === 'error').length;

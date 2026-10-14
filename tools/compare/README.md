@@ -32,6 +32,18 @@ Summary cards (total / high / medium findings, page height) and three views:
 - **Overlay** – blend (opacity), swipe, or heatmap (red = differing pixels, blue = rows only on EDS).
 - **Findings list** – every finding with priority, type, where it was found and a **View** button.
 
+**Spacing & layout** (striped boxes with the measured difference, e.g. `↕ +39px`, `↔ 815 → 930px`):
+measured from the real element boxes of everything that exists on both pages (text blocks,
+headings, images) at every width —
+- *More / Less space on EDS*: gap between an element and the one directly below it (margins, section padding);
+- *Content starts further left/right*: left edge moved (horizontal padding/margin), centred content ignored;
+- *Text column wider/narrower*: multi-line text width (explains different line wrapping);
+- *Image size differs*.
+
+Spacing differences that repeat (same element transition, e.g. heading → text, similar delta, 3+
+times) are summarised above the screenshots as **Recurring spacing differences — fix once, globally**.
+Use **Show: Spacing & layout** in the toolbar to see only these boxes.
+
 Findings combine the visual areas with located content differences (missing/changed/extra text,
 headings, links, broken images / missing alt). Rows in the Issues, Text, Headings and Links tabs
 have a **📍 Show** link that opens the screenshot at that finding.

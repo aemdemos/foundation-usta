@@ -308,7 +308,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .review-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 4px; }
 .review-head h2 { margin: 0; font-size: 20px; }
 .review-head p { margin: 4px 0 0; }
-.review-cards { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 16px; }
+.review-cards { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 16px; }
 .review-cards .card { padding: 16px 18px; }
 .review-cards .v { font-size: 28px; margin: 4px 0 2px; }
 .review-cards .v small { font-size: 13px; font-weight: 600; }
@@ -428,6 +428,28 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 .mark .mark-num { position: absolute; top: 3px; left: 3px; }
+
+/* spacing / padding / width findings: striped fill + the measured difference */
+.mark.kind-spacing, .mark.kind-padding, .mark.kind-width, .mark.kind-size {
+  border-style: dashed;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mk) 22%, transparent) 0 6px, transparent 6px 12px);
+}
+
+.mark-measure {
+  position: absolute;
+  top: 3px;
+  left: 34px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: #fff;
+  color: var(--mk);
+  border: 1.5px solid var(--mk);
+  font: 700 11px/14px system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.mark.thin .mark-measure { top: auto; bottom: 2px; }
+.fb-measure { margin: 0 6px; padding: 1px 6px; border-radius: 5px; background: var(--info-soft); font-weight: 700; font-size: 12px; }
 .mark.thin .mark-num { top: auto; bottom: 2px; }
 .legend { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .swatch { width: 12px; height: 12px; border-radius: 3px; border: 2px solid var(--mk); background: color-mix(in srgb, var(--mk) 18%, transparent); }
@@ -485,3 +507,8 @@ ins { background: #c9e9d2; color: #0d4d24; text-decoration: none; border-radius:
   .panel { box-shadow: none; break-inside: avoid; }
   .shot-scroll { height: auto; overflow: visible; }
 }
+
+.patterns { margin: 0 0 16px; padding: 12px 16px; border: 1px solid #f3d9a4; border-radius: var(--radius); background: var(--mid-soft); }
+.patterns ul { margin: 6px 0 0; padding-left: 18px; }
+.patterns li { margin: 6px 0; }
+.review-toolbar select { padding: 5px 8px; border: 1px solid #cdd2db; border-radius: 7px; background: #fff; }

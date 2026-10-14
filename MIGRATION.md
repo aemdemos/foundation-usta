@@ -5580,3 +5580,10 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
   missing/extra sections on get-involved); one global monotonic alignment fixed it. Without the drift tolerance,
   1–3px line-height drift flagged every mobile text line. Result on get-involved @1440: mismatch 6.5% → 1.8%,
   2 high findings. One of them is real: the floating "Donate" side tab renders blank on EDS.
+- **Spacing & layout findings (same day).** The checker measures matched elements (text blocks, headings, images)
+  on both pages at each width and reports: the gap to the element below (±12px+; ≥20 medium, ≥48 high), left-edge
+  shifts (padding/margin; centred content skipped), multi-line text width (wrapping), and image size. Repeats are
+  grouped as "recurring" patterns. **Open site issue it surfaced (get-involved, 1440):** every heading → paragraph
+  gap is ~2px on the original vs ~25px on EDS (5 places), so a global heading margin-bottom needs aligning with
+  the source. Section gaps also vary by ±40–90px, e.g. text → yellow band +39px and image → "Impact Societies"
+  +56px. Not fixed yet; reported only.
