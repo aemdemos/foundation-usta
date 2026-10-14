@@ -5550,3 +5550,25 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
 - **Skipped on purpose:** decorative images (`alt=""`, so no empty tooltips) and images that already have a `title`
   (an authored title wins).
 - **Verified:** homepage — 12/13 images get a title equal to their alt; the 1 decorative image gets none.
+
+### 2026-10-14 — Validation tooling: Page Parity Checker (original vs EDS UI)
+- **Request:** replace manual side-by-side validation with a UI where you enter original + EDS URLs, see how the two
+  versions differ, and export a report.
+- **Tool:** `npm run compare` → local UI (`tools/compare/`, see its README). It runs every pair in headless Chromium
+  at the selected viewports (defaults come from `tools/quality/breakpoints.json`) and checks: pixel diff
+  (side-by-side / swipe / overlay / diff map), text-block LCS diff with word-level highlights, heading outline, links
+  (normalised destinations), images/alt/embeds/forms, metadata, computed typography, console + failed requests.
+  Each page gets a score, an issue list, and a manual verdict + notes. Exports: a self-contained HTML report, a CSV of
+  issues and JSON. Runs are stored in `tools/compare/reports/` (git-ignored); `tools/compare/` is in `.hlxignore`.
+- **Defaults for this site:** the original has no `<main>`/`<header>`, so content = `<body>` minus
+  `.cmp-experiencefragment--header/--footer`. The "stickyButton" feedback iframe is hidden before screenshots.
+- **First findings (not fixed, reported only):** home — h4 "Make a donation" reads "Make a donation to us" on EDS;
+  the two "LEARN MORE" links point to different `#anchors` (`#FundingPriorities` → `#our-strategic-priorities`,
+  `#sustainable` → `#sustained-support-sustainable-impact`); `.aem.live` serves `robots: noindex, nofollow`.
+  who-we-are — the h6 "Chris Evert, Chairperson" is not a heading on EDS; the above-the-fold area at 375 differs ~35%.
+- **Change markers (same day).** The checker records where each text block / heading / link / image is rendered at
+  every viewport (document-space boxes, measured before the screenshot). Each located difference becomes a numbered
+  change drawn on the screenshots (red missing, orange changed, blue extra, purple broken/no alt), with a clickable
+  change list and "📍 Show" links from the Issues/Text/Headings/Links tabs. Gotcha: the original serves different
+  heading copy per breakpoint ("Make a donation" on desktop vs "Make a donation to us" at 375), so the home-page
+  heading change is desktop-only. Content is compared at the widest viewport; markers are placed per viewport.
