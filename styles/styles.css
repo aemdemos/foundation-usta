@@ -816,28 +816,36 @@ main .section.wide > div {
 /* compact-headings — the text sits straight under its heading instead of the
    default one-blank-line (24px) rhythm. Opt-in per section via section-metadata
    `Style | compact-headings`, on ANY page (composable, e.g. `center, medium,
-   compact-headings`). Two kinds of heading:
-   - a real heading (h1–h6): heading margin-bottom 0, next paragraph margin-top 0
-     — e.g. get-involved "Your gift powers our mission." (text gap 12px <768 /
-     18px >=768 for a 44/76px H2); columns text cells in the section follow too
-     (blocks/columns/columns.css);
+   compact-headings`). Mirrors the source, where these headings carry margin 0 /
+   padding 0 and the paragraph has margin 0 (get-involved: text gap 12px <768 /
+   18px >=768 for a 44/76px H2). The heading's TOP spacing is left as it is.
+   Covers, inside the section:
+   - a heading in default content or in a columns text cell (the `:is()` list
+     also outranks the columns block's own `h + p { margin-top: 24px }` from 992):
+     heading margin-bottom 0, next paragraph margin-top 0;
+   - a heading that ENDS the default content and introduces the block below it
+     (e.g. "The numbers speak to it." → cards): heading margin-bottom 0 and no
+     32/40px default-content → block gap;
    - a "heading line": a paragraph ENDING in bold + underlined text, e.g. news
      article "About the USTA" (Kimmelman) — no space below it or above the next
-     paragraph (source text gap 7px <768 / 4px >=768). This was the original,
-     news-only use (moved here from templates/news/news.css). */
-main .section.compact-headings > .default-content-wrapper > :is(h1, h2, h3, h4, h5, h6):has(+ p) {
-  margin-bottom: 0;
-}
-
-main .section.compact-headings > .default-content-wrapper > :is(h1, h2, h3, h4, h5, h6) + p {
-  margin-top: 0;
-}
-
+     paragraph (source text gap 7px <768 / 4px >=768). */
 main .section.compact-headings p:has(> :is(strong, b):last-child > u) {
   margin-bottom: 0;
 }
 
 main .section.compact-headings p:has(> :is(strong, b):last-child > u) + p {
+  margin-top: 0;
+}
+
+main .section.compact-headings :is(.default-content-wrapper, .columns.block > div > div) > :is(h1, h2, h3, h4, h5, h6):is(:has(+ p), :last-child) {
+  margin-bottom: 0;
+}
+
+main .section.compact-headings :is(.default-content-wrapper, .columns.block > div > div) > :is(h1, h2, h3, h4, h5, h6) + p {
+  margin-top: 0;
+}
+
+main .section.compact-headings > .default-content-wrapper:has(> :is(h1, h2, h3, h4, h5, h6):last-child) + div[class$="-wrapper"] {
   margin-top: 0;
 }
 
@@ -1015,6 +1023,7 @@ main .section.split-5-6 > .default-content-wrapper > :first-child {
   margin-bottom: 0;
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- different sections */
 main .section.split-5-6 > .default-content-wrapper + div[class$="-wrapper"]:not(.default-content-wrapper) {
   margin-top: 16px;
 }

@@ -56,18 +56,6 @@ body:not(.news) .columns:not(.feature, .stats, .statement, .profile) > div > div
   }
 }
 
-/* Section style `compact-headings` (styles.css): the first paragraph of a text
-   cell sits straight under its heading at every width (source get-involved
-   Individual Supporters / Impact Societies / YPI / Planned Giving: text gap 12px
-   <768 / 18px >=768), overriding the 24px heading→p rhythm above. */
-main .section.compact-headings .columns:not(.feature, .stats, .statement, .profile) > div > div > :is(h1, h2, h3, h4, h5, h6):has(+ p) {
-  margin-bottom: 0;
-}
-
-main .section.compact-headings .columns:not(.feature, .stats, .statement, .profile) > div > div > :is(h1, h2, h3, h4, h5, h6) + p {
-  margin-top: 0;
-}
-
 /* Bold-italic text (e.g. the "Chris Evert, Chairperson" attribution): the source
    uses the real Graphik Semibold face, not a synthetic bold of Graphik Regular. */
 .columns em strong {
