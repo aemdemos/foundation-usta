@@ -104,6 +104,20 @@ body:not(.news) .columns:not(.feature, .stats, .statement, .profile) > div > div
   .columns > div > div {
     flex: 1;
   }
+
+  /* TEXT-LEFT rows (text cell first, image cell second): from 992 up to and
+     INCLUDING 1200px the source insets the row 15px each side, so both cells are
+     15px narrower than an image-left row and the text starts 15px further in (text
+     x=30 w=555 vs 15/570 @1200, 30/451 @992). From 1201px there is no inset
+     (16/570 @1201, 135/570 @1440). Measured on every text-left row of
+     get-involved, who-we-are, our-impact, YPI, special-funds; it decides e.g.
+     "Young Professional / Initiative" wrapping @1200. The switch sits 1px above our
+     1200 breakpoint, so it's a step function: 15px while 100vw <= 1200, else 0.
+     Not in `split-5-6` sections (own 5/6 column sizing; source not inset there —
+     chris-evert-50th-anniversary x=15 w=383 @992). */
+  body:not(.news) .section:not(.split-5-6) .columns:not(.feature, .stats, .statement, .profile) > div:has(> div:first-child:not(.columns-img-col) + .columns-img-col:last-child) {
+    margin-inline: clamp(0px, (1201px - 100vw) * 15, 15px);
+  }
 }
 
 /* columns-feature — two-column feature block (video + image-collage variants) */
