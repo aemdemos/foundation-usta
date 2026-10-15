@@ -5598,3 +5598,9 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
   width for a single page (`POST /api/jobs/:id/viewport`). It runs through the same queue and re-runs comparePair
   over the saved raw captures (`p<n>-capture.json`, written per page since this change). Runs made earlier can't
   add widths; re-run those pages.
+- **2026-10-15 — same-row merge + review workflow.** Findings of the same kind whose EDS boxes share a horizontal band
+  (≥50% vertical overlap, ≥30% on the original) are merged into one "N columns in this row" item. Example from the
+  user: the gaps under both columns of a two-column section showed as #8 and #9. Get-involved @1440 went from 35 to
+  24 findings. Each finding can be marked ✓ looks fine / ✗ needs fix (`POST /api/jobs/:id/review`, stored as
+  `pair.reviews`), which auto-advances to the next unreviewed one, with a progress bar and ↑/↓/O/X shortcuts. The
+  page header is compacted to one row with score chips.

@@ -527,32 +527,29 @@ function pairDetail(pair, tab, changeId) {
   }
   const s = r.scores;
   const ringColor = { good: 'var(--good)', mid: 'var(--mid)', bad: 'var(--bad)' }[tone(s.overall)];
-  const bars = [['Visual', s.visual], ['Text', s.text], ['Headings', s.headings], ['Links', s.links], ['Images & media', s.media], ['Typography', s.typography], ['Metadata', s.meta]]
-    .map(([label, v]) => h(
-      'div',
-      null,
-      h('div', { class: 'bar-label' }, h('span', null, label), h('b', null, v ?? '–')),
-      h('div', { class: 'bar' }, h('div', { style: { width: `${v ?? 0}%`, background: `var(--${{ good: 'good', mid: 'mid', bad: 'bad' }[tone(v)] || 'line'})` } })),
-    ));
+  const scoreChips = [['Visual', s.visual], ['Text', s.text], ['Headings', s.headings], ['Links', s.links], ['Images', s.media], ['Typography', s.typography], ['Metadata', s.meta]]
+    .map(([label, v]) => h('span', { class: `score-chip ${tone(v)}`, title: `${label} score` }, label, ' ', h('b', null, v ?? '–')));
   const head = h(
     'section',
-    { class: 'panel' },
-    h('a', { class: 'backlink', href: runHref() }, '← All pages'),
+    { class: 'panel pair-panel' },
     h(
       'div',
-      { class: 'pair-head' },
-      h('div', { class: 'ring', style: { '--p': s.overall, '--c': ringColor } }, h('span', null, s.overall)),
+      { class: 'pair-head compact' },
+      h('a', { class: 'backlink', href: runHref() }, '← All pages'),
+      h('div', { class: 'ring small', style: { '--p': s.overall, '--c': ringColor }, title: 'Overall parity score' }, h('span', null, s.overall)),
       h(
         'div',
         { class: 'urls' },
-        h('div', null, badge(statusLabel[r.status], r.status), ' ', pair.notes?.verdict ? badge(`Reviewer: ${verdictLabel[pair.notes.verdict]}`, pair.notes.verdict) : null),
-        h('div', null, h('b', null, 'Original: '), extLink(pair.original), pair.src?.status ? h('span', { class: 'muted small' }, ` (HTTP ${pair.src.status})`) : null),
-        h('div', null, h('b', null, 'EDS: '), extLink(pair.eds), pair.edsInfo?.status ? h('span', { class: 'muted small' }, ` (HTTP ${pair.edsInfo.status})`) : null),
-        h('div', { class: 'small muted' }, `Compared content root — original: ${pair.src?.contentRoot || '?'}, EDS: ${pair.edsInfo?.contentRoot || '?'}`),
+        h('div', { class: 'url-line' }, h('span', { class: 'dot grey' }), extLink(pair.original), pair.src?.status ? h('span', { class: 'muted small' }, ` HTTP ${pair.src.status}`) : null),
+        h('div', { class: 'url-line' }, h('span', { class: 'dot blue' }), extLink(pair.eds), pair.edsInfo?.status ? h('span', { class: 'muted small' }, ` HTTP ${pair.edsInfo.status}`) : null),
       ),
-      h('div', { class: 'cards', style: { margin: 0 } }, h('div', { class: 'card' }, h('div', { class: 'k' }, 'Errors'), h('div', { class: `v ${r.counts.error ? 'bad' : 'good'}` }, r.counts.error)), h('div', { class: 'card' }, h('div', { class: 'k' }, 'Warnings'), h('div', { class: `v ${r.counts.warning ? 'mid' : 'good'}` }, r.counts.warning))),
+      h(
+        'div',
+        { class: 'head-right' },
+        h('div', null, badge(statusLabel[r.status], r.status), ' ', pair.notes?.verdict ? badge(`Reviewer: ${verdictLabel[pair.notes.verdict]}`, pair.notes.verdict) : null),
+        h('div', { class: 'score-chips' }, scoreChips),
+      ),
     ),
-    h('div', { class: 'bars' }, bars),
   );
   const tabs = h('nav', { class: 'tabs', 'aria-label': 'Comparison details' }, TABS.map(([key, label]) => h(
     'a',
@@ -679,6 +676,55 @@ const overlap = (p, q) => Math.max(0, Math.min(p[0] + p[2], q[0] + q[2]) - Math.
 const boxesOf = (f, side) => (f.members ? f.members.map((m) => m[side]) : [f[side]])
   .filter(Boolean);
 
+const ROW_KINDS = ['spacing', 'visual', 'width', 'padding', 'size'];
+const vOverlap = (a, b) => {
+  if (!a || !b) return 0;
+  const o = Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1]);
+  return o / Math.max(1, Math.min(a[3], b[3]));
+};
+const rank = { high: 0, medium: 1, low: 2 };
+
+/**
+ * Findings of the same kind that sit on the same horizontal band (e.g. the gap under the left and
+ * the right column of one two-column row) are one issue for the reviewer — merge them.
+ */
+function mergeRows(list) {
+  const rows = [];
+  const out = [];
+  [...list].sort((p, q) => (p.eds || p.src)[1] - (q.eds || q.src)[1]).forEach((f) => {
+    if (f.members || !ROW_KINDS.includes(f.kind)) { out.push(f); return; }
+    const row = rows.find((g) => g.kind === f.kind && g.category === f.category
+      && vOverlap(g.items[0].eds, f.eds) >= 0.5
+      && (!g.items[0].src || !f.src || vOverlap(g.items[0].src, f.src) >= 0.3));
+    if (row) row.items.push(f); else rows.push({ kind: f.kind, category: f.category, items: [f] });
+  });
+  rows.forEach(({ kind, items }) => {
+    if (items.length === 1) { out.push(items[0]); return; }
+    const first = items[0];
+    const priority = items.map((f) => f.priority).sort((a, b) => rank[a] - rank[b])[0];
+    const deltas = items.map((f) => f.delta ?? nums(f.measure)[0])
+      .filter((d) => Number.isFinite(d));
+    let title = `${describe(first).title} — ${items.length} areas in this row`;
+    let hint = 'Several areas in the same row differ — compare this row on both pages.';
+    if (kind === 'spacing' && deltas.length === items.length && deltas.every((d) => Math.sign(d) === Math.sign(deltas[0]))) {
+      const lo = Math.min(...deltas.map(Math.abs));
+      const hi = Math.max(...deltas.map(Math.abs));
+      const amount = lo === hi ? `${lo}px` : `${lo}–${hi}px`;
+      title = `${amount} ${deltas[0] > 0 ? 'more' : 'less'} space on EDS — ${items.length} columns in this row`;
+      hint = 'The gap above/below this row differs in every column, so it is most likely the section padding/margin. Check the spacing of the section, not each block.';
+    }
+    out.push({
+      ...first,
+      id: `r-${first.id}`,
+      priority,
+      members: items,
+      title,
+      hint,
+    });
+  });
+  return out;
+}
+
 /**
  * Findings for one viewport, simplified for review:
  * repeated spacing differences become one grouped item, pixel areas that a spacing/content
@@ -725,6 +771,7 @@ function findingsAt(r, vp) {
     const covered = explained.reduce((a, o) => a + boxesOf(o, 'eds').reduce((b, x) => b + overlap(f.eds, x), 0), 0);
     return covered / area(f.eds) < 0.4;
   });
+  list = mergeRows(list);
   const y = (f) => (f.eds || f.src)[1];
   return list
     .map((f) => ({ ...f, ...(f.title ? {} : describe(f)), type: typeOf(f) }))
@@ -800,6 +847,10 @@ function visualTab(pair, r, focusId) {
   let outlineAll = false;
   let showMinor = false;
   let selected = focusVp ? findingsAt(r, focusVp.viewport).find((f) => owns(f, focusId))?.id : null;
+  let keys = () => {};
+  if (state.reviewKeys) document.removeEventListener('keydown', state.reviewKeys);
+  state.reviewKeys = (e) => keys(e);
+  document.addEventListener('keydown', state.reviewKeys);
   const wrap = h('div', { class: 'review' });
   const img = (name, alt) => {
     const src = asset(name);
@@ -851,7 +902,7 @@ function visualTab(pair, r, focusId) {
           if (i === 0 || isSel) {
             out.push(h('button', {
               type: 'button',
-              class: `pin prio-${f.priority}${isSel ? ' selected' : ''}`,
+              class: `pin prio-${f.priority}${isSel ? ' selected' : ''}${(pair.reviews || {})[f.id] ? ` rv-${pair.reviews[f.id]}` : ''}`,
               dataset: { f: f.id },
               style: { left: pctOf(Math.max(0, x), W), top: pctOf(Math.max(0, y), H) },
               title: `${f.num}. ${f.title}`,
@@ -926,34 +977,66 @@ function visualTab(pair, r, focusId) {
     }
 
     // the "what's different" list
-    const item = (f) => h(
-      'li',
-      null,
-      h(
-        'button',
-        {
-          type: 'button',
-          class: `fi${sel && f.id === sel.id ? ' selected' : ''}`,
-          dataset: { f: f.id },
-          // eslint-disable-next-line no-use-before-define
-          onclick: () => choose(f.id),
-          'aria-expanded': String(!!(sel && f.id === sel.id)),
-        },
-        h('span', { class: `pin static prio-${f.priority}` }, f.num),
+    const reviews = pair.reviews || {};
+    const order = GROUPS.flatMap(([prio]) => shown.filter((f) => f.priority === prio))
+      .filter((f) => f.priority !== 'low' || showMinor || (sel && sel.id === f.id));
+    const reviewedCount = all.filter((f) => reviews[f.id]).length;
+    const STATE_LABEL = { ok: '✓ Looks fine', fix: '✗ Needs fix' };
+    const mark = async (f, st) => {
+      const after = order.slice(order.indexOf(f) + 1);
+      const next = st ? after.find((x) => !reviews[x.id] && x.id !== f.id) : null;
+      if (st) reviews[f.id] = st; else delete reviews[f.id];
+      pair.reviews = reviews;
+      if (!STATIC) {
+        api(`/api/jobs/${state.job.id}/review`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ index: pair.index, id: f.id, state: st }),
+        }).catch(() => {});
+      }
+      // eslint-disable-next-line no-use-before-define
+      if (next) choose(next.id, true); else draw();
+    };
+    const item = (f) => {
+      const isSel = sel && f.id === sel.id;
+      const st = reviews[f.id];
+      return h(
+        'li',
+        { class: `${isSel ? 'open' : ''}${st ? ` reviewed-${st}` : ''}` },
         h(
-          'span',
-          { class: 'fi-body' },
-          h('span', { class: 'fi-title' }, f.title),
-          h('span', { class: 'fi-hint' }, f.hint),
-          sel && f.id === sel.id && f.members ? h('span', { class: 'fi-detail' }, h('b', null, 'Places: '), f.members.map((m) => m.detail.replace(/^Gap between /, '').replace(/:.*$/, '')).join(' · ')) : null,
-          sel && f.id === sel.id && !f.members && f.detail && f.kind !== 'spacing' && !f.hint.includes(f.detail) ? h('span', { class: 'fi-detail' }, f.detail) : null,
-          h('span', { class: 'fi-meta' }, TYPE_INFO[f.type].label, ' · ', whereText(f)),
+          'button',
+          {
+            type: 'button',
+            class: `fi${isSel ? ' selected' : ''}`,
+            dataset: { f: f.id },
+            // eslint-disable-next-line no-use-before-define
+            onclick: () => choose(f.id),
+            'aria-expanded': String(!!isSel),
+          },
+          h('span', { class: `pin static prio-${f.priority}` }, f.num),
+          h(
+            'span',
+            { class: 'fi-body' },
+            h('span', { class: 'fi-title' }, f.title),
+            h('span', { class: 'fi-hint' }, f.hint),
+            isSel && f.members ? h('span', { class: 'fi-detail' }, h('b', null, 'Places: '), f.members.map((m) => (m.detail || m.title || '').replace(/^Gap between /, '').replace(/:.*$/, '')).join(' · ')) : null,
+            isSel && !f.members && f.detail && f.kind !== 'spacing' && !f.hint.includes(f.detail) ? h('span', { class: 'fi-detail' }, f.detail) : null,
+            h('span', { class: 'fi-tags' }, h('span', { class: `type-tag type-${f.type}` }, TYPE_INFO[f.type].label), h('span', { class: 'muted' }, whereText(f))),
+          ),
+          st ? h('span', { class: `rv rv-${st}`, title: STATE_LABEL[st] }, st === 'ok' ? '✓' : '✗') : null,
         ),
-      ),
-    );
+        isSel && !STATIC ? h(
+          'div',
+          { class: 'fi-actions' },
+          h('button', { type: 'button', class: `btn small ok${st === 'ok' ? ' on' : ''}`, onclick: () => mark(f, st === 'ok' ? '' : 'ok') }, '✓ Looks fine'),
+          h('button', { type: 'button', class: `btn small fix${st === 'fix' ? ' on' : ''}`, onclick: () => mark(f, st === 'fix' ? '' : 'fix') }, '✗ Needs fix'),
+          h('span', { class: 'small muted' }, 'or press O / X'),
+        ) : null,
+      );
+    };
     const groupBlock = ([prio, label, blurb]) => {
       const list = shown.filter((f) => f.priority === prio);
       if (!list.length) return null;
+      const done = list.filter((f) => reviews[f.id]).length;
+      const count = `${label} (${list.length})${done ? ` · ${done} reviewed` : ''}`;
       const body = h('ol', { class: 'fl' }, list.map(item));
       if (prio === 'low') {
         return h(
@@ -965,26 +1048,59 @@ function visualTab(pair, r, focusId) {
               if (showMinor !== e.target.open) { showMinor = e.target.open; draw(); }
             },
           },
-          h('summary', null, h('span', { class: `fg-title prio-${prio}` }, `${label} (${list.length})`), h('span', { class: 'fg-blurb' }, blurb)),
+          h('summary', null, h('span', { class: `fg-title prio-${prio}` }, count), h('span', { class: 'fg-blurb' }, blurb)),
           body,
         );
       }
-      return h('div', { class: 'fg' }, h('div', { class: `fg-title prio-${prio}` }, `${label} (${list.length})`), h('div', { class: 'fg-blurb' }, blurb), body);
+      return h('div', { class: 'fg' }, h('div', { class: `fg-title prio-${prio}` }, count), h('div', { class: 'fg-blurb' }, blurb), body);
     };
     const nType = (t) => all.filter((f) => f.type === t).length;
+    const step = (d) => {
+      if (!order.length) return;
+      const i = order.findIndex((f) => sel && f.id === sel.id);
+      const fresh = d > 0 ? 0 : order.length - 1; // nothing selected yet: start at an end
+      const next = order[i < 0 ? fresh : (i + d + order.length) % order.length];
+      // eslint-disable-next-line no-use-before-define
+      choose(next.id, true);
+    };
+    const pos = order.findIndex((f) => sel && f.id === sel.id);
     const panel = h(
       'aside',
       { class: 'fpanel', 'aria-label': 'What is different' },
-      h('div', { class: 'fp-head' }, h('b', null, 'What’s different'), h('span', { class: 'muted small' }, ` at ${vp}px`)),
-      h('div', { class: 'chips' }, [['all', `All (${all.length})`], ['content', `Content (${nType('content')})`], ['spacing', `Spacing (${nType('spacing')})`], ['visual', `Visual (${nType('visual')})`]]
-        .map(([k, l]) => h('button', {
-          type: 'button', class: 'chip', 'aria-pressed': String(typeFilter === k), onclick: () => { typeFilter = k; draw(); },
-        }, l))),
+      h(
+        'div',
+        { class: 'fp-top' },
+        h(
+          'div',
+          { class: 'fp-head' },
+          h('b', null, 'What’s different'),
+          h('span', { class: 'muted small' }, ` at ${vp}px`),
+          h('span', { class: 'spacer' }),
+          h('button', {
+            type: 'button', class: 'btn icon small', onclick: () => step(-1), disabled: !order.length, 'aria-label': 'Previous finding (↑)',
+          }, '↑'),
+          h('span', { class: 'small muted pos' }, pos >= 0 ? `${pos + 1} / ${order.length}` : `${order.length}`),
+          h('button', {
+            type: 'button', class: 'btn icon small', onclick: () => step(1), disabled: !order.length, 'aria-label': 'Next finding (↓)',
+          }, '↓'),
+        ),
+        all.length ? h(
+          'div',
+          { class: 'progress-line' },
+          h('div', { class: 'progress thin' }, h('div', { style: { width: `${Math.round((100 * reviewedCount) / all.length)}%` } })),
+          h('span', { class: 'small muted' }, `Reviewed ${reviewedCount} of ${all.length}`),
+        ) : null,
+        STATIC ? null : h('div', { class: 'howto' }, '1. Pick a finding  2. Compare the highlighted area  3. Mark ', h('b', null, '✓ fine'), ' or ', h('b', null, '✗ needs fix'), '. Keys: ↑ ↓ move · O fine · X needs fix'),
+        h('div', { class: 'chips' }, [['all', `All (${all.length})`], ['content', `Content (${nType('content')})`], ['spacing', `Spacing (${nType('spacing')})`], ['visual', `Visual (${nType('visual')})`]]
+          .map(([k, l]) => h('button', {
+            type: 'button', class: 'chip', 'aria-pressed': String(typeFilter === k), onclick: () => { typeFilter = k; draw(); },
+          }, l))),
+      ),
       shown.length ? GROUPS.map(groupBlock) : h('div', { class: 'empty small' }, all.length ? 'Nothing of this type.' : 'No differences found at this width 🎉'),
     );
 
-    const choose = (id) => {
-      selected = selected === id ? null : id;
+    const choose = (id, keep) => {
+      selected = selected === id && !keep ? null : id;
       draw();
       if (selected) {
         setTimeout(() => {
@@ -992,6 +1108,17 @@ function visualTab(pair, r, focusId) {
           wrap.querySelector(`.fi[data-f="${selected}"]`)?.scrollIntoView({ block: 'nearest' });
         }, 30);
       }
+    };
+
+    // keyboard: ↑/↓ or K/J move, O = looks fine, X = needs fix, Esc = clear
+    keys = (e) => {
+      if (!wrap.isConnected) { document.removeEventListener('keydown', state.reviewKeys); return; }
+      if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+      const k = e.key.toLowerCase();
+      if (k === 'arrowdown' || k === 'j') { e.preventDefault(); step(1); }
+      if (k === 'arrowup' || k === 'k') { e.preventDefault(); step(-1); }
+      if (k === 'escape' && sel) { selected = null; draw(); }
+      if (!STATIC && sel && (k === 'o' || k === 'x')) mark(sel, k === 'o' ? 'ok' : 'fix');
     };
 
     const zoomBtn = (d, label) => h('button', {
@@ -1053,7 +1180,7 @@ function visualTab(pair, r, focusId) {
         ),
         h('div', { class: 'review-body' }, h('div', { class: 'shot-scroll' }, stage), panel),
       ),
-      h('p', { class: 'small muted' }, 'Pick an item in the list (or a numbered pin) to highlight it on both pages. Content that only moved up or down is ignored. Click the item again to clear the highlight.'),
+      h('p', { class: 'small muted' }, 'Content that only moved up or down is ignored. Findings in the same row are combined into one item.'),
     );
   };
   draw();

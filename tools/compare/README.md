@@ -36,7 +36,14 @@ Built to be read top-down, one finding at a time:
   both pages scroll to it. Click again to clear. *Outline all* shows every box at once if you want the full picture.
 - **Overlay** tab: blend / swipe / heatmap.
 
-To keep the list short: spacing differences that repeat (same kind of gap, same size, 3+ places)
+**Review workflow:** pick a finding → compare the highlighted area → mark **✓ Looks fine** or
+**✗ Needs fix** (the next unreviewed finding opens automatically). A progress bar shows
+"Reviewed N of M"; marks are saved with the run and included in the exported report.
+Keyboard: **↑ / ↓** (or K / J) move, **O** looks fine, **X** needs fix, **Esc** clears.
+
+To keep the list short: findings of the same kind on the **same row** (e.g. the gap under the left
+and the right column of a two-column section) are combined into one item ("66–86px less space on EDS —
+2 columns in this row"), and spacing differences that repeat (same kind of gap, same size, 3+ places)
 are merged into **one** item ("24px more space between headings and text on EDS — 5 places",
 selecting it highlights all of them); pixel-diff areas that a spacing/content finding already
 explains are hidden. Rows in the Issues, Text, Headings and Links tabs have a **📍 Show** link.

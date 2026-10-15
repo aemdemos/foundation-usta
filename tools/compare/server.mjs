@@ -420,6 +420,18 @@ const server = http.createServer(async (req, res) => {
       await task;
       return send(res, 200, { ok: true });
     }
+    if (action === 'review' && req.method === 'POST') {
+      // per-finding review state: ok | fix ('' clears)
+      const body = await readBody(req);
+      const pair = job.pairs[Number(body.index)];
+      const id = String(body.id || '').slice(0, 40);
+      if (!pair || !/^[\w-]+$/.test(id)) return send(res, 400, { error: 'bad finding' });
+      pair.reviews = pair.reviews || {};
+      if (body.state === 'ok' || body.state === 'fix') pair.reviews[id] = body.state;
+      else delete pair.reviews[id];
+      await persist(job);
+      return send(res, 200, { ok: true });
+    }
     if (action === 'notes' && req.method === 'POST') {
       const body = await readBody(req);
       const pair = job.pairs[Number(body.index)];
