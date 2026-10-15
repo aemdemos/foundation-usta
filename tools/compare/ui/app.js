@@ -177,6 +177,13 @@ function showForm() {
     }),
     `${v}px${{ 375: ' (mobile)', 1440: ' (desktop)' }[v] || (cfg.breakpoints.includes(v) ? ' (breakpoint)' : '')}`,
   ));
+  const customVp = h('input', {
+    id: 'f-widths',
+    type: 'text',
+    value: opt.viewports.filter((v) => !cfg.viewports.includes(v)).join(', '),
+    placeholder: 'Other widths, e.g. 320, 1024, 1920',
+    style: { maxWidth: '320px' },
+  });
   const exclHF = h('input', { type: 'checkbox', checked: opt.excludeHeaderFooter });
   const exclSel = h('input', { id: 'f-excl', type: 'text', value: opt.excludeSelector });
   const hideSel = h('input', { id: 'f-hide', type: 'text', value: opt.hideSelector });
@@ -222,7 +229,8 @@ function showForm() {
           return;
         }
         const options = {
-          viewports: [...form.querySelectorAll('.vp:checked')].map((c) => Number(c.value)),
+          viewports: [...form.querySelectorAll('.vp:checked')].map((c) => Number(c.value))
+            .concat((customVp.value.match(/\d+/g) || []).map(Number)),
           excludeHeaderFooter: exclHF.checked,
           excludeSelector: exclSel.value,
           hideSelector: hideSel.value,
@@ -232,8 +240,14 @@ function showForm() {
           checkLinks: links.checked,
           threshold: Number(thr.value),
         };
+        const badVp = options.viewports.find((v) => v < 280 || v > 2560);
+        if (badVp) {
+          err.textContent = `Width ${badVp}px is out of range — use 280 to 2560px.`;
+          err.hidden = false;
+          return;
+        }
         if (!options.viewports.length) {
-          err.textContent = 'Select at least one viewport.';
+          err.textContent = 'Select at least one width.';
           err.hidden = false;
           return;
         }
@@ -256,7 +270,7 @@ function showForm() {
       },
     },
     h('h2', null, 'Compare original pages with their EDS versions'),
-    h('p', { class: 'lead' }, 'Each pair is loaded in a headless browser at every selected viewport. You get a visual diff, text / heading / link / image / metadata / typography differences, console and network errors, and a parity score. Export the report when you\'re done.'),
+    h('p', { class: 'lead' }, 'Each pair is loaded in a headless browser at every selected screen width. You get a visual diff, text / heading / link / image / metadata / typography differences, console and network errors, and a parity score. Export the report when you\'re done.'),
     h('label', { class: 'field' }, 'Pages to compare'),
     rows,
     h(
@@ -270,15 +284,15 @@ function showForm() {
     h('label', { class: 'field', for: 'f-edsbase' }, 'EDS host (used to auto-fill empty EDS URLs)'),
     h('div', { class: 'hint' }, 'The original path is kept, ".html" is dropped. Change to the .aem.page host to compare preview content.'),
     edsBase,
+    h('label', { class: 'field' }, 'Screen widths to check'),
+    h('div', { class: 'hint' }, 'Tick the project breakpoints and/or type any other widths (280–2560px). You can also add more widths later from the results.'),
+    h('div', { class: 'checks' }, vpChecks, customVp),
     h('label', { class: 'field', for: 'f-title' }, 'Run name'),
     title,
     h(
       'details',
       { class: 'options' },
       h('summary', null, 'Advanced options'),
-      h('label', { class: 'field' }, 'Viewports'),
-      h('div', { class: 'hint' }, 'Taken from the project\'s breakpoints. Each viewport adds a screenshot + pixel diff + typography check.'),
-      h('div', { class: 'checks' }, vpChecks),
       h(
         'div',
         { class: 'opt-grid' },
@@ -376,20 +390,15 @@ function showRun(pairIdx, tab, changeId) {
 }
 
 function runHeader(job) {
+  // widths actually compared (pages may have extra widths added after the run)
+  const widths = [...new Set(job.pairs.flatMap((p) => p.viewports || job.options.viewports))]
+    .sort((a, b) => a - b);
   const running = ['queued', 'running'].includes(job.status);
   const done = job.progress?.done || 0;
   const total = job.progress?.total || job.pairs.length;
-  const base = `/api/jobs/${job.id}`;
   const exports = STATIC
     ? h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn', onclick: () => window.print() }, 'Print / Save as PDF'))
-    : h(
-      'div',
-      { class: 'btn-row' },
-      h('a', { class: 'btn primary', href: `${base}/report.html` }, '⬇ Download report (HTML)'),
-      h('a', { class: 'btn', href: `${base}/report.html?images=0`, title: 'Smaller file — no screenshots' }, 'Report without screenshots'),
-      h('a', { class: 'btn', href: `${base}/issues.csv` }, 'Issues (CSV)'),
-      h('a', { class: 'btn', href: `${base}/result.json` }, 'Raw data (JSON)'),
-    );
+    : null;
   const o = job.options;
   return h(
     'section',
@@ -404,7 +413,7 @@ function runHeader(job) {
         h(
           'div',
           { class: 'muted small' },
-          `${STATIC ? 'Report generated from run' : 'Run'} ${job.id} · ${fmtDate(job.createdAt)} · viewports ${o.viewports.join(', ')}px · `,
+          `${STATIC ? 'Report generated from run' : 'Run'} ${job.id} · ${fmtDate(job.createdAt)} · widths ${widths.join(', ')}px · `,
           o.excludeHeaderFooter ? 'main content only' : 'whole page',
           o.checkLinks ? ' · link status checked' : '',
         ),
@@ -473,7 +482,12 @@ function runSummary(job) {
   return h(
     'section',
     { class: 'panel' },
-    h('h2', null, 'Summary'),
+    h(
+      'div',
+      { class: 'review-head' },
+      h('h2', null, 'Summary'),
+      STATIC || !['done', 'error'].includes(job.status) ? null : h('a', { class: 'btn', href: `/api/jobs/${job.id}/report.html` }, '⬇ Export report'),
+    ),
     h('p', { class: 'lead' }, 'Click a page to see its differences. The score weights text 30%, visual 20%, links 15%, headings / images / typography 10% each, metadata 5%.'),
     cards,
     table,
@@ -718,6 +732,57 @@ function findingsAt(r, vp) {
     .map((f, i) => ({ ...f, num: i + 1 }));
 }
 
+const WIDTH_SUGGESTIONS = [
+  320, 360, 390, 414, 600, 768, 820, 992, 1024, 1200, 1280, 1366, 1440, 1536, 1920,
+];
+
+/** "+ Add width": capture and compare one more width for this page, then show it. */
+function addWidth(pair, vis) {
+  const have = vis.map((v) => Number(v.viewport));
+  const listId = `w-sugg-${pair.index}`;
+  const options = [...new Set([...(state.config?.viewports || []), ...WIDTH_SUGGESTIONS])]
+    .filter((w) => !have.includes(w)).sort((a, b) => a - b);
+  const input = h('input', {
+    type: 'number', min: '280', max: '2560', step: '1', placeholder: 'e.g. 1024', list: listId, 'aria-label': 'Width to add in pixels',
+  });
+  const status = h('span', { class: 'small muted', role: 'status' });
+  const btn = h('button', { type: 'button', class: 'btn small' }, '+ Add width');
+  const go = async () => {
+    const w = Math.round(Number(input.value));
+    if (!(w >= 280 && w <= 2560)) { status.textContent = 'Enter 280–2560'; return; }
+    if (have.includes(w)) {
+      state.preferVp = w;
+      showRun(pair.index, 'visual');
+      return;
+    }
+    btn.disabled = true;
+    input.disabled = true;
+    status.textContent = `Checking ${w}px… (about 30s)`;
+    try {
+      await api(`/api/jobs/${state.job.id}/viewport`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ index: pair.index, width: w }),
+      });
+      state.job = await api(`/api/jobs/${state.job.id}`);
+      state.preferVp = w;
+      showRun(pair.index, 'visual');
+    } catch (e) {
+      status.textContent = e.message;
+      btn.disabled = false;
+      input.disabled = false;
+    }
+  };
+  btn.addEventListener('click', go);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+  return h(
+    'span',
+    { class: 'add-width' },
+    input,
+    h('datalist', { id: listId }, options.map((w) => h('option', { value: String(w) }))),
+    btn,
+    status,
+  );
+}
+
 function visualTab(pair, r, focusId) {
   const vis = r.visual;
   if (!vis.length) return h('div', { class: 'empty' }, 'No screenshots captured.');
@@ -725,7 +790,9 @@ function visualTab(pair, r, focusId) {
   const hasFocus = (v) => findingsAt(r, v.viewport).some((f) => owns(f, focusId));
   const focusVp = focusId && vis.find(hasFocus);
   const widest = String(Math.max(...vis.map((x) => Number(x.viewport))));
-  let current = focusVp || vis.find((v) => v.viewport === widest) || vis[0];
+  const preferred = vis.find((v) => Number(v.viewport) === state.preferVp);
+  state.preferVp = null;
+  let current = preferred || focusVp || vis.find((v) => v.viewport === widest) || vis[0];
   let view = 'side';
   let overlayMode = 'blend';
   let zoom = 1;
@@ -978,6 +1045,7 @@ function visualTab(pair, r, focusId) {
             'aria-pressed': String(x === current),
             onclick: () => { current = x; selected = null; draw(); },
           }, `${x.viewport}px`))),
+          STATIC ? null : addWidth(pair, vis),
           h('label', { class: 'check small' }, h('input', {
             type: 'checkbox', checked: outlineAll, onchange: (e) => { outlineAll = e.target.checked; draw(); },
           }), 'Outline all'),

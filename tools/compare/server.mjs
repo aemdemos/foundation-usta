@@ -106,16 +106,49 @@ const pageInfo = (cap) => ({
   url: cap.url, finalUrl: cap.finalUrl, status: cap.status, contentRoot: cap.contentRoot, title: cap.meta?.title || '',
 });
 
+const captureFile = (job, pair) => path.join(jobDir(job.id), `p${pair.index + 1}-capture.json`);
+
+const captureOptions = (o) => ({
+  excludeSelector: o.excludeHeaderFooter ? o.excludeSelector : '',
+  hideSelector: o.hideSelector,
+  includeHidden: o.includeHidden,
+});
+
+/** Pixel-diff one viewport, write its screenshots, and return the diff summary. */
+async function diffViewport(browser, job, pair, vw, a, b) {
+  const dir = jobDir(job.id);
+  const base = `p${pair.index + 1}-${vw}`;
+  let diff;
+  if (a?.png && b?.png) {
+    progress(job, `Pair ${pair.index + 1}/${job.pairs.length} · pixel diff · ${vw}px`);
+    try {
+      const d = await diffImages(browser, a.png, b.png, { threshold: job.options.threshold, foldHeight: a.viewportHeight });
+      writeFileSync(path.join(dir, `${base}-src.jpg`), d.a);
+      writeFileSync(path.join(dir, `${base}-eds.jpg`), d.b);
+      writeFileSync(path.join(dir, `${base}-diff.jpg`), d.d);
+      a.screenshot = `${base}-src.jpg`;
+      b.screenshot = `${base}-eds.jpg`;
+      diff = {
+        diffShot: `${base}-diff.jpg`, mismatch: d.mismatch, foldMismatch: d.foldMismatch, areas: d.areas, width: d.width, height: d.height,
+      };
+    } catch (err) {
+      diff = { error: `Pixel diff failed: ${err.message.split('\n')[0]}` };
+    }
+  }
+  [[a, 'src'], [b, 'eds']].forEach(([v, side]) => {
+    if (v?.png && !v.screenshot) {
+      writeFileSync(path.join(dir, `${base}-${side}.png`), v.png);
+      v.screenshot = `${base}-${side}.png`;
+    }
+    if (v) delete v.png;
+  });
+  return diff;
+}
+
 async function runPair(browser, job, pair) {
   const o = job.options;
-  const dir = jobDir(job.id);
   const step = (side) => (msg) => progress(job, `Pair ${pair.index + 1}/${job.pairs.length} · ${side} · ${msg}`);
-  const common = {
-    viewports: o.viewports,
-    excludeSelector: o.excludeHeaderFooter ? o.excludeSelector : '',
-    hideSelector: o.hideSelector,
-    includeHidden: o.includeHidden,
-  };
+  const common = { viewports: o.viewports, ...captureOptions(o) };
   const [src, eds] = await Promise.all([
     capturePage(browser, pair.original, { ...common, rootSelector: o.excludeHeaderFooter ? o.srcRoot : 'body' }, step('original')),
     capturePage(browser, pair.eds, { ...common, rootSelector: o.excludeHeaderFooter ? o.edsRoot : 'body' }, step('EDS')),
@@ -123,33 +156,9 @@ async function runPair(browser, job, pair) {
 
   const diffs = {};
   for (const vw of o.viewports) {
-    const a = src.viewports[vw];
-    const b = eds.viewports[vw];
-    const base = `p${pair.index + 1}-${vw}`;
-    if (a?.png && b?.png) {
-      progress(job, `Pair ${pair.index + 1}/${job.pairs.length} · pixel diff · ${vw}px`);
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        const d = await diffImages(browser, a.png, b.png, { threshold: o.threshold, foldHeight: a.viewportHeight });
-        writeFileSync(path.join(dir, `${base}-src.jpg`), d.a);
-        writeFileSync(path.join(dir, `${base}-eds.jpg`), d.b);
-        writeFileSync(path.join(dir, `${base}-diff.jpg`), d.d);
-        a.screenshot = `${base}-src.jpg`;
-        b.screenshot = `${base}-eds.jpg`;
-        diffs[vw] = {
-          diffShot: `${base}-diff.jpg`, mismatch: d.mismatch, foldMismatch: d.foldMismatch, areas: d.areas, width: d.width, height: d.height,
-        };
-      } catch (err) {
-        diffs[vw] = { error: `Pixel diff failed: ${err.message.split('\n')[0]}` };
-      }
-    }
-    [[a, 'src'], [b, 'eds']].forEach(([v, side]) => {
-      if (v?.png && !v.screenshot) {
-        writeFileSync(path.join(dir, `${base}-${side}.png`), v.png);
-        v.screenshot = `${base}-${side}.png`;
-      }
-      if (v) delete v.png;
-    });
+    // eslint-disable-next-line no-await-in-loop
+    const d = await diffViewport(browser, job, pair, vw, src.viewports[vw], eds.viewports[vw]);
+    if (d) diffs[vw] = d;
   }
 
   let linkStatus = null;
@@ -164,6 +173,42 @@ async function runPair(browser, job, pair) {
   pair.src = pageInfo(src);
   pair.edsInfo = pageInfo(eds);
   pair.result = comparePair(src, eds, { diffs, linkStatus });
+  pair.viewports = Object.keys(src.viewports).map(Number);
+  // keep the raw captures so more widths can be added to this page later
+  writeFileSync(captureFile(job, pair), JSON.stringify({
+    src, eds, diffs, linkStatus,
+  }));
+}
+
+/** Capture and compare one extra width for an already-compared page. */
+async function addViewport(job, pair, vw) {
+  const file = captureFile(job, pair);
+  if (!existsSync(file)) throw new Error('This page was compared with an older version of the checker — run it again to add widths.');
+  const saved = JSON.parse(await readFile(file, 'utf8'));
+  const o = job.options;
+  const browser = await launchBrowser();
+  try {
+    progress(job, `Pair ${pair.index + 1} · capturing ${vw}px`);
+    const common = { viewports: [vw], ...captureOptions(o) };
+    const [s1, e1] = await Promise.all([
+      capturePage(browser, pair.original, { ...common, rootSelector: o.excludeHeaderFooter ? o.srcRoot : 'body' }),
+      capturePage(browser, pair.eds, { ...common, rootSelector: o.excludeHeaderFooter ? o.edsRoot : 'body' }),
+    ]);
+    const a = s1.viewports[vw];
+    const b = e1.viewports[vw];
+    if (a?.error || b?.error) throw new Error(a?.error || b?.error);
+    const d = await diffViewport(browser, job, pair, vw, a, b);
+    saved.src.viewports[vw] = a;
+    saved.eds.viewports[vw] = b;
+    if (d) saved.diffs[vw] = d;
+  } finally {
+    await browser.close().catch(() => {});
+  }
+  pair.result = comparePair(saved.src, saved.eds, { diffs: saved.diffs, linkStatus: saved.linkStatus });
+  pair.viewports = Object.keys(saved.src.viewports).map(Number);
+  writeFileSync(file, JSON.stringify(saved));
+  progress(job, 'Finished');
+  await persist(job);
 }
 
 async function runJob(job) {
@@ -218,7 +263,9 @@ async function createJob(body) {
   if (!pairs.length) throw new Error('Add at least one valid pair of http(s) URLs.');
   const o = body.options || {};
   const viewports = (Array.isArray(o.viewports) ? o.viewports : cfg.defaultViewports)
-    .map(Number).filter((v) => v >= 280 && v <= 2560).slice(0, 8);
+    .map((v) => Math.round(Number(v))).filter((v, i, a) => v >= 280 && v <= 2560 && a.indexOf(v) === i)
+    .sort((x, y) => x - y)
+    .slice(0, 10);
   const str = (v, d) => (typeof v === 'string' ? v.slice(0, 2000) : d);
   const job = {
     id: newId(),
@@ -359,6 +406,19 @@ const server = http.createServer(async (req, res) => {
       job.listeners.add(res);
       req.on('close', () => job.listeners.delete(res));
       return undefined;
+    }
+    if (action === 'viewport' && req.method === 'POST') {
+      const body = await readBody(req);
+      const pair = job.pairs[Number(body.index)];
+      const vw = Math.round(Number(body.width));
+      if (!pair?.result) return send(res, 400, { error: 'This page has not been compared yet.' });
+      if (!(vw >= 280 && vw <= 2560)) return send(res, 400, { error: 'Width must be between 280 and 2560px.' });
+      if (job.status === 'running' || job.status === 'queued') return send(res, 409, { error: 'Wait for the run to finish first.' });
+      // run through the same queue so only one browser job runs at a time
+      const task = queue.then(() => addViewport(job, pair, vw));
+      queue = task.catch(() => {});
+      await task;
+      return send(res, 200, { ok: true });
     }
     if (action === 'notes' && req.method === 'POST') {
       const body = await readBody(req);

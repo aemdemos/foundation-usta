@@ -52,13 +52,20 @@ Each pair gets a **parity score** (text 30%, visual 20%, links 15%, headings / i
 10% each, metadata 5%), an auto status (Pass ≥ 90 with no errors, Needs review ≥ 75, Fail),
 and a prioritised **issue list**. Add your own **verdict + notes** per page in the *Review notes* tab.
 
+## Screen widths
+
+- **Before a run:** tick any of the project breakpoints (from `tools/quality/breakpoints.json`, plus 375 and
+  1440) and/or type other widths (280–2560px, e.g. `320, 1024, 1920`) in the main form.
+- **After a run:** in the Difference review, type a width (or pick a suggestion) next to the width buttons and
+  click **+ Add width**. Only that page is captured again at that width (~30s), and the new width is added
+  to its results and the exported report.
+
 ## Reports
 
-From a finished run:
-- **Download report (HTML)** – single self-contained file (screenshots embedded), opens offline, shareable.
-- **Report without screenshots** – same, much smaller.
-- **Issues (CSV)** – one row per issue incl. your verdict/notes, for spreadsheets/Jira.
-- **Raw data (JSON)**.
+**⬇ Export report** (in the run summary and in each page's Difference review) downloads one
+self-contained HTML file (screenshots embedded) that opens offline and can be shared.
+The same run data is also available at `/api/jobs/<id>/issues.csv` (one row per issue, incl. your
+verdict/notes) and `/api/jobs/<id>/result.json`.
 
 Runs are saved in `tools/compare/reports/<run-id>/` (git-ignored) and listed under **History**.
 

@@ -5592,3 +5592,9 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
   Minor collapsed). Only the selected finding is outlined, on both pages, with the rest dimmed. Recurring spacing
   differences are merged into one item, and pixel areas already explained by a spacing/content finding are hidden.
   Spacing is "fix first" only at ≥96px (it was ≥48, which put 10 spacing items in Fix first on get-involved).
+- **2026-10-15 — widths + layout.** The four export buttons were removed from the run header; a single "Export report"
+  stays (summary + Difference review). The app is now full width (no max-width side gutters). Screen widths moved
+  into the main form with a free-text "other widths" field. "+ Add width" in the Difference review captures one more
+  width for a single page (`POST /api/jobs/:id/viewport`). It runs through the same queue and re-runs comparePair
+  over the saved raw captures (`p<n>-capture.json`, written per page since this change). Runs made earlier can't
+  add widths; re-run those pages.

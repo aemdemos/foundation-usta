@@ -75,7 +75,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .topnav a:hover, .topnav a.active { background: rgb(255 255 255 / 12%); color: #fff; }
 body.static .topnav { display: none; }
-.app { max-width: 1440px; margin: 0 auto; padding: 24px; }
+.app { padding: 16px 20px; }
 
 /* panels */
 .panel {
@@ -514,3 +514,7 @@ ins { background: #c9e9d2; color: #0d4d24; text-decoration: none; border-radius:
   .shot-scroll { height: auto; overflow: visible; }
 }
 
+
+.add-width { display: inline-flex; align-items: center; gap: 6px; }
+.add-width input { width: 96px; padding: 5px 8px; border: 1px solid #cdd2db; border-radius: 7px; }
+.checks input[type="text"] { padding: 5px 10px; }
