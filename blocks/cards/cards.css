@@ -862,12 +862,19 @@ main .section:has(.cards.profile.bio) > div {
 }
 
 .cards.profile.bio .cards-profile-card-body {
-  flex: 1 1 auto; /* equal-height text panels across a row */
+  flex: none; /* source panels follow their own text — NOT equal-height (351 vs 375 @992) */
   margin-top: 25px;
   text-align: left;
-  padding: 24px 8px 38px;
+  padding: 24px 8px;
   background-color: #e5e5e5;
   border-radius: 24px;
+}
+
+/* the source FIRST card (Chris Evert) ends its bio with an empty 24px paragraph
+   (stripped by EDS), so its text panel has 24px more below the last line than
+   the other card: 48 vs 24 (<768), 64 vs 40 (>=768). */
+.cards.profile.bio > ul > li:first-child .cards-profile-card-body {
+  padding-bottom: 48px;
 }
 
 .cards.profile.bio .cards-profile-card-body h4 {
@@ -952,6 +959,10 @@ main .section > .default-content-wrapper + .cards-wrapper:has(> .cards.profile.b
 
   .cards.profile.bio .cards-profile-card-body {
     padding: 40px 12px;
+  }
+
+  .cards.profile.bio > ul > li:first-child .cards-profile-card-body {
+    padding-bottom: 64px;
   }
 
   .cards.profile.bio .cards-profile-card-body h4 {
