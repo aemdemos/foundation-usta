@@ -2,7 +2,7 @@
 /**
  * Page Parity Checker — a local UI for comparing an ORIGINAL page with its EDS
  * migration: visual diff per viewport, text/heading/link/image/metadata/typography
- * diffs, console + network errors, a parity score, manual notes, and an
+ * diffs, console + network errors, a parity score, per-finding review marks, and an
  * exportable report (self-contained HTML, CSV issue list, JSON).
  *
  * Usage:
@@ -285,7 +285,7 @@ async function createJob(body) {
     },
     progress: { done: 0, total: pairs.length, message: 'Queued' },
     pairs: pairs.map((p, index) => ({
-      index, original: p.original, eds: p.eds, status: 'pending', notes: { verdict: '', text: '' },
+      index, original: p.original, eds: p.eds, status: 'pending',
     })),
     listeners: new Set(),
   };
@@ -300,10 +300,10 @@ async function createJob(body) {
 const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
 function issuesCsv(job) {
-  const rows = [['Pair', 'Original URL', 'EDS URL', 'Score', 'Status', 'Verdict', 'Reviewer notes', 'Severity', 'Category', 'Issue', 'Detail']];
+  const rows = [['Pair', 'Original URL', 'EDS URL', 'Score', 'Status', 'Severity', 'Category', 'Issue', 'Detail']];
   job.pairs.forEach((p) => {
     const r = p.result;
-    const base = [p.index + 1, p.original, p.eds, r?.scores.overall ?? '', r?.status ?? p.status, p.notes?.verdict || '', p.notes?.text || ''];
+    const base = [p.index + 1, p.original, p.eds, r?.scores.overall ?? '', r?.status ?? p.status];
     if (!r) rows.push([...base, 'error', 'Capture', p.error || 'Not compared', '']);
     else if (!r.issues.length) rows.push([...base, '', '', 'No issues found', '']);
     else r.issues.forEach((i) => rows.push([...base, i.severity, i.category, i.message, i.detail]));
@@ -429,18 +429,6 @@ const server = http.createServer(async (req, res) => {
       pair.reviews = pair.reviews || {};
       if (body.state === 'ok' || body.state === 'fix') pair.reviews[id] = body.state;
       else delete pair.reviews[id];
-      await persist(job);
-      return send(res, 200, { ok: true });
-    }
-    if (action === 'notes' && req.method === 'POST') {
-      const body = await readBody(req);
-      const pair = job.pairs[Number(body.index)];
-      if (!pair) return send(res, 400, { error: 'bad pair index' });
-      pair.notes = {
-        verdict: ['', 'pass', 'minor', 'fail'].includes(body.verdict) ? body.verdict : '',
-        text: String(body.text || '').slice(0, 10000),
-        updatedAt: new Date().toISOString(),
-      };
       await persist(job);
       return send(res, 200, { ok: true });
     }

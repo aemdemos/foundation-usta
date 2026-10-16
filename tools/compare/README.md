@@ -26,23 +26,26 @@ npm run compare -- --port 4200
 After a run you get one card per page: page title, status (**Matches**, **Mostly matches**, **Needs
 review** or **Fail**), "N to fix first · N worth checking", review progress, and a **Review →** button.
 **Start / Continue reviewing →** opens the first page that still has unreviewed findings. A one-page
-run opens its review automatically when it finishes. Inside a page, **‹ Previous page / Next page ›**
-moves through the run; the breadcrumb (History › run) goes back.
+run opens its review automatically when it finishes. Inside a page, the breadcrumb
+(History › run › page) goes back and **‹ ›** moves to the previous / next page of the run.
 
-Page tabs: **Difference review**, **Issues**, **Notes**, plus a smaller **Details** row (Text,
-Headings, Links, Images, Metadata, Typography, Console) for deeper checks.
+Each page is one panel: score, both URLs, status and only the scores below 100, then the tabs
+**Difference review** and **Issues**, plus a smaller **Details** row (Text, Headings, Links, Images,
+Metadata, Typography, Console) for deeper checks.
 
 ### Difference review (default view of a page)
 
 Built to be read top-down, one finding at a time:
 
-- **One-line verdict + cards**: *Fix first* / *Worth checking* / *Minor* / page height for the chosen width.
+- **One toolbar**: counts for the chosen width (*fix first* / *worth checking* / *minor*), the width
+  buttons, + Add width, Outline all, zoom and Export report.
 - **Screenshots** (original | EDS, side by side, synced scroll, zoom, 375/768/1440…) with small numbered
   **pins** only — no boxes until you pick something.
 - **"What's different" list** next to the screenshots, grouped **Fix first → Worth checking → Minor**
   (Minor collapsed), filterable by *Content / Spacing / Visual*. Every item has a plain title
   ("39px more space on EDS") and what to check ("Between “By giving…” and image “Donors…”: 203px → 242px.
-  Check margin / padding.").
+  Check margin / padding."). Visual findings say where they are ("Looks different near “Planned Giving”"),
+  using the closest heading on the EDS page. A short tip at the top of the list can be dismissed.
 - **Pick an item** (or a pin) → it's outlined on **both** pages, the rest of the screenshot is dimmed, and
   both pages scroll to it. Click again to clear. *Outline all* shows every box at once if you want the full picture.
 
@@ -74,7 +77,7 @@ What is measured:
 
 Each pair gets a **parity score** (text 30%, visual 20%, links 15%, headings / images / typography
 10% each, metadata 5%), an auto status (Pass ≥ 90 with no errors, Needs review ≥ 75, Fail),
-and a prioritised **issue list**. Add your own **verdict + notes** per page in the *Review notes* tab.
+and a prioritised **issue list**.
 
 ## Screen widths
 
@@ -88,8 +91,8 @@ and a prioritised **issue list**. Add your own **verdict + notes** per page in t
 
 **⬇ Export report** (in the run summary and in each page's Difference review) downloads one
 self-contained HTML file (screenshots embedded) that opens offline and can be shared.
-The same run data is also available at `/api/jobs/<id>/issues.csv` (one row per issue, incl. your
-verdict/notes) and `/api/jobs/<id>/result.json`.
+The same run data is also available at `/api/jobs/<id>/issues.csv` (one row per issue) and
+`/api/jobs/<id>/result.json`.
 
 Runs are saved in `tools/compare/reports/<run-id>/` (git-ignored) and listed under **History**.
 

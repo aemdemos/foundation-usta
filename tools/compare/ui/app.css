@@ -481,10 +481,6 @@ ins { background: #c9e9d2; color: #0d4d24; text-decoration: none; border-radius:
 .list li { margin: 3px 0; word-break: break-all; }
 
 /* notes */
-.verdicts { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; }
-.verdict { display: inline-flex; gap: 6px; align-items: center; padding: 8px 14px; border: 1px solid #cdd2db; border-radius: 8px; cursor: pointer; }
-.verdict:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
-.notes-text { white-space: pre-wrap; }
 .empty { padding: 30px; text-align: center; color: var(--muted); }
 
 
@@ -618,3 +614,20 @@ ins { background: #c9e9d2; color: #0d4d24; text-decoration: none; border-radius:
 /* review: one slim summary line instead of big cards */
 .review-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 12px; }
 .rb-verdict { font-weight: 700; font-size: 15px; margin-right: 4px; }
+
+/* compact page panel: header row + tabs + content in one card */
+.pair-panel { padding: 14px 18px; }
+.pair-panel > .pair-head.compact { padding-bottom: 12px; }
+.pair-panel > .tabs { margin-bottom: 12px; }
+.head-right { grid-auto-flow: row; }
+.score-chips .small { align-self: center; margin-left: 4px; }
+.runbar .page-nav .btn.small { padding: 2px 10px; font-size: 14px; }
+
+/* findings panel polish */
+.howto { display: flex; align-items: flex-start; gap: 8px; }
+.howto > span { flex: 1; }
+.howto-x { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0 2px; font-size: 13px; }
+.howto-x:hover { color: var(--ink); }
+.fpanel .chips { flex-wrap: nowrap; overflow-x: auto; gap: 4px; }
+.fpanel .chip { white-space: nowrap; padding: 3px 9px; }
+.review-toolbar .rb-verdict { font-size: 14px; }

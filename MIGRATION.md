@@ -5623,3 +5623,8 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
   checker reports −33/−44/−45px, matching a direct DOM measurement. Section padding differences are now caught too
   (e.g. Impact Societies top padding 137 → 68px @1440). **Open site issue:** the EDS `.center-intro` h2 gets a
   60.8px margin-top where the source has ~105px between the yellow band and the next heading.
+- **2026-10-16 — Notes removed + compact page view.** The Notes tab (verdict + free-text notes), its `/notes` endpoint
+  and its CSV columns are gone; per-finding ✓/✗ marks remain the review record. The page view is now one breadcrumb
+  (History › run › page, with ‹ › page nav) and one panel (score, URLs, status, only sub-100 scores, tabs). The
+  review counts moved into the toolbar, the how-to tip is dismissible (localStorage), overlapping pins are nudged
+  apart, and visual findings name their location via the nearest EDS heading (`visual[].headings`, from new runs).

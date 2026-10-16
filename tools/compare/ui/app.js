@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 /**
  * Page Parity Checker UI. Runs in two modes:
- *  - live:   served by tools/compare/server.mjs (form, history, progress, notes)
+ *  - live:   served by tools/compare/server.mjs (form, history, progress, review marks)
  *  - static: an exported report (window.REPORT + window.REPORT_ASSETS inlined)
  */
 
@@ -47,7 +47,6 @@ const tone = (s) => {
 };
 const scoreEl = (s) => h('span', { class: `score ${tone(s)}` }, s == null ? '–' : s);
 const badge = (text, cls = '') => h('span', { class: `badge ${cls}` }, text);
-const verdictLabel = { pass: 'Pass', minor: 'Minor issues', fail: 'Fail' };
 const fmtDate = (s) => (s ? new Date(s).toLocaleString() : '');
 const extLink = (url, text) => h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, text || url);
 
@@ -379,7 +378,7 @@ async function openRun(id, pairIdx, tab, changeId) {
 function showRun(pairIdx, tab, changeId) {
   const { job } = state;
   const pair = pairIdx != null && pairIdx !== '' ? job.pairs[Number(pairIdx)] : null;
-  fill(app, runHeader(job), pair ? pairDetail(pair, tab || 'visual', changeId) : runSummary(job));
+  fill(app, runHeader(job, pair, tab || 'visual'), pair ? pairDetail(pair, tab || 'visual', changeId) : runSummary(job));
   if (!pair) window.scrollTo(0, 0);
 }
 
@@ -417,7 +416,23 @@ function pageStatus(pair) {
   return { label: 'Matches', cls: 'pass' };
 }
 
-function runHeader(job) {
+function pageNav(job, pair, tab) {
+  const pages = job.pairs.filter((p) => p.result);
+  if (pages.length < 2) return null;
+  const i = pages.indexOf(pair);
+  const link = (p, label, title) => h('a', {
+    class: `btn small${p ? '' : ' disabled'}`, href: p ? runHref(p.index, tab) : null, 'aria-disabled': p ? null : 'true', title,
+  }, label);
+  return h(
+    'span',
+    { class: 'page-nav' },
+    link(pages[i - 1], '‹', 'Previous page'),
+    h('span', { class: 'small muted' }, `Page ${i + 1} of ${pages.length}`),
+    link(pages[i + 1], '›', 'Next page'),
+  );
+}
+
+function runHeader(job, pair, tab) {
   // widths actually compared (pages may have extra widths added after the run)
   const widths = [...new Set(job.pairs.flatMap((p) => p.viewports || job.options.viewports))]
     .sort((a, b) => a - b);
@@ -432,9 +447,12 @@ function runHeader(job) {
       { class: 'crumbs' },
       STATIC ? null : h('a', { href: '#/history' }, 'History'),
       STATIC ? null : h('span', { class: 'sep' }, '›'),
-      h('a', { href: runHref(), class: 'crumb-run' }, job.title),
+      pair ? h('a', { href: runHref() }, job.title) : h('span', { class: 'crumb-run' }, job.title),
+      pair ? h('span', { class: 'sep' }, '›') : null,
+      pair ? h('span', { class: 'crumb-run' }, pair.src?.title || pagePath(pair.original)) : null,
       h('span', { class: 'muted small' }, ` · ${fmtDate(job.createdAt)} · widths ${widths.join(', ')}px`),
       h('span', { class: 'spacer' }),
+      pair ? pageNav(job, pair, tab) : null,
       STATIC ? h('button', { type: 'button', class: 'btn small', onclick: () => window.print() }, 'Print / Save as PDF') : null,
     ),
     running ? h(
@@ -531,7 +549,7 @@ function runSummary(job) {
 
 /* ------------------------------------------------------------ pair detail */
 
-const TABS = [['visual', 'Difference review'], ['issues', 'Issues'], ['notes', 'Notes']];
+const TABS = [['visual', 'Difference review'], ['issues', 'Issues']];
 const DETAIL_TABS = [
   ['text', 'Text'], ['headings', 'Headings'], ['links', 'Links'], ['media', 'Images'], ['meta', 'Metadata'], ['typography', 'Typography'], ['network', 'Console'],
 ];
@@ -558,42 +576,32 @@ function tabCount(r, key) {
 function pairDetail(pair, tab, changeId) {
   const r = pair.result;
   if (!r) {
-    return h('section', { class: 'panel' }, h('a', { class: 'backlink', href: runHref() }, '← All pages'), h('div', { class: 'empty' }, pair.error || 'This page has not been compared yet.'));
+    return h('section', { class: 'panel' }, h('div', { class: 'empty' }, pair.error || 'This page has not been compared yet.'));
   }
-  const pages = state.job.pairs.filter((p) => p.result);
-  const prev = pages[pages.indexOf(pair) - 1];
-  const next = pages[pages.indexOf(pair) + 1];
   const s = r.scores;
   const ringColor = { good: 'var(--good)', mid: 'var(--mid)', bad: 'var(--bad)' }[tone(s.overall)];
-  const scoreChips = [['Visual', s.visual], ['Text', s.text], ['Headings', s.headings], ['Links', s.links], ['Images', s.media], ['Typography', s.typography], ['Metadata', s.meta]]
-    .map(([label, v]) => h('span', { class: `score-chip ${tone(v)}`, title: `${label} score` }, label, ' ', h('b', null, v ?? '–')));
+  const scores = [['Visual', s.visual], ['Text', s.text], ['Headings', s.headings], ['Links', s.links], ['Images', s.media], ['Typography', s.typography], ['Metadata', s.meta]];
+  const imperfect = scores.filter(([, v]) => v != null && v < 100);
   const head = h(
-    'section',
-    { class: 'panel pair-panel' },
+    'div',
+    { class: 'pair-head compact' },
+    h('div', { class: 'ring small', style: { '--p': s.overall, '--c': ringColor }, title: 'Parity score (100 = identical)' }, h('span', null, s.overall)),
     h(
       'div',
-      { class: 'pair-head compact' },
-      h('a', { class: 'backlink', href: runHref() }, '← All pages'),
-      h('div', { class: 'ring small', style: { '--p': s.overall, '--c': ringColor }, title: 'Parity score (100 = identical)' }, h('span', null, s.overall)),
+      { class: 'urls' },
+      h('div', { class: 'url-line' }, h('span', { class: 'dot grey', title: 'Original' }), extLink(pair.original), pair.src?.status ? h('span', { class: 'muted small' }, ` HTTP ${pair.src.status}`) : null),
+      h('div', { class: 'url-line' }, h('span', { class: 'dot blue', title: 'EDS' }), extLink(pair.eds), pair.edsInfo?.status ? h('span', { class: 'muted small' }, ` HTTP ${pair.edsInfo.status}`) : null),
+    ),
+    h(
+      'div',
+      { class: 'head-right' },
+      badge(pageStatus(pair).label, pageStatus(pair).cls),
       h(
         'div',
-        { class: 'urls' },
-        h('div', { class: 'url-line' }, h('span', { class: 'dot grey' }), extLink(pair.original), pair.src?.status ? h('span', { class: 'muted small' }, ` HTTP ${pair.src.status}`) : null),
-        h('div', { class: 'url-line' }, h('span', { class: 'dot blue' }), extLink(pair.eds), pair.edsInfo?.status ? h('span', { class: 'muted small' }, ` HTTP ${pair.edsInfo.status}`) : null),
+        { class: 'score-chips', title: scores.map(([l, v]) => `${l} ${v ?? '–'}`).join(' · ') },
+        imperfect.map(([label, v]) => h('span', { class: `score-chip ${tone(v)}` }, label, ' ', h('b', null, v))),
+        h('span', { class: 'small muted' }, imperfect.length ? 'all other checks 100' : 'all checks 100'),
       ),
-      h(
-        'div',
-        { class: 'head-right' },
-        h('div', null, badge(pageStatus(pair).label, pageStatus(pair).cls), ' ', pair.notes?.verdict ? badge(`Reviewer: ${verdictLabel[pair.notes.verdict]}`, pair.notes.verdict) : null),
-        h('div', { class: 'score-chips' }, scoreChips),
-      ),
-      pages.length > 1 ? h(
-        'div',
-        { class: 'page-nav' },
-        h('a', { class: `btn small${prev ? '' : ' disabled'}`, href: prev ? runHref(prev.index, tab) : null, 'aria-disabled': prev ? null : 'true' }, '‹ Previous page'),
-        h('span', { class: 'small muted' }, `Page ${pages.indexOf(pair) + 1} of ${pages.length}`),
-        h('a', { class: `btn small${next ? '' : ' disabled'}`, href: next ? runHref(next.index, tab) : null, 'aria-disabled': next ? null : 'true' }, 'Next page ›'),
-      ) : null,
     ),
   );
   const tabLink = ([key, label]) => h(
@@ -619,9 +627,8 @@ function pairDetail(pair, tab, changeId) {
     meta: metaTab,
     typography: typographyTab,
     network: networkTab,
-    notes: notesTab,
   };
-  return h('div', null, head, h('section', { class: 'panel' }, tabs, (views[tab] || issuesTab)(pair, r, changeId)));
+  return h('section', { class: 'panel pair-panel' }, head, tabs, (views[tab] || issuesTab)(pair, r, changeId));
 }
 
 function issuesTab(pair, r) {
@@ -673,6 +680,7 @@ const whereText = (f) => {
   if (f.src && f.eds) return 'both pages';
   return f.src ? 'original only' : 'EDS only';
 };
+const HOWTO_KEY = 'parity-checker-howto-hidden';
 const pctOf = (n, total) => `${(100 * n) / total}%`;
 const nums = (s) => (String(s || '').match(/-?\d+/g) || []).map(Number);
 
@@ -725,6 +733,24 @@ function describe(f) {
     default:
       return { title: f.label, hint: f.detail };
   }
+}
+
+/** Say where a visual finding is: the closest heading at or above it on the EDS page. */
+function nearHeading(f, headings) {
+  if (f.category !== 'Visual' || !f.eds || !headings?.length) return f;
+  const [x, y, w, bh] = f.eds;
+  const inside = headings.find((hd) => hd.y >= y - 4 && hd.y <= y + bh
+    && hd.x < x + w && hd.x + hd.w > x);
+  const above = headings.filter((hd) => hd.y <= y + 4).sort((a, b) => b.y - a.y)[0];
+  const hd = inside || above;
+  const where = hd ? `near “${hd.text}”` : 'near the top of the page';
+  const titles = {
+    'Looks different here': `Looks different ${where}`,
+    'This section looks different': `Section ${where} looks different`,
+    'Part of the original is missing on EDS': `Part of the original is missing ${where}`,
+    'Extra content on EDS': `Extra content on EDS ${where}`,
+  };
+  return { ...f, title: titles[f.title] || f.title };
 }
 
 const area = (b) => b[2] * b[3];
@@ -837,6 +863,7 @@ function findingsAt(r, vp) {
   const y = (f) => (f.eds || f.src)[1];
   return list
     .map((f) => ({ ...f, ...(f.title ? {} : describe(f)), type: typeOf(f) }))
+    .map((f) => nearHeading(f, v?.headings))
     .sort((p, q) => PRIORITY_RANK2[p.priority] - PRIORITY_RANK2[q.priority] || y(p) - y(q))
     .map((f, i) => ({ ...f, num: i + 1 }));
 }
@@ -939,6 +966,16 @@ function visualTab(pair, r, focusId) {
     // screenshot layer: a numbered pin per finding; outline + spotlight only for the selected one
     const layer = (H, side) => {
       const out = [];
+      const placed = [];
+      const near = W / 22; // ~ one pin width at normal zoom, in screenshot pixels
+      const taken = (px, y) => placed
+        .some(([qx, qy]) => Math.abs(qx - px) < near && Math.abs(qy - y) < near);
+      const spot = (x, y) => {
+        let px = x;
+        while (taken(px, y)) px += near;
+        placed.push([px, y]);
+        return px;
+      };
       shown.forEach((f) => {
         const isSel = sel && f.id === sel.id;
         if (f.priority === 'low' && !showMinor && !isSel) return;
@@ -961,7 +998,10 @@ function visualTab(pair, r, focusId) {
               type: 'button',
               class: `pin prio-${f.priority}${isSel ? ' selected' : ''}${(pair.reviews || {})[f.id] ? ` rv-${pair.reviews[f.id]}` : ''}`,
               dataset: { f: f.id },
-              style: { left: pctOf(Math.max(0, x), W), top: pctOf(Math.max(0, y), H) },
+              style: {
+                left: pctOf(Math.min(W - near, spot(Math.max(0, x), Math.max(0, y))), W),
+                top: pctOf(Math.max(0, y), H),
+              },
               title: `${f.num}. ${f.title}`,
               'aria-label': `Finding ${f.num}: ${f.title}`,
               // eslint-disable-next-line no-use-before-define
@@ -1107,8 +1147,15 @@ function visualTab(pair, r, focusId) {
           h('div', { class: 'progress thin' }, h('div', { style: { width: `${Math.round((100 * reviewedCount) / all.length)}%` } })),
           h('span', { class: 'small muted' }, `Reviewed ${reviewedCount} of ${all.length}`),
         ) : null,
-        STATIC ? null : h('div', { class: 'howto' }, '1. Pick a finding  2. Compare the highlighted area  3. Mark ', h('b', null, '✓ fine'), ' or ', h('b', null, '✗ needs fix'), '. Keys: ↑ ↓ move · O fine · X needs fix'),
-        h('div', { class: 'chips' }, [['all', `All (${all.length})`], ['content', `Content (${nType('content')})`], ['spacing', `Spacing (${nType('spacing')})`], ['visual', `Visual (${nType('visual')})`]]
+        STATIC || localStorage.getItem(HOWTO_KEY) ? null : h(
+          'div',
+          { class: 'howto' },
+          h('span', null, 'Pick a finding → compare the highlighted area → mark ', h('b', null, '✓ fine'), ' or ', h('b', null, '✗ needs fix'), '. Keys: ↑ ↓ · O · X'),
+          h('button', {
+            type: 'button', class: 'howto-x', 'aria-label': 'Hide tip', onclick: () => { localStorage.setItem(HOWTO_KEY, '1'); draw(); },
+          }, '✕'),
+        ),
+        h('div', { class: 'chips' }, [['all', `All ${all.length}`], ['content', `Content ${nType('content')}`], ['spacing', `Spacing ${nType('spacing')}`], ['visual', `Visual ${nType('visual')}`]]
           .filter(([k]) => k === 'all' || nType(k) || typeFilter === k)
           .map(([k, l]) => h('button', {
             type: 'button', class: 'chip', 'aria-pressed': String(typeFilter === k), onclick: () => { typeFilter = k; draw(); },
@@ -1150,25 +1197,13 @@ function visualTab(pair, r, focusId) {
       },
     }, d < 0 ? '−' : '+');
     const exportBtn = STATIC
-      ? h('button', { type: 'button', class: 'btn', onclick: () => window.print() }, '⬇ Print / PDF')
-      : h('a', { class: 'btn', href: `/api/jobs/${state.job.id}/report.html` }, '⬇ Export report');
-    let verdict = `At ${vp}px: matches`;
-    if (counts.high) verdict = `At ${vp}px:`;
-    else if (counts.medium) verdict = `At ${vp}px: nothing critical`;
+      ? h('button', { type: 'button', class: 'btn small', onclick: () => window.print() }, '⬇ Print / PDF')
+      : h('a', { class: 'btn small', href: `/api/jobs/${state.job.id}/report.html` }, '⬇ Export report');
+    let verdict = `${vp}px · matches`;
+    if (counts.high || counts.medium) verdict = `${vp}px`;
 
     fill(
       wrap,
-      h(
-        'div',
-        { class: 'review-bar' },
-        h('span', { class: 'rb-verdict' }, verdict),
-        h('span', { class: 'pill bad' }, `${counts.high} fix first`),
-        h('span', { class: 'pill mid' }, `${counts.medium} worth checking`),
-        h('span', { class: 'pill' }, `${counts.low} minor`),
-        h('span', { class: 'small muted', title: 'Captured page height' }, `Height: EDS ${(v.edsHeight || 0).toLocaleString()}px · original ${(v.srcHeight || 0).toLocaleString()}px`),
-        h('span', { class: 'spacer' }),
-        exportBtn,
-      ),
       v.error ? h('div', { class: 'error-box' }, v.error) : null,
       !r.changes && !v.areas ? h('div', { class: 'error-box' }, 'This run was made before differences were marked — run the page again to see findings.') : null,
       h(
@@ -1177,9 +1212,11 @@ function visualTab(pair, r, focusId) {
         h(
           'div',
           { class: 'review-toolbar' },
-          h('b', { class: 'toolbar-title' }, 'Original vs EDS'),
+          h('span', { class: 'rb-verdict' }, verdict),
+          counts.high ? h('span', { class: 'pill bad' }, `${counts.high} fix first`) : null,
+          counts.medium ? h('span', { class: 'pill mid' }, `${counts.medium} worth checking`) : null,
+          counts.low ? h('span', { class: 'pill' }, `${counts.low} minor`) : null,
           h('span', { class: 'spacer' }),
-          h('span', { class: 'small muted' }, 'Width'),
           h('div', { class: 'seg' }, vis.map((x) => h('button', {
             type: 'button',
             'aria-pressed': String(x === current),
@@ -1190,10 +1227,11 @@ function visualTab(pair, r, focusId) {
             type: 'checkbox', checked: outlineAll, onchange: (e) => { outlineAll = e.target.checked; draw(); },
           }), 'Outline all'),
           h('div', { class: 'zoom' }, zoomBtn(-0.25, 'Zoom out'), h('span', { class: 'zoom-val' }, `${Math.round(zoom * 100)}%`), zoomBtn(0.25, 'Zoom in')),
+          exportBtn,
         ),
         h('div', { class: 'review-body' }, h('div', { class: 'shot-scroll' }, stage), panel),
       ),
-      h('p', { class: 'small muted' }, 'Content that only moved up or down is ignored. Findings in the same row are combined into one item.'),
+      h('p', { class: 'small muted' }, `Content that only moved up or down is ignored. Findings in the same row are combined. Page height: EDS ${(v.edsHeight || 0).toLocaleString()}px · original ${(v.srcHeight || 0).toLocaleString()}px.`),
     );
   };
   draw();
@@ -1442,51 +1480,6 @@ function networkTab(pair, r) {
     n.console.length ? h('ul', { class: 'list' }, n.console.map((c) => h('li', { class: 'mono' }, c))) : h('div', { class: 'small muted' }, 'None'),
   );
   return h('div', { class: 'cols' }, block('EDS', r.network.eds), block('Original', r.network.src));
-}
-
-function notesTab(pair) {
-  const n = pair.notes || {};
-  if (STATIC) {
-    return h(
-      'div',
-      null,
-      h('h3', null, 'Reviewer verdict'),
-      n.verdict ? badge(verdictLabel[n.verdict], n.verdict) : h('span', { class: 'muted' }, 'Not reviewed'),
-      h('h3', null, 'Notes'),
-      n.text ? h('div', { class: 'notes-text' }, n.text) : h('span', { class: 'muted' }, 'No notes'),
-    );
-  }
-  const text = h('textarea', {
-    id: 'f-notes', value: n.text || '', placeholder: 'What did you check? What still needs fixing?', style: { fontFamily: 'inherit', fontSize: '14px' },
-  });
-  const saved = h('span', { class: 'small muted' }, n.updatedAt ? `Saved ${fmtDate(n.updatedAt)}` : '');
-  const radios = [['pass', 'Pass'], ['minor', 'Minor issues'], ['fail', 'Fail']].map(([v, l]) => h(
-    'label',
-    { class: 'verdict' },
-    h('input', {
-      type: 'radio', name: 'verdict', value: v, checked: n.verdict === v,
-    }),
-    l,
-  ));
-  const save = async () => {
-    const verdict = radios.map((x) => x.querySelector('input')).find((i) => i.checked)?.value || '';
-    try {
-      await api(`/api/jobs/${state.job.id}/notes`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ index: pair.index, verdict, text: text.value }),
-      });
-      pair.notes = { verdict, text: text.value, updatedAt: new Date().toISOString() };
-      saved.textContent = `Saved ${fmtDate(pair.notes.updatedAt)} — included in the exported report`;
-    } catch (e) { saved.textContent = `Save failed: ${e.message}`; }
-  };
-  return h(
-    'div',
-    null,
-    h('p', { class: 'lead' }, 'Record your manual review. The verdict and notes appear in the summary, the HTML report and the CSV.'),
-    h('div', { class: 'verdicts', role: 'radiogroup', 'aria-label': 'Verdict' }, radios),
-    h('label', { class: 'field', for: 'f-notes' }, 'Notes'),
-    text,
-    h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn primary', onclick: save }, 'Save review'), saved),
-  );
 }
 
 /* ------------------------------------------------------------ boot */

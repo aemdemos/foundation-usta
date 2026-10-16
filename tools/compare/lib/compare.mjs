@@ -516,6 +516,9 @@ function compareVisual(src, eds, diffs) {
       srcOverflow: va.layout?.overflowX || 0,
       edsOverflow: vb.layout?.overflowX || 0,
       error: va.error || vb.error || d.error || null,
+      // heading positions on the EDS shot, so findings can say where they are ("near heading X")
+      headings: (vb.boxes?.headings || []).slice(0, 150)
+        .map((x) => ({ text: normalizeText(x.text).slice(0, 60), y: x.box[1], x: x.box[0], w: x.box[2] })),
     };
   });
 }
