@@ -18,7 +18,8 @@
     "check:overflow": "node tools/quality/overflow-sweep.mjs",
     "discover:typography": "node tools/quality/typography-discover.mjs",
     "check:typography": "node tools/quality/typography-check.mjs",
-    "postinstall": "playwright install chromium || true"
+    "postinstall": "playwright install chromium || true",
+    "compare": "node tools/compare/server.mjs"
   },
   "repository": {
     "type": "git",

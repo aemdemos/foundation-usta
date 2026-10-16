@@ -5550,3 +5550,81 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
 - **Skipped on purpose:** decorative images (`alt=""`, so no empty tooltips) and images that already have a `title`
   (an authored title wins).
 - **Verified:** homepage — 12/13 images get a title equal to their alt; the 1 decorative image gets none.
+
+### 2026-10-14 — Validation tooling: Page Parity Checker (original vs EDS UI)
+- **Request:** replace manual side-by-side validation with a UI where you enter original + EDS URLs, see how the two
+  versions differ, and export a report.
+- **Tool:** `npm run compare` → local UI (`tools/compare/`, see its README). It runs every pair in headless Chromium
+  at the selected viewports (defaults come from `tools/quality/breakpoints.json`) and checks: pixel diff
+  (side-by-side / swipe / overlay / diff map), text-block LCS diff with word-level highlights, heading outline, links
+  (normalised destinations), images/alt/embeds/forms, metadata, computed typography, console + failed requests.
+  Each page gets a score, an issue list, and a manual verdict + notes. Exports: a self-contained HTML report, a CSV of
+  issues and JSON. Runs are stored in `tools/compare/reports/` (git-ignored); `tools/compare/` is in `.hlxignore`.
+- **Defaults for this site:** the original has no `<main>`/`<header>`, so content = `<body>` minus
+  `.cmp-experiencefragment--header/--footer`. The "stickyButton" feedback iframe is hidden before screenshots.
+- **First findings (not fixed, reported only):** home — h4 "Make a donation" reads "Make a donation to us" on EDS;
+  the two "LEARN MORE" links point to different `#anchors` (`#FundingPriorities` → `#our-strategic-priorities`,
+  `#sustainable` → `#sustained-support-sustainable-impact`); `.aem.live` serves `robots: noindex, nofollow`.
+  who-we-are — the h6 "Chris Evert, Chairperson" is not a heading on EDS; the above-the-fold area at 375 differs ~35%.
+- **Change markers (same day).** The checker records where each text block / heading / link / image is rendered at
+  every viewport (document-space boxes, measured before the screenshot). Each located difference becomes a numbered
+  change drawn on the screenshots (red missing, orange changed, blue extra, purple broken/no alt), with a clickable
+  change list and "📍 Show" links from the Issues/Text/Headings/Links tabs. Gotcha: the original serves different
+  heading copy per breakpoint ("Make a donation" on desktop vs "Make a donation to us" at 375), so the home-page
+  heading change is desktop-only. Content is compared at the widest viewport; markers are placed per viewport.
+- **Difference review + shift-aware diff (same day).** The page view now opens on a "Difference review": summary cards,
+  Side by side / Overlay / Findings list, zoom, and numbered priority-coloured boxes on both screenshots. The pixel
+  diff first lines the two pages up (banded edit distance over 4px row signatures), then compares with ±3px/±1px
+  tolerance, and groups differing 16px cells into boxes; unmatched rows become missing/extra/section/spacing
+  findings. **Dead end:** aligning fixed 48px strips independently jittered back and forth (dozens of false
+  missing/extra sections on get-involved); one global monotonic alignment fixed it. Without the drift tolerance,
+  1–3px line-height drift flagged every mobile text line. Result on get-involved @1440: mismatch 6.5% → 1.8%,
+  2 high findings. One of them is real: the floating "Donate" side tab renders blank on EDS.
+- **Spacing & layout findings (same day).** The checker measures matched elements (text blocks, headings, images)
+  on both pages at each width and reports: the gap to the element below (±12px+; ≥20 medium, ≥48 high), left-edge
+  shifts (padding/margin; centred content skipped), multi-line text width (wrapping), and image size. Repeats are
+  grouped as "recurring" patterns. **Open site issue it surfaced (get-involved, 1440):** every heading → paragraph
+  gap is ~2px on the original vs ~25px on EDS (5 places), so a global heading margin-bottom needs aligning with
+  the source. Section gaps also vary by ±40–90px, e.g. text → yellow band +39px and image → "Impact Societies"
+  +56px. Not fixed yet; reported only.
+- **Decluttered review (same day, after user feedback "too cluttered").** Drawing every finding as a box at once
+  was unreadable. The view now shows numbered pins plus a grouped plain-language list (Fix first / Worth checking /
+  Minor collapsed). Only the selected finding is outlined, on both pages, with the rest dimmed. Recurring spacing
+  differences are merged into one item, and pixel areas already explained by a spacing/content finding are hidden.
+  Spacing is "fix first" only at ≥96px (it was ≥48, which put 10 spacing items in Fix first on get-involved).
+- **2026-10-15 — widths + layout.** The four export buttons were removed from the run header; a single "Export report"
+  stays (summary + Difference review). The app is now full width (no max-width side gutters). Screen widths moved
+  into the main form with a free-text "other widths" field. "+ Add width" in the Difference review captures one more
+  width for a single page (`POST /api/jobs/:id/viewport`). It runs through the same queue and re-runs comparePair
+  over the saved raw captures (`p<n>-capture.json`, written per page since this change). Runs made earlier can't
+  add widths; re-run those pages.
+- **2026-10-15 — same-row merge + review workflow.** Findings of the same kind whose EDS boxes share a horizontal band
+  (≥50% vertical overlap, ≥30% on the original) are merged into one "N columns in this row" item. Example from the
+  user: the gaps under both columns of a two-column section showed as #8 and #9. Get-involved @1440 went from 35 to
+  24 findings. Each finding can be marked ✓ looks fine / ✗ needs fix (`POST /api/jobs/:id/review`, stored as
+  `pair.reviews`), which auto-advances to the next unreviewed one, with a progress bar and ↑/↓/O/X shortcuts. The
+  page header is compacted to one row with score chips.
+- **2026-10-15 — UX pass.** The run summary is now a list of page cards (status, fix-first / worth-checking counts,
+  review progress, Review → button) plus a "Start/Continue reviewing" button. The run header became a breadcrumb.
+  Page view: 3 main tabs plus a small Details row, Previous/Next page navigation, and a one-line review summary
+  instead of 4 cards. A one-page run auto-opens its review on completion. Page status follows the findings
+  (Matches / Mostly matches / Needs review / Fail), so a page can no longer show "Pass" with fix-first items.
+  **Bug fixed:** `h()` assigned CSS custom properties via `Object.assign(el.style)`, which silently drops `--x`, so
+  score rings never showed their colour. It now uses `style.setProperty` for `--*` keys.
+- **2026-10-16 — Overlay removed (user request).** The Difference review is side-by-side only; the Overlay tab
+  (blend / swipe / heatmap) and its CSS are gone. The `-diff.jpg` heatmaps are still written per width but are no
+  longer embedded in the exported report, which keeps it smaller.
+- **2026-10-16 — section-edge spacing (user: "gap above Signature Events not found").** Spacing was measured only between
+  content blocks, so "image → Signature Events" (−75px @1440) mixed the yellow section's bottom padding with the gap
+  after the section. The checker now records wide background bands per width (`boxes.bands`, outermost per colour)
+  and measures each element's space to the nearest edge (content above / section top / end of section above), plus
+  section bottom padding. Only like-for-like edges are compared. Verified on get-involved: the gap above "Signature
+  Events" (yellow band bottom → heading) is 73/105/105px on the original vs 40/61/60px on EDS @375/768/1440; the
+  checker reports −33/−44/−45px, matching a direct DOM measurement. Section padding differences are now caught too
+  (e.g. Impact Societies top padding 137 → 68px @1440). **Open site issue:** the EDS `.center-intro` h2 gets a
+  60.8px margin-top where the source has ~105px between the yellow band and the next heading.
+- **2026-10-16 — Notes removed + compact page view.** The Notes tab (verdict + free-text notes), its `/notes` endpoint
+  and its CSV columns are gone; per-finding ✓/✗ marks remain the review record. The page view is now one breadcrumb
+  (History › run › page, with ‹ › page nav) and one panel (score, URLs, status, only sub-100 scores, tabs). The
+  review counts moved into the toolbar, the how-to tip is dismissible (localStorage), overlapping pins are nudged
+  apart, and visual findings name their location via the nearest EDS heading (`visual[].headings`, from new runs).
