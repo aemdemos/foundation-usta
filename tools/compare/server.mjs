@@ -316,7 +316,7 @@ async function reportHtml(job, { images = true } = {}) {
   const assets = {};
   if (images) {
     const files = await readdir(jobDir(job.id));
-    await Promise.all(files.filter((f) => /\.(jpg|png)$/.test(f)).map(async (f) => {
+    await Promise.all(files.filter((f) => /\.(jpg|png)$/.test(f) && !/-diff\./.test(f)).map(async (f) => {
       const b = await readFile(path.join(jobDir(job.id), f));
       assets[f] = `data:image/${f.endsWith('.png') ? 'png' : 'jpeg'};base64,${b.toString('base64')}`;
     }));

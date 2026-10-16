@@ -5604,3 +5604,22 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
   24 findings. Each finding can be marked ✓ looks fine / ✗ needs fix (`POST /api/jobs/:id/review`, stored as
   `pair.reviews`), which auto-advances to the next unreviewed one, with a progress bar and ↑/↓/O/X shortcuts. The
   page header is compacted to one row with score chips.
+- **2026-10-15 — UX pass.** The run summary is now a list of page cards (status, fix-first / worth-checking counts,
+  review progress, Review → button) plus a "Start/Continue reviewing" button. The run header became a breadcrumb.
+  Page view: 3 main tabs plus a small Details row, Previous/Next page navigation, and a one-line review summary
+  instead of 4 cards. A one-page run auto-opens its review on completion. Page status follows the findings
+  (Matches / Mostly matches / Needs review / Fail), so a page can no longer show "Pass" with fix-first items.
+  **Bug fixed:** `h()` assigned CSS custom properties via `Object.assign(el.style)`, which silently drops `--x`, so
+  score rings never showed their colour. It now uses `style.setProperty` for `--*` keys.
+- **2026-10-16 — Overlay removed (user request).** The Difference review is side-by-side only; the Overlay tab
+  (blend / swipe / heatmap) and its CSS are gone. The `-diff.jpg` heatmaps are still written per width but are no
+  longer embedded in the exported report, which keeps it smaller.
+- **2026-10-16 — section-edge spacing (user: "gap above Signature Events not found").** Spacing was measured only between
+  content blocks, so "image → Signature Events" (−75px @1440) mixed the yellow section's bottom padding with the gap
+  after the section. The checker now records wide background bands per width (`boxes.bands`, outermost per colour)
+  and measures each element's space to the nearest edge (content above / section top / end of section above), plus
+  section bottom padding. Only like-for-like edges are compared. Verified on get-involved: the gap above "Signature
+  Events" (yellow band bottom → heading) is 73/105/105px on the original vs 40/61/60px on EDS @375/768/1440; the
+  checker reports −33/−44/−45px, matching a direct DOM measurement. Section padding differences are now caught too
+  (e.g. Impact Societies top padding 137 → 68px @1440). **Open site issue:** the EDS `.center-intro` h2 gets a
+  60.8px margin-top where the source has ~105px between the yellow band and the next heading.

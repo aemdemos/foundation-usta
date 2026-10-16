@@ -153,13 +153,38 @@ function extractContent(opts) {
       };
     });
 
+  // "bands": wide areas painted with a background colour/image that differs from the page —
+  // section backgrounds whose edges matter for spacing (padding / gap after a section)
+  const parseColor = (c) => (String(c).match(/[\d.]+/g) || []).map(Number);
+  const pageBg = (() => {
+    const [r, g, b, a = 1] = parseColor(getComputedStyle(document.body).backgroundColor);
+    if (a > 0.1) return `${r},${g},${b}`;
+    const [hr, hg, hb, ha = 1] = parseColor(getComputedStyle(document.documentElement).backgroundColor);
+    return ha > 0.1 ? `${hr},${hg},${hb}` : '255,255,255';
+  })();
+  const minBandWidth = Math.min(window.innerWidth, document.documentElement.clientWidth) * 0.4;
+  const bands = [];
   const bgImages = [];
   [...root.querySelectorAll('*')].slice(0, 6000).forEach((el) => {
     if (el.closest('[data-cmp-x]')) return;
-    const bg = getComputedStyle(el).backgroundImage;
+    const cs = getComputedStyle(el);
+    const bg = cs.backgroundImage;
     const m = bg && bg !== 'none' && bg.match(/url\(["']?([^"')]+)["']?\)/);
     if (m && !m[1].startsWith('data:')) bgImages.push(m[1]);
+    const [r, g, b, a = 1] = parseColor(cs.backgroundColor);
+    const colour = a > 0.1 ? `${r},${g},${b}` : '';
+    const painted = (colour && colour !== pageBg) || !!m;
+    if (!painted || cs.visibility === 'hidden') return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < minBandWidth || rect.height < 40) return;
+    const box = toBox(rect);
+    if (box) bands.push({ box, colour: colour || 'image' });
   });
+  // keep the outermost band of each colour (nested containers often repeat the same background)
+  const inside = (p, q) => p.box[0] >= q.box[0] - 2 && p.box[1] >= q.box[1] - 2
+    && p.box[0] + p.box[2] <= q.box[0] + q.box[2] + 2 && p.box[1] + p.box[3] <= q.box[1] + q.box[3] + 2;
+  const sectionBands = bands.filter((p, i) => !bands.some((q, j) => j !== i && q.colour === p.colour
+    && inside(p, q) && (j < i || !inside(q, p))));
 
   const embeds = [...root.querySelectorAll('iframe[src], video, embed[src], object[data]')]
     .filter((e) => !e.closest('[data-cmp-x]'))
@@ -190,6 +215,7 @@ function extractContent(opts) {
       links,
       images,
       bgImages: [...new Set(bgImages)],
+      bands: sectionBands,
       embeds,
       forms: root.querySelectorAll('form').length,
       wordCount,
@@ -233,6 +259,7 @@ function boxesOf(content) {
     headings: keep(content.headings, ['text']),
     links: keep(content.links, ['text', 'href']),
     images: keep(content.images, ['src', 'alt']),
+    bands: (content.bands || []).slice(0, 200),
   };
 }
 
@@ -337,6 +364,7 @@ export async function capturePage(browser, url, opts, onStep = () => {}) {
         // eslint-disable-next-line no-await-in-loop
         const ex = await page.evaluate(extractContent, { rootSelector, excludeSelector, includeHidden });
         ['blocks', 'headings', 'links', 'images'].forEach((k) => ex.content[k].forEach((x) => { delete x.box; }));
+        delete ex.content.bands;
         result.content = ex.content;
         result.meta = ex.meta;
         result.contentRoot = ex.rootSelector;

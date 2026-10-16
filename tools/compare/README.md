@@ -21,6 +21,17 @@ npm run compare -- --port 4200
 | **Typography** | Computed font family/size/weight/line-height/colour/letter-spacing for body, h1–h6, p, a, li at every viewport. |
 | **Console & network** | JS errors and failed requests on both pages. |
 
+### Run summary
+
+After a run you get one card per page: page title, status (**Matches**, **Mostly matches**, **Needs
+review** or **Fail**), "N to fix first · N worth checking", review progress, and a **Review →** button.
+**Start / Continue reviewing →** opens the first page that still has unreviewed findings. A one-page
+run opens its review automatically when it finishes. Inside a page, **‹ Previous page / Next page ›**
+moves through the run; the breadcrumb (History › run) goes back.
+
+Page tabs: **Difference review**, **Issues**, **Notes**, plus a smaller **Details** row (Text,
+Headings, Links, Images, Metadata, Typography, Console) for deeper checks.
+
 ### Difference review (default view of a page)
 
 Built to be read top-down, one finding at a time:
@@ -34,7 +45,6 @@ Built to be read top-down, one finding at a time:
   Check margin / padding.").
 - **Pick an item** (or a pin) → it's outlined on **both** pages, the rest of the screenshot is dimmed, and
   both pages scroll to it. Click again to clear. *Outline all* shows every box at once if you want the full picture.
-- **Overlay** tab: blend / swipe / heatmap.
 
 **Review workflow:** pick a finding → compare the highlighted area → mark **✓ Looks fine** or
 **✗ Needs fix** (the next unreviewed finding opens automatically). A progress bar shows
@@ -50,9 +60,16 @@ explains are hidden. Rows in the Issues, Text, Headings and Links tabs have a **
 
 What is measured:
 - **Visual** – shift-aware pixel diff (pages are lined up first, so content that only moved is ignored).
-- **Spacing & layout** – from the real element boxes of everything on both pages: gap to the element
-  below (margins / section padding), left-edge shifts (padding), multi-line text width (wrapping),
-  image size. Priority: ≥96px fix first, ≥24px worth checking, smaller = minor.
+- **Spacing & layout** – from the real element boxes of everything on both pages, plus the edges of
+  **coloured / image-background sections** (bands at least 40% of the page wide):
+  - space above each element to the nearest edge — the content above, the **top of its section**
+    (padding-top) or the **end of the section above** (e.g. "Above heading “Signature Events”, after the
+    section above: 105px → 60px");
+  - space between the last element of a section and the **bottom of that section** (padding-bottom);
+  - left-edge shifts (padding), multi-line text width (wrapping), image size.
+
+  Only like-for-like edges are compared (section end vs section end, the same block above, …).
+  Priority: ≥96px fix first, ≥24px worth checking, smaller = minor.
 - **Content** – missing / changed / extra text, headings, links, broken images, missing alt.
 
 Each pair gets a **parity score** (text 30%, visual 20%, links 15%, headings / images / typography
@@ -81,7 +98,6 @@ Runs are saved in `tools/compare/reports/<run-id>/` (git-ignored) and listed und
 - **Main content only** (default) – compares `<main>` on EDS and the original's `<main>`/`<body>`
   minus header/footer selectors (pre-filled for this site's AEM experience fragments). Turn off to compare
   the whole page.
-- **Content root selectors** – override when the original's content lives in a specific container.
 - **Hide before screenshots** – cookie banners, chat/feedback widgets.
 - **Include hidden text** – also compare text in closed tabs/menus (`<details>` accordions are always opened).
 - **Pixel-diff tolerance** – colour delta treated as noise.
@@ -91,5 +107,5 @@ Runs are saved in `tools/compare/reports/<run-id>/` (git-ignored) and listed und
 - Uses the project's Playwright dev-dependency; no extra installs. If Chromium is missing, run
   `npx playwright install chromium` or set `CHROME_PATH`.
 - The server binds to `127.0.0.1` only.
-- Full-page pixel diffs cascade once content shifts vertically — judge with the above-the-fold %
-  and the swipe/overlay views.
+- The two pages are lined up row by row before pixels are compared, so content that only moved
+  up or down is not reported as a difference.

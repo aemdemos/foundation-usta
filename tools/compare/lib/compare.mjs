@@ -592,11 +592,12 @@ const bottom = (b) => b[1] + b[3];
 /**
  * Spacing & layout: compares the measured boxes of elements that exist on both pages
  * (matched text blocks, headings and images) at every viewport.
- *  - vertical gap to the element directly below (margins / section padding)
+ *  - vertical space above each element to the nearest edge (content above, top of its coloured
+ *    section, or end of the section above) and each section's bottom padding
  *  - left edge (horizontal padding / margin), skipped for centred content
  *  - width of multi-line text (column width → different wrapping) and image size
  */
-function layoutFindings(r, L) {
+function layoutFindings(r, L, src, eds) {
   const pairs = [];
   r.headings.ops.filter((o) => o.type === 'equal' || o.type === 'changed').forEach((o) => pairs.push({
     a: L.src.headings(o.a), b: L.eds.headings(o.b), name: `heading “${clip(o.a.text, 40)}”`, text: true, type: 'heading',
@@ -624,35 +625,90 @@ function layoutFindings(r, L) {
       .sort((p, q) => p.A[1] - q.A[1]);
     const found = [];
 
-    // 1. vertical gaps: each item vs the nearest item directly below it (same column on both pages)
-    const targets = new Set();
-    items.forEach((p) => {
-      const below = items.filter((q) => q !== p && !targets.has(q)
-        && q.A[1] >= bottom(p.A) - 2 && q.B[1] >= bottom(p.B) - 2
-        && overlapsX(p.A, q.A) && overlapsX(p.B, q.B));
-      if (!below.length) return;
-      const q = below.reduce((m, x) => (x.A[1] < m.A[1] ? x : m));
-      targets.add(q);
-      const gapA = q.A[1] - bottom(p.A);
-      const gapB = q.B[1] - bottom(p.B);
+    // 1. vertical spacing, measured to the nearest *edge* above each element: the content above it,
+    //    the top of the coloured section it sits in (padding-top) or the end of the section above it
+    //    (gap after a section). Plus each section's bottom padding. Only like-for-like edges are compared.
+    const sideData = (cap, key) => ({
+      key,
+      bands: (cap.viewports[vp]?.boxes?.bands || []).map((x) => x.box),
+      content: ['blocks', 'headings', 'images'].flatMap((k) => (cap.viewports[vp]?.boxes?.[k] || []).map((x) => x.box)),
+    });
+    const sides = { A: sideData(src, 'A'), B: sideData(eds, 'B') };
+    const covers = (band, box) => band[0] <= box[0] + 4 && band[0] + band[2] >= box[0] + box[2] - 4;
+    // anything painted strictly between y0 and y1 in this column?
+    const blocked = (S, box, y0, y1, skip) => S.content.some((c) => c !== box && c !== skip
+      && overlapsX(c, box) && c[1] >= y0 + 2 && bottom(c) <= y1 - 2);
+    const edgeAbove = (S, q) => {
+      const box = q[S.key];
+      let best = null;
+      const consider = (y, kind, item) => { if (y <= box[1] + 2 && (!best || y > best.y)) best = { y, kind, item }; };
+      items.forEach((p) => {
+        if (p !== q && bottom(p[S.key]) <= box[1] + 2 && overlapsX(p[S.key], box)) consider(bottom(p[S.key]), 'content', p);
+      });
+      S.bands.forEach((bd) => {
+        if (!covers(bd, box)) return;
+        if (bd[1] <= box[1] + 2 && bottom(bd) > box[1] + 2) consider(bd[1], 'section-top');
+        if (bottom(bd) <= box[1] + 2) consider(bottom(bd), 'section-end');
+      });
+      if (best && blocked(S, box, best.y, box[1], best.item?.[S.key])) return null;
+      return best;
+    };
+    const edgeBelowInSection = (S, p) => {
+      const box = p[S.key];
+      const bd = S.bands.filter((b) => covers(b, box) && b[1] <= box[1] + 2 && bottom(b) >= bottom(box) - 2)
+        .sort((x, y) => bottom(x) - bottom(y))[0];
+      if (!bd || blocked(S, box, bottom(box), bottom(bd))) return null;
+      return { y: bottom(bd) };
+    };
+    const span = (x0, x1, y0, y1) => [x0, y0, Math.max(1, x1 - x0), Math.max(6, y1 - y0)];
+    const colSpan = (S, box, item) => {
+      const other = item?.[S.key];
+      return [Math.min(box[0], other ? other[0] : box[0]), Math.max(box[0] + box[2], other ? other[0] + other[2] : box[0] + box[2])];
+    };
+    const PLACE = {
+      'section-end': (q) => [`the end of the coloured section above and ${q.name}`, `above ${q.name}, after the section above`, `section end → ${q.type}`],
+      'section-top': (q) => [`the top of its coloured section and ${q.name}`, `at the top of the section, above ${q.name}`, `section top → ${q.type}`],
+    };
+    const pushGap = (gapA, gapB, extra) => {
       const d = gapB - gapA;
       if (Math.abs(d) < 12 || gapA > 900) return;
-      const span = (P, Q) => {
-        const x0 = Math.min(P[0], Q[0]);
-        const x1 = Math.max(P[0] + P[2], Q[0] + Q[2]);
-        return [x0, bottom(P), x1 - x0, Math.max(6, Q[1] - bottom(P))];
-      };
       found.push({
         kind: 'spacing',
         category: 'Spacing',
         priority: spacingPriority(d),
         label: d > 0 ? 'More space on EDS' : 'Less space on EDS',
         measure: `↕ ${signed(d)}`,
-        detail: `Gap between ${p.name} and ${q.name}: ${gapA}px on the original vs ${gapB}px on EDS (${signed(d)}).`,
-        src: span(p.A, q.A),
-        eds: span(p.B, q.B),
-        transition: `${p.type} → ${q.type}`,
         delta: d,
+        ...extra,
+        detail: `Gap between ${extra.between}: ${gapA}px on the original vs ${gapB}px on EDS (${signed(d)}).`,
+      });
+    };
+    items.forEach((q) => {
+      const ea = edgeAbove(sides.A, q);
+      const eb = edgeAbove(sides.B, q);
+      if (!ea || !eb) return;
+      const sameEdge = ea.kind === eb.kind && (ea.kind !== 'content' || ea.item === eb.item);
+      if (!sameEdge) return;
+      const [ax0, ax1] = colSpan(sides.A, q.A, ea.item);
+      const [bx0, bx1] = colSpan(sides.B, q.B, eb.item);
+      const [between, place, transition] = ea.kind === 'content'
+        ? [`${ea.item.name} and ${q.name}`, null, `${ea.item.type} → ${q.type}`]
+        : PLACE[ea.kind](q);
+      pushGap(q.A[1] - ea.y, q.B[1] - eb.y, {
+        between, place, transition, src: span(ax0, ax1, ea.y, q.A[1]), eds: span(bx0, bx1, eb.y, q.B[1]),
+      });
+    });
+    // bottom padding of a section: last element in a coloured section → the section's bottom edge
+    items.forEach((p) => {
+      const ea = edgeBelowInSection(sides.A, p);
+      const eb = edgeBelowInSection(sides.B, p);
+      if (!ea || !eb) return;
+      pushGap(ea.y - bottom(p.A), eb.y - bottom(p.B), {
+        between: `${p.name} and the bottom of its coloured section`,
+        place: `at the bottom of the section, below ${p.name}`,
+        transition: `${p.type} → section bottom`,
+        src: span(p.A[0], p.A[0] + p.A[2], bottom(p.A), ea.y),
+        eds: span(p.B[0], p.B[0] + p.B[2], bottom(p.B), eb.y),
       });
     });
 
@@ -1004,7 +1060,7 @@ export function comparePair(src, eds, { diffs, linkStatus } = {}) {
   };
   const L = makeLocators(src, eds);
   r.changes = buildChanges(r, L);
-  mergeLayout(r, layoutFindings(r, L));
+  mergeLayout(r, layoutFindings(r, L, src, eds));
   r.scores = scoreAll(r);
   r.issues = buildIssues(r);
   const errors = r.issues.filter((i) => i.severity === 'error').length;

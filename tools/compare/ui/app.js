@@ -18,8 +18,12 @@ function h(tag, props, ...kids) {
     if (v == null || v === false) return;
     if (k === 'class') el.className = v;
     else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
-    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
-    else if (k === 'dataset') Object.assign(el.dataset, v);
+    else if (k === 'style' && typeof v === 'object') {
+      // custom properties (--x) need setProperty; plain keys can be assigned
+      Object.entries(v).forEach(([prop, val]) => {
+        if (prop.startsWith('--')) el.style.setProperty(prop, val); else el.style[prop] = val;
+      });
+    } else if (k === 'dataset') Object.assign(el.dataset, v);
     else if (['checked', 'value', 'disabled', 'open', 'selected'].includes(k)) el[k] = v;
     else el.setAttribute(k, v === true ? '' : v);
   });
@@ -43,7 +47,6 @@ const tone = (s) => {
 };
 const scoreEl = (s) => h('span', { class: `score ${tone(s)}` }, s == null ? '–' : s);
 const badge = (text, cls = '') => h('span', { class: `badge ${cls}` }, text);
-const statusLabel = { pass: 'Pass', review: 'Needs review', fail: 'Fail' };
 const verdictLabel = { pass: 'Pass', minor: 'Minor issues', fail: 'Fail' };
 const fmtDate = (s) => (s ? new Date(s).toLocaleString() : '');
 const extLink = (url, text) => h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, text || url);
@@ -102,8 +105,6 @@ function showForm() {
     excludeHeaderFooter: true,
     excludeSelector: d.excludeSelector,
     hideSelector: d.hideSelector,
-    srcRoot: '',
-    edsRoot: '',
     includeHidden: false,
     checkLinks: false,
     threshold: d.threshold,
@@ -187,12 +188,6 @@ function showForm() {
   const exclHF = h('input', { type: 'checkbox', checked: opt.excludeHeaderFooter });
   const exclSel = h('input', { id: 'f-excl', type: 'text', value: opt.excludeSelector });
   const hideSel = h('input', { id: 'f-hide', type: 'text', value: opt.hideSelector });
-  const srcRoot = h('input', {
-    id: 'f-srcroot', type: 'text', value: opt.srcRoot, placeholder: 'auto: <main>, else <body>',
-  });
-  const edsRoot = h('input', {
-    id: 'f-edsroot', type: 'text', value: opt.edsRoot, placeholder: 'auto: <main>',
-  });
   const hidden = h('input', { type: 'checkbox', checked: opt.includeHidden });
   const links = h('input', { type: 'checkbox', checked: opt.checkLinks });
   const thrVal = h('span', { class: 'mono' }, opt.threshold);
@@ -234,8 +229,6 @@ function showForm() {
           excludeHeaderFooter: exclHF.checked,
           excludeSelector: exclSel.value,
           hideSelector: hideSel.value,
-          srcRoot: srcRoot.value.trim(),
-          edsRoot: edsRoot.value.trim(),
           includeHidden: hidden.checked,
           checkLinks: links.checked,
           threshold: Number(thr.value),
@@ -303,10 +296,6 @@ function showForm() {
           h('div', { class: 'hint' }, 'Header/footer are usually validated separately. Turn off to compare the whole page.'),
           h('label', { class: 'field', for: 'f-excl' }, 'Header / footer selectors to exclude'),
           exclSel,
-          h('label', { class: 'field', for: 'f-srcroot' }, 'Original content root (CSS selector)'),
-          srcRoot,
-          h('label', { class: 'field', for: 'f-edsroot' }, 'EDS content root (CSS selector)'),
-          edsRoot,
         ),
         h(
           'div',
@@ -374,6 +363,11 @@ async function openRun(id, pairIdx, tab, changeId) {
       if (msg.type === 'pair' || msg.type === 'done') {
         state.job = await api(`/api/jobs/${id}`);
         if (msg.type === 'done') { state.es.close(); state.es = null; }
+        if (msg.type === 'done' && state.job.pairs.length === 1 && state.job.pairs[0].result
+          && window.location.hash === `#/run/${id}`) {
+          window.location.hash = `#/run/${id}/0/visual`;
+          return;
+        }
         const [, , , p, t] = window.location.hash.split('/');
         if (window.location.hash.startsWith(`#/run/${id}`)) showRun(p, t);
       }
@@ -389,6 +383,40 @@ function showRun(pairIdx, tab, changeId) {
   if (!pair) window.scrollTo(0, 0);
 }
 
+/** Findings + review progress for one page, across all compared widths. */
+function pageStats(pair) {
+  const r = pair.result;
+  if (!r) return null;
+  const all = r.visual.flatMap((v) => findingsAt(r, v.viewport));
+  const reviews = pair.reviews || {};
+  return {
+    high: all.filter((f) => f.priority === 'high').length,
+    medium: all.filter((f) => f.priority === 'medium').length,
+    total: all.length,
+    reviewed: all.filter((f) => reviews[f.id]).length,
+    needsFix: all.filter((f) => reviews[f.id] === 'fix').length,
+  };
+}
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const pagePath = (u) => {
+  try {
+    const x = new URL(u);
+    return x.pathname + x.search || '/';
+  } catch { return u; }
+};
+
+/** Plain status for a page: low score fails; otherwise what the findings say. */
+function pageStatus(pair) {
+  const r = pair.result;
+  if (!r) return null;
+  if (r.status === 'fail') return { label: 'Fail', cls: 'fail' };
+  const st = pageStats(pair);
+  if (st.high) return { label: 'Needs review', cls: 'review' };
+  if (st.medium) return { label: 'Mostly matches', cls: 'review' };
+  return { label: 'Matches', cls: 'pass' };
+}
+
 function runHeader(job) {
   // widths actually compared (pages may have extra widths added after the run)
   const widths = [...new Set(job.pairs.flatMap((p) => p.viewports || job.options.viewports))]
@@ -396,35 +424,24 @@ function runHeader(job) {
   const running = ['queued', 'running'].includes(job.status);
   const done = job.progress?.done || 0;
   const total = job.progress?.total || job.pairs.length;
-  const exports = STATIC
-    ? h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn', onclick: () => window.print() }, 'Print / Save as PDF'))
-    : null;
-  const o = job.options;
   return h(
     'section',
-    { class: 'panel' },
+    { class: 'runbar' },
     h(
       'div',
-      { class: 'run-head' },
-      h(
-        'div',
-        null,
-        h('h2', null, job.title),
-        h(
-          'div',
-          { class: 'muted small' },
-          `${STATIC ? 'Report generated from run' : 'Run'} ${job.id} · ${fmtDate(job.createdAt)} · widths ${widths.join(', ')}px · `,
-          o.excludeHeaderFooter ? 'main content only' : 'whole page',
-          o.checkLinks ? ' · link status checked' : '',
-        ),
-      ),
-      running ? null : exports,
+      { class: 'crumbs' },
+      STATIC ? null : h('a', { href: '#/history' }, 'History'),
+      STATIC ? null : h('span', { class: 'sep' }, '›'),
+      h('a', { href: runHref(), class: 'crumb-run' }, job.title),
+      h('span', { class: 'muted small' }, ` · ${fmtDate(job.createdAt)} · widths ${widths.join(', ')}px`),
+      h('span', { class: 'spacer' }),
+      STATIC ? h('button', { type: 'button', class: 'btn small', onclick: () => window.print() }, 'Print / Save as PDF') : null,
     ),
     running ? h(
       'div',
-      null,
+      { class: 'run-progress' },
       h('div', { class: `progress${done === 0 ? ' indeterminate' : ''}` }, h('div', { style: { width: `${Math.round((100 * done) / total)}%` } })),
-      h('div', { class: 'small' }, `${done} of ${total} page${total > 1 ? 's' : ''} compared · `, h('span', { id: 'progress-msg', class: 'muted' }, job.progress?.message || '')),
+      h('div', { class: 'small' }, `Comparing… ${done} of ${plural(total, 'page')} done · `, h('span', { id: 'progress-msg', class: 'muted' }, job.progress?.message || '')),
     ) : null,
     job.status === 'error' ? h('div', { class: 'error-box' }, job.error) : null,
   );
@@ -432,73 +449,91 @@ function runHeader(job) {
 
 function runSummary(job) {
   const results = job.pairs.filter((p) => p.result);
-  const total = results.reduce((a, p) => a + p.result.scores.overall, 0);
-  const avg = results.length ? Math.round(total / results.length) : null;
-  const count = (st) => results.filter((p) => p.result.status === st).length;
-  const errors = results.reduce((a, p) => a + p.result.counts.error, 0);
-  const reviewed = job.pairs.filter((p) => p.notes?.verdict).length;
-  const cards = h(
-    'div',
-    { class: 'cards' },
-    [['Pages', job.pairs.length, ''], ['Average score', avg ?? '–', tone(avg)], ['Pass', count('pass'), 'good'],
-      ['Needs review', count('review'), 'mid'], ['Fail', count('fail'), 'bad'], ['Errors found', errors, errors ? 'bad' : 'good'],
-      ['Manually reviewed', `${reviewed}/${job.pairs.length}`, '']]
-      .map(([k, v, c]) => h('div', { class: 'card' }, h('div', { class: 'k' }, k), h('div', { class: `v ${c}` }, v))),
-  );
-  const s = (p, k) => p.result?.scores[k];
-  const table = h('div', { class: 'table-wrap' }, h(
-    'table',
-    null,
-    h('thead', null, h('tr', null, ['#', 'Original → EDS', 'Score', 'Visual', 'Text', 'Links', 'Images', 'Issues', 'Auto status', 'Your verdict']
-      .map((t) => h('th', null, t)))),
-    h('tbody', null, job.pairs.map((p) => {
-      const r = p.result;
-      let statusCell;
-      if (r) statusCell = badge(statusLabel[r.status], r.status);
-      else if (p.status === 'error') statusCell = h('span', null, badge('Error', 'fail'), h('div', { class: 'small muted' }, p.error));
-      else statusCell = badge(p.status === 'running' ? 'Running…' : 'Pending');
-      return h(
-        'tr',
-        { class: r ? 'clickable' : '', onclick: r ? () => { window.location.hash = runHref(p.index); } : null },
-        h('td', { class: 'num' }, p.index + 1),
+  const stats = job.pairs.map(pageStats);
+  const findings = stats.reduce((a, x) => a + (x?.total || 0), 0);
+  const reviewed = stats.reduce((a, x) => a + (x?.reviewed || 0), 0);
+  const firstTodo = job.pairs.find((p, i) => stats[i] && stats[i].reviewed < stats[i].total);
+
+  const card = (p, i) => {
+    const r = p.result;
+    const st = stats[i];
+    let status;
+    if (r) status = badge(pageStatus(p).label, pageStatus(p).cls);
+    else if (p.status === 'error') status = badge('Could not compare', 'fail');
+    else status = badge(p.status === 'running' ? 'Comparing…' : 'Waiting', p.status === 'running' ? 'added' : '');
+    const donePct = st && st.total ? Math.round((100 * st.reviewed) / st.total) : 0;
+    let action = 'Review →';
+    if (st?.reviewed) action = st.reviewed < st.total ? 'Continue review →' : 'Open →';
+    return h(
+      'li',
+      { class: `page-card${r ? ' ready' : ''}` },
+      h(
+        'div',
+        { class: 'pc-main' },
+        r ? h('div', { class: 'ring small', style: { '--p': r.scores.overall, '--c': { good: 'var(--good)', mid: 'var(--mid)', bad: 'var(--bad)' }[tone(r.scores.overall)] }, title: 'Parity score (100 = identical)' }, h('span', null, r.scores.overall)) : h('div', { class: 'ring small idle' }, h('span', null, '…')),
         h(
-          'td',
-          { class: 'url' },
-          r ? h('a', { href: runHref(p.index) }, p.original) : p.original,
-          h('div', { class: 'muted' }, '→ ', p.eds),
-          p.src?.title ? h('div', { class: 'small muted' }, p.src.title) : null,
+          'div',
+          { class: 'pc-text' },
+          h('div', { class: 'pc-title' }, p.src?.title || pagePath(p.original), ' ', status),
+          h('div', { class: 'pc-urls muted small' }, pagePath(p.original), ' → ', new URL(p.eds).host),
+          p.status === 'error' ? h('div', { class: 'small error-text' }, p.error) : null,
+          st ? h(
+            'div',
+            { class: 'pc-counts' },
+            st.high ? h('span', { class: 'pill bad' }, `${st.high} to fix first`) : null,
+            st.medium ? h('span', { class: 'pill mid' }, `${st.medium} worth checking`) : null,
+            !st.high && !st.medium ? h('span', { class: 'pill good' }, 'No important differences') : null,
+            st.needsFix ? h('span', { class: 'pill bad outline' }, `${st.needsFix} marked needs fix`) : null,
+          ) : null,
         ),
-        h('td', null, scoreEl(s(p, 'overall'))),
-        h('td', null, scoreEl(s(p, 'visual'))),
-        h('td', null, scoreEl(s(p, 'text'))),
-        h('td', null, scoreEl(s(p, 'links'))),
-        h('td', null, scoreEl(s(p, 'media'))),
-        h('td', null, r ? [badge(`${r.counts.error} errors`, r.counts.error ? 'error' : ''), ' ', badge(`${r.counts.warning} warnings`, r.counts.warning ? 'warning' : '')] : ''),
-        h('td', null, statusCell),
-        h('td', null, p.notes?.verdict ? badge(verdictLabel[p.notes.verdict], p.notes.verdict) : h('span', { class: 'muted small' }, '—')),
-      );
-    })),
-  ));
+      ),
+      st ? h(
+        'div',
+        { class: 'pc-side' },
+        h('div', { class: 'small muted' }, st.total ? `Reviewed ${st.reviewed} of ${st.total} · all widths` : 'Nothing to review'),
+        h('div', { class: 'progress thin' }, h('div', { style: { width: `${donePct}%` } })),
+        h('a', { class: `btn ${st.reviewed < st.total ? 'primary' : ''}`, href: runHref(p.index, 'visual') }, action),
+      ) : null,
+    );
+  };
+
+  const parts = [plural(job.pairs.length, 'page')];
+  const by = (label) => results.filter((p) => pageStatus(p).label === label).length;
+  if (results.length) {
+    if (by('Matches')) parts.push(`${by('Matches')} match${by('Matches') === 1 ? 'es' : ''}`);
+    if (by('Mostly matches')) parts.push(`${by('Mostly matches')} mostly match${by('Mostly matches') === 1 ? 'es' : ''}`);
+    if (by('Needs review')) parts.push(`${by('Needs review')} need${by('Needs review') === 1 ? 's' : ''} review`);
+    if (by('Fail')) parts.push(`${by('Fail')} failed`);
+  }
   return h(
     'section',
     { class: 'panel' },
     h(
       'div',
       { class: 'review-head' },
-      h('h2', null, 'Summary'),
-      STATIC || !['done', 'error'].includes(job.status) ? null : h('a', { class: 'btn', href: `/api/jobs/${job.id}/report.html` }, '⬇ Export report'),
+      h(
+        'div',
+        null,
+        h('h2', null, 'Pages in this run'),
+        h('p', { class: 'muted' }, parts.join(' · '), findings ? ` · reviewed ${reviewed} of ${findings} findings` : ''),
+      ),
+      h(
+        'div',
+        { class: 'btn-row', style: { marginTop: 0 } },
+        firstTodo ? h('a', { class: 'btn primary', href: runHref(firstTodo.index, 'visual') }, reviewed ? 'Continue reviewing →' : 'Start reviewing →') : null,
+        STATIC || !['done', 'error'].includes(job.status) ? null : h('a', { class: 'btn', href: `/api/jobs/${job.id}/report.html` }, '⬇ Export report'),
+      ),
     ),
-    h('p', { class: 'lead' }, 'Click a page to see its differences. The score weights text 30%, visual 20%, links 15%, headings / images / typography 10% each, metadata 5%.'),
-    cards,
-    table,
+    h('ol', { class: 'page-cards' }, job.pairs.map(card)),
+    h('p', { class: 'small muted' }, 'The parity score (0–100) summarises how closely the EDS page matches the original: text 30%, visual 20%, links 15%, headings / images / typography 10% each, metadata 5%.'),
   );
 }
 
 /* ------------------------------------------------------------ pair detail */
 
-const TABS = [
-  ['visual', 'Difference review'], ['issues', 'Issues'], ['text', 'Text'], ['headings', 'Headings'], ['links', 'Links'],
-  ['media', 'Images & media'], ['meta', 'Metadata'], ['typography', 'Typography'], ['network', 'Console & network'], ['notes', 'Review notes'],
+const TABS = [['visual', 'Difference review'], ['issues', 'Issues'], ['notes', 'Notes']];
+const DETAIL_TABS = [
+  ['text', 'Text'], ['headings', 'Headings'], ['links', 'Links'], ['media', 'Images'], ['meta', 'Metadata'], ['typography', 'Typography'], ['network', 'Console'],
 ];
 
 function tabCount(r, key) {
@@ -525,6 +560,9 @@ function pairDetail(pair, tab, changeId) {
   if (!r) {
     return h('section', { class: 'panel' }, h('a', { class: 'backlink', href: runHref() }, '← All pages'), h('div', { class: 'empty' }, pair.error || 'This page has not been compared yet.'));
   }
+  const pages = state.job.pairs.filter((p) => p.result);
+  const prev = pages[pages.indexOf(pair) - 1];
+  const next = pages[pages.indexOf(pair) + 1];
   const s = r.scores;
   const ringColor = { good: 'var(--good)', mid: 'var(--mid)', bad: 'var(--bad)' }[tone(s.overall)];
   const scoreChips = [['Visual', s.visual], ['Text', s.text], ['Headings', s.headings], ['Links', s.links], ['Images', s.media], ['Typography', s.typography], ['Metadata', s.meta]]
@@ -536,7 +574,7 @@ function pairDetail(pair, tab, changeId) {
       'div',
       { class: 'pair-head compact' },
       h('a', { class: 'backlink', href: runHref() }, '← All pages'),
-      h('div', { class: 'ring small', style: { '--p': s.overall, '--c': ringColor }, title: 'Overall parity score' }, h('span', null, s.overall)),
+      h('div', { class: 'ring small', style: { '--p': s.overall, '--c': ringColor }, title: 'Parity score (100 = identical)' }, h('span', null, s.overall)),
       h(
         'div',
         { class: 'urls' },
@@ -546,17 +584,31 @@ function pairDetail(pair, tab, changeId) {
       h(
         'div',
         { class: 'head-right' },
-        h('div', null, badge(statusLabel[r.status], r.status), ' ', pair.notes?.verdict ? badge(`Reviewer: ${verdictLabel[pair.notes.verdict]}`, pair.notes.verdict) : null),
+        h('div', null, badge(pageStatus(pair).label, pageStatus(pair).cls), ' ', pair.notes?.verdict ? badge(`Reviewer: ${verdictLabel[pair.notes.verdict]}`, pair.notes.verdict) : null),
         h('div', { class: 'score-chips' }, scoreChips),
       ),
+      pages.length > 1 ? h(
+        'div',
+        { class: 'page-nav' },
+        h('a', { class: `btn small${prev ? '' : ' disabled'}`, href: prev ? runHref(prev.index, tab) : null, 'aria-disabled': prev ? null : 'true' }, '‹ Previous page'),
+        h('span', { class: 'small muted' }, `Page ${pages.indexOf(pair) + 1} of ${pages.length}`),
+        h('a', { class: `btn small${next ? '' : ' disabled'}`, href: next ? runHref(next.index, tab) : null, 'aria-disabled': next ? null : 'true' }, 'Next page ›'),
+      ) : null,
     ),
   );
-  const tabs = h('nav', { class: 'tabs', 'aria-label': 'Comparison details' }, TABS.map(([key, label]) => h(
+  const tabLink = ([key, label]) => h(
     'a',
     { href: runHref(pair.index, key), 'aria-current': key === tab ? 'page' : null },
     label,
     tabCount(r, key),
-  )));
+  );
+  const tabs = h(
+    'nav',
+    { class: 'tabs', 'aria-label': 'Comparison details' },
+    TABS.map(tabLink),
+    h('span', { class: 'spacer' }),
+    h('span', { class: 'detail-tabs' }, h('span', { class: 'small muted' }, 'Details:'), DETAIL_TABS.map(tabLink)),
+  );
   const views = {
     issues: issuesTab,
     visual: visualTab,
@@ -636,7 +688,10 @@ function describe(f) {
   switch (f.kind) {
     case 'spacing':
       return {
-        title: d > 0 ? `${d}px more space on EDS` : `${Math.abs(d)}px less space on EDS`,
+        // section-edge gaps say where the space is ("Above heading X, after the section above")
+        title: f.place
+          ? `${f.place[0].toUpperCase()}${f.place.slice(1)}: ${Math.abs(d)}px ${d > 0 ? 'more' : 'less'} space on EDS`
+          : `${d > 0 ? `${d}px more` : `${Math.abs(d)}px less`} space on EDS`,
         hint: f.detail
           ? `${f.detail.replace(/^Gap between /, 'Between ').replace(/: (\d+)px on the original vs (\d+)px on EDS.*$/, ': $1px → $2px')}. Check margin / padding.`
           : 'The gap between these blocks differs — check margin / padding.',
@@ -658,9 +713,11 @@ function describe(f) {
     case 'section':
       return { title: 'This section looks different', hint: 'Layout, wrapping or content changed here — compare the two pages side by side.' };
     case 'missing':
-      return f.category === 'Visual'
-        ? { title: 'Part of the original is missing on EDS', hint: f.detail }
-        : { title: f.label, hint: f.detail };
+      if (f.category === 'Visual') return { title: 'Part of the original is missing on EDS', hint: f.detail };
+      if (f.category === 'Heading') {
+        return { title: 'Heading missing on EDS', hint: `“${f.detail}” is a heading (${(f.label.match(/h\d/) || ['heading'])[0]}) on the original but not on EDS.` };
+      }
+      return { title: f.label, hint: f.detail };
     case 'extra':
       return f.category === 'Visual'
         ? { title: 'Extra content on EDS', hint: f.detail }
@@ -710,7 +767,12 @@ function mergeRows(list) {
       const lo = Math.min(...deltas.map(Math.abs));
       const hi = Math.max(...deltas.map(Math.abs));
       const amount = lo === hi ? `${lo}px` : `${lo}–${hi}px`;
-      title = `${amount} ${deltas[0] > 0 ? 'more' : 'less'} space on EDS — ${items.length} columns in this row`;
+      const t = first.transition || '';
+      let where = '';
+      if (t.startsWith('section top')) where = 'At the top of the section: ';
+      else if (t.endsWith('section bottom')) where = 'At the bottom of the section: ';
+      else if (t.startsWith('section end')) where = 'After the section above: ';
+      title = `${where}${amount} ${deltas[0] > 0 ? 'more' : 'less'} space on EDS — ${items.length} columns in this row`;
       hint = 'The gap above/below this row differs in every column, so it is most likely the section padding/margin. Check the spacing of the section, not each block.';
     }
     out.push({
@@ -840,8 +902,6 @@ function visualTab(pair, r, focusId) {
   const preferred = vis.find((v) => Number(v.viewport) === state.preferVp);
   state.preferVp = null;
   let current = preferred || focusVp || vis.find((v) => v.viewport === widest) || vis[0];
-  let view = 'side';
-  let overlayMode = 'blend';
   let zoom = 1;
   let typeFilter = 'all';
   let outlineAll = false;
@@ -882,14 +942,11 @@ function visualTab(pair, r, focusId) {
       shown.forEach((f) => {
         const isSel = sel && f.id === sel.id;
         if (f.priority === 'low' && !showMinor && !isSel) return;
-        let boxes = side === 'both' ? boxesOf(f, 'eds') : boxesOf(f, side);
-        let dashed = false;
-        if (side === 'both' && !boxes.length) { boxes = boxesOf(f, 'src'); dashed = true; }
-        boxes.filter((b) => b[1] < H).forEach((b, i) => {
+        boxesOf(f, side).filter((b) => b[1] < H).forEach((b, i) => {
           const [x, y, w, bh] = b;
           if (isSel || outlineAll) {
             out.push(h('div', {
-              class: `hl prio-${f.priority}${isSel ? ' selected' : ''}${isSel && !f.members ? ' spot' : ''}${dashed ? ' dashed' : ''}`,
+              class: `hl prio-${f.priority}${isSel ? ' selected' : ''}${isSel && !f.members ? ' spot' : ''}`,
               dataset: { f: f.id },
               style: {
                 left: pctOf(Math.max(0, x - 4), W),
@@ -929,52 +986,12 @@ function visualTab(pair, r, focusId) {
       }, url),
     );
 
-    let stage;
-    if (view === 'side') {
-      stage = h(
-        'div',
-        { class: 'shot-grid', style: { width: `${zoom * 100}%` } },
-        h('div', { class: 'shot', style: cap }, pageHead('grey', 'Original page', pair.original), canvas(hSrc, 'src', img(v.srcShot, 'Original page screenshot'))),
-        h('div', { class: 'shot', style: cap }, pageHead('blue', 'EDS migrated page', pair.eds), canvas(hEds, 'eds', img(v.edsShot, 'EDS page screenshot'))),
-      );
-    } else {
-      const H = Math.max(hSrc, hEds);
-      let layers;
-      let control = null;
-      if (overlayMode === 'heatmap') {
-        layers = [img(v.diffShot, 'Pixel difference heatmap')];
-      } else {
-        const top = h('div', { class: 'top' }, img(v.edsShot, 'EDS page screenshot'));
-        const line = h('div', { class: 'swipe-line' });
-        const range = h('input', {
-          type: 'range', min: '0', max: '100', value: '50', 'aria-label': overlayMode === 'swipe' ? 'Swipe position' : 'EDS opacity',
-        });
-        const apply = () => {
-          if (overlayMode === 'swipe') {
-            top.style.clipPath = `inset(0 0 0 ${range.value}%)`;
-            line.style.left = `${range.value}%`;
-          } else top.style.opacity = String(range.value / 100);
-        };
-        range.addEventListener('input', apply);
-        apply();
-        layers = [img(v.srcShot, 'Original page screenshot'), top, overlayMode === 'swipe' ? line : null];
-        control = h('span', { class: 'range' }, overlayMode === 'swipe' ? 'Original ◀' : 'Original', range, overlayMode === 'swipe' ? '▶ EDS' : 'EDS');
-      }
-      stage = h(
-        'div',
-        null,
-        h(
-          'div',
-          { class: 'overlay-bar' },
-          h('div', { class: 'seg' }, [['blend', 'Blend'], ['swipe', 'Swipe'], ['heatmap', 'Heatmap']].map(([k, l]) => h('button', {
-            type: 'button', 'aria-pressed': String(overlayMode === k), onclick: () => { overlayMode = k; draw(); },
-          }, l))),
-          control,
-          h('span', { class: 'small muted' }, overlayMode === 'heatmap' ? 'Red = pixels that differ after lining the pages up · blue = rows that only exist on EDS.' : 'Drag the slider to compare the two pages in place.'),
-        ),
-        h('div', { class: 'shot-grid single' }, h('div', { class: 'shot', style: cap }, canvas(H, 'both', layers))),
-      );
-    }
+    const stage = h(
+      'div',
+      { class: 'shot-grid', style: { width: `${zoom * 100}%` } },
+      h('div', { class: 'shot', style: cap }, pageHead('grey', 'Original page', pair.original), canvas(hSrc, 'src', img(v.srcShot, 'Original page screenshot'))),
+      h('div', { class: 'shot', style: cap }, pageHead('blue', 'EDS migrated page', pair.eds), canvas(hEds, 'eds', img(v.edsShot, 'EDS page screenshot'))),
+    );
 
     // the "what's different" list
     const reviews = pair.reviews || {};
@@ -1092,6 +1109,7 @@ function visualTab(pair, r, focusId) {
         ) : null,
         STATIC ? null : h('div', { class: 'howto' }, '1. Pick a finding  2. Compare the highlighted area  3. Mark ', h('b', null, '✓ fine'), ' or ', h('b', null, '✗ needs fix'), '. Keys: ↑ ↓ move · O fine · X needs fix'),
         h('div', { class: 'chips' }, [['all', `All (${all.length})`], ['content', `Content (${nType('content')})`], ['spacing', `Spacing (${nType('spacing')})`], ['visual', `Visual (${nType('visual')})`]]
+          .filter(([k]) => k === 'all' || nType(k) || typeFilter === k)
           .map(([k, l]) => h('button', {
             type: 'button', class: 'chip', 'aria-pressed': String(typeFilter === k), onclick: () => { typeFilter = k; draw(); },
           }, l))),
@@ -1134,26 +1152,22 @@ function visualTab(pair, r, focusId) {
     const exportBtn = STATIC
       ? h('button', { type: 'button', class: 'btn', onclick: () => window.print() }, '⬇ Print / PDF')
       : h('a', { class: 'btn', href: `/api/jobs/${state.job.id}/report.html` }, '⬇ Export report');
-    let verdict = `At ${vp}px everything important matches.`;
-    if (counts.high) verdict = `At ${vp}px: ${counts.high} thing${counts.high > 1 ? 's' : ''} to fix first, ${counts.medium} worth checking.`;
-    else if (counts.medium) verdict = `At ${vp}px nothing critical — ${counts.medium} thing${counts.medium > 1 ? 's' : ''} worth checking.`;
+    let verdict = `At ${vp}px: matches`;
+    if (counts.high) verdict = `At ${vp}px:`;
+    else if (counts.medium) verdict = `At ${vp}px: nothing critical`;
 
     fill(
       wrap,
       h(
         'div',
-        { class: 'review-head' },
-        h('div', null, h('h2', null, 'Difference review'), h('p', { class: 'muted' }, verdict)),
+        { class: 'review-bar' },
+        h('span', { class: 'rb-verdict' }, verdict),
+        h('span', { class: 'pill bad' }, `${counts.high} fix first`),
+        h('span', { class: 'pill mid' }, `${counts.medium} worth checking`),
+        h('span', { class: 'pill' }, `${counts.low} minor`),
+        h('span', { class: 'small muted', title: 'Captured page height' }, `Height: EDS ${(v.edsHeight || 0).toLocaleString()}px · original ${(v.srcHeight || 0).toLocaleString()}px`),
+        h('span', { class: 'spacer' }),
         exportBtn,
-      ),
-      h(
-        'div',
-        { class: 'cards review-cards' },
-        [['Fix first', counts.high, counts.high ? 'bad' : 'good', 'Clear differences'],
-          ['Worth checking', counts.medium, counts.medium ? 'mid' : 'good', 'Confirm if they matter'],
-          ['Minor', counts.low, '', 'Usually fine'],
-          ['Page height', h('span', null, (v.edsHeight || 0).toLocaleString(), h('small', null, ' px')), '', `EDS · original ${(v.srcHeight || 0).toLocaleString()}px`]]
-          .map(([k, val, c, sub]) => h('div', { class: 'card' }, h('div', { class: 'k' }, k), h('div', { class: `v ${c}` }, val), h('div', { class: 'small muted' }, sub))),
       ),
       v.error ? h('div', { class: 'error-box' }, v.error) : null,
       !r.changes && !v.areas ? h('div', { class: 'error-box' }, 'This run was made before differences were marked — run the page again to see findings.') : null,
@@ -1163,10 +1177,9 @@ function visualTab(pair, r, focusId) {
         h(
           'div',
           { class: 'review-toolbar' },
-          h('div', { class: 'seg tabs-seg', role: 'tablist' }, [['side', 'Side by side'], ['overlay', 'Overlay']].map(([k, l]) => h('button', {
-            type: 'button', role: 'tab', 'aria-selected': String(view === k), onclick: () => { view = k; draw(); },
-          }, l))),
+          h('b', { class: 'toolbar-title' }, 'Original vs EDS'),
           h('span', { class: 'spacer' }),
+          h('span', { class: 'small muted' }, 'Width'),
           h('div', { class: 'seg' }, vis.map((x) => h('button', {
             type: 'button',
             'aria-pressed': String(x === current),
