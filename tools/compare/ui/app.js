@@ -1087,6 +1087,7 @@ function visualTab(pair, r, focusId) {
           h('button', { type: 'button', class: `btn small fix${st === 'fix' ? ' on' : ''}`, onclick: () => mark(f, st === 'fix' ? '' : 'fix') }, '✗ Needs fix'),
           h('span', { class: 'small muted' }, 'or press O / X'),
         ) : null,
+        isSel ? fixBox(pair, { ...f, vp }, draw) : null,
       );
     };
     const groupBlock = ([prio, label, blurb]) => {
@@ -1482,6 +1483,229 @@ function networkTab(pair, r) {
   return h('div', { class: 'cols' }, block('EDS', r.network.eds), block('Original', r.network.src));
 }
 
+/* ------------------------------------------------------------ code fixes */
+
+/** Same text the server appends (shown as a preview). */
+function fixCss(fx, title) {
+  const rule = (ind) => `${ind}${fx.selector} {\n${ind}  ${fx.prop}: ${fx.value};\n${ind}}`;
+  const body = fx.minWidth ? `@media (width >= ${fx.minWidth}px) {\n${rule('  ')}\n}` : rule('');
+  return `/* parity fix: ${title} */\n${body}`;
+}
+
+const fixKey = (fx) => [fx.file, fx.selector, fx.prop, fx.minWidth || 0].join('|');
+
+/** Distinct fixes for a finding (grouped findings may share one rule). */
+function fixesOf(f) {
+  const seen = new Set();
+  return (f.members || [f]).map((m) => m.fix).filter((fx) => {
+    if (!fx || seen.has(fixKey(fx))) return false;
+    seen.add(fixKey(fx));
+    return true;
+  });
+}
+
+async function loadFixes() {
+  if (STATIC) return;
+  try { state.fixes = await api('/api/fixes'); } catch { state.fixes = []; }
+  renderChangesButton();
+}
+
+const appliedFor = (fx) => (state.fixes || []).find((e) => e.status === 'applied' && fixKey(e) === fixKey(fx) && e.value === fx.value);
+
+/** "Suggested fix" box shown under a selected finding. */
+function fixBox(pair, f, redraw) {
+  const list = fixesOf(f);
+  if (!list.length) {
+    let msg = 'No automatic code fix for this one — compare the area by eye.';
+    if (f.type === 'content') msg = 'Content difference — fix it in the page content (authoring), not in code.';
+    return h('div', { class: 'fixbox none small muted' }, msg);
+  }
+  return h('div', { class: 'fixbox' }, list.map((fx) => {
+    const title = `${f.title} (${pagePath(pair.eds)}, ${f.vp || ''}px)`.replace(/ \(([^,]+), px\)$/, ' ($1)');
+    const applied = appliedFor(fx);
+    const status = h('span', { class: 'small', role: 'status' });
+    const copy = h('button', {
+      type: 'button',
+      class: 'btn small',
+      onclick: async () => {
+        try { await navigator.clipboard.writeText(fixCss(fx, title)); status.textContent = 'Copied'; } catch { status.textContent = 'Copy failed'; }
+      },
+    }, 'Copy');
+    const apply = async () => {
+      status.textContent = 'Applying…';
+      try {
+        const res = await api('/api/fixes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fix: fx,
+            title,
+            page: pair.eds,
+            jobId: state.job.id,
+            pairIndex: pair.index,
+            findingId: f.id,
+          }),
+        });
+        await loadFixes();
+        state.lastChecks = { id: res.entry.id, ...res.checks };
+        redraw();
+      } catch (e) { status.textContent = e.message; }
+    };
+    const undo = async () => {
+      try { await api(`/api/fixes/${applied.id}/undo`, { method: 'POST' }); await loadFixes(); redraw(); } catch (e) { status.textContent = e.message; }
+    };
+    const checks = applied && state.lastChecks?.id === applied.id ? state.lastChecks : null;
+    let applyControls = null;
+    if (!STATIC && applied) {
+      applyControls = [h('span', { class: 'pill good' }, `✓ Added to ${fx.file}`), h('button', { type: 'button', class: 'btn small', onclick: undo }, 'Undo')];
+    } else if (!STATIC) {
+      applyControls = h('button', { type: 'button', class: 'btn small primary', onclick: apply }, 'Apply to code');
+    }
+    return h(
+      'div',
+      { class: 'fix' },
+      h(
+        'div',
+        { class: 'fix-head' },
+        h('b', null, 'Suggested fix'),
+        h('span', { class: 'mono small' }, fx.file),
+        fx.current ? h('span', { class: 'small muted' }, `now ${fx.prop}: ${fx.current}`) : null,
+      ),
+      fx.affects > 1 ? h('div', { class: 'small warn-text' }, `This selector matches ${fx.affects} elements on the page — check the others still look right.`) : null,
+      h('pre', { class: 'fix-code' }, fixCss(fx, title)),
+      h(
+        'div',
+        { class: 'btn-row', style: { marginTop: '6px' } },
+        applyControls,
+        copy,
+        status,
+      ),
+      checks ? h(
+        'div',
+        { class: `small ${checks.stylelint.ok && checks.breakpoints.ok ? 'ok-text' : 'warn-text'}` },
+        checks.stylelint.ok ? 'stylelint ✓' : 'stylelint found problems',
+        ' · ',
+        checks.breakpoints.ok ? 'breakpoint check ✓' : 'breakpoint check failed',
+        checks.stylelint.ok && checks.breakpoints.ok ? null : h('pre', { class: 'fix-code' }, `${checks.stylelint.output}\n${checks.breakpoints.ok ? '' : checks.breakpoints.output}`.trim()),
+      ) : null,
+    );
+  }));
+}
+
+/** Floating "Code changes (N)" button + drawer with undo and push-to-branch. */
+function renderChangesButton() {
+  if (STATIC) return;
+  let btn = document.getElementById('changes-btn');
+  const live = (state.fixes || []).filter((e) => e.status === 'applied');
+  if (!btn) {
+    btn = h('button', {
+      type: 'button', id: 'changes-btn', class: 'changes-btn', onclick: () => toggleDrawer(),
+    });
+    document.body.append(btn);
+  }
+  btn.hidden = !(state.fixes || []).length;
+  fill(btn, '⟨/⟩ Code changes ', h('span', { class: 'count' }, live.length));
+  if (document.getElementById('changes-drawer')) toggleDrawer(true);
+}
+
+function toggleDrawer(keepOpen) {
+  let d = document.getElementById('changes-drawer');
+  if (d && !keepOpen) { d.remove(); return; }
+  if (!d) {
+    d = h('aside', { id: 'changes-drawer', class: 'changes-drawer', 'aria-label': 'Code changes' });
+    document.body.append(d);
+  }
+  const all = state.fixes || [];
+  const applied = all.filter((e) => e.status === 'applied');
+  const pushed = all.filter((e) => e.status === 'pushed');
+  const { git = {} } = state.config || {};
+  const d8 = new Date();
+  const branchInput = h('input', {
+    type: 'text', value: `parity-fixes-${String(d8.getMonth() + 1).padStart(2, '0')}${String(d8.getDate()).padStart(2, '0')}`, 'aria-label': 'New branch name', class: 'mono',
+  });
+  const out = h('div', { role: 'status' });
+  const push = async (ev) => {
+    const name = branchInput.value.trim();
+    // eslint-disable-next-line no-alert
+    if (!window.confirm(`Commit ${applied.length} change(s) to a new branch "${name}" and push it to GitHub?\n\nOnly these CSS rules are committed — your current branch and other local changes stay as they are.`)) return;
+    ev.target.disabled = true;
+    fill(out, h('span', { class: 'small muted' }, 'Committing and pushing…'));
+    try {
+      const res = await api('/api/git/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branch: name }) });
+      state.lastPush = res;
+      await loadFixes();
+    } catch (e) {
+      ev.target.disabled = false;
+      fill(out, h('div', { class: 'error-box' }, e.message));
+    }
+  };
+  const recheck = async (res) => {
+    const { job } = state;
+    if (!job || !res.previewBase) return;
+    const pairs = job.pairs.map((p) => {
+      const u = new URL(p.eds);
+      return { original: p.original, eds: `${res.previewBase}${u.pathname}${u.search}` };
+    });
+    const { id } = await api('/api/jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pairs, options: { ...job.options }, title: `${job.title} — re-check on ${res.branch}` }),
+    });
+    toggleDrawer();
+    window.location.hash = `#/run/${id}`;
+  };
+  const row = (e) => h(
+    'li',
+    { class: 'chg' },
+    h('div', { class: 'mono small' }, e.file),
+    h('div', { class: 'small' }, h('code', null, `${e.selector} { ${e.prop}: ${e.value} }`), e.minWidth ? h('span', { class: 'muted' }, ` · ≥ ${e.minWidth}px`) : null),
+    h('div', { class: 'small muted' }, e.title),
+    e.status === 'applied'
+      ? h('button', {
+        type: 'button',
+        class: 'btn small',
+        onclick: async () => { try { await api(`/api/fixes/${e.id}/undo`, { method: 'POST' }); await loadFixes(); route(); } catch (err) { fill(out, h('div', { class: 'error-box' }, err.message)); } },
+      }, 'Undo')
+      : h('span', { class: 'pill good' }, `pushed to ${e.branch}`),
+  );
+  const res = state.lastPush;
+  fill(
+    d,
+    h('div', { class: 'cd-head' }, h('b', null, 'Code changes'), h('span', { class: 'spacer' }), h('button', {
+      type: 'button', class: 'btn icon small', 'aria-label': 'Close', onclick: () => toggleDrawer(),
+    }, '✕')),
+    h('p', { class: 'small muted' }, 'Rules you applied are already in your local files (the local dev server shows them). Push them to a new branch to preview on aem.page and open a pull request.'),
+    applied.length ? h('ol', { class: 'chg-list' }, applied.map(row)) : h('div', { class: 'small muted' }, 'No unpushed changes.'),
+    applied.length ? h(
+      'div',
+      { class: 'cd-push' },
+      h('label', { class: 'small' }, 'New branch'),
+      branchInput,
+      h('button', { type: 'button', class: 'btn primary', onclick: push }, `Push ${applied.length} change${applied.length > 1 ? 's' : ''} to new branch`),
+      h('div', { class: 'small muted' }, `From ${git.branch || 'the current branch'} → github.com/${git.owner || '?'}/${git.repo || '?'}`),
+    ) : null,
+    out,
+    res ? h(
+      'div',
+      { class: 'cd-done' },
+      h('div', null, h('b', null, `✓ Pushed ${res.count} change${res.count > 1 ? 's' : ''} to `), h('code', null, res.branch)),
+      h(
+        'div',
+        { class: 'btn-row' },
+        res.previewBase ? h('a', {
+          class: 'btn small', href: `${res.previewBase}${state.job ? new URL(state.job.pairs[0].eds).pathname : '/'}`, target: '_blank', rel: 'noopener noreferrer',
+        }, 'Preview on branch ↗') : null,
+        res.prUrl ? h('a', {
+          class: 'btn small', href: res.prUrl, target: '_blank', rel: 'noopener noreferrer',
+        }, 'Open pull request ↗') : null,
+        state.job ? h('button', { type: 'button', class: 'btn small primary', onclick: () => recheck(res) }, 'Re-check on branch') : null,
+      ),
+      h('div', { class: 'small muted' }, 'AEM Code Sync needs a moment to pick up a new branch before its preview is ready.'),
+    ) : null,
+    pushed.length ? h('details', { class: 'small' }, h('summary', null, `Pushed earlier (${pushed.length})`), h('ol', { class: 'chg-list' }, pushed.map(row))) : null,
+  );
+}
+
 /* ------------------------------------------------------------ boot */
 
 async function route() {
@@ -1521,6 +1745,7 @@ async function boot() {
   }
   window.addEventListener('hashchange', route);
   route();
+  loadFixes();
 }
 
 boot();

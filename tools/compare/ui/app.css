@@ -631,3 +631,57 @@ ins { background: #c9e9d2; color: #0d4d24; text-decoration: none; border-radius:
 .fpanel .chips { flex-wrap: nowrap; overflow-x: auto; gap: 4px; }
 .fpanel .chip { white-space: nowrap; padding: 3px 9px; }
 .review-toolbar .rb-verdict { font-size: 14px; }
+
+/* suggested code fix */
+.fixbox { margin: 4px 0 8px 44px; }
+.fixbox.none { padding: 6px 10px; border-radius: 8px; background: #f6f8fb; }
+.fix { border: 1px solid #c9d6f2; border-radius: 10px; background: #f7f9ff; padding: 10px 12px; margin-bottom: 6px; }
+.fix-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.fix-code { margin: 6px 0 0; padding: 8px 10px; border-radius: 8px; background: #121826; color: #e6edf7; font: 12px/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.warn-text { color: var(--mid); }
+.ok-text { color: var(--good); }
+
+/* code changes: floating button + drawer */
+.changes-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 99px;
+  background: #121826;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 25%);
+  cursor: pointer;
+}
+
+.changes-btn .count { padding: 0 8px; border-radius: 99px; background: var(--accent); }
+
+.changes-drawer {
+  position: fixed;
+  right: 20px;
+  bottom: 72px;
+  z-index: 41;
+  width: min(460px, calc(100vw - 40px));
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 22%);
+}
+
+.changes-drawer .cd-head { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.chg-list { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 8px; }
+.chg { display: grid; gap: 3px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+.chg .btn, .chg .pill { justify-self: start; }
+.chg code { font-size: 12px; overflow-wrap: anywhere; }
+.cd-push { display: grid; gap: 6px; margin: 10px 0; padding-top: 10px; border-top: 1px solid var(--line); }
+.cd-push input { width: 100%; padding: 7px 10px; border: 1px solid #cdd2db; border-radius: 8px; }
+.cd-done { display: grid; gap: 6px; margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--good-soft); }

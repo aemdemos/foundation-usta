@@ -23,6 +23,7 @@ import {
   launchBrowser, capturePage, diffImages, checkLinks,
 } from './lib/capture.mjs';
 import { comparePair } from './lib/compare.mjs';
+import { createFixStore } from './lib/fixes.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../..');
@@ -43,10 +44,15 @@ async function projectConfig() {
     if (Array.isArray(bp.breakpoints) && bp.breakpoints.length) breakpoints = bp.breakpoints;
   } catch { /* defaults */ }
   let edsBase = '';
+  const git = { owner: null, repo: null, branch: null };
   try {
     const remote = execSync('git remote get-url origin', { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
     const m = remote.match(/github\.com[:/]([^/]+)\/([^/.]+)(\.git)?$/);
-    if (m) edsBase = `https://main--${m[2]}--${m[1]}.aem.live`.toLowerCase();
+    if (m) {
+      edsBase = `https://main--${m[2]}--${m[1]}.aem.live`.toLowerCase();
+      [git.owner, git.repo] = [m[1].toLowerCase(), m[2].toLowerCase()];
+    }
+    git.branch = execSync('git branch --show-current', { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
   } catch { /* not a git checkout */ }
   const viewports = [...new Set([375, ...breakpoints, 1440])].sort((a, b) => a - b);
   return {
@@ -54,6 +60,7 @@ async function projectConfig() {
     viewports,
     defaultViewports: [375, breakpoints[0], 1440].filter((v, i, a) => a.indexOf(v) === i),
     edsBase,
+    git,
     defaults: {
       excludeSelector: 'header, footer, [role="banner"], [role="contentinfo"], .cmp-experiencefragment--header, .cmp-experiencefragment--footer',
       hideSelector: '#onetrust-consent-sdk, #CybotCookiebotDialog, .cc-window, #truste-consent-track, .truste_box_overlay, iframe[class*="stickyButton"]',
@@ -151,7 +158,7 @@ async function runPair(browser, job, pair) {
   const common = { viewports: o.viewports, ...captureOptions(o) };
   const [src, eds] = await Promise.all([
     capturePage(browser, pair.original, { ...common, rootSelector: o.excludeHeaderFooter ? o.srcRoot : 'body' }, step('original')),
-    capturePage(browser, pair.eds, { ...common, rootSelector: o.excludeHeaderFooter ? o.edsRoot : 'body' }, step('EDS')),
+    capturePage(browser, pair.eds, { ...common, withCss: true, rootSelector: o.excludeHeaderFooter ? o.edsRoot : 'body' }, step('EDS')),
   ]);
 
   const diffs = {};
@@ -172,7 +179,7 @@ async function runPair(browser, job, pair) {
 
   pair.src = pageInfo(src);
   pair.edsInfo = pageInfo(eds);
-  pair.result = comparePair(src, eds, { diffs, linkStatus });
+  pair.result = comparePair(src, eds, { diffs, linkStatus, breakpoints: (await projectConfig()).breakpoints });
   pair.viewports = Object.keys(src.viewports).map(Number);
   // keep the raw captures so more widths can be added to this page later
   writeFileSync(captureFile(job, pair), JSON.stringify({
@@ -192,7 +199,7 @@ async function addViewport(job, pair, vw) {
     const common = { viewports: [vw], ...captureOptions(o) };
     const [s1, e1] = await Promise.all([
       capturePage(browser, pair.original, { ...common, rootSelector: o.excludeHeaderFooter ? o.srcRoot : 'body' }),
-      capturePage(browser, pair.eds, { ...common, rootSelector: o.excludeHeaderFooter ? o.edsRoot : 'body' }),
+      capturePage(browser, pair.eds, { ...common, withCss: true, rootSelector: o.excludeHeaderFooter ? o.edsRoot : 'body' }),
     ]);
     const a = s1.viewports[vw];
     const b = e1.viewports[vw];
@@ -204,7 +211,7 @@ async function addViewport(job, pair, vw) {
   } finally {
     await browser.close().catch(() => {});
   }
-  pair.result = comparePair(saved.src, saved.eds, { diffs: saved.diffs, linkStatus: saved.linkStatus });
+  pair.result = comparePair(saved.src, saved.eds, { diffs: saved.diffs, linkStatus: saved.linkStatus, breakpoints: (await projectConfig()).breakpoints });
   pair.viewports = Object.keys(saved.src.viewports).map(Number);
   writeFileSync(file, JSON.stringify(saved));
   progress(job, 'Finished');
@@ -354,6 +361,8 @@ function readBody(req) {
 
 const fileSafe = (s) => s.replace(/[^\w-]+/g, '-').slice(0, 60);
 
+const fixes = createFixStore(ROOT, REPORTS);
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const parts = url.pathname.split('/').filter(Boolean);
@@ -373,6 +382,17 @@ const server = http.createServer(async (req, res) => {
     if (parts[0] !== 'api') return send(res, 404, { error: 'not found' });
 
     if (url.pathname === '/api/config') return send(res, 200, await projectConfig());
+
+    // code fixes: apply / undo a suggested CSS rule, push applied fixes to a new branch
+    if (url.pathname === '/api/fixes' && req.method === 'GET') return send(res, 200, await fixes.list());
+    if (url.pathname === '/api/fixes' && req.method === 'POST') return send(res, 201, await fixes.apply(await readBody(req)));
+    const undo = url.pathname.match(/^\/api\/fixes\/([\w-]+)\/undo$/);
+    if (undo && req.method === 'POST') return send(res, 200, await fixes.undo(undo[1]));
+    if (url.pathname === '/api/git/push' && req.method === 'POST') {
+      const body = await readBody(req);
+      const { git } = await projectConfig();
+      return send(res, 200, await fixes.push({ branch: String(body.branch || '').trim(), owner: git.owner, repo: git.repo }));
+    }
     if (url.pathname === '/api/jobs' && req.method === 'GET') {
       const list = [...jobs.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((j) => ({
         id: j.id,

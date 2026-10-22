@@ -50,7 +50,9 @@ export async function launchBrowser() {
 
 /** Runs in the page: extract comparable content from the content root. */
 function extractContent(opts) {
-  const { rootSelector, excludeSelector, includeHidden } = opts;
+  const {
+    rootSelector, excludeSelector, includeHidden, withCss,
+  } = opts;
   const root = (rootSelector && document.querySelector(rootSelector))
     || document.querySelector('main') || document.body;
   if (excludeSelector) {
@@ -84,6 +86,67 @@ function extractContent(opts) {
       left: l, top: t, width: Math.max(...rs.map((r) => r.right)) - l, height: Math.max(...rs.map((r) => r.bottom)) - t,
     });
   };
+  // EDS-side code hints: a scoped selector + computed spacing for an element, used to suggest CSS fixes
+  const WORD = /^[a-z][\w-]*$/;
+  const STATE = /^(active|selected|open|appear|is-|has-)/;
+  const sectionSel = (el) => {
+    const sec = el.closest('.section');
+    if (!sec) return 'main';
+    const cls = [...sec.classList].filter((c) => c !== 'section' && !c.endsWith('-container') && WORD.test(c) && !STATE.test(c));
+    return `main .section${cls.map((c) => `.${c}`).join('')}`;
+  };
+  const selectorFor = (el) => {
+    const tag = el.tagName.toLowerCase();
+    const own = [...el.classList].find((c) => WORD.test(c) && !STATE.test(c));
+    const self = `${tag}${own ? `.${own}` : ''}`;
+    const block = el.closest('[data-block-name]');
+    if (block && block !== el) {
+      const name = block.dataset.blockName;
+      const parent = el.parentElement;
+      const pcls = parent && parent !== block ? [...parent.classList].find((c) => WORD.test(c) && !STATE.test(c)) : null;
+      return { sel: `.${name}${pcls ? ` .${pcls}` : ''} ${self}`, block: name };
+    }
+    if (block === el) return { sel: `.${block.dataset.blockName}`, block: block.dataset.blockName };
+    if (el.classList.contains('section')) return { sel: sectionSel(el), block: null };
+    const wrap = el.closest('.default-content-wrapper');
+    let sel = sectionSel(el);
+    if (wrap) sel += el.parentElement === wrap ? ` .default-content-wrapper > ${self}` : ` .default-content-wrapper ${self}`;
+    else sel += ` ${self}`;
+    return { sel, block: null };
+  };
+  // the outermost wrapper that occupies the same box (images usually get their margin from a <p>/<picture>)
+  const tight = (el) => {
+    let cur = el;
+    while (cur.parentElement && cur.parentElement !== root) {
+      const pe = cur.parentElement;
+      if (pe.matches('main, .section, .block, [data-block-name], .default-content-wrapper')) break;
+      const pr = pe.getBoundingClientRect();
+      const cr = cur.getBoundingClientRect();
+      if (Math.abs(pr.height - cr.height) > 4 || Math.abs(pr.top - cr.top) > 4) break;
+      cur = pe;
+    }
+    return cur;
+  };
+  const px = (v) => Math.round(parseFloat(v) * 10) / 10 || 0;
+  const cssOf = (el) => {
+    if (!withCss || !el) return undefined;
+    const cs = getComputedStyle(el);
+    const { sel, block } = selectorFor(el);
+    let n = 0;
+    try { n = document.querySelectorAll(sel).length; } catch { n = 0; }
+    return {
+      sel,
+      block,
+      n,
+      mt: px(cs.marginTop),
+      mb: px(cs.marginBottom),
+      pt: px(cs.paddingTop),
+      pb: px(cs.paddingBottom),
+      ml: px(cs.marginLeft),
+      w: Math.round(el.getBoundingClientRect().width),
+      display: cs.display,
+    };
+  };
   const blockOf = (el) => {
     let cur = el;
     while (cur && cur !== root && isInline(cur)) cur = cur.parentElement;
@@ -101,7 +164,9 @@ function extractContent(opts) {
       const b = blockOf(p);
       if (!index.has(b)) {
         index.set(b, blocks.length);
-        blocks.push({ tag: b.tagName.toLowerCase(), parts: [], nodes: [] });
+        blocks.push({
+          tag: b.tagName.toLowerCase(), parts: [], nodes: [], el: b,
+        });
       }
       blocks[index.get(b)].parts.push(n.nodeValue);
       blocks[index.get(b)].nodes.push(n);
@@ -111,6 +176,7 @@ function extractContent(opts) {
     .map((b) => ({
       tag: b.tag,
       text: clean(b.parts.join('')),
+      css: cssOf(b.el),
       box: unionBox(b.nodes.map((n) => {
         const range = document.createRange();
         range.selectNodeContents(n);
@@ -123,7 +189,9 @@ function extractContent(opts) {
   const inScope = (el) => !el.closest('[data-cmp-x]') && visible(el);
   const headings = [...root.querySelectorAll('h1,h2,h3,h4,h5,h6')]
     .filter(inScope)
-    .map((h) => ({ level: Number(h.tagName[1]), text: clean(h.textContent), box: toBox(h.getBoundingClientRect()) }))
+    .map((h) => ({
+      level: Number(h.tagName[1]), text: clean(h.textContent), box: toBox(h.getBoundingClientRect()), css: cssOf(h),
+    }))
     .filter((h) => h.text);
 
   const links = [...root.querySelectorAll('a[href]')]
@@ -150,6 +218,7 @@ function extractContent(opts) {
         loaded: i.complete && i.naturalWidth > 0,
         visible: i.checkVisibility({ checkVisibilityCSS: true }),
         box: toBox(r),
+        css: cssOf(tight(i)),
       };
     });
 
@@ -176,15 +245,17 @@ function extractContent(opts) {
     const painted = (colour && colour !== pageBg) || !!m;
     if (!painted || cs.visibility === 'hidden') return;
     const rect = el.getBoundingClientRect();
-    if (rect.width < minBandWidth || rect.height < 40) return;
+    // sections only: big enough, and not a control (a full-width mobile button is not a section)
+    if (rect.width < minBandWidth || rect.height < 80 || el.matches('a, button, input, select, textarea, label, .button')) return;
     const box = toBox(rect);
-    if (box) bands.push({ box, colour: colour || 'image' });
+    if (box) bands.push({ box, colour: colour || 'image', el });
   });
   // keep the outermost band of each colour (nested containers often repeat the same background)
   const inside = (p, q) => p.box[0] >= q.box[0] - 2 && p.box[1] >= q.box[1] - 2
     && p.box[0] + p.box[2] <= q.box[0] + q.box[2] + 2 && p.box[1] + p.box[3] <= q.box[1] + q.box[3] + 2;
   const sectionBands = bands.filter((p, i) => !bands.some((q, j) => j !== i && q.colour === p.colour
-    && inside(p, q) && (j < i || !inside(q, p))));
+    && inside(p, q) && (j < i || !inside(q, p))))
+    .map(({ box, colour, el }) => ({ box, colour, css: cssOf(el) })); // DOM nodes can't leave the page
 
   const embeds = [...root.querySelectorAll('iframe[src], video, embed[src], object[data]')]
     .filter((e) => !e.closest('[data-cmp-x]'))
@@ -255,10 +326,10 @@ function boxesOf(content) {
   const keep = (list, fields) => list.filter((x) => x.box)
     .map((x) => Object.fromEntries([...fields, 'box'].map((f) => [f, x[f]])));
   return {
-    blocks: keep(content.blocks, ['text', 'tag']),
-    headings: keep(content.headings, ['text']),
+    blocks: keep(content.blocks, ['text', 'tag', 'css']),
+    headings: keep(content.headings, ['text', 'css']),
     links: keep(content.links, ['text', 'href']),
-    images: keep(content.images, ['src', 'alt']),
+    images: keep(content.images, ['src', 'alt', 'css']),
     bands: (content.bands || []).slice(0, 200),
   };
 }
@@ -294,7 +365,7 @@ async function settle(page, { hideSelector }) {
  */
 export async function capturePage(browser, url, opts, onStep = () => {}) {
   const {
-    viewports, rootSelector, excludeSelector, hideSelector, includeHidden,
+    viewports, rootSelector, excludeSelector, hideSelector, includeHidden, withCss,
   } = opts;
   const result = {
     url, finalUrl: url, status: null, viewports: {}, content: null, meta: {}, network: { failed: [], console: [] },
@@ -353,7 +424,9 @@ export async function capturePage(browser, url, opts, onStep = () => {}) {
       vp.shotHeight = height;
       // element positions as they appear in this screenshot, used to mark changes on it
       // eslint-disable-next-line no-await-in-loop
-      const shown = await page.evaluate(extractContent, { rootSelector, excludeSelector, includeHidden });
+      const shown = await page.evaluate(extractContent, {
+        rootSelector, excludeSelector, includeHidden, withCss,
+      });
       vp.boxes = boxesOf(shown.content);
       // eslint-disable-next-line no-await-in-loop
       vp.typography = await page.evaluate(extractTypography, { rootSelector, excludeSelector });
@@ -363,7 +436,7 @@ export async function capturePage(browser, url, opts, onStep = () => {}) {
         await page.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
         // eslint-disable-next-line no-await-in-loop
         const ex = await page.evaluate(extractContent, { rootSelector, excludeSelector, includeHidden });
-        ['blocks', 'headings', 'links', 'images'].forEach((k) => ex.content[k].forEach((x) => { delete x.box; }));
+        ['blocks', 'headings', 'links', 'images'].forEach((k) => ex.content[k].forEach((x) => { delete x.box; delete x.css; }));
         delete ex.content.bands;
         result.content = ex.content;
         result.meta = ex.meta;

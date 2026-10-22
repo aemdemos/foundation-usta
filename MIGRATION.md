@@ -5628,3 +5628,14 @@ tab→heading gap (62/78 vs source 70/86) is a separate, unaddressed difference.
   (History › run › page, with ‹ › page nav) and one panel (score, URLs, status, only sub-100 scores, tabs). The
   review counts moved into the toolbar, the how-to tip is dismissible (localStorage), overlapping pins are nudged
   apart, and visual findings name their location via the nearest EDS heading (`visual[].headings`, from new runs).
+- **2026-10-22 — code fix suggestions + push to branch.** EDS captures now record per element/section a scoped selector
+  (block → `.<block> …`, default content → `main .section.<styles> .default-content-wrapper > tag`), the match count,
+  and computed margin/padding. Spacing/width findings carry a `fix` {file, selector, prop, value, minWidth}, mapped
+  to the breakpoint tier from `breakpoints.json`. "Apply to code" (`POST /api/fixes`) appends the rule, then runs
+  stylelint + breakpoint-check; Undo removes the exact text. "Push to new branch" (`POST /api/git/push`) builds a
+  commit from HEAD + the fix rules only (temporary `GIT_INDEX_FILE`, `commit-tree`, `push <commit>:refs/heads/<b>`),
+  so the working tree/current branch are untouched. Tested in a throwaway clone with a local bare remote: the pushed
+  commit held only the 7-line rule, and an unrelated uncommitted edit stayed out. Verified on the live EDS page that
+  the suggested Signature Events rule moves the gap 61px → 106px (original 105px). **Gotcha:** a full-width mobile
+  button counted as a "section band" and produced a nonsense padding fix, so bands now need ≥80px height and exclude
+  controls (`a, button, .button, …`).

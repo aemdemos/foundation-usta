@@ -79,6 +79,39 @@ Each pair gets a **parity score** (text 30%, visual 20%, links 15%, headings / i
 10% each, metadata 5%), an auto status (Pass ≥ 90 with no errors, Needs review ≥ 75, Fail),
 and a prioritised **issue list**.
 
+## Code fixes & push to a branch
+
+For spacing and text-width findings the review shows a **Suggested fix** — real CSS built from the
+EDS page itself:
+
+- **selector** taken from the EDS element: scoped to its block (`.cards .cards-card-body p` →
+  `blocks/cards/cards.css`) or to its section for default content
+  (`main .section.center-intro .default-content-wrapper > h2` → `styles/styles.css`);
+- **value** = the element's current computed margin/padding adjusted by the measured difference (e.g.
+  heading `margin-top` 60.8px → 106px so the gap matches the original's 105px). Section padding is changed
+  on the section, gaps after a section on the element below it, and for two blocks whichever margin
+  currently makes the gap;
+- wrapped in the **project breakpoint** the width belongs to, mobile-first (375 → base rule, 768 →
+  `@media (width >= 768px)`, 1440 → `@media (width >= 1200px)`, from `tools/quality/breakpoints.json`).
+  A warning is shown when the selector matches several elements.
+
+**Apply to code** appends the rule (with a `/* parity fix: … */` comment) to that file, then runs
+stylelint and the breakpoint check and shows the result. **Undo** removes exactly that rule. Content
+differences (text, headings) get no code fix — fix them in the authored page.
+
+**⟨/⟩ Code changes** (bottom-right) lists applied rules. **Push to new branch** commits *only those
+rules* — the HEAD version of each file plus the fix rules — to a new branch (default `parity-fixes-MMDD`)
+and pushes it to `origin`. Your current branch, index and other uncommitted changes are not touched
+(the commit is built in a temporary index). Afterwards you get **Preview on branch**
+(`https://<branch>--<repo>--<owner>.aem.page/…`), **Open pull request** and **Re-check on branch**
+(re-runs the comparison against the branch preview). Pushing uses your normal git credentials; give AEM
+Code Sync a moment before the branch preview is ready. Applied fixes are tracked in
+`tools/compare/reports/fixes.json`.
+
+Safety: only `blocks/<name>/<name>.css` and `styles/*.css` can be edited; selectors, properties
+(margin/padding top/bottom/left, max-width) and px values are validated server-side; branch names must
+be lowercase letters, numbers and dashes and fit an aem.page host (`branch--repo--owner` ≤ 63 chars).
+
 ## Screen widths
 
 - **Before a run:** tick any of the project breakpoints (from `tools/quality/breakpoints.json`, plus 375 and

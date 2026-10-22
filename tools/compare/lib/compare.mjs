@@ -593,6 +593,27 @@ const overlapsX = (p, q) => p[0] < q[0] + q[2] && q[0] < p[0] + p[2];
 const bottom = (b) => b[1] + b[3];
 
 /**
+ * A CSS change for one EDS element/section: set `prop` to current + need (or to an absolute value).
+ * The width the finding was seen at is mapped to the project's breakpoint tier (min-width only).
+ */
+let BREAKPOINTS = [];
+function cssFix(css, prop, current, need, vp, absolute = false) {
+  if (!css?.sel) return null;
+  const value = Math.round(absolute ? need : (current || 0) + need);
+  if (value < 0 || (!absolute && Math.abs(need) < 4)) return null;
+  const tier = [...BREAKPOINTS].sort((a, b) => b - a).find((bp) => Number(vp) >= bp) || null;
+  return {
+    file: css.block ? `blocks/${css.block}/${css.block}.css` : 'styles/styles.css',
+    selector: css.sel,
+    prop,
+    value: `${value}px`,
+    current: current == null ? null : `${Math.round(current * 10) / 10}px`,
+    minWidth: tier,
+    affects: css.n || 1,
+  };
+}
+
+/**
  * Spacing & layout: compares the measured boxes of elements that exist on both pages
  * (matched text blocks, headings and images) at every viewport.
  *  - vertical space above each element to the nearest edge (content above, top of its coloured
@@ -631,11 +652,18 @@ function layoutFindings(r, L, src, eds) {
     // 1. vertical spacing, measured to the nearest *edge* above each element: the content above it,
     //    the top of the coloured section it sits in (padding-top) or the end of the section above it
     //    (gap after a section). Plus each section's bottom padding. Only like-for-like edges are compared.
-    const sideData = (cap, key) => ({
-      key,
-      bands: (cap.viewports[vp]?.boxes?.bands || []).map((x) => x.box),
-      content: ['blocks', 'headings', 'images'].flatMap((k) => (cap.viewports[vp]?.boxes?.[k] || []).map((x) => x.box)),
-    });
+    const sideData = (cap, key) => {
+      const b = cap.viewports[vp]?.boxes || {};
+      const css = new Map();
+      ['blocks', 'headings', 'images'].forEach((k) => (b[k] || []).forEach((x) => { if (x.css) css.set(x.box, x.css); }));
+      (b.bands || []).forEach((x) => { if (x.css) css.set(x.box, x.css); });
+      return {
+        key,
+        css,
+        bands: (b.bands || []).map((x) => x.box),
+        content: ['blocks', 'headings', 'images'].flatMap((k) => (b[k] || []).map((x) => x.box)),
+      };
+    };
     const sides = { A: sideData(src, 'A'), B: sideData(eds, 'B') };
     const covers = (band, box) => band[0] <= box[0] + 4 && band[0] + band[2] >= box[0] + box[2] - 4;
     // anything painted strictly between y0 and y1 in this column?
@@ -644,14 +672,18 @@ function layoutFindings(r, L, src, eds) {
     const edgeAbove = (S, q) => {
       const box = q[S.key];
       let best = null;
-      const consider = (y, kind, item) => { if (y <= box[1] + 2 && (!best || y > best.y)) best = { y, kind, item }; };
+      const consider = (y, kind, item, band) => {
+        if (y <= box[1] + 2 && (!best || y > best.y)) best = {
+          y, kind, item, band,
+        };
+      };
       items.forEach((p) => {
         if (p !== q && bottom(p[S.key]) <= box[1] + 2 && overlapsX(p[S.key], box)) consider(bottom(p[S.key]), 'content', p);
       });
       S.bands.forEach((bd) => {
         if (!covers(bd, box)) return;
-        if (bd[1] <= box[1] + 2 && bottom(bd) > box[1] + 2) consider(bd[1], 'section-top');
-        if (bottom(bd) <= box[1] + 2) consider(bottom(bd), 'section-end');
+        if (bd[1] <= box[1] + 2 && bottom(bd) > box[1] + 2) consider(bd[1], 'section-top', null, bd);
+        if (bottom(bd) <= box[1] + 2) consider(bottom(bd), 'section-end', null, bd);
       });
       if (best && blocked(S, box, best.y, box[1], best.item?.[S.key])) return null;
       return best;
@@ -661,7 +693,7 @@ function layoutFindings(r, L, src, eds) {
       const bd = S.bands.filter((b) => covers(b, box) && b[1] <= box[1] + 2 && bottom(b) >= bottom(box) - 2)
         .sort((x, y) => bottom(x) - bottom(y))[0];
       if (!bd || blocked(S, box, bottom(box), bottom(bd))) return null;
-      return { y: bottom(bd) };
+      return { y: bottom(bd), band: bd };
     };
     const span = (x0, x1, y0, y1) => [x0, y0, Math.max(1, x1 - x0), Math.max(6, y1 - y0)];
     const colSpan = (S, box, item) => {
@@ -672,10 +704,12 @@ function layoutFindings(r, L, src, eds) {
       'section-end': (q) => [`the end of the coloured section above and ${q.name}`, `above ${q.name}, after the section above`, `section end → ${q.type}`],
       'section-top': (q) => [`the top of its coloured section and ${q.name}`, `at the top of the section, above ${q.name}`, `section top → ${q.type}`],
     };
-    const pushGap = (gapA, gapB, extra) => {
+    const pushGap = (gapA, gapB, { fixFor, ...extra }) => {
       const d = gapB - gapA;
       if (Math.abs(d) < 12 || gapA > 900) return;
+      const fix = fixFor ? fixFor(gapA - gapB) : null;
       found.push({
+        fix,
         kind: 'spacing',
         category: 'Spacing',
         priority: spacingPriority(d),
@@ -697,8 +731,21 @@ function layoutFindings(r, L, src, eds) {
       const [between, place, transition] = ea.kind === 'content'
         ? [`${ea.item.name} and ${q.name}`, null, `${ea.item.type} → ${q.type}`]
         : PLACE[ea.kind](q);
+      const qc = sides.B.css.get(q.B);
+      const fixFor = (need) => {
+        if (ea.kind === 'section-top') {
+          const bc = sides.B.css.get(eb.band);
+          return bc && bc.pt > 0 ? cssFix(bc, 'padding-top', bc.pt, need, vp) : cssFix(qc, 'margin-top', qc?.mt, need, vp);
+        }
+        if (ea.kind === 'content') {
+          const pc = sides.B.css.get(eb.item.B);
+          // collapsing margins: change whichever margin currently makes the gap
+          if (pc && qc && pc.mb > qc.mt) return cssFix(pc, 'margin-bottom', pc.mb, need, vp);
+        }
+        return cssFix(qc, 'margin-top', qc?.mt, need, vp);
+      };
       pushGap(q.A[1] - ea.y, q.B[1] - eb.y, {
-        between, place, transition, src: span(ax0, ax1, ea.y, q.A[1]), eds: span(bx0, bx1, eb.y, q.B[1]),
+        between, place, transition, src: span(ax0, ax1, ea.y, q.A[1]), eds: span(bx0, bx1, eb.y, q.B[1]), fixFor,
       });
     });
     // bottom padding of a section: last element in a coloured section → the section's bottom edge
@@ -706,7 +753,12 @@ function layoutFindings(r, L, src, eds) {
       const ea = edgeBelowInSection(sides.A, p);
       const eb = edgeBelowInSection(sides.B, p);
       if (!ea || !eb) return;
+      const bc = sides.B.css.get(eb.band);
+      const pc = sides.B.css.get(p.B);
       pushGap(ea.y - bottom(p.A), eb.y - bottom(p.B), {
+        fixFor: (need) => (bc && bc.pb > 0
+          ? cssFix(bc, 'padding-bottom', bc.pb, need, vp)
+          : cssFix(pc, 'margin-bottom', pc?.mb, need, vp)),
         between: `${p.name} and the bottom of its coloured section`,
         place: `at the bottom of the section, below ${p.name}`,
         transition: `${p.type} → section bottom`,
@@ -770,6 +822,7 @@ function layoutFindings(r, L, src, eds) {
         kind: 'width',
         category: 'Layout',
         priority: Math.abs(d) >= 40 ? 'medium' : 'low',
+        fix: d > 0 ? cssFix(sides.B.css.get(p.B), 'max-width', null, p.A[2], vp, true) : null,
         label: d > 0 ? 'Text column wider on EDS' : 'Text column narrower on EDS',
         measure: `↔ ${p.A[2]} → ${p.B[2]}px`,
         detail: `${run.length > 1 ? `${run.length} text blocks from ${p.name} are` : `${p.name} is`} ${p.A[2]}px wide on the original vs ${p.B[2]}px on EDS (${signed(d)}), so lines wrap differently.`,
@@ -1045,7 +1098,8 @@ function buildIssues(r) {
 
 /* ---------------------------------------------------------------- entry */
 
-export function comparePair(src, eds, { diffs, linkStatus } = {}) {
+export function comparePair(src, eds, { diffs, linkStatus, breakpoints = [] } = {}) {
+  BREAKPOINTS = breakpoints;
   const hosts = siteHosts(src, eds);
   const r = {
     text: compareText(src, eds),
